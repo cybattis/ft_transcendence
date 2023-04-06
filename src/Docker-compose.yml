@@ -1,0 +1,59 @@
+#
+name: ft_transcendance
+
+services:
+#  client:
+#    build: ./webapp
+#    ports:
+#      - 3001:3001
+#    networks:
+#      - transcend
+#    volumes:
+#      - ./webapp:/usr/src/app
+#      - /usr/src/app/node_modules
+
+  api:
+    build: ./api
+    ports:
+      - 5400:5400
+      - 9229:9229 # debug port
+    depends_on:
+      - postgres
+    networks:
+      - transcend
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    env_file:
+      - database/postgres.env
+    networks:
+      - transcend
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+
+  ### Postgrey admin ###
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    env_file:
+      - database/pgadmin.env
+    ports:
+      - 15432:80
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - transcend
+
+volumes:
+  postgres:
+  pgadmin:
+
+networks:
+  transcend: {}
