@@ -2,15 +2,15 @@
 name: ft_transcendance
 
 services:
-#  client:
-#    build: ./webapp
-#    ports:
-#      - 3001:3001
-#    networks:
-#      - transcend
-#    volumes:
-#      - ./webapp:/usr/src/app
-#      - /usr/src/app/node_modules
+  client:
+    build: ./client
+    ports:
+      - 3000:3000
+    networks:
+      - transcend
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
 
   api:
     build: ./api
