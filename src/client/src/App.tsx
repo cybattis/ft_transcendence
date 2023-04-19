@@ -1,26 +1,16 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import {AIOnlyPong} from "./game/AIOnlyPong";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	return (
+		<>
+			<AIOnlyPong name={"pong1"} width={400} height={400} leftDifficulty={"Easy"} rightDifficulty={"Easy"}/>
+			<AIOnlyPong name={"pong2"} width={400} height={400} leftDifficulty={"Easy"} rightDifficulty={"Easy"}/>
+			<AIOnlyPong name={"pong3"} width={400} height={400} leftDifficulty={"Easy"} rightDifficulty={"Easy"}/>
+			<AIOnlyPong name={"pong4"} width={400} height={400} leftDifficulty={"Easy"} rightDifficulty={"Easy"}/>
+		</>
+	);
 }
 
 export default App;
