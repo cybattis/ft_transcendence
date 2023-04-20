@@ -1,0 +1,66 @@
+.div-Project{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    gap: 5px;
+    isolation: isolate;
+
+    width: 190.71px;
+    height: 43.15px;
+
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+}
+
+.div-Logo{
+    width: 44.71px;
+    height: 43.15px;
+
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+    z-index: 1;
+}
+
+.div-Logo-rectangle{
+    position: absolute;
+    width: 45px;
+    height: 7px;
+    left: 10px;
+    top: 16px;
+
+    background: linear-gradient(128.15deg, #A259FF 49.75%, #377DF7 136.56%);
+    box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 2px;
+    transform: rotate(41deg);
+}
+
+.div-Logo-sphere{
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    left: 30px;
+    top: 1px;
+
+    background: linear-gradient(100.92deg, #A259FF 13.57%, #FF6250 97.65%);
+    border-radius: 50%;
+    box-shadow: inset 3px -2px 2px -2px rgba(0, 0, 0, 0.25);
+}
+
+.div-Title{
+    font-family: 'Roboto Flex';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 100%;
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+    text-transform: capitalize;
+
+    color: #FFFFFF;
+}

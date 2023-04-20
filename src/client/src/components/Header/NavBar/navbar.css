@@ -1,0 +1,21 @@
+.div-NavBar{
+    width: 45px;
+    height: 45px;
+
+    font-family: 'Roboto Flex';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 85%;
+    line-height: 140%;
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    color: #FFFFFF;
+
+    flex: none;
+    order: 0;
+    flex-grow: 0;
+}
