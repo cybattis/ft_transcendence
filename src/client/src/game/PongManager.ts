@@ -175,9 +175,6 @@ export class AIOnlyPongState {
 			this.rightSpeed = canvas.height / 4;
 		else
 			this.rightSpeed = canvas.height / 2;
-
-		console.log(this.leftSpeed);
-		console.log(this.rightSpeed);
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
@@ -226,15 +223,39 @@ export class AIOnlyPongState {
 		ctx.strokeStyle = "rgba(255, 255, 255, 255)";
 		ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
 
-		ctx.beginPath();
-		ctx.moveTo(this.canvas.width * 0.5, 0);
-		ctx.lineTo(this.canvas.width * 0.5, this.canvas.height);
-		ctx.stroke();
-		ctx.closePath();
+		this.renderNet(ctx);
 
 		this.ball.render(ctx);
 		this.leftPaddle.render(ctx);
 		this.rightPaddle.render(ctx);
+	}
+
+	renderNet(ctx: CanvasRenderingContext2D) {
+		const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
+		const desiredHeight = primarySize / 20;
+		const remainder = this.canvas.height % desiredHeight;
+		let quotient = Math.floor(this.canvas.height / desiredHeight);
+
+		let actualHeight = desiredHeight + remainder / quotient;
+
+		if (quotient % 2 == 0) {
+			actualHeight += actualHeight / (quotient - 1);
+			quotient -= 1;
+		}
+
+		for (let i = 0; i < quotient; i += 2) {
+			ctx.fillRect(
+				this.canvas.width / 2 - desiredHeight / 2,
+				i * actualHeight,
+				desiredHeight,
+				actualHeight);
+		}
+
+		ctx.fillRect(
+			this.canvas.width / 2 - desiredHeight / 2,
+			this.canvas.height - actualHeight,
+			desiredHeight,
+			actualHeight);
 	}
 }
 
