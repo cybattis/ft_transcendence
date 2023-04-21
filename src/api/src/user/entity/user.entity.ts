@@ -5,9 +5,9 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    username: string;
+    @Column({type: 'varchar', length: 20})
+    name: string;
 
-    @Column()
+    @Column({type: 'varchar', length: 50})
     password: string;
 }

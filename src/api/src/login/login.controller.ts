@@ -11,4 +11,5 @@ export class LogController {
         '&response_type=code', 302
     )
     intra() {};
+
 }

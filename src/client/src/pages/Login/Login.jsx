@@ -1,20 +1,32 @@
-import { Link } from 'react-router-dom';
-
 export default function Login() {
     return (
-        <div>
-            <a
-            className="Api42-link"
-            href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-edf712168eec4256ee4f78ca683cdc411e0d71b7cafcff73b1876feb3f229d47&redirect_uri=http%3A%2F%2F127.0.0.1%3A3000%2F&response_type=code
-            "
-            target="_blank"
-            rel="noopener noreferrer"
-            >
-                Login
-            </a>
-            <nav>
-                <Link to='/CreateAccount'>Create Account</Link>
-            </nav>
+        <div className="Auth-form-container">
+            <form className="Auth-form">
+                <div className="Auth-form-content">
+                <h3 className="Auth-form-title">Sign In</h3>
+                <div className="form-group mt-3">
+                    <label>Username</label>
+                    <input
+                    type="username"
+                    className="form-control mt-1"
+                    placeholder="Enter username"
+                    />
+                </div>
+                <div className="form-group mt-3">
+                    <label>Password</label>
+                    <input
+                    type="password"
+                    className="form-control mt-1"
+                    placeholder="Enter password"
+                    />
+                </div>
+                <div className="d-grid gap-2 mt-3">
+                    <button type="submit" className="btn btn-primary">
+                    Submit
+                    </button>
+                </div>
+                </div>
+            </form>
         </div>
     );
 }
