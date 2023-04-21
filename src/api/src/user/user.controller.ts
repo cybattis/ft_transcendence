@@ -18,6 +18,11 @@ export class UserController {
     }
   }
 
+  @Get()
+  async findAll(): Promise<User[]> {
+      return this.userService.findAll();
+  }
+
   @Post()
   public createUser(@Body() body: CreateUserDto): Promise<User> {
     return this.userService.create(body);
