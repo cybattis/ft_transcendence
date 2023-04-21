@@ -1,0 +1,29 @@
+.full {
+    background-origin: border-box;
+    background-image: url("../../resource/home-forme.svg");
+}
+
+.home {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.desc {
+    width: 715px;
+    height: 112px;
+    align-items: center;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.game {
+    width: 954px;
+    height: 536px;
+    background: rgba(255, 255, 255, 0.21);
+    box-shadow: inset 0 0 16px 22px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+
+    margin-bottom: 2em;
+}

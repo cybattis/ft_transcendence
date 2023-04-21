@@ -1,0 +1,50 @@
+.rightMenu{
+    display: flex;
+    flex-direction: row;
+
+    max-width: max-content;
+    padding-right: 6em;
+}
+
+.login-button {
+    display: flex;
+
+    width: 70px;
+    height: 30px;
+    margin: 0 10px 0 10px;
+    border-radius: 8px;
+
+    color: white;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+.login-button:hover {
+    background-color: var(--cyan);
+}
+
+.signup-button{
+    display: flex;
+    align-items: center;
+
+    color: white;
+    background: #8449BF;
+
+    width: max-content;
+    height: 30px;
+    padding: 0 10px 0 10px;
+    margin: 0 10px 0 10px;
+    border-radius: 8px;
+
+    text-align: center;
+    text-decoration: none;
+}
+
+.signup-button:hover{
+    background: #00CCCC;
+}
+
+.logo-signin{
+    margin-right: 4px;
+}

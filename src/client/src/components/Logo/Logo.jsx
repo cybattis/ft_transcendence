@@ -1,13 +1,11 @@
-import './logo.css'
+import "./logo.css";
+import logo from "../../resource/Logo.svg";
 
 export default function Logo() {
-    return (
-        <div className='div-Project'>
-            <div className='div-Logo'>
-                <div className='div-Logo-rectangle'></div>
-                <div className='div-Logo-sphere'></div>
-            </div>
-            <div className='div-Title'>PongFever</div>
-        </div>
-    );
+  return (
+    <div className="div-Project">
+      <img src={logo} className="logo" alt="logo" />
+      <div className="title">PongFever</div>
+    </div>
+  );
 }
