@@ -1,13 +1,25 @@
 .full {
-    background-origin: border-box;
+    display: flex;
+    flex-direction: column;
+
+    background-origin: content-box;
+    background-repeat: no-repeat;
     background-image: url("../../resource/home-forme.svg");
+    background-size: cover;
+    background-position: 50% 17%;
+
+    width: 100%;
+    height: 100%;
+
+    overflow-x: scroll;
 }
 
 .home {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+
     align-items: center;
+    height: 100%;
 }
 
 .desc {
@@ -21,7 +33,7 @@
 .game {
     width: 954px;
     height: 536px;
-    background: rgba(255, 255, 255, 0.21);
+    background: dimgrey;
     box-shadow: inset 0 0 16px 22px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
 
