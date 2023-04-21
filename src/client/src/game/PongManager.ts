@@ -73,40 +73,143 @@ export class Ball {
 			this.vel.y *= -1;
 		}
 	}
+
+	checkCollision(paddle: Paddle) {
+		const pBounds = {
+			top: paddle.pos.y,
+			bottom: paddle.pos.y + paddle.size.y,
+			left: paddle.pos.x,
+			right: paddle.pos.x + paddle.size.x
+		}
+
+		const bBounds = {
+			top: this.pos.y - this.radius,
+			bottom: this.pos.y + this.radius,
+			left: this.pos.x - this.radius,
+			right: this.pos.x + this.radius
+		}
+
+		if (bBounds.bottom >= pBounds.top && bBounds.top <= pBounds.bottom &&
+			bBounds.left <= pBounds.right && bBounds.right >= pBounds.left) {
+			if (this.pos.x > this.canvasSize.x / 2) {
+				const offset = pBounds.left - bBounds.right;
+				this.pos.x += 2 * offset;
+			} else {
+				const offset = pBounds.right - bBounds.left;
+				this.pos.x += 2 * offset;
+			}
+
+			this.vel.x *= -1.1;
+			this.vel.y *= 1.1;
+		}
+	}
 }
 
 export class Paddle {
-	
+	public readonly pos: Vec2;
+	public readonly size: Vec2;
+
+	private canvasHeight: number;
+
+	constructor(isLeft: boolean, canvasWidth: number, canvasHeight: number) {
+		this.canvasHeight = canvasHeight;
+
+		const primarySize = Math.min(canvasWidth / 2, canvasHeight);
+		this.size = new Vec2(primarySize / 20, primarySize / 5);
+
+		if (isLeft)
+			this.pos = new Vec2(canvasWidth / 20, canvasHeight / 2 - this.size.y / 2);
+		else
+			this.pos = new Vec2(canvasWidth - canvasWidth / 20, canvasHeight / 2 - this.size.y / 2);
+	}
+
+	public get centerX(): number {
+		return this.pos.x + this.size.x / 2;
+	}
+
+	public get centerY(): number {
+		return this.pos.y + this.size.y / 2;
+	}
+
+	move(dy: number) {
+		this.pos.y += dy;
+		if (this.pos.y < 0)
+			this.pos.y = 0;
+		else if (this.pos.y + this.size.y > this.canvasHeight)
+			this.pos.y = this.canvasHeight - this.size.y;
+	}
+
+	render(ctx: CanvasRenderingContext2D) {
+		ctx.fillRect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+	}
 }
 
 export class AIOnlyPongState {
 	public name: string;
 	public canvas: HTMLCanvasElement;
 
-	public leftDifficulty: AIDifficulty;
-	public leftPosition: number;
-	public rightDifficulty: AIDifficulty;
-	public rightPosition: number;
+	public leftSpeed: number;
+	public leftPaddle: Paddle;
+	public rightSpeed: number;
+	public rightPaddle: Paddle;
 
 	public ball: Ball;
 
 	constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
-		this.leftDifficulty = leftDifficulty;
-		this.rightDifficulty = rightDifficulty;
 		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, 10, this.canvas.width, this.canvas.height, 150, Math.PI / 4);
+		this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
+		this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
+
+		if (leftDifficulty === "Easy")
+			this.leftSpeed = canvas.height / 6;
+		else if (leftDifficulty === "Medium")
+			this.leftSpeed = canvas.height / 4;
+		else
+			this.leftSpeed = canvas.height / 2;
+
+		if (rightDifficulty === "Easy")
+			this.rightSpeed = canvas.height / 6;
+		else if (rightDifficulty === "Medium")
+			this.rightSpeed = canvas.height / 4;
+		else
+			this.rightSpeed = canvas.height / 2;
+
+		console.log(this.leftSpeed);
+		console.log(this.rightSpeed);
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
 		this.ball.update(frameTime);
-		if (this.ball.pos.x >= this.canvas.width || this.ball.pos.x <= 0) {
+
+		this.movePaddle(this.leftPaddle, this.leftSpeed, frameTime);
+		this.movePaddle(this.rightPaddle, this.rightSpeed, frameTime);
+
+		const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.rightPaddle : this.leftPaddle;
+		this.ball.checkCollision(paddle);
+
+		if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x ||
+			this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
 			this.ball.goToCenter();
 		}
+	}
 
+	movePaddle(paddle: Paddle, speed: number, frameTime: DOMHighResTimeStamp) {
+
+		// Very primitive AI
+		// It tracks down the exact current y position of the ball
+		// The difficulty affects the max speed of the paddle
 		const ballPos = this.ball.pos.y;
-		this.leftPosition = ballPos;
-		this.rightPosition = ballPos;
+		const delta = ballPos - paddle.centerY;
+		if (Math.abs(delta) <= speed * frameTime) {
+			paddle.move(delta);
+		} else {
+			if (delta >= 0)
+				paddle.move(speed * frameTime);
+			else
+				paddle.move(-speed *  frameTime);
+		}
 	}
 
 	render() {
@@ -130,19 +233,8 @@ export class AIOnlyPongState {
 		ctx.closePath();
 
 		this.ball.render(ctx);
-		this.renderPaddles(ctx);
-	}
-
-	private renderPaddles(ctx: CanvasRenderingContext2D) {
-		ctx.fillRect(this.canvas.width * 0.025,
-			this.canvas.height * this.leftPosition - this.canvas.height * 0.1,
-			this.canvas.width * 0.025,
-			this.canvas.height * 0.2);
-
-		ctx.fillRect(this.canvas.width * 0.95,
-			this.canvas.height * this.rightPosition - this.canvas.height * 0.1,
-			this.canvas.width * 0.025,
-			this.canvas.height * 0.2);
+		this.leftPaddle.render(ctx);
+		this.rightPaddle.render(ctx);
 	}
 }
 
