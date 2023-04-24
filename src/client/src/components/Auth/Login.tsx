@@ -1,18 +1,18 @@
 import React from "react";
 import Logo from "../Logo/Logo";
-import "./Login.css";
-import InputForm from "./InputForm";
+import "./Auth.css";
+import InputForm from "../InputForm";
 
 export default function Login() {
   return (
     <div className="background">
-      <div className="loginForm">
+      <div className="authForm">
         <Logo />
         <div className="desc">Sign in to your account</div>
         <form method="post">
           <InputForm type="text" name="email" />
           <br />
-          <InputForm type="text" name="password" />
+          <InputForm type="password" name="password" />
           <div className="formOption">
             <label>
               <input type="checkbox" name="rememberMe" defaultChecked={false} />
@@ -35,9 +35,9 @@ export default function Login() {
           Login with
         </a>
 
-        <div className="noAccount">
+        <div className="authFooter">
           <div>New to PongFever?</div>
-          <a className="signup" href="blank" target="_blank">
+          <a className="link" href="blank" target="_blank">
             Sign up!
           </a>
         </div>

@@ -11,7 +11,7 @@
     backdrop-filter: blur(10px);
 }
 
-.loginForm {
+.authForm {
     position: relative;
 
     display: flex;
@@ -19,14 +19,17 @@
     align-items: center;
     justify-items: center;
 
-    width: 500px;
-    height: 500px;
+    width: fit-content;
+    height: fit-content;
+
+    padding: 1em 4em 1em 4em;
 
     background-color: var(--bg);
+    border: 2px solid var(--purple-darker);
     border-radius: 20px;
 }
 
-.loginForm > .desc {
+.authForm > .desc {
     font-size: 22px;
     line-height: 110%;
 
@@ -34,6 +37,13 @@
     height: fit-content;
 
     padding: 20px;
+}
+
+.halfInput {
+    display: flex;
+    flex-direction: row;
+
+    gap: 10px;
 }
 
 .link42 {
@@ -109,7 +119,7 @@
     color: var(--cyan);
 }
 
-.noAccount {
+.authFooter {
     display: flex;
     flex-direction: row;
 
@@ -119,6 +129,6 @@
     gap: 10px;
 }
 
-.noAccount > .signup {
+.authFooter > .link {
     color: var(--cyan);
 }

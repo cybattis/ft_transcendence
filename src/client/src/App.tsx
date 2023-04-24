@@ -2,8 +2,8 @@ import React from "react";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import "./App.css";
-import Login from "./components/Login/Login";
-import Signup from "./components/Signup";
+import Login from "./components/Auth/Login";
+import Signup from "./components/Auth/Signup";
 import NavBar from "./components/NavBar/NavBar";
 import Footer from "./components/Footer/Footer";
 

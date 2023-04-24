@@ -7,6 +7,8 @@ function capitalizeFirstLetter(string: String) {
 interface LabelProps {
   name: string;
   type: string;
+  label?: string;
+  half?: boolean;
 }
 
 export default function InputForm(props: LabelProps) {
@@ -17,9 +19,10 @@ export default function InputForm(props: LabelProps) {
     alignItems: "center",
 
     padding: "10px 14px",
+    marginBottom: "5px",
     gap: "8px",
 
-    width: "358px",
+    width: props.half ? "174px" : "358px",
     height: "46px",
 
     color: "var(--black)",
@@ -30,10 +33,11 @@ export default function InputForm(props: LabelProps) {
   };
 
   const name = capitalizeFirstLetter(props.name);
+  const label = props.label ? props.label : name;
 
   return (
     <label>
-      {name} <br />
+      {label} <br />
       <input style={inputStyle} type={props.type} name={props.name} />
     </label>
   );
