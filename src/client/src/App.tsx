@@ -1,19 +1,28 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import "./App.css";
-import Home from "./pages/Home/Home";
-import Login from "./pages/Login/Login";
-import CreateAccount from "./pages/CreateAccount";
+import Login from "./components/Login/Login";
+import Signup from "./components/Signup";
+import NavBar from "./components/NavBar/NavBar";
+import Footer from "./components/Footer/Footer";
+
+export interface AuthProps {
+  loginCallback: (value: any) => void;
+  signupCallback: (value: any) => void;
+}
 
 function App() {
+  const [loginState, setLoginState] = useState(false);
+  const [signupState, setSignupState] = useState(false);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/CreateAccount" element={<CreateAccount />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="app">
+      <NavBar loginCallback={setLoginState} signupCallback={setSignupState} />
+      <Outlet />
+      <Footer />
+      {loginState ? <Login /> : signupState ? <Signup /> : null}
+    </div>
   );
 }
 

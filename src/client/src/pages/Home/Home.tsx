@@ -1,16 +1,6 @@
-import NavBar from "../../components/NavBar/NavBar";
-import Footer from "../../components/Footer/Footer";
 import "./Home.css";
-import { useState } from "react";
-import Login from "../Login/Login";
-import Signup from "../Signup";
 
-export interface AuthProps {
-  loginCallback: (value: any) => void;
-  signupCallback: (value: any) => void;
-}
-
-function HomePage() {
+function HomeUnlogged() {
   return (
     <div className="home">
       <h1>PongFever</h1>
@@ -23,15 +13,9 @@ function HomePage() {
 }
 
 export default function Home() {
-  const [loginState, setLoginState] = useState(false);
-  const [signupState, setSignupState] = useState(false);
-
   return (
     <div className="full">
-      <NavBar loginCallback={setLoginState} signupCallback={setSignupState} />
-      {loginState ? <Login /> : signupState ? <Signup /> : null}
-      <HomePage />
-      <Footer />
+      <HomeUnlogged />
     </div>
   );
 }

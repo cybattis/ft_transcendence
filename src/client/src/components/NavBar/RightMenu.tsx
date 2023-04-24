@@ -1,7 +1,7 @@
 import React from "react";
 import "./RightMenu.css";
 import logo from "../../resource/signin-logo.svg";
-import { AuthProps } from "../../pages/Home/Home";
+import { AuthProps } from "../../App";
 
 export default function RightMenu(props: AuthProps) {
   return (

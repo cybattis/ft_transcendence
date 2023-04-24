@@ -10,10 +10,10 @@ export default function LeftMenu() {
         <Link className="navLink" to="/">
           Home
         </Link>
-        <Link to="/about" className="navLink">
+        <Link to="about" className="navLink">
           About
         </Link>
-        <Link to="/team" className="navLink">
+        <Link to="team" className="navLink">
           Team
         </Link>
       </div>

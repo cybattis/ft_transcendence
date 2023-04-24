@@ -1,0 +1,124 @@
+.background {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+
+    backdrop-filter: blur(10px);
+}
+
+.loginForm {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
+
+    width: 500px;
+    height: 500px;
+
+    background-color: var(--bg);
+    border-radius: 20px;
+}
+
+.loginForm > .desc {
+    font-size: 22px;
+    line-height: 110%;
+
+    width: fit-content;
+    height: fit-content;
+
+    padding: 20px;
+}
+
+.link42 {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    width: 358px;
+    height: 46px;
+    border-radius: 8px;
+    margin: 5px 0 0 0;
+
+    color: white;
+    background-color: var(--purple-wave);
+}
+
+.link42:hover {
+    background-color: var(--cyan);
+}
+
+.submitButton {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    width: 358px;
+    height: 46px;
+    border-radius: 8px;
+    margin: 20px 0 5px 0;
+
+    color: white;
+    background-color: var(--purple-wave);
+    font-family: 'Space Mono', monospace;
+    font-weight: bold;
+}
+
+.submitButton:hover {
+    background-color: var(--cyan);
+    cursor: pointer;
+}
+
+.inputForm {
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 14px;
+    gap: 8px;
+
+    width: 358px;
+    height: 46px;
+
+    color: var(--black);
+    background: white;
+    border-radius: 8px;
+    border: none;
+    outline:0;
+}
+
+.formOption {
+    display: flex;
+    flex-direction: row;
+
+    margin-top: 10px;
+
+    gap: 60px;
+    font-size: 14px;
+}
+
+.forgetPassLink {
+    color: var(--cyan);
+}
+
+.noAccount {
+    display: flex;
+    flex-direction: row;
+
+    margin-top: 15px;
+    font-size: 14px;
+
+    gap: 10px;
+}
+
+.noAccount > .signup {
+    color: var(--cyan);
+}

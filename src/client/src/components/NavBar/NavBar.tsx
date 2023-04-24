@@ -1,26 +1,36 @@
 import RightMenu from "./RightMenu";
 import LeftMenu from "./LeftMenu";
-import {AuthProps} from "../../pages/Home/Home";
+import { AuthProps } from "../../App";
+import React from "react";
 
 export default function NavBar(authProps: AuthProps) {
   const navStyle = {
     display: "flex",
-    "flex-direction": "row",
+    flexDirection: "row" as "row",
     height: "3.5em",
 
-    "font-weight": "bold",
-    "align-items": "center",
+    fontWeight: "bold",
+    alignItems: "center",
   };
 
-  const obj = {
-    loginCallback: authProps.loginCallback,
-    signupCallback: authProps.signupCallback,
-  }
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Escape") {
+        authProps.loginCallback(false);
+        authProps.signupCallback(false);
+      }
+    },
+    false
+  );
 
   return (
     <nav style={navStyle}>
       <LeftMenu />
-      <RightMenu loginCallback={authProps.loginCallback} signupCallback={authProps.signupCallback}/>
+      <RightMenu
+        loginCallback={authProps.loginCallback}
+        signupCallback={authProps.signupCallback}
+      />
     </nav>
   );
 }
