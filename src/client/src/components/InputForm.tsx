@@ -7,6 +7,9 @@ function capitalizeFirstLetter(string: String) {
 interface LabelProps {
   name: string;
   type: string;
+  id: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   label?: string;
   half?: boolean;
 }
@@ -38,7 +41,7 @@ export default function InputForm(props: LabelProps) {
   return (
     <label>
       {label} <br />
-      <input style={inputStyle} type={props.type} name={props.name} />
+      <input style={inputStyle} type={props.type} name={props.name}/>
     </label>
   );
 }

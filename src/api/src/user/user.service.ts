@@ -19,14 +19,17 @@ export class UserService {
       return this.userRepository.find();
     }
 
-    async findUser(name: string, password: string): Promise<User | null> {
-      return this.userRepository.findOne({where: {name, password}});
+    async findUser(email: string, password: string): Promise<User | null> {
+      return this.userRepository.findOne({where: {email, password}});
     }
 
     async create(body: CreateUserDto): Promise<User> {
       const user: User = new User();
   
-      user.name = body.name;
+      user.nickname = body.nickname;
+      user.firstname = body.firstname;
+      user.lastname = body.lastname;
+      user.email = body.email;
       user.password = body.password;
   
       return this.userRepository.save(user);

@@ -1,18 +1,43 @@
-import React, { Component } from "react";
+import React from "react";
+import axios from 'axios';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 import InputForm from "../InputForm";
 
 export default function Login() {
+  const [form, setForm] = React.useState({
+    email: '',
+    password: '',
+  });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({
+      ...form,
+      [event.target.id]: event.target.value,
+    });
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    console.log(form.email);
+    console.log(form.password);
+
+    axios.get('http://loclahost:5400/user/' + form.email + '/' + form.password)
+    .then(res => {
+      console.log(res);
+    });
+  }
+
   return (
     <div className="background">
       <div className="authForm">
         <Logo />
-        <div className="desc">Sign in to your account</div>
-        <form method="post">
-          <InputForm type="text" name="email" />
+        <div className="desc">Sign into your account</div>
+        <form method="post" onSubmit={handleSubmit}>
+          <InputForm type="text" name="email" id="email" value={form.email} onChange={handleChange} />
           <br />
-          <InputForm type="password" name="password" />
+          <InputForm type="password" name="password" id="password" value={form.password} onChange={handleChange}/>
           <div className="formOption">
             <label>
               <input type="checkbox" name="rememberMe" defaultChecked={false} />

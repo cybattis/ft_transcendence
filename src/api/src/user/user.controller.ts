@@ -22,19 +22,4 @@ export class UserController {
   async findAll(): Promise<User[]> {
       return this.userService.findAll();
   }
-
-  @Get(':name/:password')
-  async findUser(@Param('name') name: string, @Param('password') password: string): Promise<User | null> {
-    const user = await this.userService.findUser(name, password);
-    if (!user) {
-      throw new NotFoundException('User does not exist!');
-    } else {
-      return user;
-    }
-  }
-
-  @Post()
-  async createUser(@Body() body: CreateUserDto): Promise<User> {
-    return this.userService.create(body);
-  }
 }
