@@ -168,8 +168,10 @@ export class AIOnlyPongState {
 	public canvas: HTMLCanvasElement;
 
 	public leftSpeed: number;
+	public leftScore: number;
 	public leftPaddle: Paddle;
 	public rightSpeed: number;
+	public rightScore: number;
 	public rightPaddle: Paddle;
 
 	public ball: Ball;
@@ -180,6 +182,9 @@ export class AIOnlyPongState {
 		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, 10, this.canvas.width, this.canvas.height, 150, Math.PI / 4);
 		this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
 		this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
+
+		this.leftScore = 0;
+		this.rightScore = 0;
 
 		if (leftDifficulty === "Easy")
 			this.leftSpeed = canvas.height / 6;
@@ -205,9 +210,12 @@ export class AIOnlyPongState {
 		const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.rightPaddle : this.leftPaddle;
 		this.ball.checkCollision(paddle);
 
-		if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x ||
-			this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
+		if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x) {
 			this.ball.goToCenter();
+			this.leftScore++;
+		} else if (this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
+			this.ball.goToCenter();
+			this.rightScore++;
 		}
 	}
 
@@ -243,6 +251,16 @@ export class AIOnlyPongState {
 		ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
 
 		this.renderNet(ctx);
+
+		ctx.textAlign = "center";
+		ctx.textBaseline = "hanging";
+
+		const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
+		ctx.font = (48 * primarySize / 200).toString() + "px Courier New";
+		ctx.direction = "ltr";
+		ctx.fillText(this.leftScore.toString(), this.canvas.width / 2 + primarySize / 5, 10);
+		ctx.direction = "rtl";
+		ctx.fillText(this.rightScore.toString(), this.canvas.width / 2 - primarySize / 5, 10);
 
 		this.ball.render(ctx);
 		this.leftPaddle.render(ctx);
