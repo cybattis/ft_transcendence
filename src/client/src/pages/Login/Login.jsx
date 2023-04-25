@@ -1,29 +1,21 @@
 import React from 'react';
 import axios from 'axios';
 
-export default class PersonList extends React.Component {
-  state = {
-    persons: []
-  }
+export default function Person() {
+  const [post, setPost] = React.useState(null);
 
-  componentDidMount() {
-    axios.get('http://localhost:5400/user')
+  React.useEffect(() => {
+    axios.get('http://localhost:5400/user/' + 'A' + '/' + 'Test123456!abc')
       .then(res => {
-        const persons = res.data;
-        this.setState({ persons });
-      })
-  }
+        setPost(res.data);
+      });
+  }, [])
 
-  render() {
+  if (!post) return null;
+
     return (
-      <ul>
-        {
-          this.state.persons
-            .map(person =>
-              <li key={person.id}>{person.name}</li>
-            )
-        }
-      </ul>
-    )
-  }
+      <div>
+        <h2>{post.id}</h2>
+      </div>
+    );
 }

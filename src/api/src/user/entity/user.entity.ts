@@ -10,4 +10,6 @@ export class User {
 
     @Column({type: 'varchar', length: 50})
     password: string;
+
+    
 }
