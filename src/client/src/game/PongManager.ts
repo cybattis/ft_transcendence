@@ -23,6 +23,7 @@ export class Ball {
 
 	private canvasSize: Vec2;
 	private speed: number;
+	private maxSpeed: number;
 
 	constructor(x: number, y: number, radius: number, canvasWidth: number, canvasHeight: number, speed: number, direction: number) {
 		this.pos = new Vec2(x, y);
@@ -31,6 +32,9 @@ export class Ball {
 		this.speed = speed;
 
 		this.vel = new Vec2(Math.cos(direction) * this.speed, Math.sin(direction) * this.speed);
+
+		const primarySize = Math.min(canvasWidth / 2, canvasHeight);
+		this.maxSpeed = primarySize / 40;
 	}
 
 	setVelocity(newVelocity: Vec2) {
@@ -60,8 +64,16 @@ export class Ball {
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
-		this.pos.x += this.vel.x * frameTime;
-		this.pos.y += this.vel.y * frameTime;
+		const clampedVel = new Vec2(this.vel.x, this.vel.y);
+		if (Math.pow(clampedVel.x, 2) + Math.pow(clampedVel.y, 2) > Math.pow(this.maxSpeed * 400, 2)) {
+			const mag = Math.sqrt(Math.pow(clampedVel.x, 2) + Math.pow(clampedVel.y, 2));
+			const coef = this.maxSpeed * 400 / mag;
+			clampedVel.x *= coef;
+			clampedVel.y *= coef;
+		}
+
+		this.pos.x += clampedVel.x * frameTime;
+		this.pos.y += clampedVel.y * frameTime;
 
 		if (this.pos.y - this.radius <= 0) {
 			this.pos.y += 2 * -(this.pos.y - this.radius);
@@ -101,6 +113,13 @@ export class Ball {
 
 			this.vel.x *= -1.1;
 			this.vel.y *= 1.1;
+		}
+
+		if (Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2) > Math.pow(this.maxSpeed * 400, 2)) {
+			const mag = Math.sqrt(Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2));
+			const coef = this.maxSpeed * 400 / mag;
+			this.vel.x *= coef;
+			this.vel.y *= coef;
 		}
 	}
 }
