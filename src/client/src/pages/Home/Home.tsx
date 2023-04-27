@@ -1,4 +1,5 @@
 import "./Home.css";
+import { useOutletContext } from "react-router-dom";
 
 function HomeUnlogged() {
   return (
@@ -12,10 +13,22 @@ function HomeUnlogged() {
   );
 }
 
+function HomeLogged() {
+  //TODO: fetch relevant user data
+
+  return (
+    <div className="home">
+      <h1>I'm Logged !!!!!!!!!!</h1>
+    </div>
+  );
+}
+
 export default function Home() {
+  const contextData = useOutletContext();
+
   return (
     <div className="full">
-      <HomeUnlogged />
+      {contextData === false ? <HomeUnlogged /> : <HomeLogged />}
     </div>
   );
 }
