@@ -7,21 +7,56 @@ import Signup from "./components/Auth/Signup";
 import NavBar from "./components/NavBar/NavBar";
 import Footer from "./components/Footer/Footer";
 
-export interface AuthProps {
-  loginCallback: (value: any) => void;
-  signupCallback: (value: any) => void;
+export interface FormProps {
+  loginFormCallback: (value: any) => void;
+  signupFormCallback: (value: any) => void;
+}
+
+export interface LoggedInProps {
+  loginFormCallback: (value: any) => void;
+  loggedInCallback: (value: any) => void;
+}
+
+export interface Authed {
+  authed: boolean;
+}
+
+export interface SetAuthed {
+  authCallback: (value: any) => void;
 }
 
 function App() {
-  const [loginState, setLoginState] = useState(false);
-  const [signupState, setSignupState] = useState(false);
+  const [loginFormState, setLoginFormState] = useState(false);
+  const [signupFormState, setSignupFormState] = useState(false);
+  const [authed, setAuthed] = useState(false);
+
+  function AuthForms() {
+    return (
+      <>
+        {loginFormState ? (
+          <Login
+            loggedInCallback={setAuthed}
+            loginFormCallback={setLoginFormState}
+            authed={authed}
+          />
+        ) : signupFormState ? (
+          <Signup />
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <div className="app">
-      <NavBar loginCallback={setLoginState} signupCallback={setSignupState} />
-      <Outlet />
+      <NavBar
+        loginFormCallback={setLoginFormState}
+        signupFormCallback={setSignupFormState}
+        authed={authed}
+        authCallback={setAuthed}
+      />
+      <AuthForms />
+      <Outlet context={authed} />
       <Footer />
-      {loginState ? <Login /> : signupState ? <Signup /> : null}
     </div>
   );
 }
