@@ -9,6 +9,7 @@
   --purple-dark: #4E458C;
   --purple-wave: #8449BF;
   --cyan: #4EBFD9;
+  --vp-size: calc(100vh - 60px - 3.5em);
 
   color-scheme: light dark;
 
