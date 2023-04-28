@@ -2,9 +2,28 @@ import React from "react";
 import axios from 'axios';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
-import InputForm from "../InputForm";
 
 export default function Login() {
+  const inputStyle = {
+    display: "flex",
+    flexDirection: "row" as "row",
+    boxSizing: "border-box" as "border-box",
+    alignItems: "center",
+
+    padding: "10px 14px",
+    marginBottom: "5px",
+    gap: "8px",
+
+    width: "358px",
+    height: "46px",
+
+    color: "var(--black)",
+    background: "white",
+    borderRadius: "8px",
+    border: "none",
+    outline: 0,
+  };
+
   const [form, setForm] = React.useState({
     email: '',
     password: '',
@@ -17,15 +36,20 @@ export default function Login() {
     });
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    console.log(form.email);
-    console.log(form.password);
-
-    axios.get('http://loclahost:5400/user/' + form.email + '/' + form.password)
+    axios.get('http://localhost:5400/auth/' + form.email + '/' + form.password,
+    {
+      headers: {
+      'Content-Type': 'application/json',
+    }
+    })
     .then(res => {
       console.log(res);
+    })
+    .catch(error => {
+      console.log(error);
     });
   }
 
@@ -35,9 +59,14 @@ export default function Login() {
         <Logo />
         <div className="desc">Sign into your account</div>
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="email" id="email" value={form.email} onChange={handleChange} />
-          <br />
-          <InputForm type="password" name="password" id="password" value={form.password} onChange={handleChange}/>
+          <label>
+            Email <br />
+            <input style={inputStyle} type="text" name="email" id="email" value={form.email} onChange={handleChange}/>
+          </label>
+          <label>
+            Password <br />
+            <input style={inputStyle} type="password" name="password" id="password" value={form.password} onChange={handleChange}/>
+          </label>
           <div className="formOption">
             <label>
               <input type="checkbox" name="rememberMe" defaultChecked={false} />
@@ -53,8 +82,7 @@ export default function Login() {
         </form>
         <a
           className="link42"
-          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-edf712168eec4256ee4f78ca683cdc411e0d71b7cafcff73b1876feb3f229d47&redirect_uri=http%3A%2F%2F127.0.0.1%3A3000%2F&response_type=code"
-          target="_blank"
+          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
           rel="noopener noreferrer"
         >
           Login with 42

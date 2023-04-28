@@ -1,25 +1,15 @@
 import { Controller, Get, Inject, Param, Post, Body, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './entity/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
+import { AllUsers } from './entity/allUsers.entity';
+import { CreateAllUsersDto } from './dto/allUsers.dto';
 
 @Controller('user')
 export class UserController {
   @Inject(UserService)
   private readonly userService: UserService;
 
-  @Get(':id')
-  async findOne(@Param('id') id: number): Promise<User> {
-    const user = await this.userService.findOne(id);
-    if (!user) {
-      throw new NotFoundException('User does not exist!');
-    } else {
-      return user;
-    }
-  }
-
   @Get()
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<AllUsers[]> {
       return this.userService.findAll();
   }
 }

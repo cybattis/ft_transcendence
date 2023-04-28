@@ -7,9 +7,6 @@ function capitalizeFirstLetter(string: String) {
 interface LabelProps {
   name: string;
   type: string;
-  id: string;
-  value: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   label?: string;
   half?: boolean;
 }

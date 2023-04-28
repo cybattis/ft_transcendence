@@ -1,24 +1,64 @@
-import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
-import { User } from 'src/user/entity/user.entity'
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { Controller, Get, Query, Res, Post, Inject, Body, Param, NotFoundException } from '@nestjs/common';
+import { Response } from 'express';
+import { AuthService } from './auth.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UserIntra } from './entity/userIntra.entity';
+import { User } from './entity/user.entity';
 import { UserService } from 'src/user/user.service';
 
 @Controller('auth')
 export class AuthController {
-  private readonly userService: UserService;
+  @Inject(AuthService)
+  private readonly authService: AuthService;
+  @Inject(UserService)
+  private readonly usersService: UserService;
 
+  // getCode(@Query('code') code : string): string{
+  //   return code;
+  // }
   @Get('42')
-  async fortyTwoLogin() {
-    const url = 'https://api.intra.42.fr/oauth/authorize' +
-      '?client_id=' + process.env.FORTYTWO_CLIENT_ID +
-      '&redirect_uri=' + encodeURIComponent('http://localhost:3000/auth/42/callback') +
-      '&response_type=code';
-    return { url };
+  async redirectToAppSignup(@Query('code') code: string, @Res() res: Response) {
+    try {
+      const token = await this.authService.exchangeCodeForToken(code);
+      const dataUser = await this.authService.infoUser(token);
+      const user = await this.authService.findOneBy(dataUser.login, dataUser.email);
+      if (!user)
+      {
+        const alreadyexist = await this.usersService.findByLogin(dataUser.login);
+        if (!alreadyexist)
+        {
+          const alreadyexist = await this.usersService.findByEmail(dataUser.email);
+          if (!alreadyexist)
+          {
+            var param = {
+              username: dataUser.login,
+              email: dataUser.email,
+            };
+        
+            this.usersService.createUsers(param);
+            this.authService.createIntraUser(dataUser);
+          }
+          else
+            throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
+        }
+        else
+          throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
+      }
+      res.redirect(`http://localhost:3000/` + dataUser.login);
+    } catch (err) {
+      console.error(err);
+      res.redirect('http://localhost:3000');
+    }
+  }
+
+  @Get()
+  async findAllIntraUsers(): Promise<UserIntra[]> {
+      return this.authService.findAllUserIntra();
   }
 
   @Get(':email/:password')
-  async findUser(@Param('name') name: string, @Param('password') password: string): Promise<User | null> {
-    const user = await this.userService.findUser(name, password);
+  async findUser(@Param('email') email: string, @Param('password') password: string): Promise<User | null> {
+    const user = await this.authService.findUser(email, password);
     if (!user) {
       throw new NotFoundException('User does not exist!');
     } else {
@@ -26,8 +66,30 @@ export class AuthController {
     }
   }
 
+  @Get('user')
+  async findAllUsers(): Promise<User[]> {
+      return this.authService.findAll();
+  }
+
   @Post()
-  async createUser(@Body() body: CreateUserDto): Promise<User> {
-    return this.userService.create(body);
+  async createUser(@Body() body: CreateUserDto, @Res() res: Response): Promise<User> {
+    var param = {
+      username: body.nickname,
+      email: body.email,
+    };
+    const alreadyexist = await this.usersService.findByLogin(body.nickname);
+    if (!alreadyexist)
+    {
+      const alreadyexist = await this.usersService.findByEmail(body.email);
+      if (!alreadyexist)
+      {
+        this.usersService.createUsers(param);
+        return this.authService.createUser(body);
+      }
+      else
+        throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
+    }
+    else
+      throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
   }
 }
