@@ -22,9 +22,9 @@ export class Ball {
 	public readonly radius: number;
 
 	private canvasSize: Vec2;
-	private maxSpeed: number;
 	private speed: number;
 	private readonly baseSpeed: number;
+	private readonly maxSpeed: number;
 
 	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number, speed: number) {
 		this.pos = new Vec2(x, y);
@@ -135,7 +135,7 @@ export class Paddle {
 	public readonly pos: Vec2;
 	public readonly size: Vec2;
 
-	private canvasHeight: number;
+	private readonly canvasHeight: number;
 
 	constructor(isLeft: boolean, canvasWidth: number, canvasHeight: number) {
 		this.canvasHeight = canvasHeight;
@@ -239,7 +239,7 @@ export class AIOnlyPongState {
 			if (delta >= 0)
 				paddle.move(speed * frameTime);
 			else
-				paddle.move(-speed *  frameTime);
+				paddle.move(-speed * frameTime);
 		}
 	}
 
@@ -326,7 +326,7 @@ export class PracticePongState {
 			if (delta >= 0)
 				this.aiPaddle.move(this.aiSpeed * frameTime);
 			else
-				this.aiPaddle.move(-this.aiSpeed *  frameTime);
+				this.aiPaddle.move(-this.aiSpeed * frameTime);
 		}
 	}
 
@@ -364,8 +364,7 @@ export class PracticePongState {
 function renderPongGame(ctx: CanvasRenderingContext2D,
 						leftPaddle: Paddle, rightPaddle: Paddle,
 						ball: Ball, leftScore: number, rightScore: number,
-						canvas: HTMLCanvasElement)
-{
+						canvas: HTMLCanvasElement) {
 	ctx.fillStyle = "rgba(0, 0, 0, 255)";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
