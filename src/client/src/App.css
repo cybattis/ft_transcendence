@@ -25,21 +25,41 @@ html body {
 h1 {
     font-size: 67px;
     line-height: 110%;
+    margin: 10px 0 10px 0;
 }
 
 h2 {
     font-size: 51px;
     line-height: 110%;
+    margin: 10px 0 10px 0;
 }
 
 h3 {
     font-size: 38px;
     line-height: 110%;
+    margin: 10px 0 10px 0;
+    padding: 0;
+}
+
+h4 {
+    font-size: 28px;
+    line-height: 110%;
+    margin: 10px 0 10px 0;
+    padding: 0;
 }
 
 h5 {
-    font-size: 28px;
+    font-size: 22px;
     line-height: 110%;
+    margin: 10px 0 10px 0;
+    padding: 0;
+}
+
+p {
+    font-size: 16px;
+    line-height: 110%;
+    margin: 10px 0 10px 0;
+    padding: 0;
 }
 
 a {
