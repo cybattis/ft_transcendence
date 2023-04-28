@@ -157,6 +157,10 @@ export class Paddle {
 		return this.pos.y + this.size.y / 2;
 	}
 
+	goToCenter() {
+		this.pos.y = this.canvasHeight / 2 - this.size.y / 2;
+	}
+
 	move(dy: number) {
 		this.pos.y += dy;
 		if (this.pos.y < 0)
@@ -183,6 +187,10 @@ export class AIOnlyPongState {
 
 	public ball: Ball;
 
+	private playing: boolean;
+	private winner: "" | "Left" | "Right";
+	private timeSinceGameOver: DOMHighResTimeStamp;
+
 	constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
@@ -192,6 +200,10 @@ export class AIOnlyPongState {
 
 		this.leftScore = 0;
 		this.rightScore = 0;
+
+		this.playing = true;
+		this.winner = "";
+		this.timeSinceGameOver = 0;
 
 		if (leftDifficulty === "Easy")
 			this.leftSpeed = canvas.height / 6;
@@ -209,6 +221,13 @@ export class AIOnlyPongState {
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
+		if (this.playing)
+			this.updateGame(frameTime);
+		else
+			this.updateGameOver(frameTime);
+	}
+
+	updateGame(frameTime: DOMHighResTimeStamp) {
 		this.ball.update(frameTime);
 
 		this.movePaddle(this.leftPaddle, this.leftSpeed, frameTime);
@@ -223,6 +242,31 @@ export class AIOnlyPongState {
 		} else if (this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
 			this.ball.goToCenter();
 			this.rightScore++;
+		}
+
+		if (this.leftScore >= 11 && this.leftScore - this.rightScore >= 2) {
+			this.playing = false;
+			this.winner = "Left";
+		} else if (this.rightScore >= 11 && this.rightScore - this.leftScore >= 2) {
+			this.playing = false;
+			this.winner = "Right";
+		}
+	}
+
+	updateGameOver(frameTime: DOMHighResTimeStamp) {
+		this.timeSinceGameOver += frameTime;
+
+		if (this.timeSinceGameOver > 3) {
+			this.leftScore = 0;
+			this.rightScore = 0;
+			this.winner = "";
+
+			this.leftPaddle.goToCenter();
+			this.rightPaddle.goToCenter();
+			this.ball.goToCenter();
+
+			this.timeSinceGameOver = 0;
+			this.playing = true;
 		}
 	}
 
@@ -251,13 +295,24 @@ export class AIOnlyPongState {
 		if (!ctx) return;
 
 		renderPongGame(ctx, this.leftPaddle, this.rightPaddle, this.ball, this.leftScore, this.rightScore, this.canvas);
+
+		if (!this.playing) {
+			ctx.fillStyle = "rgba(25, 25, 25, 0.95)";
+			ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
+			ctx.font = (48 * primarySize / 400).toString() + "px Courier New";
+			ctx.fillStyle = "rgba(255, 255, 255, 1)";
+			ctx.fillText("Game Over", this.canvas.width / 2, this.canvas.height / 2 - 48 * primarySize / 400);
+			ctx.fillText(this.winner + " AI won !", this.canvas.width / 2, this.canvas.height / 2 + 48 * primarySize / 400);
+		}
 	}
 }
 
 export class PracticePongState {
 	public name: string;
 	public canvas: HTMLCanvasElement;
-	public started: boolean;
 
 	public aiSpeed: number;
 	public aiScore: number;
@@ -268,6 +323,10 @@ export class PracticePongState {
 	public playerPaddle: Paddle;
 
 	public ball: Ball;
+
+	private playing: boolean;
+	private gameOverState: boolean;
+	private winner: "" | "AI" | "Player";
 
 	constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
 		this.name = name;
@@ -288,14 +347,22 @@ export class PracticePongState {
 
 		this.playerSpeed = canvas.height / 2;
 
-		this.started = false;
+		this.winner = "";
+		this.gameOverState = false;
+		this.playing = false;
 	}
 
 	start() {
-		this.started = true;
+		if (!this.playing)
+			this.restartGame();
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
+		if (this.playing)
+			this.updateGame(frameTime);
+	}
+
+	updateGame(frameTime: DOMHighResTimeStamp) {
 		this.ball.update(frameTime);
 
 		this.moveAIPaddle(frameTime);
@@ -311,6 +378,29 @@ export class PracticePongState {
 			this.ball.goToCenter();
 			this.playerScore++;
 		}
+
+		if (this.aiScore >= 11 && this.aiScore - this.playerScore >= 2) {
+			this.playing = false;
+			this.gameOverState = true;
+			this.winner = "AI";
+		} else if (this.playerScore >= 11 && this.playerScore - this.aiScore >= 2) {
+			this.playing = false;
+			this.gameOverState = true;
+			this.winner = "Player";
+		}
+	}
+
+	restartGame() {
+		this.aiScore = 0;
+		this.playerScore = 0;
+		this.winner = "";
+
+		this.aiPaddle.goToCenter();
+		this.playerPaddle.goToCenter();
+		this.ball.goToCenter();
+
+		this.playing = true;
+		this.gameOverState = false;
 	}
 
 	moveAIPaddle(frameTime: DOMHighResTimeStamp) {
@@ -345,18 +435,22 @@ export class PracticePongState {
 		if (!ctx) return;
 
 		renderPongGame(ctx, this.aiPaddle, this.playerPaddle, this.ball, this.aiScore, this.playerScore, this.canvas);
-		if (!this.started) {
+		if (!this.playing) {
 			ctx.fillStyle = "rgba(25, 25, 25, 0.9)";
 			ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-		}
-
-		if (!this.started) {
 			ctx.textAlign = "center";
 			ctx.textBaseline = "middle";
 			const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
 			ctx.font = (48 * primarySize / 400).toString() + "px Courier New";
 			ctx.fillStyle = "rgba(255, 255, 255, 1)";
-			ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2);
+
+			if (this.gameOverState) {
+				ctx.fillText("Game Over", this.canvas.width / 2, this.canvas.height / 2 - 48 * primarySize / 400);
+				ctx.fillText(this.winner + " won !", this.canvas.width / 2, this.canvas.height / 2 + 48 * primarySize / 400);
+				ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2 + 2 * 48 * primarySize / 400);
+			} else {
+				ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2);
+			}
 		}
 	}
 }
@@ -428,11 +522,6 @@ export function startPongManager() {
 			upArrowPressed = true;
 		else if (e.key === "ArrowDown")
 			downArrowPressed = true;
-		else if (e.key === " ") {
-			practiceGameList.forEach((game) => {
-				game.start();
-			});
-		}
 	});
 
 	window.addEventListener("keyup", (e) => {
@@ -440,6 +529,14 @@ export function startPongManager() {
 			upArrowPressed = false;
 		else if (e.key === "ArrowDown")
 			downArrowPressed = false;
+	});
+
+	window.addEventListener("keypress", (e) => {
+		if (e.key === " ") {
+			practiceGameList.forEach((game) => {
+				game.start();
+			});
+		}
 	});
 
 	lastFrameTimestamp = performance.now();
@@ -453,8 +550,7 @@ export function updatePongGames(timestamp: DOMHighResTimeStamp) {
 	});
 
 	practiceGameList.forEach((game) => {
-		if (game.started)
-			game.update((timestamp - lastFrameTimestamp) / 1000.0);
+		game.update((timestamp - lastFrameTimestamp) / 1000.0);
 		game.render();
 	});
 
