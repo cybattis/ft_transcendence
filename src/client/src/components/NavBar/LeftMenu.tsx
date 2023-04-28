@@ -12,9 +12,6 @@ function Unlogged() {
       <Link to="about" className="leftLink">
         About
       </Link>
-      <Link to="team" className="leftLink">
-        Team
-      </Link>
     </>
   );
 }
@@ -37,17 +34,14 @@ function Logged() {
 
   return (
     <>
-      <Link to="team" className="leftLink">
-        Team
+      <Link to="about" className="leftLink">
+        About
       </Link>
       <Link to="/" style={playLink}>
         Play
       </Link>
-      <Link to="/" className="leftLink">
+      <Link to="/ranking" className="leftLink">
         Ranking
-      </Link>
-      <Link to="/" className="leftLink">
-        Chat
       </Link>
     </>
   );

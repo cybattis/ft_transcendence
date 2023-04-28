@@ -2,6 +2,7 @@ import React from "react";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
 import { Authed, FormProps, SetAuthed } from "../../App";
+import { useNavigate } from "react-router-dom";
 
 function Unlogged(props: {
   onClickLogin: () => void;
@@ -25,8 +26,11 @@ function Unlogged(props: {
 }
 
 function Logged(props: SetAuthed) {
+  const naviguate = useNavigate();
+
   const handleDisconnect = () => {
     props.authCallback(false);
+    naviguate("/");
   };
 
   return (
