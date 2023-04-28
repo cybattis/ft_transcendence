@@ -26,15 +26,15 @@ export class Ball {
 	private readonly baseSpeed: number;
 	private readonly maxSpeed: number;
 
-	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number, speed: number) {
+	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number) {
 		this.pos = new Vec2(x, y);
 
 		const primarySize = Math.min(canvasWidth / 2, canvasHeight);
 		this.radius = primarySize / 40;
 		this.maxSpeed = primarySize / 40;
+		this.speed = primarySize / 2;
+		this.baseSpeed = primarySize / 2;
 		this.canvasSize = new Vec2(canvasWidth, canvasHeight);
-		this.speed = speed;
-		this.baseSpeed = speed;
 
 		this.vel = new Vec2(0, 0);
 		this.getRandomDirection();
@@ -186,7 +186,7 @@ export class AIOnlyPongState {
 	constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 150);
+		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height);
 		this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
 		this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
 
@@ -272,7 +272,7 @@ export class PracticePongState {
 	constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 150);
+		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height);
 		this.aiPaddle = new Paddle(true, canvas.width, canvas.height);
 		this.playerPaddle = new Paddle(false, canvas.width, canvas.height);
 
