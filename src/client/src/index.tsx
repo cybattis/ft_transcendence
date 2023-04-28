@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import ErrorPage from "./pages/error-page";
+import Error404 from "./pages/Error404";
 import Team from "./pages/Team";
 import Home from "./pages/Home/Home";
 
@@ -12,8 +12,11 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    errorElement: <ErrorPage />,
     children: [
+      {
+        path: "*",
+        element: <Error404 />,
+      },
       {
         path: "/",
         element: <Home />,
