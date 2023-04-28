@@ -22,8 +22,9 @@ export class Ball {
 	public readonly radius: number;
 
 	private canvasSize: Vec2;
-	private speed: number;
 	private maxSpeed: number;
+	private speed: number;
+	private readonly baseSpeed: number;
 
 	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number, speed: number) {
 		this.pos = new Vec2(x, y);
@@ -33,6 +34,7 @@ export class Ball {
 		this.maxSpeed = primarySize / 40;
 		this.canvasSize = new Vec2(canvasWidth, canvasHeight);
 		this.speed = speed;
+		this.baseSpeed = speed;
 
 		this.vel = new Vec2(0, 0);
 		this.getRandomDirection();
@@ -51,7 +53,7 @@ export class Ball {
 	goToCenter() {
 		this.pos.x = this.canvasSize.x / 2;
 		this.pos.y = this.canvasSize.y / 2;
-
+		this.speed = this.baseSpeed;
 		this.getRandomDirection();
 	}
 
