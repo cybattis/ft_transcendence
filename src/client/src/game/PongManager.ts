@@ -25,16 +25,17 @@ export class Ball {
 	private speed: number;
 	private maxSpeed: number;
 
-	constructor(x: number, y: number, radius: number, canvasWidth: number, canvasHeight: number, speed: number, direction: number) {
+	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number, speed: number) {
 		this.pos = new Vec2(x, y);
-		this.radius = radius;
+
+		const primarySize = Math.min(canvasWidth / 2, canvasHeight);
+		this.radius = primarySize / 40;
+		this.maxSpeed = primarySize / 40;
 		this.canvasSize = new Vec2(canvasWidth, canvasHeight);
 		this.speed = speed;
 
-		this.vel = new Vec2(Math.cos(direction) * this.speed, Math.sin(direction) * this.speed);
-
-		const primarySize = Math.min(canvasWidth / 2, canvasHeight);
-		this.maxSpeed = primarySize / 40;
+		this.vel = new Vec2(0, 0);
+		this.getRandomDirection();
 	}
 
 	setVelocity(newVelocity: Vec2) {
@@ -51,9 +52,13 @@ export class Ball {
 		this.pos.x = this.canvasSize.x / 2;
 		this.pos.y = this.canvasSize.y / 2;
 
-		const direction = Math.random() * Math.PI * 2;
+		this.getRandomDirection();
+	}
+
+	getRandomDirection() {
+		const direction = Math.random() < 0.5 ? Math.random() * Math.PI / 2 - Math.PI / 4 : Math.random() * Math.PI / 2 + Math.PI * 3 / 4;
 		this.vel.x = Math.cos(direction) * this.speed;
-		this.vel.y = Math.sin(direction) * this.speed;
+		this.vel.y = -Math.sin(direction) * this.speed;
 	}
 
 	render(ctx: CanvasRenderingContext2D) {
@@ -179,7 +184,7 @@ export class AIOnlyPongState {
 	constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, 10, this.canvas.width, this.canvas.height, 150, Math.PI / 4);
+		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 150);
 		this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
 		this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
 
@@ -265,7 +270,7 @@ export class PracticePongState {
 	constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
 		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, 10, this.canvas.width, this.canvas.height, 150, Math.PI / 4);
+		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 150);
 		this.aiPaddle = new Paddle(true, canvas.width, canvas.height);
 		this.playerPaddle = new Paddle(false, canvas.width, canvas.height);
 
