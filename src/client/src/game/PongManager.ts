@@ -1,3 +1,6 @@
+import {PongState} from "./PongState";
+import {drawText} from "./Utils";
+
 export type AIDifficulty = "Easy" | "Medium" | "Hard";
 
 export class Vec2 {
@@ -175,34 +178,18 @@ export class Paddle {
 }
 
 export class AIOnlyPongState {
-	public name: string;
-	public canvas: HTMLCanvasElement;
+	public state: PongState;
 
-	public leftSpeed: number;
-	public leftScore: number;
-	public leftPaddle: Paddle;
-	public rightSpeed: number;
-	public rightScore: number;
-	public rightPaddle: Paddle;
-
-	public ball: Ball;
-
-	private playing: boolean;
-	private winner: "" | "Left" | "Right";
+	private canvas: HTMLCanvasElement;
 	private timeSinceGameOver: DOMHighResTimeStamp;
 
+	private leftSpeed: number;
+	private rightSpeed: number;
+
 	constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
-		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height);
-		this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
-		this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
-
-		this.leftScore = 0;
-		this.rightScore = 0;
-
-		this.playing = true;
-		this.winner = "";
+		this.state = new PongState(name, canvas, "Left AI", "Right AI");
+		this.state.restartGame();
 		this.timeSinceGameOver = 0;
 
 		if (leftDifficulty === "Easy")
@@ -221,122 +208,38 @@ export class AIOnlyPongState {
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
-		if (this.playing)
-			this.updateGame(frameTime);
-		else
+		if (this.state.isPlaying()) {
+			this.state.moveLeftPaddleAI(this.leftSpeed, frameTime);
+			this.state.moveRightPaddleAI(this.rightSpeed, frameTime);
+			this.state.update(frameTime);
+		} else
 			this.updateGameOver(frameTime);
-	}
-
-	updateGame(frameTime: DOMHighResTimeStamp) {
-		this.ball.update(frameTime);
-
-		this.movePaddle(this.leftPaddle, this.leftSpeed, frameTime);
-		this.movePaddle(this.rightPaddle, this.rightSpeed, frameTime);
-
-		const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.rightPaddle : this.leftPaddle;
-		this.ball.checkCollision(paddle);
-
-		if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x) {
-			this.ball.goToCenter();
-			this.leftScore++;
-		} else if (this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
-			this.ball.goToCenter();
-			this.rightScore++;
-		}
-
-		if (this.leftScore >= 11 && this.leftScore - this.rightScore >= 2) {
-			this.playing = false;
-			this.winner = "Left";
-		} else if (this.rightScore >= 11 && this.rightScore - this.leftScore >= 2) {
-			this.playing = false;
-			this.winner = "Right";
-		}
 	}
 
 	updateGameOver(frameTime: DOMHighResTimeStamp) {
 		this.timeSinceGameOver += frameTime;
 
 		if (this.timeSinceGameOver > 3) {
-			this.leftScore = 0;
-			this.rightScore = 0;
-			this.winner = "";
-
-			this.leftPaddle.goToCenter();
-			this.rightPaddle.goToCenter();
-			this.ball.goToCenter();
-
+			this.state.restartGame();
 			this.timeSinceGameOver = 0;
-			this.playing = true;
-		}
-	}
-
-	movePaddle(paddle: Paddle, speed: number, frameTime: DOMHighResTimeStamp) {
-
-		// Very primitive AI
-		// It tracks down the exact current y position of the ball
-		// The difficulty affects the max speed of the paddle
-		const ballPos = this.ball.pos.y;
-		const delta = ballPos - paddle.centerY;
-		if (Math.abs(delta) <= speed * frameTime) {
-			paddle.move(delta);
-		} else {
-			if (delta >= 0)
-				paddle.move(speed * frameTime);
-			else
-				paddle.move(-speed * frameTime);
 		}
 	}
 
 	render() {
-		if (!this.canvas) return;
-		if (!this.canvas.getContext) return;
-
-		const ctx = this.canvas.getContext("2d");
-		if (!ctx) return;
-
-		renderPongGame(ctx, this.leftPaddle, this.rightPaddle, this.ball, this.leftScore, this.rightScore, this.canvas);
-
-		if (!this.playing) {
-			ctx.fillStyle = "rgba(25, 25, 25, 0.95)";
-			ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
-			ctx.font = (48 * primarySize / 400).toString() + "px Courier New";
-			ctx.fillStyle = "rgba(255, 255, 255, 1)";
-			ctx.fillText("Game Over", this.canvas.width / 2, this.canvas.height / 2 - 48 * primarySize / 400);
-			ctx.fillText(this.winner + " AI won !", this.canvas.width / 2, this.canvas.height / 2 + 48 * primarySize / 400);
-		}
+		this.state.render();
 	}
 }
 
 export class PracticePongState {
-	public name: string;
-	public canvas: HTMLCanvasElement;
+	public readonly state: PongState;
 
-	public aiSpeed: number;
-	public aiScore: number;
-	public aiPaddle: Paddle;
-
-	public playerSpeed: number;
-	public playerScore: number;
-	public playerPaddle: Paddle;
-
-	public ball: Ball;
-
-	private playing: boolean;
-	private gameOverState: boolean;
-	private winner: "" | "AI" | "Player";
+	private readonly canvas: HTMLCanvasElement;
+	private readonly aiSpeed: number;
+	private readonly playerSpeed: number;
 
 	constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
-		this.name = name;
 		this.canvas = canvas;
-		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height);
-		this.aiPaddle = new Paddle(true, canvas.width, canvas.height);
-		this.playerPaddle = new Paddle(false, canvas.width, canvas.height);
-
-		this.aiScore = 0;
-		this.playerScore = 0;
+		this.state = new PongState(name, canvas, "AI", "Player");
 
 		if (aiDifficulty === "Easy")
 			this.aiSpeed = canvas.height / 6;
@@ -346,167 +249,42 @@ export class PracticePongState {
 			this.aiSpeed = canvas.height / 2;
 
 		this.playerSpeed = canvas.height / 2;
-
-		this.winner = "";
-		this.gameOverState = false;
-		this.playing = false;
 	}
 
 	start() {
-		if (!this.playing)
-			this.restartGame();
+		if (!this.state.isPlaying())
+			this.state.restartGame();
 	}
 
 	update(frameTime: DOMHighResTimeStamp) {
-		if (this.playing)
-			this.updateGame(frameTime);
-	}
+		if (!this.state.isPlaying())
+			return;
 
-	updateGame(frameTime: DOMHighResTimeStamp) {
-		this.ball.update(frameTime);
-
-		this.moveAIPaddle(frameTime);
+		this.state.moveLeftPaddleAI(this.aiSpeed, frameTime);
 		this.handlePlayerMovement(frameTime);
-
-		const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.playerPaddle : this.aiPaddle;
-		this.ball.checkCollision(paddle);
-
-		if (this.ball.pos.x + this.ball.radius > this.playerPaddle.pos.x) {
-			this.ball.goToCenter();
-			this.aiScore++;
-		} else if (this.ball.pos.x - this.ball.radius < this.aiPaddle.pos.x + this.aiPaddle.size.x) {
-			this.ball.goToCenter();
-			this.playerScore++;
-		}
-
-		if (this.aiScore >= 11 && this.aiScore - this.playerScore >= 2) {
-			this.playing = false;
-			this.gameOverState = true;
-			this.winner = "AI";
-		} else if (this.playerScore >= 11 && this.playerScore - this.aiScore >= 2) {
-			this.playing = false;
-			this.gameOverState = true;
-			this.winner = "Player";
-		}
-	}
-
-	restartGame() {
-		this.aiScore = 0;
-		this.playerScore = 0;
-		this.winner = "";
-
-		this.aiPaddle.goToCenter();
-		this.playerPaddle.goToCenter();
-		this.ball.goToCenter();
-
-		this.playing = true;
-		this.gameOverState = false;
-	}
-
-	moveAIPaddle(frameTime: DOMHighResTimeStamp) {
-
-		// Very primitive AI
-		// It tracks down the exact current y position of the ball
-		// The difficulty affects the max speed of the paddle
-		const ballPos = this.ball.pos.y;
-		const delta = ballPos - this.aiPaddle.centerY;
-		if (Math.abs(delta) <= this.aiSpeed * frameTime) {
-			this.aiPaddle.move(delta);
-		} else {
-			if (delta >= 0)
-				this.aiPaddle.move(this.aiSpeed * frameTime);
-			else
-				this.aiPaddle.move(-this.aiSpeed * frameTime);
-		}
+		this.state.update(frameTime);
 	}
 
 	handlePlayerMovement(frameTime: DOMHighResTimeStamp) {
 		if (upArrowPressed)
-			this.playerPaddle.move(-this.playerSpeed * frameTime);
+			this.state.moveRightPaddle(-this.playerSpeed * frameTime);
 		else if (downArrowPressed)
-			this.playerPaddle.move(this.playerSpeed * frameTime);
+			this.state.moveRightPaddle(this.playerSpeed * frameTime);
 	}
 
 	render() {
-		if (!this.canvas) return;
-		if (!this.canvas.getContext) return;
+		this.state.render();
 
-		const ctx = this.canvas.getContext("2d");
-		if (!ctx) return;
+		if (!this.state.isPlaying()) {
+			if (!this.canvas) return;
+			if (!this.canvas.getContext) return;
 
-		renderPongGame(ctx, this.aiPaddle, this.playerPaddle, this.ball, this.aiScore, this.playerScore, this.canvas);
-		if (!this.playing) {
-			ctx.fillStyle = "rgba(25, 25, 25, 0.9)";
-			ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-			ctx.textAlign = "center";
-			ctx.textBaseline = "middle";
-			const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
-			ctx.font = (48 * primarySize / 400).toString() + "px Courier New";
-			ctx.fillStyle = "rgba(255, 255, 255, 1)";
+			const ctx = this.canvas.getContext("2d");
+			if (!ctx) return;
 
-			if (this.gameOverState) {
-				ctx.fillText("Game Over", this.canvas.width / 2, this.canvas.height / 2 - 48 * primarySize / 400);
-				ctx.fillText(this.winner + " won !", this.canvas.width / 2, this.canvas.height / 2 + 48 * primarySize / 400);
-				ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2 + 2 * 48 * primarySize / 400);
-			} else {
-				ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2);
-			}
+			drawText(ctx, "Press space to start...", "middle", this.canvas.width / 2, this.canvas.height / 2 + this.state.getFontSize() * 2, this.state.getFont());
 		}
 	}
-}
-
-function renderPongGame(ctx: CanvasRenderingContext2D,
-						leftPaddle: Paddle, rightPaddle: Paddle,
-						ball: Ball, leftScore: number, rightScore: number,
-						canvas: HTMLCanvasElement) {
-	ctx.fillStyle = "rgba(0, 0, 0, 255)";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-	ctx.fillStyle = "rgba(255, 255, 255, 255)";
-	ctx.strokeStyle = "rgba(255, 255, 255, 255)";
-	ctx.strokeRect(0, 0, canvas.width, canvas.height);
-
-	renderPongNet(ctx, canvas);
-
-	ctx.textAlign = "center";
-	ctx.textBaseline = "hanging";
-
-	const primarySize = Math.min(canvas.width / 2, canvas.height);
-	ctx.font = (48 * primarySize / 200).toString() + "px Courier New";
-	ctx.fillText(leftScore.toString(), canvas.width / 2 + primarySize / 5, 10);
-	ctx.fillText(rightScore.toString(), canvas.width / 2 - primarySize / 5, 10);
-
-	ball.render(ctx);
-	leftPaddle.render(ctx);
-	rightPaddle.render(ctx);
-}
-
-function renderPongNet(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
-	const primarySize = Math.min(canvas.width / 2, canvas.height);
-	const desiredHeight = primarySize / 20;
-	const remainder = canvas.height % desiredHeight;
-	let quotient = Math.floor(canvas.height / desiredHeight);
-
-	let actualHeight = desiredHeight + remainder / quotient;
-
-	if (quotient % 2 === 0) {
-		actualHeight += actualHeight / (quotient - 1);
-		quotient -= 1;
-	}
-
-	for (let i = 0; i < quotient; i += 2) {
-		ctx.fillRect(
-			canvas.width / 2 - desiredHeight / 2,
-			i * actualHeight,
-			desiredHeight,
-			actualHeight);
-	}
-
-	ctx.fillRect(
-		canvas.width / 2 - desiredHeight / 2,
-		canvas.height - actualHeight,
-		desiredHeight,
-		actualHeight);
 }
 
 let lastFrameTimestamp: DOMHighResTimeStamp = 0;
@@ -566,7 +344,7 @@ export function removeAiOnlyGame(name: string) {
 	let index = -1;
 
 	for (let i = 0; i < AIOnlyGameList.length; i++) {
-		if (AIOnlyGameList[i].name === name) {
+		if (AIOnlyGameList[i].state.getName() === name) {
 			index = i;
 			break;
 		}
@@ -585,7 +363,7 @@ export function removePracticeGame(name: string) {
 	let index = -1;
 
 	for (let i = 0; i < practiceGameList.length; i++) {
-		if (practiceGameList[i].name === name) {
+		if (practiceGameList[i].state.getName() === name) {
 			index = i;
 			break;
 		}
