@@ -243,63 +243,199 @@ export class AIOnlyPongState {
 		const ctx = this.canvas.getContext("2d");
 		if (!ctx) return;
 
-		ctx.fillStyle = "rgba(0, 0, 0, 255)";
-		ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		renderPongGame(ctx, this.leftPaddle, this.rightPaddle, this.ball, this.leftScore, this.rightScore, this.canvas);
+	}
+}
 
-		ctx.fillStyle = "rgba(255, 255, 255, 255)";
-		ctx.strokeStyle = "rgba(255, 255, 255, 255)";
-		ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+export class PracticePongState {
+	public name: string;
+	public canvas: HTMLCanvasElement;
+	public started: boolean;
 
-		this.renderNet(ctx);
+	public aiSpeed: number;
+	public aiScore: number;
+	public aiPaddle: Paddle;
 
-		ctx.textAlign = "center";
-		ctx.textBaseline = "hanging";
+	public playerSpeed: number;
+	public playerScore: number;
+	public playerPaddle: Paddle;
 
-		const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
-		ctx.font = (48 * primarySize / 200).toString() + "px Courier New";
-		ctx.direction = "ltr";
-		ctx.fillText(this.leftScore.toString(), this.canvas.width / 2 + primarySize / 5, 10);
-		ctx.direction = "rtl";
-		ctx.fillText(this.rightScore.toString(), this.canvas.width / 2 - primarySize / 5, 10);
+	public ball: Ball;
 
-		this.ball.render(ctx);
-		this.leftPaddle.render(ctx);
-		this.rightPaddle.render(ctx);
+	constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
+		this.name = name;
+		this.canvas = canvas;
+		this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, 10, this.canvas.width, this.canvas.height, 150, Math.PI / 4);
+		this.aiPaddle = new Paddle(true, canvas.width, canvas.height);
+		this.playerPaddle = new Paddle(false, canvas.width, canvas.height);
+
+		this.aiScore = 0;
+		this.playerScore = 0;
+
+		if (aiDifficulty === "Easy")
+			this.aiSpeed = canvas.height / 6;
+		else if (aiDifficulty === "Medium")
+			this.aiSpeed = canvas.height / 4;
+		else
+			this.aiSpeed = canvas.height / 2;
+
+		this.playerSpeed = canvas.height / 2;
+
+		this.started = false;
 	}
 
-	renderNet(ctx: CanvasRenderingContext2D) {
-		const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
-		const desiredHeight = primarySize / 20;
-		const remainder = this.canvas.height % desiredHeight;
-		let quotient = Math.floor(this.canvas.height / desiredHeight);
+	start() {
+		this.started = true;
+	}
 
-		let actualHeight = desiredHeight + remainder / quotient;
+	update(frameTime: DOMHighResTimeStamp) {
+		this.ball.update(frameTime);
 
-		if (quotient % 2 == 0) {
-			actualHeight += actualHeight / (quotient - 1);
-			quotient -= 1;
+		this.moveAIPaddle(frameTime);
+		this.handlePlayerMovement(frameTime);
+
+		const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.playerPaddle : this.aiPaddle;
+		this.ball.checkCollision(paddle);
+
+		if (this.ball.pos.x + this.ball.radius > this.playerPaddle.pos.x) {
+			this.ball.goToCenter();
+			this.aiScore++;
+		} else if (this.ball.pos.x - this.ball.radius < this.aiPaddle.pos.x + this.aiPaddle.size.x) {
+			this.ball.goToCenter();
+			this.playerScore++;
+		}
+	}
+
+	moveAIPaddle(frameTime: DOMHighResTimeStamp) {
+
+		// Very primitive AI
+		// It tracks down the exact current y position of the ball
+		// The difficulty affects the max speed of the paddle
+		const ballPos = this.ball.pos.y;
+		const delta = ballPos - this.aiPaddle.centerY;
+		if (Math.abs(delta) <= this.aiSpeed * frameTime) {
+			this.aiPaddle.move(delta);
+		} else {
+			if (delta >= 0)
+				this.aiPaddle.move(this.aiSpeed * frameTime);
+			else
+				this.aiPaddle.move(-this.aiSpeed *  frameTime);
+		}
+	}
+
+	handlePlayerMovement(frameTime: DOMHighResTimeStamp) {
+		if (upArrowPressed)
+			this.playerPaddle.move(-this.playerSpeed * frameTime);
+		else if (downArrowPressed)
+			this.playerPaddle.move(this.playerSpeed * frameTime);
+	}
+
+	render() {
+		if (!this.canvas) return;
+		if (!this.canvas.getContext) return;
+
+		const ctx = this.canvas.getContext("2d");
+		if (!ctx) return;
+
+		renderPongGame(ctx, this.aiPaddle, this.playerPaddle, this.ball, this.aiScore, this.playerScore, this.canvas);
+		if (!this.started) {
+			ctx.fillStyle = "rgba(25, 25, 25, 0.9)";
+			ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 		}
 
-		for (let i = 0; i < quotient; i += 2) {
-			ctx.fillRect(
-				this.canvas.width / 2 - desiredHeight / 2,
-				i * actualHeight,
-				desiredHeight,
-				actualHeight);
+		if (!this.started) {
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			const primarySize = Math.min(this.canvas.width / 2, this.canvas.height);
+			ctx.font = (48 * primarySize / 400).toString() + "px Courier New";
+			ctx.fillStyle = "rgba(255, 255, 255, 1)";
+			ctx.fillText("Press space to start...", this.canvas.width / 2, this.canvas.height / 2);
 		}
+	}
+}
 
+function renderPongGame(ctx: CanvasRenderingContext2D,
+						leftPaddle: Paddle, rightPaddle: Paddle,
+						ball: Ball, leftScore: number, rightScore: number,
+						canvas: HTMLCanvasElement)
+{
+	ctx.fillStyle = "rgba(0, 0, 0, 255)";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	ctx.fillStyle = "rgba(255, 255, 255, 255)";
+	ctx.strokeStyle = "rgba(255, 255, 255, 255)";
+	ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+	renderPongNet(ctx, canvas);
+
+	ctx.textAlign = "center";
+	ctx.textBaseline = "hanging";
+
+	const primarySize = Math.min(canvas.width / 2, canvas.height);
+	ctx.font = (48 * primarySize / 200).toString() + "px Courier New";
+	ctx.fillText(leftScore.toString(), canvas.width / 2 + primarySize / 5, 10);
+	ctx.fillText(rightScore.toString(), canvas.width / 2 - primarySize / 5, 10);
+
+	ball.render(ctx);
+	leftPaddle.render(ctx);
+	rightPaddle.render(ctx);
+}
+
+function renderPongNet(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
+	const primarySize = Math.min(canvas.width / 2, canvas.height);
+	const desiredHeight = primarySize / 20;
+	const remainder = canvas.height % desiredHeight;
+	let quotient = Math.floor(canvas.height / desiredHeight);
+
+	let actualHeight = desiredHeight + remainder / quotient;
+
+	if (quotient % 2 === 0) {
+		actualHeight += actualHeight / (quotient - 1);
+		quotient -= 1;
+	}
+
+	for (let i = 0; i < quotient; i += 2) {
 		ctx.fillRect(
-			this.canvas.width / 2 - desiredHeight / 2,
-			this.canvas.height - actualHeight,
+			canvas.width / 2 - desiredHeight / 2,
+			i * actualHeight,
 			desiredHeight,
 			actualHeight);
 	}
+
+	ctx.fillRect(
+		canvas.width / 2 - desiredHeight / 2,
+		canvas.height - actualHeight,
+		desiredHeight,
+		actualHeight);
 }
 
 let lastFrameTimestamp: DOMHighResTimeStamp = 0;
 let AIOnlyGameList: AIOnlyPongState[] = new Array<AIOnlyPongState>();
+let practiceGameList: PracticePongState[] = new Array<PracticePongState>();
+
+let upArrowPressed: boolean = false;
+let downArrowPressed: boolean = false;
 
 export function startPongManager() {
+	window.addEventListener("keydown", (e) => {
+		if (e.key === "ArrowUp")
+			upArrowPressed = true;
+		else if (e.key === "ArrowDown")
+			downArrowPressed = true;
+		else if (e.key === " ") {
+			practiceGameList.forEach((game) => {
+				game.start();
+			});
+		}
+	});
+
+	window.addEventListener("keyup", (e) => {
+		if (e.key === "ArrowUp")
+			upArrowPressed = false;
+		else if (e.key === "ArrowDown")
+			downArrowPressed = false;
+	});
+
 	lastFrameTimestamp = performance.now();
 	window.requestAnimationFrame(updatePongGames);
 }
@@ -309,21 +445,25 @@ export function updatePongGames(timestamp: DOMHighResTimeStamp) {
 		game.update((timestamp - lastFrameTimestamp) / 1000.0);
 		game.render();
 	});
+
+	practiceGameList.forEach((game) => {
+		if (game.started)
+			game.update((timestamp - lastFrameTimestamp) / 1000.0);
+		game.render();
+	});
+
 	lastFrameTimestamp = timestamp;
 	window.requestAnimationFrame(updatePongGames);
 }
 
 export function createNewAIOnlyGame(newGame: AIOnlyPongState) {
 	AIOnlyGameList.push(newGame);
-	console.log("New game: ", newGame.name);
 }
 
 export function removeAiOnlyGame(name: string) {
-	console.log("Try to remove game", name);
 	let index = -1;
 
 	for (let i = 0; i < AIOnlyGameList.length; i++) {
-		console.log("Iterating over:", AIOnlyGameList[i].name);
 		if (AIOnlyGameList[i].name === name) {
 			index = i;
 			break;
@@ -332,6 +472,24 @@ export function removeAiOnlyGame(name: string) {
 
 	if (index !== -1) {
 		AIOnlyGameList.splice(index, 1);
-		console.log("Removing game...", name);
+	}
+}
+
+export function createNewPracticeGame(newGame: PracticePongState) {
+	practiceGameList.push(newGame);
+}
+
+export function removePracticeGame(name: string) {
+	let index = -1;
+
+	for (let i = 0; i < practiceGameList.length; i++) {
+		if (practiceGameList[i].name === name) {
+			index = i;
+			break;
+		}
+	}
+
+	if (index !== -1) {
+		practiceGameList.splice(index, 1);
 	}
 }
