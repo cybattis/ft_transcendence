@@ -24,10 +24,12 @@ export class Ball {
 	public readonly vel: Vec2;
 	public readonly radius: number;
 
+	private serving: boolean;
 	private canvasSize: Vec2;
 	private speed: number;
 	private readonly baseSpeed: number;
 	private readonly maxSpeed: number;
+	private readonly servingSpeed: number;
 
 	constructor(x: number, y: number, canvasWidth: number, canvasHeight: number) {
 		this.pos = new Vec2(x, y);
@@ -37,10 +39,16 @@ export class Ball {
 		this.maxSpeed = primarySize / 40;
 		this.speed = primarySize / 2;
 		this.baseSpeed = primarySize / 2;
+		this.servingSpeed = primarySize / 4;
 		this.canvasSize = new Vec2(canvasWidth, canvasHeight);
 
+		this.serving = true;
 		this.vel = new Vec2(0, 0);
-		this.getRandomDirection();
+
+		if (Math.random() > 0.5)
+			this.serveRight();
+		else
+			this.serveLeft();
 	}
 
 	setVelocity(newVelocity: Vec2) {
@@ -53,17 +61,18 @@ export class Ball {
 		this.pos.y = newPosition.y;
 	}
 
-	goToCenter() {
-		this.pos.x = this.canvasSize.x / 2;
-		this.pos.y = this.canvasSize.y / 2;
-		this.speed = this.baseSpeed;
-		this.getRandomDirection();
+	serveRight() {
+		this.goToCenter();
+		const direction = Math.random() * Math.PI / 2 - Math.PI / 4;
+		this.vel.x = Math.cos(direction) * this.servingSpeed;
+		this.vel.y = -Math.sin(direction) * this.servingSpeed;
 	}
 
-	getRandomDirection() {
-		const direction = Math.random() < 0.5 ? Math.random() * Math.PI / 2 - Math.PI / 4 : Math.random() * Math.PI / 2 + Math.PI * 3 / 4;
-		this.vel.x = Math.cos(direction) * this.speed;
-		this.vel.y = -Math.sin(direction) * this.speed;
+	serveLeft() {
+		this.goToCenter();
+		const direction = Math.random() * Math.PI / 2 + Math.PI * 3 / 4;
+		this.vel.x = Math.cos(direction) * this.servingSpeed;
+		this.vel.y = -Math.sin(direction) * this.servingSpeed;
 	}
 
 	render(ctx: CanvasRenderingContext2D) {
@@ -121,8 +130,14 @@ export class Ball {
 				this.pos.x += 2 * offset;
 			}
 
-			this.vel.x *= -1.1;
-			this.vel.y *= 1.1;
+			if (this.serving) {
+				this.vel.x *= this.baseSpeed / this.servingSpeed;
+				this.vel.y *= this.baseSpeed / this.servingSpeed;
+				this.serving = false;
+			} else {
+				this.vel.x *= -1.1;
+				this.vel.y *= 1.1;
+			}
 		}
 
 		if (Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2) > Math.pow(this.maxSpeed * 400, 2)) {
@@ -131,6 +146,12 @@ export class Ball {
 			this.vel.x *= coef;
 			this.vel.y *= coef;
 		}
+	}
+
+	private goToCenter() {
+		this.pos.x = this.canvasSize.x / 2;
+		this.pos.y = this.canvasSize.y / 2;
+		this.speed = this.baseSpeed;
 	}
 }
 

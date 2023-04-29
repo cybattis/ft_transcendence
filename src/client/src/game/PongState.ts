@@ -119,10 +119,10 @@ export class PongState {
 			this.ball.checkCollision(paddle);
 
 			if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x) {
-				this.ball.goToCenter();
+				this.ball.serveLeft();
 				this.leftScore++;
 			} else if (this.ball.pos.x - this.ball.radius < this.leftPaddle.pos.x + this.leftPaddle.size.x) {
-				this.ball.goToCenter();
+				this.ball.serveRight();
 				this.rightScore++;
 			}
 
@@ -143,7 +143,11 @@ export class PongState {
 
 		this.leftPaddle.goToCenter();
 		this.rightPaddle.goToCenter();
-		this.ball.goToCenter();
+
+		if (Math.random() > 0.5)
+			this.ball.serveRight();
+		else
+			this.ball.serveLeft();
 
 		this.playing = true;
 	}
