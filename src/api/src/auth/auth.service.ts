@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
 import { IntraUserDto } from './dto/auth.dto';
 import { CreateUserDto } from '../auth/dto/create-user.dto';
 import { UserIntra } from './entity/userIntra.entity';
-import { User } from '../auth/entity/user.entity'
+import { User } from '../auth/entity/user.entity';
+import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -55,6 +57,21 @@ export class AuthService {
     return data;
   }
 
+  async signin(user: User, jwt: JwtService): Promise<any> {
+    const foundUser = await this.userRepository.findOne({where: {email: user.email}});
+    if (foundUser) {
+        const password = foundUser.password;
+        if (bcrypt.compare(user.password, password)) {
+            const payload = { email: user.email };
+            return {
+                token: jwt.sign(payload),
+            };
+        }
+        return new HttpException('Incorrect username or password', HttpStatus.UNAUTHORIZED)
+    }
+    return new HttpException('Incorrect username or password', HttpStatus.UNAUTHORIZED)
+}
+
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
@@ -64,13 +81,15 @@ export class AuthService {
   }
 
   async createUser(body: CreateUserDto): Promise<User> {
+    const salt = await bcrypt.genSalt();
+    const hash = await bcrypt.hash(body.password, salt);
     const user: User = new User();
 
     user.nickname = body.nickname;
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     user.email = body.email;
-    user.password = body.password;
+    user.password = hash;
 
     return this.userRepository.save(user);
   }

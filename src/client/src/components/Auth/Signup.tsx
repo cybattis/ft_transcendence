@@ -3,7 +3,7 @@ import axios from 'axios';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
-export default function Signup() {
+export default function Signup({setIsLoggedIn}) {
   const inputStyle = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -24,6 +24,7 @@ export default function Signup() {
     outline: 0,
   };
 
+  const [errrorMessage, setErrorMessage] = React.useState('');
   const [form, setForm] = React.useState({
     nickname: '',
     firstname: '',
@@ -50,19 +51,19 @@ export default function Signup() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    axios.post('http://localhost:5400/auth', body,
+    const { data } = await axios.post('http://localhost:5400/auth', body,
     {
       headers: {
       'Content-Type': 'application/json',
       "Access-Control-Allow-Origin": "*",
       }
     })
-    .then(res => {
-      console.log(res);
-    })
-    .catch(error => {
-      console.log(error);
-    });
+    if (data.status === parseInt('401')) {
+      setErrorMessage(data.response)
+    } else {
+      localStorage.setItem('token', data.token);
+      setIsLoggedIn(true)
+    }
   }
 
   return (

@@ -1,10 +1,11 @@
-import { Controller, Get, Query, Res, Post, Inject, Body, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Query, Res, Post, Inject, Body, Param, NotFoundException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserIntra } from './entity/userIntra.entity';
 import { User } from './entity/user.entity';
 import { UserService } from 'src/user/user.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
@@ -12,6 +13,7 @@ export class AuthController {
   private readonly authService: AuthService;
   @Inject(UserService)
   private readonly usersService: UserService;
+  private jwtService: JwtService;
 
   // getCode(@Query('code') code : string): string{
   //   return code;
@@ -21,30 +23,25 @@ export class AuthController {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
-      const user = await this.authService.findOneBy(dataUser.login, dataUser.email);
-      if (!user)
+      const alreadyexist = await this.usersService.findByLogin(dataUser.login);
+      if (!alreadyexist)
       {
-        const alreadyexist = await this.usersService.findByLogin(dataUser.login);
+        const alreadyexist = await this.usersService.findByEmail(dataUser.email);
         if (!alreadyexist)
         {
-          const alreadyexist = await this.usersService.findByEmail(dataUser.email);
-          if (!alreadyexist)
-          {
-            var param = {
-              username: dataUser.login,
-              email: dataUser.email,
-            };
-        
-            this.usersService.createUsers(param);
-            this.authService.createIntraUser(dataUser);
-          }
-          else
-            throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
+          var param = {
+            username: dataUser.login,
+            email: dataUser.email,
+          };    
+          this.usersService.createUsers(param);
+          this.authService.createIntraUser(dataUser);
         }
         else
-          throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
+          throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
       }
-      res.redirect(`http://localhost:3000/` + dataUser.login);
+      else
+        throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
+    res.redirect(`http://localhost:3000/` + dataUser.login);
     } catch (err) {
       console.error(err);
       res.redirect('http://localhost:3000');
@@ -92,4 +89,10 @@ export class AuthController {
     else
       throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
   }
+
+  @Post('/signin')
+    async SignIn(@Res() response: Response, @Body() user: User) {
+        const token = await this.authService.signin(user, this.jwtService);
+        return response.status(HttpStatus.OK).json(token)
+    }
 }

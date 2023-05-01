@@ -3,7 +3,7 @@ import axios from 'axios';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
-export default function Login() {
+export default function Login({setIsLoggedIn}) {
   const inputStyle = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -24,6 +24,7 @@ export default function Login() {
     outline: 0,
   };
 
+  const [errrorMessage, setErrorMessage] = React.useState('');
   const [form, setForm] = React.useState({
     email: '',
     password: '',
@@ -39,18 +40,18 @@ export default function Login() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    axios.get('http://localhost:5400/auth/' + form.email + '/' + form.password,
-    {
-      headers: {
-      'Content-Type': 'application/json',
+    var body = {
+      email: form.email,
+      password: form.password
     }
-    })
-    .then(res => {
-      console.log(res);
-    })
-    .catch(error => {
-      console.log(error);
-    });
+
+    const { data } = await axios.post("http://localhost:5400/auth/signin", body);
+    if (data.status === parseInt('401')) {
+      setErrorMessage(data.response)
+    } else {
+      localStorage.setItem('token', data.token);
+      setIsLoggedIn(true)
+    }
   }
 
   return (
