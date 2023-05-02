@@ -9,8 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { UserIntra } from './auth/entity/userIntra.entity';
 import { AllUsers } from './user/entity/allUsers.entity';
 import { JwtModule } from '@nestjs/jwt';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path/posix';
 import { secret } from './utils/constant';
 
 @Module({
@@ -18,9 +16,6 @@ import { secret } from './utils/constant';
     JwtModule.register({
       secret,
       signOptions: { expiresIn: '2h' },
-    }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
     }),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({

@@ -16,6 +16,7 @@ export class AuthService {
     private userIntraRepository: Repository<UserIntra>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private jwtService: JwtService
     ) {}
 
   getCode(code :string): string{
@@ -57,14 +58,25 @@ export class AuthService {
     return data;
   }
 
+  async intraSignin(email: string, jwt: JwtService): Promise<any> {
+    const foundUser = await this.userIntraRepository.findOne({where: {email: email}});
+    if (foundUser) {
+          const payload = { email: email };
+          return {
+              token: await this.jwtService.signAsync(payload),
+          };
+      }
+    return new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED)
+  }
+
   async signin(user: User, jwt: JwtService): Promise<any> {
     const foundUser = await this.userRepository.findOne({where: {email: user.email}});
     if (foundUser) {
         const password = foundUser.password;
-        if (bcrypt.compare(user.password, password)) {
+        if (await bcrypt.compare(user.password, password)) {
             const payload = { email: user.email };
             return {
-                token: jwt.sign(payload),
+                token: await this.jwtService.signAsync(payload),
             };
         }
         return new HttpException('Incorrect username or password', HttpStatus.UNAUTHORIZED)
@@ -78,6 +90,10 @@ export class AuthService {
 
   async findUser(email: string, password: string): Promise<User | null> {
     return this.userRepository.findOne({where: {email, password}});
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({where: {email}});
   }
 
   async createUser(body: CreateUserDto): Promise<User> {

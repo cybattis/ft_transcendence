@@ -23,28 +23,27 @@ export class AuthController {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
-      const alreadyexist = await this.usersService.findByLogin(dataUser.login);
+      const emailInUse = await this.authService.findByEmail(dataUser.email);
+      if (emailInUse)
+        throw new NotFoundException('Email already in use');
+      const alreadyexist = await this.usersService.findByEmail(dataUser.email);
       if (!alreadyexist)
       {
-        const alreadyexist = await this.usersService.findByEmail(dataUser.email);
-        if (!alreadyexist)
-        {
-          var param = {
-            username: dataUser.login,
-            email: dataUser.email,
-          };    
-          this.usersService.createUsers(param);
-          this.authService.createIntraUser(dataUser);
-        }
-        else
-          throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
+        var param = {
+          username: dataUser.login,
+          email: dataUser.email,
+        };    
+        this.usersService.createUsers(param);
+        this.authService.createIntraUser(dataUser);
+        return res.redirect('http://localhost:3000');
       }
-      else
-        throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
-    res.redirect(`http://localhost:3000/` + dataUser.login);
+      const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
+      res.redirect(`http://localhost:3000`);
+      return (token42);
     } catch (err) {
       console.error(err);
       res.redirect('http://localhost:3000');
+      return err;
     }
   }
 

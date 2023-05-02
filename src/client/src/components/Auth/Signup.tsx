@@ -3,7 +3,7 @@ import axios from 'axios';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
-export default function Signup({setIsLoggedIn}) {
+export default function Signup() {
   const inputStyle = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -48,7 +48,7 @@ export default function Signup({setIsLoggedIn}) {
     password: form.password,
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const { data } = await axios.post('http://localhost:5400/auth', body,
@@ -57,12 +57,14 @@ export default function Signup({setIsLoggedIn}) {
       'Content-Type': 'application/json',
       "Access-Control-Allow-Origin": "*",
       }
-    })
+    });
     if (data.status === parseInt('401')) {
-      setErrorMessage(data.response)
+      setErrorMessage(data.response);
+      console.log(errrorMessage);
     } else {
       localStorage.setItem('token', data.token);
-      setIsLoggedIn(true)
+      console.log(data);
+      //setIsLoggedIn(true)
     }
   }
 
