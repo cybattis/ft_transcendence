@@ -52,7 +52,36 @@ function UserProfile() {
 }
 
 function Chat() {
-  return <div className="chat"></div>;
+  const inputStyle = {
+    boxSizing: "border-box" as "border-box",
+    display: "flex",
+
+    padding: "0 14px",
+    gap: "8px",
+
+    height: "40px",
+    width: "100%",
+
+    color: "var(--black)",
+    background: "white",
+    borderRadius: "8px",
+    border: "none",
+    outline: 0,
+  };
+
+  const chatBox = {
+    display: "flex",
+    flex: "auto",
+    boxSizing: "border-box" as "border-box",
+  };
+
+  return (
+    <div className="chat">
+      <div>tabs</div>
+      <div style={chatBox}></div>
+      <input style={inputStyle} />
+    </div>
+  );
 }
 
 export function HomeLogged() {
