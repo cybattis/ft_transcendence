@@ -90,7 +90,6 @@ export default function Login() {
         >
           Login with 42
         </a>
-
         <div className="authFooter">
           <div>New to PongFever?</div>
           <a className="link" href="blank" target="_blank">

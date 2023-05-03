@@ -26,7 +26,7 @@ export class AuthController {
       const emailInUse = await this.authService.findByEmail(dataUser.email);
       if (emailInUse)
         throw new NotFoundException('Email already in use');
-      const alreadyexist = await this.usersService.findByEmail(dataUser.email);
+      const alreadyexist = await this.authService.findIntraByEmail(dataUser.email);
       if (!alreadyexist)
       {
         var param = {
@@ -38,11 +38,10 @@ export class AuthController {
         return res.redirect('http://localhost:3000');
       }
       const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
-      res.redirect(`http://localhost:3000`);
-      return (token42);
+      res.redirect('http://localhost:3000/loading?' + token42.token);
     } catch (err) {
       console.error(err);
-      res.redirect('http://localhost:3000');
+      res.redirect('http://localhost:3000/');
       return err;
     }
   }

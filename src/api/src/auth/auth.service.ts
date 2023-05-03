@@ -96,6 +96,10 @@ export class AuthService {
     return this.userRepository.findOne({where: {email}});
   }
 
+  async findIntraByEmail(email: string): Promise<UserIntra | null> {
+    return this.userIntraRepository.findOne({where: {email}});
+  }
+
   async createUser(body: CreateUserDto): Promise<User> {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
