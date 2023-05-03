@@ -1,7 +1,7 @@
 import React from "react";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { Authed, FormProps, SetAuthed } from "../../App";
+import { Authed, LoginFormProps, SetAuthed, SignupFormProps } from "../../App";
 import { useNavigate } from "react-router-dom";
 
 function Unlogged(props: {
@@ -42,7 +42,7 @@ function Logged(props: SetAuthed) {
   );
 }
 
-export default function RightMenu(props: FormProps & Authed & SetAuthed) {
+export default function RightMenu(props: LoginFormProps & SignupFormProps & Authed & SetAuthed) {
   const rightMenu = {
     display: "flex",
     flexDirection: "row" as "row",

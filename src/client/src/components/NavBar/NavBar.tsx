@@ -1,9 +1,9 @@
 import RightMenu from "./RightMenu";
 import LeftMenu from "./LeftMenu";
-import { Authed, FormProps, SetAuthed } from "../../App";
+import { Authed, LoginFormProps, SetAuthed, SignupFormProps } from "../../App";
 import React from "react";
 
-export default function NavBar(props: FormProps & Authed & SetAuthed) {
+export default function NavBar(props: LoginFormProps & SignupFormProps & Authed & SetAuthed) {
   const navStyle = {
     display: "flex",
     flexDirection: "row" as "row",

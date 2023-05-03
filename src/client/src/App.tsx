@@ -7,13 +7,15 @@ import Signup from "./components/Auth/Signup";
 import NavBar from "./components/NavBar/NavBar";
 import Footer from "./components/Footer/Footer";
 
-export interface FormProps {
+export interface LoginFormProps {
   loginFormCallback: (value: any) => void;
+}
+
+export interface SignupFormProps {
   signupFormCallback: (value: any) => void;
 }
 
 export interface LoggedInProps {
-  loginFormCallback: (value: any) => void;
   loggedInCallback: (value: any) => void;
 }
 
@@ -53,7 +55,10 @@ function App() {
             authed={authed}
           />
         ) : signupFormState ? (
-          <Signup />
+          <Signup 
+            loggedInCallback={setAuthed}
+            signupFormCallback={setSignupFormState}
+            authed={authed}/>
         ) : null}
       </>
     );

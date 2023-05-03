@@ -4,11 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { User } from './user/entity/user.entity';
-import { LogModule } from './login/login.module';
+import { User } from './auth/entity/user.entity';
+import { AuthModule } from './auth/auth.module';
+import { UserIntra } from './auth/entity/userIntra.entity';
+import { AllUsers } from './user/entity/allUsers.entity';
 
 @Module({
-  imports: [UserModule, LogModule, 
+  imports: [UserModule, AuthModule, 
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
     type: 'postgres',
@@ -17,7 +19,7 @@ import { LogModule } from './login/login.module';
     username: process.env.POSTGRES_USER,
     password: process.env.POSTGRES_PASSWORD,
     database: process.env.POSTGRES_DB,
-    entities: [User],
+    entities: [AllUsers, User, UserIntra],
     synchronize: true,
     })],
   controllers: [AppController],

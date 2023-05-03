@@ -38,7 +38,7 @@ export default function InputForm(props: LabelProps) {
   return (
     <label>
       {label} <br />
-      <input style={inputStyle} type={props.type} name={props.name} />
+      <input style={inputStyle} type={props.type} name={props.name}/>
     </label>
   );
 }

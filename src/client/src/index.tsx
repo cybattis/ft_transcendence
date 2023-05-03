@@ -7,6 +7,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Team from "./pages/Team";
 import Home from "./pages/Home/Home";
+import RedirectionPage from './pages/Redirection/Redirection';
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "loading",
+        element: <RedirectionPage />,
       },
       {
         path: "team",
