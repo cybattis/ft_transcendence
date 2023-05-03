@@ -33,9 +33,10 @@ export class AuthController {
           username: dataUser.login,
           email: dataUser.email,
         };    
-        this.usersService.createUsers(param);
-        this.authService.createIntraUser(dataUser);
-        return res.redirect('http://localhost:3000');
+        await this.usersService.createUsers(param);
+        await this.authService.createIntraUser(dataUser);
+        const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
+        return res.redirect('http://localhost:3000/loading?' + token42.token);
       }
       const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
       res.redirect('http://localhost:3000/loading?' + token42.token);
@@ -66,20 +67,25 @@ export class AuthController {
       return this.authService.findAll();
   }
 
-  @Post()
-  async createUser(@Body() body: CreateUserDto, @Res() res: Response): Promise<User> {
+  @Post('signup')
+  async createUser(@Body() body: CreateUserDto, @Res() res: Response): Promise<string | any> {
     var param = {
       username: body.nickname,
       email: body.email,
     };
+    const user : User = new User();
+    user.email = body.email;
+    user.password = body.password;
     const alreadyexist = await this.usersService.findByLogin(body.nickname);
     if (!alreadyexist)
     {
       const alreadyexist = await this.usersService.findByEmail(body.email);
       if (!alreadyexist)
       {
-        this.usersService.createUsers(param);
-        return this.authService.createUser(body);
+        await this.usersService.createUsers(param);
+        await this.authService.createUser(body);
+        const token = await this.authService.signin(user, this.jwtService);
+        return res.status(HttpStatus.OK).json(token);
       }
       else
         throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris

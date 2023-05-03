@@ -1,24 +1,24 @@
 import React, { FormEvent } from "react";
 import axios from 'axios';
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps } from "../../App";
+import { Authed, LoggedInProps, LoginFormProps } from "../../App";
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
 interface UserCredential {
-  username: string;
+  email: string;
   password: string;
   remember: boolean;
 }
 
-export default function Login(props: LoggedInProps & Authed) {
+export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
   const [errrorMessage, setErrorMessage] = React.useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const user: UserCredential = {
-      username: e.currentTarget.nickname.value,
+      email: e.currentTarget.email.value,
       password: e.currentTarget.password.value,
       remember: e.currentTarget.rememberMe.checked,
     };
@@ -40,7 +40,7 @@ export default function Login(props: LoggedInProps & Authed) {
         <Logo />
         <div className="desc">Sign in to your account</div>
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="nickname" />
+          <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
           <div className="formOption">

@@ -1,57 +1,35 @@
 import React from "react";
 import axios from 'axios';
 import Logo from "../Logo/Logo";
+import InputForm from "../InputForm";
+import { Authed, LoggedInProps, SignupFormProps } from "../../App";
 import "./Auth.css";
 
-export default function Signup() {
-  const inputStyle = {
-    display: "flex",
-    flexDirection: "row" as "row",
-    boxSizing: "border-box" as "border-box",
-    alignItems: "center",
 
-    padding: "10px 14px",
-    marginBottom: "5px",
-    gap: "8px",
+interface UserCredential {
+  nickname: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+}
 
-    width: "358px",
-    height: "46px",
-
-    color: "var(--black)",
-    background: "white",
-    borderRadius: "8px",
-    border: "none",
-    outline: 0,
-  };
+export default function Signup(props: LoggedInProps & SignupFormProps & Authed) {
 
   const [errrorMessage, setErrorMessage] = React.useState('');
-  const [form, setForm] = React.useState({
-    nickname: '',
-    firstname: '',
-    lastname: '',
-    email: '',
-    password: '',
-  });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [event.target.id]: event.target.value,
-    });
-  };
-
-  var body = {
-    nickname: form.nickname,
-    firstname: form.firstname,
-    lastname: form.lastname,
-    email: form.email,
-    password: form.password,
-  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { data } = await axios.post('http://localhost:5400/auth', body,
+    const user: UserCredential = {
+      nickname: e.currentTarget.nickname.value,
+      firstname: e.currentTarget.firstname.value,
+      lastname: e.currentTarget.lastname.checked,
+      email: e.currentTarget.email.value,
+      password: e.currentTarget.password.value,
+    };
+
+    const { data } = await axios.post('http://localhost:5400/auth/signup', user,
     {
       headers: {
       'Content-Type': 'application/json',
@@ -63,8 +41,8 @@ export default function Signup() {
       console.log(errrorMessage);
     } else {
       localStorage.setItem('token', data.token);
-      console.log(data);
-      //setIsLoggedIn(true)
+      props.loggedInCallback(true);
+      props.signupFormCallback(false);
     }
   }
 
@@ -73,52 +51,29 @@ export default function Signup() {
       <div className="authForm">
         <Logo />
         <div className="desc">Join the Fever</div>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Nickname <br />
-            <input style={inputStyle} type="text" name="nickname" id="nickname" value={form.nickname} onChange={handleChange}/> 
-          </label>
+        <form method="post" onSubmit={handleSubmit}>
+          <InputForm type="text" name="nickname" />
           <div className="halfInput">
-            <label>
-              Firstname <br />
-              <input
-                style={inputStyle}
-                type="text"
-                name="firstName"
-                id="firstname"
-                value={form.firstname}
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Lastname <br />
-              <input
-                style={inputStyle}
-                type="text"
-                name="lastName"
-                id="lastname"
-                value={form.lastname}
-                onChange={handleChange}
-              />
-            </label>
+            <InputForm
+              type="text"
+              name="firstname"
+              label="First name"
+              half={true}
+            />
+            <InputForm
+              type="text"
+              name="lastname"
+              label="Last name"
+              half={true}
+            />
           </div>
-          <label>
-            Email <br />
-            <input style={inputStyle} type="text" name="email" id="email" value={form.email} onChange={handleChange}/> 
-          </label>
-          <label>
-            Password <br />
-            <input style={inputStyle} type="text" name="password" id="password" value={form.password} onChange={handleChange}/> 
-          </label>
-          <label>
-              Confirm Password <br />
-              <input
-                style={inputStyle}
-                type="text"
-                name="confirmpwd"
-                //Faire veirfication mdp si deux fois le meme
-              />
-            </label>
+          <InputForm type="text" name="email" />
+          <InputForm type="password" name="password" />
+          <InputForm
+            type="password"
+            name="confirmPwd"
+            label="Confirm password"
+          />
           <button type="submit" className="submitButton">
             Signup
           </button>
@@ -130,7 +85,6 @@ export default function Signup() {
         >
           Signup with 42
         </a>
-
         <div className="authFooter">
           <div>Already have an account?</div>
           <a className="link" href="blank" target="_blank">
