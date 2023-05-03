@@ -1,12 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Post, Body, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
+import { AllUsers } from './entity/allUsers.entity';
+import { CreateAllUsersDto } from './dto/allUsers.dto';
 
-@Controller('/user')
+@Controller('user')
 export class UserController {
-    constructor(private userService: UserService) {}
+  @Inject(UserService)
+  private readonly userService: UserService;
 
-    @Get()
-    getUser() {
-        return this.userService.getUser();
-    }
+  @Get()
+  async findAll(): Promise<AllUsers[]> {
+      return this.userService.findAll();
+  }
 }

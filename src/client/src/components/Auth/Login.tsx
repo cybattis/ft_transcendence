@@ -1,37 +1,37 @@
 import React, { FormEvent } from "react";
-import "./Auth.css";
-import Logo from "../Logo/Logo";
+import axios from 'axios';
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps } from "../../App";
-import { useNavigate } from "react-router-dom";
+import { Authed, LoggedInProps, LoginFormProps } from "../../App";
+import Logo from "../Logo/Logo";
+import "./Auth.css";
 
 interface UserCredential {
-  username: string;
+  email: string;
   password: string;
   remember: boolean;
 }
 
-export default function Login(props: LoggedInProps & Authed) {
-  const navigate = useNavigate();
+export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
+  const [errrorMessage, setErrorMessage] = React.useState('');
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
     const user: UserCredential = {
-      username: event.currentTarget.nickname.value,
-      password: event.currentTarget.password.value,
-      remember: event.currentTarget.rememberMe.checked,
+      email: e.currentTarget.email.value,
+      password: e.currentTarget.password.value,
+      remember: e.currentTarget.rememberMe.checked,
     };
-    console.log(user);
 
-    // hash password
-    // send data to API
-    // if all good go to home logged
-
-    props.loggedInCallback(true);
-    props.loginFormCallback(false);
-
-    navigate("/");
+    const { data } = await axios.post("http://localhost:5400/auth/signin", user);
+    if (data.status === parseInt('401')) {
+      setErrorMessage(data.response);
+      console.log(errrorMessage);
+    } else {
+      localStorage.setItem('token', data.token);
+      props.loggedInCallback(true);
+      props.loginFormCallback(false);
+    }
   }
 
   return (
@@ -40,7 +40,7 @@ export default function Login(props: LoggedInProps & Authed) {
         <Logo />
         <div className="desc">Sign in to your account</div>
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="nickname" />
+          <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
           <div className="formOption">
@@ -63,11 +63,10 @@ export default function Login(props: LoggedInProps & Authed) {
         </form>
         <a
           className="link42"
-          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-edf712168eec4256ee4f78ca683cdc411e0d71b7cafcff73b1876feb3f229d47&redirect_uri=http%3A%2F%2F127.0.0.1%3A3000%2F&response_type=code"
-          target="_blank"
+          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
           rel="noopener noreferrer"
         >
-          Login with
+          Login with 42
         </a>
         <div className="authFooter">
           <div>New to PongFever?</div>

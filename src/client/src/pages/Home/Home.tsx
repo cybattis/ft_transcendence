@@ -1,12 +1,13 @@
-import { useOutletContext } from "react-router-dom";
+//import { useOutletContext } from "react-router-dom";
 import { HomeLogged } from "./HomeLogged";
 
 export default function Home() {
-  const contextData = useOutletContext();
+  //const contextData = useOutletContext();
+  const token = localStorage.getItem('token');
 
   return (
     <div className="full">
-      {contextData === false ? <HomeUnlogged /> : <HomeLogged />}
+      {token === null ? <HomeUnlogged /> : <HomeLogged />}
     </div>
   );
 }
