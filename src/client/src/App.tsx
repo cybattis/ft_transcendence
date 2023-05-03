@@ -1,15 +1,77 @@
-import React from 'react';
-import './App.css';
-import {AIOnlyPong} from "./game/components/AIOnlyPong";
-import {PracticePong} from "./game/components/PracticePong";
+import React, { useEffect } from "react";
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import "./App.css";
+import Login from "./components/Auth/Login";
+import Signup from "./components/Auth/Signup";
+import NavBar from "./components/NavBar/NavBar";
+import Footer from "./components/Footer/Footer";
+
+export interface FormProps {
+  loginFormCallback: (value: any) => void;
+  signupFormCallback: (value: any) => void;
+}
+
+export interface LoggedInProps {
+  loginFormCallback: (value: any) => void;
+  loggedInCallback: (value: any) => void;
+}
+
+export interface Authed {
+  authed: boolean;
+}
+
+export interface SetAuthed {
+  authCallback: (value: any) => void;
+}
 
 function App() {
-	return (
-		<>
-			<AIOnlyPong name={"pong1"} width={500} height={250} leftDifficulty={"Easy"} rightDifficulty={"Easy"}/>
-			<PracticePong name={"practicePong1"} width={1200} height={600} aiDifficulty={"Medium"}/>
-		</>
-	);
+  const [loginFormState, setLoginFormState] = useState(false);
+  const [signupFormState, setSignupFormState] = useState(false);
+  const [authed, setAuthed] = useState(false);
+
+  const keyPress = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && (loginFormState || signupFormState)) {
+      setLoginFormState(false);
+      setSignupFormState(false);
+      console.log("closing forms");
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", keyPress);
+    return () => document.removeEventListener("keydown", keyPress);
+  });
+
+  function AuthForms() {
+    return (
+      <>
+        {loginFormState ? (
+          <Login
+            loggedInCallback={setAuthed}
+            loginFormCallback={setLoginFormState}
+            authed={authed}
+          />
+        ) : signupFormState ? (
+          <Signup />
+        ) : null}
+      </>
+    );
+  }
+
+  return (
+    <div className="app">
+      <NavBar
+        loginFormCallback={setLoginFormState}
+        signupFormCallback={setSignupFormState}
+        authed={authed}
+        authCallback={setAuthed}
+      />
+      <AuthForms />
+      <Outlet context={authed} />
+      <Footer />
+    </div>
+  );
 }
 
 export default App;

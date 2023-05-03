@@ -1,16 +1,41 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Error404 from "./pages/Error404";
+import Team from "./pages/Team";
+import Home from "./pages/Home/Home";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      {
+        path: "*",
+        element: <Error404 />,
+      },
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "team",
+        element: <Team />,
+      },
+    ],
+  },
+]);
 import {startPongManager} from "./game/PongManager";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 
