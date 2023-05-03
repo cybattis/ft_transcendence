@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import "./App.css";
@@ -29,6 +29,19 @@ function App() {
   const [loginFormState, setLoginFormState] = useState(false);
   const [signupFormState, setSignupFormState] = useState(false);
   const [authed, setAuthed] = useState(false);
+
+  const keyPress = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && (loginFormState || signupFormState)) {
+      setLoginFormState(false);
+      setSignupFormState(false);
+      console.log("closing forms");
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", keyPress);
+    return () => document.removeEventListener("keydown", keyPress);
+  });
 
   function AuthForms() {
     return (

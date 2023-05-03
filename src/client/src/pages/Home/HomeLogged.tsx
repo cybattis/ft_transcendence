@@ -1,5 +1,7 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
+import { Form } from "react-router-dom";
+import { FormEvent, KeyboardEvent, useCallback } from "react";
 
 function GameMode(props: { name: string }) {
   const content = {
@@ -75,11 +77,42 @@ function Chat() {
     boxSizing: "border-box" as "border-box",
   };
 
+  // const keyPress = (event: KeyboardEvent) => {
+  //   if (event.key === "Escape" && (loginFormState || signupFormState)) {
+  //     setLoginFormState(false);
+  //     setSignupFormState(false);
+  //     console.log("closing forms");
+  //   }
+  // };
+  //
+  // useEffect(() => {
+  //   document.addEventListener("keydown", keyPress);
+  //   return () => document.removeEventListener("keydown", keyPress);
+  // });
+
+  const onInputKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        console.log("enter");
+      }
+      console.log(event);
+    },
+    []
+  );
+
   return (
     <div className="chat">
-      <div>tabs</div>
+      <div>global</div>
       <div style={chatBox}></div>
-      <input style={inputStyle} />
+      <form>
+        <input
+          style={inputStyle}
+          type="text"
+          placeholder="Type here..."
+          onKeyDown={onInputKeyDown}
+          name="msg"
+        />
+      </form>
     </div>
   );
 }

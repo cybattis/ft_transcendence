@@ -13,17 +13,6 @@ export default function NavBar(props: FormProps & Authed & SetAuthed) {
     alignItems: "center",
   };
 
-  document.addEventListener(
-    "keydown",
-    (event) => {
-      if (event.key === "Escape") {
-        props.loginFormCallback(false);
-        props.signupFormCallback(false);
-      }
-    },
-    false
-  );
-
   return (
     <nav style={navStyle}>
       <LeftMenu authed={props.authed} />
