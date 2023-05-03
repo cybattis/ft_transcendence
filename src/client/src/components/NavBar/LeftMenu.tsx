@@ -1,22 +1,70 @@
 import { Link } from "react-router-dom";
 import Logo from "../Logo/Logo";
-import "./LeftMenu.css";
+import "./NavBar.css";
+import { Authed } from "../../App";
 
-export default function LeftMenu() {
+function Unlogged() {
   return (
-    <div className="leftMenu">
-      <Logo />
-      <div className="leftLinks">
-        <Link className="navLink" to="/">
-          Home
-        </Link>
-        <Link to="about" className="navLink">
-          About
-        </Link>
-        <Link to="team" className="navLink">
-          Team
-        </Link>
-      </div>
+    <>
+      <Link to="/" className="leftLink">
+        Home
+      </Link>
+      <Link to="about" className="leftLink">
+        About
+      </Link>
+    </>
+  );
+}
+
+function Logged() {
+  const playLink = {
+    display: "flex",
+    width: "70px",
+    height: "30px",
+    margin: "0 10px 0 10px",
+    padding: "0 5px",
+    borderRadius: "8px",
+
+    color: "white",
+    backgroundColor: "var(--purple-wave)",
+    justifyContent: "center",
+    alignItems: "center",
+    textDecoration: "none",
+  };
+
+  return (
+    <>
+      <Link to="about" className="leftLink">
+        About
+      </Link>
+      <Link to="/" style={playLink}>
+        Play
+      </Link>
+      <Link to="/ranking" className="leftLink">
+        Ranking
+      </Link>
+    </>
+  );
+}
+
+export default function LeftMenu(props: Authed) {
+  const leftMenu = {
+    display: "flex",
+    flex: "auto",
+    paddingLeft: "6em",
+  };
+
+  const links = {
+    display: "flex",
+    alignItems: "center",
+  };
+
+  return (
+    <div style={leftMenu}>
+      <Link to="/">
+        <Logo />
+      </Link>
+      <div style={links}>{!props.authed ? <Unlogged /> : <Logged />}</div>
     </div>
   );
 }

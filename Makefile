@@ -21,7 +21,7 @@ clean: stop _clean
 fclean: clean
 	$(COMPOSE) down --volumes
 
-restart: _restart clean start
+restart: _restart clean build start
 
 show:
 	$(COMPOSE) ps

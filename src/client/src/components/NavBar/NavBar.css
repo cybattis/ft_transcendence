@@ -1,9 +1,20 @@
-.rightMenu{
+.leftLink {
     display: flex;
-    flex-direction: row;
 
-    max-width: max-content;
-    padding-right: 6em;
+    width: 70px;
+    height: 30px;
+    margin: 0 10px 0 10px;
+    padding: 0 5px;
+    border-radius: 8px;
+
+    color: white;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+.leftLink:hover {
+    background-color: var(--cyan);
 }
 
 .login-button {
@@ -17,10 +28,12 @@
     color: white;
     justify-content: center;
     align-items: center;
+
     border: none;
     background-color: transparent;
 
     font-family: "Space Mono", monospace;
+    font-size: 15px;
     font-weight: bold;
 }
 
@@ -46,13 +59,10 @@
     border: none;
 
     font-family: "Space Mono", monospace;
+    font-size: 15px;
     font-weight: bold;
 }
 
 .signup-button:hover{
     background: #00CCCC;
-}
-
-.logo-signin{
-    margin-right: 4px;
 }
