@@ -1,7 +1,6 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
-import { Form } from "react-router-dom";
-import { FormEvent, KeyboardEvent, useCallback } from "react";
+import { Chat } from "../../components/Chat/Chat";
 
 function GameMode(props: { name: string }) {
   const content = {
@@ -49,70 +48,6 @@ function UserProfile() {
         </div>
       </div>
       <h5>Last matches</h5>
-    </div>
-  );
-}
-
-function Chat() {
-  const inputStyle = {
-    boxSizing: "border-box" as "border-box",
-    display: "flex",
-
-    padding: "0 14px",
-    gap: "8px",
-
-    height: "40px",
-    width: "100%",
-
-    color: "var(--black)",
-    background: "white",
-    borderRadius: "8px",
-    border: "none",
-    outline: 0,
-  };
-
-  const chatBox = {
-    display: "flex",
-    flex: "auto",
-    boxSizing: "border-box" as "border-box",
-  };
-
-  // const keyPress = (event: KeyboardEvent) => {
-  //   if (event.key === "Escape" && (loginFormState || signupFormState)) {
-  //     setLoginFormState(false);
-  //     setSignupFormState(false);
-  //     console.log("closing forms");
-  //   }
-  // };
-  //
-  // useEffect(() => {
-  //   document.addEventListener("keydown", keyPress);
-  //   return () => document.removeEventListener("keydown", keyPress);
-  // });
-
-  const onInputKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        console.log("enter");
-      }
-      console.log(event);
-    },
-    []
-  );
-
-  return (
-    <div className="chat">
-      <div>global</div>
-      <div style={chatBox}></div>
-      <form>
-        <input
-          style={inputStyle}
-          type="text"
-          placeholder="Type here..."
-          onKeyDown={onInputKeyDown}
-          name="msg"
-        />
-      </form>
     </div>
   );
 }
