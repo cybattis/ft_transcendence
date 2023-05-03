@@ -2,12 +2,12 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Team from "./pages/Team";
 import Home from "./pages/Home/Home";
-import RedirectionPage from './pages/Redirection/Redirection';
+import RedirectionPage from "./pages/Redirection/Redirection";
+import { startPongManager } from "./game/PongManager";
 
 const router = createBrowserRouter([
   {
@@ -33,7 +33,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-import {startPongManager} from "./game/PongManager";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
