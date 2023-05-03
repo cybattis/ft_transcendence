@@ -1,58 +1,36 @@
-import React from "react";
+import React, { FormEvent } from "react";
 import axios from 'axios';
+import InputForm from "../InputForm";
+import { Authed, LoggedInProps } from "../../App";
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
-export default function Login() {
-  const inputStyle = {
-    display: "flex",
-    flexDirection: "row" as "row",
-    boxSizing: "border-box" as "border-box",
-    alignItems: "center",
+interface UserCredential {
+  username: string;
+  password: string;
+  remember: boolean;
+}
 
-    padding: "10px 14px",
-    marginBottom: "5px",
-    gap: "8px",
-
-    width: "358px",
-    height: "46px",
-
-    color: "var(--black)",
-    background: "white",
-    borderRadius: "8px",
-    border: "none",
-    outline: 0,
-  };
-
+export default function Login(props: LoggedInProps & Authed) {
   const [errrorMessage, setErrorMessage] = React.useState('');
-  const [form, setForm] = React.useState({
-    email: '',
-    password: '',
-  });
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [event.target.id]: event.target.value,
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    var body = {
-      email: form.email,
-      password: form.password
-    }
+    const user: UserCredential = {
+      username: e.currentTarget.nickname.value,
+      password: e.currentTarget.password.value,
+      remember: e.currentTarget.rememberMe.checked,
+    };
 
-    const { data } = await axios.post("http://localhost:5400/auth/signin", body);
+    const { data } = await axios.post("http://localhost:5400/auth/signin", user);
     if (data.status === parseInt('401')) {
       setErrorMessage(data.response);
       console.log(errrorMessage);
     } else {
       localStorage.setItem('token', data.token);
-      console.log(data);
-      //setIsLoggedIn(true)
+      props.loggedInCallback(true);
+      props.loginFormCallback(false);
     }
   }
 
@@ -60,19 +38,19 @@ export default function Login() {
     <div className="background">
       <div className="authForm">
         <Logo />
-        <div className="desc">Sign into your account</div>
+        <div className="desc">Sign in to your account</div>
         <form method="post" onSubmit={handleSubmit}>
-          <label>
-            Email <br />
-            <input style={inputStyle} type="text" name="email" id="email" value={form.email} onChange={handleChange}/>
-          </label>
-          <label>
-            Password <br />
-            <input style={inputStyle} type="password" name="password" id="password" value={form.password} onChange={handleChange}/>
-          </label>
+          <InputForm type="text" name="nickname" />
+          <br />
+          <InputForm type="password" name="password" />
           <div className="formOption">
             <label>
-              <input type="checkbox" name="rememberMe" defaultChecked={false} />
+              <input
+                type="checkbox"
+                name="rememberMe"
+                value="false"
+                defaultChecked={false}
+              />
               Remember me
             </label>
             <a className="forgetPassLink" href="blank" target="_blank">

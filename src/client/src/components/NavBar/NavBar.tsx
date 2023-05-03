@@ -1,9 +1,9 @@
 import RightMenu from "./RightMenu";
 import LeftMenu from "./LeftMenu";
-import { AuthProps } from "../../App";
+import { Authed, FormProps, SetAuthed } from "../../App";
 import React from "react";
 
-export default function NavBar(authProps: AuthProps) {
+export default function NavBar(props: FormProps & Authed & SetAuthed) {
   const navStyle = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -13,23 +13,14 @@ export default function NavBar(authProps: AuthProps) {
     alignItems: "center",
   };
 
-  document.addEventListener(
-    "keydown",
-    (event) => {
-      if (event.key === "Escape") {
-        authProps.loginCallback(false);
-        authProps.signupCallback(false);
-      }
-    },
-    false
-  );
-
   return (
     <nav style={navStyle}>
-      <LeftMenu />
+      <LeftMenu authed={props.authed} />
       <RightMenu
-        loginCallback={authProps.loginCallback}
-        signupCallback={authProps.signupCallback}
+        loginFormCallback={props.loginFormCallback}
+        signupFormCallback={props.signupFormCallback}
+        authed={props.authed}
+        authCallback={props.authCallback}
       />
     </nav>
   );

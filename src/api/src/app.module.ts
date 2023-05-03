@@ -8,15 +8,9 @@ import { User } from './auth/entity/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserIntra } from './auth/entity/userIntra.entity';
 import { AllUsers } from './user/entity/allUsers.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { secret } from './utils/constant';
 
 @Module({
   imports: [UserModule, AuthModule, 
-    JwtModule.register({
-      secret,
-      signOptions: { expiresIn: '2h' },
-    }),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
     type: 'postgres',
