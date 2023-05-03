@@ -130,12 +130,19 @@ export class Ball {
 				this.pos.x += 2 * offset;
 			}
 
+			const impactVector = new Vec2(this.pos.x - paddle.centerX, this.pos.y - paddle.centerY);
+			impactVector.normalize();
+			const mag = Math.sqrt(Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2)) / 2;
+			this.vel.normalize();
+			this.vel.x = (-this.vel.x + impactVector.x) * mag;
+			this.vel.y = (this.vel.y + impactVector.y) * mag;
+
 			if (this.serving) {
 				this.vel.x *= this.baseSpeed / this.servingSpeed;
 				this.vel.y *= this.baseSpeed / this.servingSpeed;
 				this.serving = false;
 			} else {
-				this.vel.x *= -1.1;
+				this.vel.x *= 1.1;
 				this.vel.y *= 1.1;
 			}
 		}
