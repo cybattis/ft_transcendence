@@ -1,5 +1,7 @@
-import {Ball, Paddle, Vec2} from "./PongManager";
-import {drawText} from "./Utils";
+import Vec2 from "../util/Vec2";
+import Ball from "../logic/Ball";
+import Paddle from "../logic/Paddle";
+import {drawText} from "../util/Utils";
 
 export class PongState {
 	public name: string;

@@ -1,5 +1,6 @@
 import {useEffect, useRef} from "react";
-import {AIDifficulty, AIOnlyPongState, createNewAIOnlyGame, removeAiOnlyGame} from "./PongManager";
+import {AIDifficulty, createNewAIOnlyGame, removeAiOnlyGame} from "../PongManager";
+import AIOnlyPongState from "../states/AIOnlyPongState"
 
 export type AIOnlyPongProps = {
 	name: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
-import {AIOnlyPong} from "./game/AIOnlyPong";
-import {PracticePong} from "./game/PracticePong";
+import {AIOnlyPong} from "./game/components/AIOnlyPong";
+import {PracticePong} from "./game/components/PracticePong";
 
 function App() {
 	return (

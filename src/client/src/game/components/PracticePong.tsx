@@ -1,4 +1,5 @@
-import {AIDifficulty, createNewPracticeGame, PracticePongState, removePracticeGame} from "./PongManager";
+import {AIDifficulty, createNewPracticeGame, removePracticeGame} from "../PongManager";
+import PracticePongState from "../states/PracticePongState"
 import {useEffect, useRef} from "react";
 
 export type PracticePongProps = {
