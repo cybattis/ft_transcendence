@@ -1,15 +1,13 @@
-//import { useOutletContext } from "react-router-dom";
 import { HomeLogged } from "./HomeLogged";
 import { AIOnlyPong } from "../../game/components/AIOnlyPong";
+import { AuthContext } from "../../components/Auth/dto";
+import { useContext } from "react";
 
 export default function Home() {
-  //const contextData = useOutletContext();
-  const token = localStorage.getItem("token");
+  const { authed } = useContext(AuthContext);
 
   return (
-    <div className="full">
-      {token === null ? <HomeUnlogged /> : <HomeLogged />}
-    </div>
+    <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>
   );
 }
 
@@ -25,7 +23,7 @@ function HomeUnlogged() {
     width: "715px",
     height: "112px",
     alignItems: "center",
-    "text-align": "center",
+    textAlign: "center" as "center",
   };
 
   const game = {

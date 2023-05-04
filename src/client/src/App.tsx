@@ -1,23 +1,16 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import "./App.css";
-import Login from "./components/Auth/Login";
-import Signup from "./components/Auth/Signup";
 import NavBar from "./components/NavBar/NavBar";
 import Footer from "./components/Footer/Footer";
-
-export interface LoginFormProps {
-  loginFormCallback: (value: any) => void;
-}
-
-export interface SignupFormProps {
-  signupFormCallback: (value: any) => void;
-}
-
-export interface LoggedInProps {
-  loggedInCallback: (value: any) => void;
-}
+import {
+  defaultFormState,
+  FormContext,
+  AuthContext,
+  defaultAuthState,
+} from "./components/Auth/dto";
+import { AuthForms } from "./components/Auth/Forms";
 
 export interface Authed {
   authed: boolean;
@@ -28,52 +21,21 @@ export interface SetAuthed {
 }
 
 function App() {
-  const [loginFormState, setLoginFormState] = useState(false);
-  const [signupFormState, setSignupFormState] = useState(false);
-  const [authed, setAuthed] = useState(false);
-
-  const keyPress = (event: KeyboardEvent) => {
-    if (event.key === "Escape" && (loginFormState || signupFormState)) {
-      setLoginFormState(false);
-      setSignupFormState(false);
-      console.log("closing forms");
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("keydown", keyPress);
-    return () => document.removeEventListener("keydown", keyPress);
-  });
-
-  function AuthForms() {
-    return (
-      <>
-        {loginFormState ? (
-          <Login
-            loggedInCallback={setAuthed}
-            loginFormCallback={setLoginFormState}
-            authed={authed}
-          />
-        ) : signupFormState ? (
-          <Signup 
-            loggedInCallback={setAuthed}
-            signupFormCallback={setSignupFormState}
-            authed={authed}/>
-        ) : null}
-      </>
-    );
-  }
+  const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
+  const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
+  const [authed, setAuth] = useState(defaultAuthState.authed);
 
   return (
     <div className="app">
-      <NavBar
-        loginFormCallback={setLoginFormState}
-        signupFormCallback={setSignupFormState}
-        authed={authed}
-        authCallback={setAuthed}
-      />
-      <AuthForms />
-      <Outlet context={authed} />
+      <AuthContext.Provider value={{ authed, setAuth }}>
+        <FormContext.Provider
+          value={{ loginForm, setLoginForm, signupForm, setSignupForm }}
+        >
+          <NavBar />
+          <AuthForms />
+        </FormContext.Provider>
+        <Outlet />
+      </AuthContext.Provider>
       <Footer />
     </div>
   );

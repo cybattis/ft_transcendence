@@ -1,23 +1,30 @@
-import React from "react";
+import React, { useContext } from "react";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { Authed, LoginFormProps, SetAuthed, SignupFormProps } from "../../App";
 import { useNavigate } from "react-router-dom";
+import { AuthContext, FormContext } from "../Auth/dto";
 
-function Unlogged(props: {
-  onClickLogin: () => void;
-  onClickSubmit: () => void;
-}) {
+function Unlogged() {
   const logoSignup = {
     marginRight: "4px",
   };
 
+  const { setLoginForm, setSignupForm } = useContext(FormContext);
+
+  function toggleLoginForm() {
+    setLoginForm(true);
+  }
+
+  function toggleSignupForm() {
+    setSignupForm(true);
+  }
+
   return (
     <>
-      <button className="login-button" onClick={props.onClickLogin}>
+      <button className="login-button" onClick={toggleLoginForm}>
         Login
       </button>
-      <button className="signup-button" onClick={props.onClickSubmit}>
+      <button className="signup-button" onClick={toggleSignupForm}>
         <img style={logoSignup} src={logo} alt="logo" />
         SignUp
       </button>
@@ -25,11 +32,13 @@ function Unlogged(props: {
   );
 }
 
-function Logged(props: SetAuthed) {
+function Logged() {
+  const { setAuth } = useContext(AuthContext);
   const naviguate = useNavigate();
 
   const handleDisconnect = () => {
-    props.authCallback(false);
+    localStorage.removeItem("token");
+    setAuth(null);
     naviguate("/");
   };
 
@@ -42,7 +51,7 @@ function Logged(props: SetAuthed) {
   );
 }
 
-export default function RightMenu(props: LoginFormProps & SignupFormProps & Authed & SetAuthed) {
+export default function RightMenu() {
   const rightMenu = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -50,22 +59,7 @@ export default function RightMenu(props: LoginFormProps & SignupFormProps & Auth
     paddingRight: "6em",
   };
 
-  return (
-    <div style={rightMenu}>
-      {!props.authed ? (
-        <Unlogged
-          onClickLogin={() => {
-            props.loginFormCallback(true);
-            props.signupFormCallback(false);
-          }}
-          onClickSubmit={() => {
-            props.signupFormCallback(true);
-            props.loginFormCallback(false);
-          }}
-        />
-      ) : (
-        <Logged authCallback={props.authCallback} />
-      )}
-    </div>
-  );
+  const { authed } = useContext(AuthContext);
+
+  return <div style={rightMenu}>{!authed ? <Unlogged /> : <Logged />}</div>;
 }

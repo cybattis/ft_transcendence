@@ -1,10 +1,8 @@
 import React from "react";
-import axios from 'axios';
+import axios from "axios";
 import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps, SignupFormProps } from "../../App";
 import "./Auth.css";
-
 
 interface UserCredential {
   nickname: string;
@@ -14,9 +12,8 @@ interface UserCredential {
   password: string;
 }
 
-export default function Signup(props: LoggedInProps & SignupFormProps & Authed) {
-
-  const [errrorMessage, setErrorMessage] = React.useState('');
+export default function Signup() {
+  const [errrorMessage, setErrorMessage] = React.useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,22 +26,23 @@ export default function Signup(props: LoggedInProps & SignupFormProps & Authed) 
       password: e.currentTarget.password.value,
     };
 
-    const { data } = await axios.post('http://localhost:5400/auth/signup', user,
-    {
-      headers: {
-      'Content-Type': 'application/json',
-      "Access-Control-Allow-Origin": "*",
+    const { data } = await axios.post(
+      "http://localhost:5400/auth/signup",
+      user,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       }
-    });
-    if (data.status === parseInt('401')) {
+    );
+    if (data.status === parseInt("401")) {
       setErrorMessage(data.response);
       console.log(errrorMessage);
     } else {
-      localStorage.setItem('token', data.token);
-      props.loggedInCallback(true);
-      props.signupFormCallback(false);
+      localStorage.setItem("token", data.token);
     }
-  }
+  };
 
   return (
     <div className="background">
