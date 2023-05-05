@@ -1,4 +1,4 @@
-import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useCallback, useRef, useState } from "react";
 import { useSend } from "../../App";
 import "./Chat.css";
 
@@ -12,7 +12,7 @@ export function Chat() {
         <MessageList messages={messages} />
         <InputMessage />
       </div>
-      <div className="friendList"></div>
+      <div className="friendList">Friends list</div>
     </div>
   );
 }
@@ -58,7 +58,7 @@ function MessageList({ messages }: { messages: string[] }) {
   return (
     <div id={"box"} className={"messageList"}>
       {messages.map((message, index) => (
-        <div key={index}>: {message}</div>
+        <div key={index}>nickname: {message}</div>
       ))}
     </div>
   );

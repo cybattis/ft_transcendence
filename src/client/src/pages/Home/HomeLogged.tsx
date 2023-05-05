@@ -6,7 +6,8 @@ function GameMode(props: { name: string }) {
   const content = {
     display: "flex",
     flexDirection: "column" as "column",
-    flex: "auto",
+    width: "100%",
+    boxSizing: "border-box" as "border-box",
 
     alignItems: "center",
     justifyContent: "center",
@@ -76,7 +77,6 @@ export function HomeLogged() {
     height: "95%",
     maxWidth: "50%",
     gap: "20px",
-    backgroundColor: "cyan",
   };
 
   //TODO: fetch relevant user data
