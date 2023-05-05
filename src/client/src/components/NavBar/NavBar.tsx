@@ -1,9 +1,8 @@
 import RightMenu from "./RightMenu";
 import LeftMenu from "./LeftMenu";
-import { Authed, LoginFormProps, SetAuthed, SignupFormProps } from "../../App";
 import React from "react";
 
-export default function NavBar(props: LoginFormProps & SignupFormProps & Authed & SetAuthed) {
+export default function NavBar() {
   const navStyle = {
     display: "flex",
     flexDirection: "row" as "row",
@@ -15,13 +14,8 @@ export default function NavBar(props: LoginFormProps & SignupFormProps & Authed 
 
   return (
     <nav style={navStyle}>
-      <LeftMenu authed={props.authed} />
-      <RightMenu
-        loginFormCallback={props.loginFormCallback}
-        signupFormCallback={props.signupFormCallback}
-        authed={props.authed}
-        authCallback={props.authCallback}
-      />
+      <LeftMenu />
+      <RightMenu />
     </nav>
   );
 }

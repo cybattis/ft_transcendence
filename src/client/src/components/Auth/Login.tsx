@@ -1,7 +1,6 @@
-import React, { FormEvent } from "react";
-import axios from 'axios';
+import React from "react";
+import axios from "axios";
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps, LoginFormProps } from "../../App";
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
@@ -11,8 +10,8 @@ interface UserCredential {
   remember: boolean;
 }
 
-export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
-  const [errrorMessage, setErrorMessage] = React.useState('');
+export default function Login() {
+  const [errrorMessage, setErrorMessage] = React.useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,16 +22,18 @@ export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
       remember: e.currentTarget.rememberMe.checked,
     };
 
-    const { data } = await axios.post("http://localhost:5400/auth/signin", user);
-    if (data.status === parseInt('401')) {
+    const { data } = await axios.post(
+      "http://localhost:5400/auth/signin",
+      user
+    );
+    console.log("Hey Login");
+    if (data.status === parseInt("401")) {
       setErrorMessage(data.response);
       console.log(errrorMessage);
     } else {
-      localStorage.setItem('token', data.token);
-      props.loggedInCallback(true);
-      props.loginFormCallback(false);
+      localStorage.setItem("token", data.token);
     }
-  }
+  };
 
   return (
     <div className="background">

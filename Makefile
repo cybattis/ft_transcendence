@@ -108,16 +108,16 @@ CLEAN	=	docker rmi -f
 _clean:
 ifeq (client, $(filter client,$(MAKECMDGOALS)))
 	@echo 'removing client image'
-	$(CLEAN) $(CLIENT)
+	$(CLEAN) $(NAME)-$(CLIENT)
 else ifeq (api, $(filter api,$(MAKECMDGOALS)))
 	@echo 'removing api image'
-	$(CLEAN) $(API)
+	$(CLEAN) $(NAME)-$(API)
 else ifeq (db, $(filter db,$(MAKECMDGOALS)))
 	@echo 'removing postgres image'
 	$(CLEAN) $(POSTGRES)
 else
 	@echo 'removing all images'
-	$(CLEAN) $(CLIENT) $(API) postgres
+	$(CLEAN) $(NAME)-$(CLIENT) $(NAME)-$(API)
 endif
 
 .PHONY: _restart

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import Logo from "../Logo/Logo";
 import "./NavBar.css";
-import { Authed } from "../../App";
+import { AuthContext } from "../Auth/dto";
+import { useContext } from "react";
 
 function Unlogged() {
   return (
@@ -47,7 +48,7 @@ function Logged() {
   );
 }
 
-export default function LeftMenu(props: Authed) {
+export default function LeftMenu() {
   const leftMenu = {
     display: "flex",
     flex: "auto",
@@ -59,12 +60,14 @@ export default function LeftMenu(props: Authed) {
     alignItems: "center",
   };
 
+  const { authed } = useContext(AuthContext);
+
   return (
     <div style={leftMenu}>
       <Link to="/">
         <Logo />
       </Link>
-      <div style={links}>{!props.authed ? <Unlogged /> : <Logged />}</div>
+      <div style={links}>{!authed ? <Unlogged /> : <Logged />}</div>
     </div>
   );
 }
