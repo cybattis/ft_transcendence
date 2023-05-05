@@ -10,6 +10,8 @@ function GameMode(props: { name: string }) {
 
     alignItems: "center",
     justifyContent: "center",
+
+    margin: "10px",
   };
 
   return (
@@ -67,13 +69,14 @@ export function HomeLogged() {
 
   const leftSide = {
     display: "flex",
+    flex: "1",
     flexDirection: "column" as "column",
     alignItems: "center",
-    flex: "1.5 1 100px",
-    width: "100%",
 
     height: "95%",
+    maxWidth: "50%",
     gap: "20px",
+    backgroundColor: "cyan",
   };
 
   //TODO: fetch relevant user data
