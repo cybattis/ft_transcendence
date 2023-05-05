@@ -117,7 +117,7 @@ else ifeq (db, $(filter db,$(MAKECMDGOALS)))
 	$(CLEAN) $(POSTGRES)
 else
 	@echo 'removing all images'
-	$(CLEAN) $(CLIENT) $(API) postgres
+	$(CLEAN) $(NAME)-$(CLIENT) $(NAME)-$(API)
 endif
 
 .PHONY: _restart
