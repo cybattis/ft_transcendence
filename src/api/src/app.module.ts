@@ -8,21 +8,25 @@ import { User } from './auth/entity/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserIntra } from './auth/entity/userIntra.entity';
 import { AllUsers } from './user/entity/allUsers.entity';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
-  imports: [UserModule, AuthModule, 
+  imports: [
+    UserModule,
+    AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: 'postgres',
-    port: 5432,
-    username: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB,
-    entities: [AllUsers, User, UserIntra],
-    synchronize: true,
-    })],
+      type: 'postgres',
+      host: 'postgres',
+      port: 5432,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DB,
+      entities: [AllUsers, User, UserIntra],
+      synchronize: true,
+    }),
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatGateway],
 })
 export class AppModule {}

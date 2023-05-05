@@ -1,4 +1,6 @@
-import { KeyboardEvent, useCallback } from "react";
+import { ContextType, KeyboardEvent, useCallback, useState } from "react";
+import { useOutletContext } from "react-router-dom";
+import { useSend } from "../../App";
 
 function Tabs() {
   const tabs = {
@@ -18,14 +20,20 @@ function Tabs() {
   );
 }
 
-function MessageList() {
+function MessageList({ messages }: { messages: string[] }) {
   const chatBox = {
     display: "flex",
     flex: "auto",
     boxSizing: "border-box" as "border-box",
   };
 
-  return <div style={chatBox}></div>;
+  return (
+    <div>
+      {messages.map((message, index) => (
+        <div key={index}>{message}</div>
+      ))}
+    </div>
+  );
 }
 
 export function Chat() {
@@ -46,29 +54,40 @@ export function Chat() {
     outline: 0,
   };
 
-  const onInputKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
-        console.log("enter");
-      }
-      console.log(event);
-    },
-    []
-  );
+  const sendMessage = {
+    display: "flex",
+    flexDirection: "row" as "row",
+  };
+
+  // const onInputKeyDown = useCallback(
+  //   (event: KeyboardEvent<HTMLInputElement>) => {
+  //     if (event.key === "Enter") {
+  //       console.log("enter");
+  //     }
+  //     console.log(event);
+  //   },
+  //   []
+  // );
+
+  const { send, messages } = useSend();
+  const [value, setValue] = useState("");
 
   return (
     <div className="chat">
       <Tabs />
-      <MessageList />
-      <form>
+      <MessageList messages={messages} />
+      <div style={sendMessage}>
         <input
+          onChange={(e) => {
+            setValue(e.target.value);
+          }}
           style={inputStyle}
           type="text"
           placeholder="Type here..."
-          onKeyDown={onInputKeyDown}
-          name="msg"
+          value={value}
         />
-      </form>
+        <button onClick={() => send(value)}>Send</button>
+      </div>
     </div>
   );
 }
