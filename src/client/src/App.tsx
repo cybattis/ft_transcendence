@@ -23,11 +23,13 @@ export interface SetAuthed {
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
-  const [authed, setAuth] = useState(defaultAuthState.authed);
+  const [authToken, setAuthToken] = useState(defaultAuthState.authed);
 
   return (
     <div className="app">
-      <AuthContext.Provider value={{ authed, setAuth }}>
+      <AuthContext.Provider
+        value={{ authed: authToken, setAuthToken: setAuthToken }}
+      >
         <FormContext.Provider
           value={{ loginForm, setLoginForm, signupForm, setSignupForm }}
         >

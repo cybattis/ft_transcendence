@@ -33,12 +33,12 @@ function Unlogged() {
 }
 
 function Logged() {
-  const { setAuth } = useContext(AuthContext);
+  const { setAuthToken } = useContext(AuthContext);
   const naviguate = useNavigate();
 
   const handleDisconnect = () => {
     localStorage.removeItem("token");
-    setAuth(null);
+    setAuthToken(null);
     naviguate("/");
   };
 

@@ -7,7 +7,7 @@ export interface FormContextType {
   setSignupForm: (value: boolean) => void;
 }
 
-export const defaultFormState = {
+export const defaultFormState: FormContextType = {
   loginForm: false,
   setLoginForm: () => {},
   signupForm: false,
@@ -18,12 +18,12 @@ export const FormContext = createContext<FormContextType>(defaultFormState);
 
 export interface AuthContextType {
   authed: string | null;
-  setAuth: (value: string | null) => void;
+  setAuthToken: (value: string | null) => void;
 }
 
-export const defaultAuthState = {
+export const defaultAuthState: AuthContextType = {
   authed: localStorage.getItem("token"),
-  setAuth: () => {},
+  setAuthToken: () => {},
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultAuthState);
