@@ -7,15 +7,13 @@ import { AuthContext, FormContext } from "./dto";
 
 interface UserCredential {
   nickname: string;
-  firstname: string;
-  lastname: string;
   email: string;
   password: string;
 }
 
 export default function Signup() {
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { setSignupForm } = useContext(FormContext);
+  const { setSignupForm, setLoginForm } = useContext(FormContext);
   const { setAuthToken } = useContext(AuthContext);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -23,8 +21,6 @@ export default function Signup() {
 
     const user: UserCredential = {
       nickname: e.currentTarget.nickname.value,
-      firstname: e.currentTarget.firstname.value,
-      lastname: e.currentTarget.lastname.value,
       email: e.currentTarget.email.value,
       password: e.currentTarget.password.value,
     };
@@ -58,20 +54,6 @@ export default function Signup() {
         <div className="desc">Join the Fever</div>
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="nickname" />
-          <div className="halfInput">
-            <InputForm
-              type="text"
-              name="firstname"
-              label="First name"
-              half={true}
-            />
-            <InputForm
-              type="text"
-              name="lastname"
-              label="Last name"
-              half={true}
-            />
-          </div>
           <InputForm type="text" name="email" />
           <InputForm type="password" name="password" />
           <InputForm
@@ -93,9 +75,15 @@ export default function Signup() {
         </a>
         <div className="authFooter">
           <div>Already have an account?</div>
-          <a className="link" href="blank" target="_blank">
+          <button
+            className="link"
+            onClick={() => {
+              setSignupForm(false);
+              setLoginForm(true);
+            }}
+          >
             Sign in!
-          </a>
+          </button>
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ interface UserCredential {
 export default function Login() {
   const [errorMessage, setErrorMessage] = React.useState("");
   const { setAuthToken } = useContext(AuthContext);
-  const { setLoginForm } = useContext(FormContext);
+  const { setLoginForm, setSignupForm } = useContext(FormContext);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,9 +79,15 @@ export default function Login() {
         </a>
         <div className="authFooter">
           <div>New to PongFever?</div>
-          <a className="link" href="blank" target="_blank">
+          <button
+            className="link"
+            onClick={() => {
+              setSignupForm(true);
+              setLoginForm(false);
+            }}
+          >
             Sign up!
-          </a>
+          </button>
         </div>
       </div>
     </div>
