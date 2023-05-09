@@ -14,6 +14,6 @@ export class User {
   @Column({ type: 'boolean', select: false })
   IsIntra: boolean;
 
-  @Column({ type: 'varchar', length: 100, select: false })
+  @Column({ type: 'varchar', length: 100 })
   password: string;
 }
