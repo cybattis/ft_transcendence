@@ -2,26 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
-import { IntraUserDto } from './dto/auth.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UserIntra } from './entity/userIntra.entity';
-import { User } from './entity/user.entity';
+import { IntraUserDto, SigninDto, SignupDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '../user/entity/Users.entity';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserIntra)
-    private userIntraRepository: Repository<UserIntra>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private usersService: UserService,
   ) {}
-
-  getCode(code: string): string {
-    return code;
-  }
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
     const clientId =
@@ -57,23 +51,16 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(email: string, jwt: JwtService): Promise<any> {
-    const foundUser = await this.userIntraRepository.findOne({
-      where: { email: email },
-    });
-    if (foundUser) {
-      const payload = { email: email };
-      return {
-        token: await this.jwtService.signAsync(payload),
-      };
-    }
-    return new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED);
+  async intraSignin(email: string): Promise<any> {
+    const payload = { email: email };
+    return {
+      token: await this.jwtService.signAsync(payload),
+    };
   }
 
-  async signin(user: User, jwt: JwtService): Promise<any> {
-    const foundUser = await this.userRepository.findOne({
-      where: { email: user.email },
-    });
+  async signin(user: User): Promise<any> {
+    const foundUser = await this.usersService.findByEmail(user.email);
+
     if (foundUser) {
       const password = foundUser.password;
       if (await bcrypt.compare(user.password, password)) {
@@ -93,54 +80,27 @@ export class AuthService {
     );
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
-  }
-
-  async findUser(email: string, password: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email, password } });
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
-  }
-
-  async findIntraByEmail(email: string): Promise<UserIntra | null> {
-    return this.userIntraRepository.findOne({ where: { email } });
-  }
-
-  async createUser(body: CreateUserDto): Promise<User> {
+  async createUser(body: SignupDto): Promise<User> {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
     const user: User = new User();
 
     user.nickname = body.nickname;
-    user.firstname = body.firstname;
-    user.lastname = body.lastname;
     user.email = body.email;
     user.password = hash;
+    user.IsIntra = false;
 
     return this.userRepository.save(user);
   }
 
-  async findAllUserIntra(): Promise<UserIntra[]> {
-    return this.userIntraRepository.find();
-  }
+  async createUserIntra(body: SigninDto): Promise<User> {
+    const user: User = new User();
 
-  async findOneBy(login: string, email: string): Promise<UserIntra | null> {
-    return this.userIntraRepository.findOne({ where: { login, email } });
-  }
-
-  async createIntraUser(body: IntraUserDto): Promise<UserIntra> {
-    const user: UserIntra = new UserIntra();
-
-    user.login = body.login;
-    user.displayname = body.displayname;
-    const parts = body.displayname.split(' ');
-    user.firstname = parts[0];
-    user.lastname = parts[1];
+    user.nickname = body.nickname;
     user.email = body.email;
+    user.password = '';
+    user.IsIntra = true;
 
-    return this.userIntraRepository.save(user);
+    return this.userRepository.save(user);
   }
 }

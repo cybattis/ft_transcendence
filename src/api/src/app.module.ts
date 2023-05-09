@@ -4,10 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
-import { User } from './auth/entity/user.entity';
 import { AuthModule } from './auth/auth.module';
-import { UserIntra } from './auth/entity/userIntra.entity';
-import { AllUsers } from './user/entity/allUsers.entity';
+import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
@@ -22,7 +20,7 @@ import { ChatGateway } from './chat/chat.gateway';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [AllUsers, User, UserIntra],
+      entities: [User],
       synchronize: true,
     }),
   ],

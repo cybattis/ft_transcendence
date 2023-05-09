@@ -7,7 +7,9 @@ export default function RedirectionPage() {
 
   const location = useLocation();
   const token = location.search.substr(1);
-  localStorage.setItem("token", token);
+
+  if (token !== undefined) localStorage.setItem("token", token);
+  else console.log(token);
 
   useEffect(() => {
     setAuthToken(localStorage.getItem("token"));

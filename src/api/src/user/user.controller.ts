@@ -1,7 +1,6 @@
-import { Controller, Get, Inject, Param, Post, Body, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { UserService } from './user.service';
-import { AllUsers } from './entity/allUsers.entity';
-import { CreateAllUsersDto } from './dto/allUsers.dto';
+import { User } from './entity/Users.entity';
 
 @Controller('user')
 export class UserController {
@@ -9,7 +8,7 @@ export class UserController {
   private readonly userService: UserService;
 
   @Get()
-  async findAll(): Promise<AllUsers[]> {
-      return this.userService.findAll();
+  async findAll(): Promise<User[]> {
+    return this.userService.findAll();
   }
 }
