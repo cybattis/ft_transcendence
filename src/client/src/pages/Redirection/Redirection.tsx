@@ -3,15 +3,15 @@ import { useContext, useEffect } from "react";
 import { AuthContext } from "../../components/Auth/dto";
 
 export default function RedirectionPage() {
-  const { setAuth } = useContext(AuthContext);
+  const { setAuthToken } = useContext(AuthContext);
 
   const location = useLocation();
   const token = location.search.substr(1);
   localStorage.setItem("token", token);
 
   useEffect(() => {
-    setAuth(localStorage.getItem("token"));
-  }, [setAuth]);
+    setAuthToken(localStorage.getItem("token"));
+  }, [setAuthToken]);
 
   return <Navigate to="/" />;
 }

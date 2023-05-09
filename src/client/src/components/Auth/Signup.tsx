@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
 import axios from "axios";
 import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
 import "./Auth.css";
+import { AuthContext, FormContext } from "./dto";
 
 interface UserCredential {
   nickname: string;
@@ -13,7 +14,9 @@ interface UserCredential {
 }
 
 export default function Signup() {
-  const [errrorMessage, setErrorMessage] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const { setSignupForm } = useContext(FormContext);
+  const { setAuthToken } = useContext(AuthContext);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,27 +24,31 @@ export default function Signup() {
     const user: UserCredential = {
       nickname: e.currentTarget.nickname.value,
       firstname: e.currentTarget.firstname.value,
-      lastname: e.currentTarget.lastname.checked,
+      lastname: e.currentTarget.lastname.value,
       email: e.currentTarget.email.value,
       password: e.currentTarget.password.value,
     };
 
-    const { data } = await axios.post(
-      "http://localhost:5400/auth/signup",
-      user,
-      {
+    await axios
+      .post("http://localhost:5400/auth/signup", user, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-      }
-    );
-    if (data.status === parseInt("401")) {
-      setErrorMessage(data.response);
-      console.log(errrorMessage);
-    } else {
-      localStorage.setItem("token", data.token);
-    }
+      })
+      .then((res) => {
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        setAuthToken(data.token);
+        setSignupForm(false);
+      })
+      .catch((error) => {
+        if (error.response.status === 400) {
+          if (error.response.data.message.length > 1)
+            setErrorMessage(error.response.data.message[0]);
+          else setErrorMessage(error.response.data.message);
+        } else setErrorMessage("Server busy... try again");
+      });
   };
 
   return (
@@ -76,6 +83,7 @@ export default function Signup() {
             Signup
           </button>
         </form>
+        {errorMessage !== "" ? <div>{errorMessage}</div> : null}
         <a
           className="link42"
           href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"

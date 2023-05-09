@@ -18,7 +18,7 @@ type ContextType = { send: (value: string) => void; messages: string[] };
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
-  const [authed, setAuth] = useState(defaultAuthState.authed);
+  const [authToken, setAuthToken] = useState(defaultAuthState.authed);
 
   const [socket, setSocket] = useState<Socket>();
   const [messages, setMessages] = useState<String[]>([]);
@@ -33,21 +33,22 @@ function App() {
     setSocket(newSocket);
   }, [setSocket]);
 
-  const messageListener = (message: string) => {
-    setMessages([...messages, message]);
-    console.log("Listener: ", message);
-  };
-
   useEffect(() => {
+    const messageListener = (message: string) => {
+      setMessages([...messages, message]);
+      console.log("Listener: ", message);
+    };
     socket?.on("message", messageListener);
     return () => {
       socket?.off("message", messageListener);
     };
-  }, [messageListener]);
+  }, [messages, socket]);
 
   return (
     <div className="app">
-      <AuthContext.Provider value={{ authed, setAuth }}>
+      <AuthContext.Provider
+        value={{ authed: authToken, setAuthToken: setAuthToken }}
+      >
         <FormContext.Provider
           value={{ loginForm, setLoginForm, signupForm, setSignupForm }}
         >

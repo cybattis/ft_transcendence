@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import axios from "axios";
 import InputForm from "../InputForm";
 import Logo from "../Logo/Logo";
 import "./Auth.css";
+import { AuthContext, FormContext } from "./dto";
+import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   email: string;
@@ -11,7 +13,9 @@ interface UserCredential {
 }
 
 export default function Login() {
-  const [errrorMessage, setErrorMessage] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const { setAuthToken } = useContext(AuthContext);
+  const { setLoginForm } = useContext(FormContext);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,17 +26,20 @@ export default function Login() {
       remember: e.currentTarget.rememberMe.checked,
     };
 
-    const { data } = await axios.post(
-      "http://localhost:5400/auth/signin",
-      user
-    );
-    console.log("Hey Login");
-    if (data.status === parseInt("401")) {
-      setErrorMessage(data.response);
-      console.log(errrorMessage);
-    } else {
-      localStorage.setItem("token", data.token);
-    }
+    await axios
+      .post("http://localhost:5400/auth/signin", user)
+      .then((res) => {
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        setAuthToken(data.token);
+        setLoginForm(false);
+        return <Navigate to="/" />;
+      })
+      .catch((error) => {
+        if (error.response.status === 401) {
+          setErrorMessage(error.response.data.message);
+        } else setErrorMessage("Server busy... try again");
+      });
   };
 
   return (
@@ -44,6 +51,7 @@ export default function Login() {
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
+          {errorMessage !== "" ? <div>{errorMessage}</div> : null}
           <div className="formOption">
             <label>
               <input
