@@ -15,7 +15,6 @@ interface UserCredential {
 }
 
 export default function Signup() {
-
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
   const { setSignupForm } = useContext(FormContext);
@@ -200,6 +199,7 @@ export default function Signup() {
             Signup
           </button>
         </form>
+        {errorMessage !== "" ? <div>{errorMessage}</div> : null}
         <a
           className="link42"
           href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"

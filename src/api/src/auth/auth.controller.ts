@@ -1,4 +1,15 @@
-import { Controller, Get, Query, Res, Post, Inject, Body, Param, NotFoundException, HttpStatus } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -15,30 +26,34 @@ export class AuthController {
   private readonly usersService: UserService;
   private readonly jwtService: JwtService;
 
-  // getCode(@Query('code') code : string): string{
-  //   return code;
-  // }
   @Get('42')
   async redirectToAppSignup(@Query('code') code: string, @Res() res: Response) {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
       const emailInUse = await this.authService.findByEmail(dataUser.email);
-      if (emailInUse)
-        throw new NotFoundException('Email already in use');
-      const alreadyexist = await this.authService.findIntraByEmail(dataUser.email);
-      if (!alreadyexist)
-      {
-        var param = {
+
+      if (emailInUse) throw new NotFoundException('Email already in use');
+      const alreadyexist = await this.authService.findIntraByEmail(
+        dataUser.email,
+      );
+      if (!alreadyexist) {
+        const param = {
           username: dataUser.login,
           email: dataUser.email,
-        };    
+        };
         await this.usersService.createUsers(param);
         await this.authService.createIntraUser(dataUser);
-        const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
+        const token42 = await this.authService.intraSignin(
+          dataUser.email,
+          this.jwtService,
+        );
         return res.redirect('http://localhost:3000/loading?' + token42.token);
       }
-      const token42 = await this.authService.intraSignin(dataUser.email, this.jwtService);
+      const token42 = await this.authService.intraSignin(
+        dataUser.email,
+        this.jwtService,
+      );
       res.redirect('http://localhost:3000/loading?' + token42.token);
     } catch (err) {
       console.error(err);
@@ -54,12 +69,12 @@ export class AuthController {
 
   @Get()
   async findAllIntraUsers(): Promise<UserIntra[]> {
-      return this.authService.findAllUserIntra();
+    return this.authService.findAllUserIntra();
   }
-
+  
   @Get('user')
   async findAllUsers(): Promise<User[]> {
-      return this.authService.findAll();
+    return this.authService.findAll();
   }
 
   @Post('/signup')
@@ -68,30 +83,23 @@ export class AuthController {
       username: body.nickname,
       email: body.email,
     };
-    const user : User = new User();
+
+    const user: User = new User();
     user.email = body.email;
     user.password = body.password;
     const alreadyexist = await this.usersService.findByLogin(body.nickname);
-    if (!alreadyexist)
-    {
+    if (!alreadyexist) {
       const alreadyexist = await this.usersService.findByEmail(body.email);
-      if (!alreadyexist)
-      {
+      if (!alreadyexist) {
         await this.usersService.createUsers(param);
         await this.authService.createUser(body);
-        const token = await this.authService.signin(user, this.jwtService);
-        return res.status(HttpStatus.OK).json(token);
-      }
-      else
-        throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
-    }
-    else
-      throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
+        return await this.authService.signin(user, this.jwtService);
+      } else throw new NotFoundException('User already exist!'); //Changer l erreur maais veut dire que login deja pris
+    } else throw new NotFoundException('User already exist!'); // Changer l erreur mais veut dire que email deja pris
   }
 
-  @Post('/signin')
-    async SignIn(@Res() response: Response, @Body() user: User) {
-        const token = await this.authService.signin(user, this.jwtService);
-        return response.status(HttpStatus.OK).json(token)
-    }
+  @Post('signin')
+  async SignIn(@Body() user: User) {
+    return await this.authService.signin(user, this.jwtService);
+  }
 }

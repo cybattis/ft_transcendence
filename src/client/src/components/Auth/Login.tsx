@@ -6,6 +6,8 @@ import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import "./Auth.css";
+import { AuthContext, FormContext } from "./dto";
+import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   email: string;
@@ -89,6 +91,7 @@ export default function Login() {
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
+          {errorMessage !== "" ? <div>{errorMessage}</div> : null}
           <div className="formOption">
             <label>
               <input
