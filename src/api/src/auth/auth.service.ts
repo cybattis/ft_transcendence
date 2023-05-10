@@ -1,33 +1,31 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
 import { IntraUserDto } from './dto/auth.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '../auth/dto/create-user.dto';
 import { UserIntra } from './entity/userIntra.entity';
-import { User } from './entity/user.entity';
+import { User } from '../auth/entity/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(
+  constructor(  
     @InjectRepository(UserIntra)
     private userIntraRepository: Repository<UserIntra>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private jwtService: JwtService,
-  ) {}
+    private jwtService: JwtService
+    ) {}
 
-  getCode(code: string): string {
+  getCode(code :string): string{
     return code;
   }
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
-    const clientId =
-      'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
-    const clientSecret =
-      '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';
+    const clientId = 'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
+    const clientSecret = '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
@@ -43,70 +41,76 @@ export class AuthService {
       body,
     });
 
-    return await response.json();
+    const data: IntraTokenDto = await response.json();
+    return data;
+  }
+
+  async checkToken(token: string) {
+    const user = this.jwtService.decode(token);
+    if (user)
+    {
+      if (user as {[key: string] : any}) {
+        const dic = user as {[key: string] : any}
+        if (dic["exp"] > (new Date().getTime() / 1000))
+          return HttpStatus.OK;
+        else
+          return new UnauthorizedException('Token iInvalid');
+      }
+     
+    }
+    else
+      return new UnauthorizedException('Token iInvalid');
   }
 
   async infoUser(token: IntraTokenDto): Promise<IntraUserDto> {
     const meUrl = 'https://api.intra.42.fr/v2/me';
     const response = await fetch(meUrl, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token.access_token}`,
-      },
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token.access_token}`,
+        },
     });
-    return await response.json();
+    const data : IntraUserDto = await response.json();
+
+    return data;
   }
 
   async intraSignin(email: string, jwt: JwtService): Promise<any> {
-    const foundUser = await this.userIntraRepository.findOne({
-      where: { email: email },
-    });
+    const foundUser = await this.userIntraRepository.findOne({where: {email: email}});
     if (foundUser) {
-      const payload = { email: email };
-      return {
-        token: await this.jwtService.signAsync(payload),
-      };
-    }
-    return new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED);
+          const payload = { email: email };
+          return {
+              token: await this.jwtService.signAsync(payload),
+          };
+      }
+    throw new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED)
   }
 
   async signin(user: User, jwt: JwtService): Promise<any> {
-    const foundUser = await this.userRepository.findOne({
-      where: { email: user.email },
-    });
+    const foundUser = await this.userRepository.findOne({where: {email: user.email}});
     if (foundUser) {
-      const password = foundUser.password;
-      if (await bcrypt.compare(user.password, password)) {
-        const payload = { email: user.email };
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
-      }
-      throw new HttpException(
-        'Incorrect username or password',
-        HttpStatus.UNAUTHORIZED,
-      );
+        const password = foundUser.password;
+        if (await bcrypt.compare(user.password, password)) {
+            const payload = { email: user.email };
+            return {
+                token: await this.jwtService.signAsync(payload),
+            };
+        }
+        throw new HttpException('Incorrect email or password', HttpStatus.UNAUTHORIZED)
     }
-    throw new HttpException(
-      'Incorrect username or password',
-      HttpStatus.UNAUTHORIZED,
-    );
-  }
+    throw new HttpException('Incorrect email or password', HttpStatus.UNAUTHORIZED)
+}
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
 
-  async findUser(email: string, password: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email, password } });
-  }
-
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
+    return this.userRepository.findOne({where: {email}});
   }
 
   async findIntraByEmail(email: string): Promise<UserIntra | null> {
-    return this.userIntraRepository.findOne({ where: { email } });
+    return this.userIntraRepository.findOne({where: {email}});
   }
 
   async createUser(body: CreateUserDto): Promise<User> {
@@ -127,16 +131,12 @@ export class AuthService {
     return this.userIntraRepository.find();
   }
 
-  async findOneBy(login: string, email: string): Promise<UserIntra | null> {
-    return this.userIntraRepository.findOne({ where: { login, email } });
-  }
-
   async createIntraUser(body: IntraUserDto): Promise<UserIntra> {
     const user: UserIntra = new UserIntra();
 
     user.login = body.login;
     user.displayname = body.displayname;
-    const parts = body.displayname.split(' ');
+    const parts = body.displayname.split(" ");
     user.firstname = parts[0];
     user.lastname = parts[1];
     user.email = body.email;
@@ -144,3 +144,4 @@ export class AuthService {
     return this.userIntraRepository.save(user);
   }
 }
+

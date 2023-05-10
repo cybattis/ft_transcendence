@@ -24,7 +24,7 @@ export class AuthController {
   private readonly authService: AuthService;
   @Inject(UserService)
   private readonly usersService: UserService;
-  private jwtService: JwtService;
+  private readonly jwtService: JwtService;
 
   @Get('42')
   async redirectToAppSignup(@Query('code') code: string, @Res() res: Response) {
@@ -62,24 +62,16 @@ export class AuthController {
     }
   }
 
+  @Get('validation/:token')
+    async checkTokenValidity(@Param('token') token: string) {
+      return this.authService.checkToken(token);
+    }
+
   @Get()
   async findAllIntraUsers(): Promise<UserIntra[]> {
     return this.authService.findAllUserIntra();
   }
-
-  @Get(':email/:password')
-  async findUser(
-    @Param('email') email: string,
-    @Param('password') password: string,
-  ): Promise<User | null> {
-    const user = await this.authService.findUser(email, password);
-    if (!user) {
-      throw new NotFoundException('User does not exist!');
-    } else {
-      return user;
-    }
-  }
-
+  
   @Get('user')
   async findAllUsers(): Promise<User[]> {
     return this.authService.findAll();
