@@ -65,13 +65,18 @@ export default function Login() {
     await axios
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
-        setLoginForm(false);
-        return <Navigate to="/" />;
+        if (res.data.status === parseInt('401')) {
+          setErrorMessage(res.data.response);
+        } else {
+          const data = res.data;
+          localStorage.setItem("token", data.token);
+          setAuthToken(data.token);
+          setLoginForm(false);
+          return <Navigate to="/" />;
+        }
       })
       .catch((error) => {
+        console.log(error);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
@@ -89,7 +94,6 @@ export default function Login() {
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
-          {errorMessage !== "" ? <div>{errorMessage}</div> : null}
           <div className="formOption">
             <label>
               <input

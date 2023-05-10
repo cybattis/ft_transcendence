@@ -1,4 +1,3 @@
-//import { useOutletContext } from "react-router-dom";
 import React from "react";
 import { HomeLogged } from "./HomeLogged";
 import { AIOnlyPong } from "../../game/components/AIOnlyPong";
@@ -17,7 +16,6 @@ async function CheckToken(token: string | null) {
 
 export default function Home() {
   const { authed } = useContext(AuthContext);
-  //const contextData = useOutletContext();
   CheckToken(localStorage.getItem('token'));
 
   return (

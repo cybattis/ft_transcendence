@@ -77,9 +77,9 @@ export class AuthController {
     return this.authService.findAll();
   }
 
-  @Post('/signup')
-  async createUser(@Body() body: CreateUserDto, @Res() res: Response): Promise<string | any> {
-    var param = {
+  @Post('signup')
+  async createUser(@Body() body: CreateUserDto): Promise<string | any> {
+    const param = {
       username: body.nickname,
       email: body.email,
     };

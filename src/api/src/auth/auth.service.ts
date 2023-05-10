@@ -83,7 +83,7 @@ export class AuthService {
               token: await this.jwtService.signAsync(payload),
           };
       }
-    return new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED)
+    throw new HttpException('User doesnt exist', HttpStatus.UNAUTHORIZED)
   }
 
   async signin(user: User, jwt: JwtService): Promise<any> {
@@ -96,9 +96,9 @@ export class AuthService {
                 token: await this.jwtService.signAsync(payload),
             };
         }
-        return new HttpException('Incorrect username or password', HttpStatus.UNAUTHORIZED)
+        throw new HttpException('Incorrect email or password', HttpStatus.UNAUTHORIZED)
     }
-    return new HttpException('Incorrect username or password', HttpStatus.UNAUTHORIZED)
+    throw new HttpException('Incorrect email or password', HttpStatus.UNAUTHORIZED)
 }
 
   async findAll(): Promise<User[]> {
