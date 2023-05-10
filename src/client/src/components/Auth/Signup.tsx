@@ -1,12 +1,10 @@
-import React from "react";
-import { Navigate } from 'react-router-dom';
+import React, { useContext } from "react";
 import axios from 'axios';
 import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps, SignupFormProps } from "../../App";
 import "./Auth.css";
 import validator from 'validator';
-
+import { AuthContext, FormContext } from "./dto";
 
 interface UserCredential {
   nickname: string;
@@ -16,10 +14,12 @@ interface UserCredential {
   password: string;
 }
 
-export default function Signup(props: LoggedInProps & SignupFormProps & Authed) {
+export default function Signup() {
 
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const { setSignupForm } = useContext(FormContext);
+  const { setAuth } = useContext(AuthContext);
   const inputs = {
     nickname: '',
     firstname: '',
@@ -123,23 +123,43 @@ export default function Signup(props: LoggedInProps & SignupFormProps & Authed) 
       password: inputs.password,
     };
 
-    const { data } = await axios.post('http://localhost:5400/auth/signup', user,
-    {
-      headers: {
-      'Content-Type': 'application/json',
-      "Access-Control-Allow-Origin": "*",
+    /*const { data } = await axios.post(
+      "http://localhost:5400/auth/signup",
+      user,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
       }
-    });
-    if (data.status === parseInt('401')) {
+    );
+    if (data.status === parseInt("401")) {
       setErrorMessage(data.response);
       console.log(errorMessage);
     } else {
-      localStorage.setItem('token', data.token);
-      props.loggedInCallback(true);
-      props.signupFormCallback(false);
-      return <Navigate to="/" />;
-    }
-  }
+      localStorage.setItem("token", data.token);
+    }*/
+    await axios
+      .post("http://localhost:5400/auth/signup", user, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
+      .then((res) => {
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        setAuth(data.token);
+        setSignupForm(false);
+      })
+      .catch((error) => {
+        if (error.response.status === 400) {
+          if (error.response.data.message.length > 1)
+            setErrorMessage(error.response.data.message[0]);
+          else setErrorMessage(error.response.data.message);
+        } else setErrorMessage("Server busy... try again");
+      });
+  };
 
   return (
     <div className="background">
@@ -147,6 +167,7 @@ export default function Signup(props: LoggedInProps & SignupFormProps & Authed) 
         <Logo />
         <div className="desc">Join the Fever</div>
         {errorInput && <p className="error"> {errorInput} </p>}
+        {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit} >
           <InputForm type="text" name="nickname" />
           <div className="halfInput">

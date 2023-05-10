@@ -1,12 +1,14 @@
 //import { useOutletContext } from "react-router-dom";
 import React from "react";
 import { HomeLogged } from "./HomeLogged";
+import { AIOnlyPong } from "../../game/components/AIOnlyPong";
+import { AuthContext } from "../../components/Auth/dto";
+import { useContext } from "react";
 import axios from 'axios';
 
 async function CheckToken(token: string | null) {
   if (token === null)
     return ;
-
   const { data } =  await axios.get('http://localhost:5400/auth/validation/' + token);
   if (data.status === parseInt('401')) {
     localStorage.removeItem('token');
@@ -14,14 +16,12 @@ async function CheckToken(token: string | null) {
 }
 
 export default function Home() {
+  const { authed } = useContext(AuthContext);
   //const contextData = useOutletContext();
   CheckToken(localStorage.getItem('token'));
-  const token = localStorage.getItem('token');
 
   return (
-    <div className="full">
-      {token === null ? <HomeUnlogged /> : <HomeLogged />}
-    </div>
+    <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>
   );
 }
 
@@ -49,7 +49,6 @@ function HomeUnlogged() {
     width: "50vw",
     height: "56.25vh",
 
-    background: "dimgrey",
     boxShadow: "inset 0 0 16px 22px rgba(0, 0, 0, 0.15)",
     borderRadius: "8px",
 
@@ -62,7 +61,15 @@ function HomeUnlogged() {
       <h4 style={title}>
         Come play to the new and fun multiplayer pong game !
       </h4>
-      <div style={game}></div>
+      <div style={game}>
+        <AIOnlyPong
+          name={"Home game"}
+          width={954}
+          height={537}
+          leftDifficulty={"Medium"}
+          rightDifficulty={"Hard"}
+        />
+      </div>
     </div>
   );
 }

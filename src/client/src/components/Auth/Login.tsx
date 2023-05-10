@@ -1,9 +1,10 @@
-import React, { FormEvent } from "react";
-import axios from 'axios';
+import React, { useContext } from "react";
+import axios from "axios";
 import InputForm from "../InputForm";
-import { Authed, LoggedInProps, LoginFormProps } from "../../App";
 import validator from 'validator';
 import Logo from "../Logo/Logo";
+import { AuthContext, FormContext } from "./dto";
+import { Navigate } from "react-router-dom";
 import "./Auth.css";
 
 interface UserCredential {
@@ -12,9 +13,11 @@ interface UserCredential {
   remember: boolean;
 }
 
-export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
+export default function Login() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const { setAuth } = useContext(AuthContext);
+  const { setLoginForm } = useContext(FormContext);
   const inputs = {
     email: '',
     password: '',
@@ -59,16 +62,21 @@ export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
       remember: inputs.remember,
     };
 
-    const { data } = await axios.post("http://localhost:5400/auth/signin", user);
-    if (data.status === parseInt('401')) {
-      setErrorMessage(data.response);
-      console.log(errorMessage);
-    } else {
-      localStorage.setItem('token', data.token);
-      props.loggedInCallback(true);
-      props.loginFormCallback(false);
-    }
-  }
+    await axios
+      .post("http://localhost:5400/auth/signin", user)
+      .then((res) => {
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        setAuth(data.token);
+        setLoginForm(false);
+        return <Navigate to="/" />;
+      })
+      .catch((error) => {
+        if (error.response.status === 401) {
+          setErrorMessage(error.response.data.message);
+        } else setErrorMessage("Server busy... try again");
+      });
+  };
 
   return (
     <div className="background">
@@ -76,6 +84,7 @@ export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
         <Logo />
         <div className="desc">Sign in to your account</div>
         {errorInput && <p className="error"> {errorInput} </p>}
+        {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="email" />
           <br />
