@@ -1,9 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Inject,
-  NotFoundException,
   Param,
   Post,
   Query,
@@ -22,18 +22,24 @@ export class AuthController {
   private readonly usersService: UserService;
 
   @Get('42')
-  async redirectToAppSignup(@Query('code') code: string, @Res() res: Response) {
+  async redirectToAppSignup(
+    @Query('code') code: string,
+    @Res() res: Response,
+  ): Promise<string | any> {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
-      const emailInUse = await this.usersService.findByEmail(dataUser.email);
+      const user = await this.usersService.findByEmail(dataUser.email);
 
-      if (!emailInUse) {
+      if (!user) {
         await this.authService.createUserIntra(dataUser);
       }
 
-      const token42 = await this.authService.intraSignin(dataUser.email);
-      res.redirect('http://localhost:3000/loading?' + token42.token);
+      if (user?.IsIntra) {
+        const token42 = await this.authService.intraSignin(dataUser.email);
+        res.redirect('http://localhost:3000/loading?' + token42.token);
+      }
+      res.redirect('http://localhost:3000/'); // TODO send data to display popup error
     } catch (err) {
       console.error(err);
       res.redirect('http://localhost:3000/');
@@ -57,9 +63,9 @@ export class AuthController {
         await this.authService.createUser(body);
         return await this.authService.signin(body.email, body.password);
       }
-      throw new NotFoundException('Email is already taken!');
+      throw new BadRequestException('Email is already taken!');
     }
-    throw new NotFoundException('Nickname is already taken!');
+    throw new BadRequestException('Nickname is already taken!');
   }
 
   @Post('signin')
