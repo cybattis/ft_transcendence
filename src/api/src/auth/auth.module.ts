@@ -13,7 +13,7 @@ import { secret } from '../utils/constant';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret,
-      signOptions: { expiresIn: '2h' },
+      signOptions: { expiresIn: '30s' },
     }),
   ],
   controllers: [AuthController, UserController],

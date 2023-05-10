@@ -1,8 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
-import { IntraUserDto, SigninDto, SignupDto } from './dto/auth.dto';
+import { IntraSignupDto, SignupDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
@@ -40,7 +45,18 @@ export class AuthService {
     return await response.json();
   }
 
-  async infoUser(token: IntraTokenDto): Promise<IntraUserDto> {
+  async checkToken(token: string) {
+    const user = this.jwtService.decode(token);
+    if (user) {
+      if (user as { [key: string]: any }) {
+        const dic = user as { [key: string]: any };
+        if (dic['exp'] > new Date().getTime() / 1000) return HttpStatus.OK;
+        else return new UnauthorizedException('Token iInvalid');
+      }
+    } else return new UnauthorizedException('Token invalid');
+  }
+
+  async infoUser(token: IntraTokenDto): Promise<IntraSignupDto> {
     const meUrl = 'https://api.intra.42.fr/v2/me';
     const response = await fetch(meUrl, {
       method: 'GET',
@@ -58,24 +74,23 @@ export class AuthService {
     };
   }
 
-  async signin(user: User): Promise<any> {
-    const foundUser = await this.usersService.findByEmail(user.email);
+  async signin(email: string, password: string): Promise<any> {
+    const foundUser = await this.usersService.findByEmail(email);
 
     if (foundUser && !foundUser.IsIntra) {
-      const password = foundUser.password;
-      if (await bcrypt.compare(user.password, password)) {
-        const payload = { email: user.email };
+      if (await bcrypt.compare(password, foundUser.password)) {
+        const payload = { email: email };
         return {
           token: await this.jwtService.signAsync(payload),
         };
       }
       throw new HttpException(
-        'Incorrect username or password',
+        'Incorrect email or password',
         HttpStatus.UNAUTHORIZED,
       );
     }
     throw new HttpException(
-      'Incorrect username or password',
+      'Incorrect email or password',
       HttpStatus.UNAUTHORIZED,
     );
   }
@@ -86,6 +101,8 @@ export class AuthService {
     const user: User = new User();
 
     user.nickname = body.nickname;
+    user.firstname = body.firstname;
+    user.lastname = body.lastname;
     user.email = body.email;
     user.password = hash;
     user.IsIntra = false;
@@ -93,10 +110,15 @@ export class AuthService {
     return this.userRepository.save(user);
   }
 
-  async createUserIntra(body: SigninDto): Promise<User> {
+  async createUserIntra(body: IntraSignupDto): Promise<User> {
     const user: User = new User();
 
-    user.nickname = body.nickname;
+    user.nickname = body.login;
+
+    const parts = body.displayname.split(' ');
+    user.firstname = parts[0];
+    user.lastname = parts[1];
+
     user.email = body.email;
     user.IsIntra = true;
 

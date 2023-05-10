@@ -1,10 +1,11 @@
 import React, { useContext } from "react";
 import axios from "axios";
 import InputForm from "../InputForm";
+import validator from 'validator';
 import Logo from "../Logo/Logo";
-import "./Auth.css";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
+import "./Auth.css";
 
 interface UserCredential {
   email: string;
@@ -13,29 +14,69 @@ interface UserCredential {
 }
 
 export default function Login() {
-  const [errorMessage, setErrorMessage] = React.useState("");
+  const [errorInput, setErrorInput] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
   const { setAuthToken } = useContext(AuthContext);
   const { setLoginForm, setSignupForm } = useContext(FormContext);
+  const inputs = {
+    email: '',
+    password: '',
+    remember: false
+  };
+
+  const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    inputs.email = e.currentTarget.email.value;
+    inputs.password = e.currentTarget.password.value;
+    inputs.remember = e.currentTarget.rememberMe.checked;
+  }
+
+  const validateInput = async () => {
+    let isValid = true;
+      if (!inputs.email) {
+        setErrorInput("Please enter an Email.");
+        isValid = false;
+      }
+      else if (!validator.isEmail(inputs.email)) {
+        setErrorInput("Please enter a valid Email.");
+        isValid = false;
+      }
+      else if (!inputs.password) {
+        setErrorInput("Please enter a Password.");
+        isValid = false;
+      }
+    return isValid;
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    await changeInputs(e);
+    if (! await validateInput())
+      return ;
+
     const user: UserCredential = {
-      email: e.currentTarget.email.value,
-      password: e.currentTarget.password.value,
-      remember: e.currentTarget.rememberMe.checked,
+      email: inputs.email,
+      password: inputs.password,
+      remember: inputs.remember,
     };
 
     await axios
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
-        setLoginForm(false);
-        return <Navigate to="/" />;
+        if (res.data.status === parseInt('401')) {
+          setErrorMessage(res.data.response);
+        } else {
+          const data = res.data;
+          localStorage.setItem("token", data.token);
+          setAuthToken(data.token);
+          setLoginForm(false);
+          return <Navigate to="/" />;
+        }
       })
       .catch((error) => {
+        console.log(error);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
@@ -47,11 +88,12 @@ export default function Login() {
       <div className="authForm">
         <Logo />
         <div className="desc">Sign in to your account</div>
+        {errorInput && <p className="error"> {errorInput} </p>}
+        {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
-          {errorMessage !== "" ? <div>{errorMessage}</div> : null}
           <div className="formOption">
             <label>
               <input

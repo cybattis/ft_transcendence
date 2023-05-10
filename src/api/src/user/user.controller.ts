@@ -1,4 +1,4 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 
@@ -10,5 +10,15 @@ export class UserController {
   @Get()
   async findAll(): Promise<User[]> {
     return this.userService.findAll();
+  }
+
+  @Get('check/login/:input')
+  async checkNicknameInUse(@Param('input') input: string) {
+    return this.userService.findByLogin(input);
+  }
+
+  @Get('check/email/:input')
+  async checkEmailInUse(@Param('input') input: string) {
+    return this.userService.findByEmail(input);
   }
 }

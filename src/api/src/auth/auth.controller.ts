@@ -12,8 +12,7 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SigninDto, SignupDto } from './dto/auth.dto';
-import { User } from '../user/entity/Users.entity';
+import { SignupDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,17 +29,10 @@ export class AuthController {
       const emailInUse = await this.usersService.findByEmail(dataUser.email);
 
       if (!emailInUse) {
-        const param: SigninDto = {
-          nickname: dataUser.login,
-          email: dataUser.email,
-          IsIntra: true,
-        };
-
-        await this.authService.createUserIntra(param);
+        await this.authService.createUserIntra(dataUser);
       }
 
       const token42 = await this.authService.intraSignin(dataUser.email);
-      console.log(token42.token);
       res.redirect('http://localhost:3000/loading?' + token42.token);
     } catch (err) {
       console.error(err);
@@ -49,26 +41,13 @@ export class AuthController {
     }
   }
 
-  // TODO: maybe remove this
-  @Get(':email/:password')
-  async findUser(
-    @Param('email') email: string,
-    @Param('password') password: string,
-  ): Promise<User | null> {
-    const user = await this.usersService.findUser(email, password);
-    if (!user) {
-      throw new NotFoundException('User does not exist!');
-    }
-    return user;
+  @Get('validation/:token')
+  async checkTokenValidity(@Param('token') token: string) {
+    return this.authService.checkToken(token);
   }
 
   @Post('signup')
   async signUp(@Body() body: SignupDto): Promise<string | any> {
-    const user: User = new User();
-    user.nickname = body.nickname;
-    user.email = body.email;
-    user.password = body.password;
-
     const niknameExist = await this.usersService.findByLogin(body.nickname);
 
     if (!niknameExist) {
@@ -76,15 +55,15 @@ export class AuthController {
 
       if (!emailExist) {
         await this.authService.createUser(body);
-        return await this.authService.signin(user);
+        return await this.authService.signin(body.email, body.password);
       }
-      throw new NotFoundException('User already exist!');
+      throw new NotFoundException('Email is already taken!');
     }
     throw new NotFoundException('Nickname is already taken!');
   }
 
   @Post('signin')
-  async signIn(@Body() user: User) {
-    return await this.authService.signin(user);
+  async signIn(@Body() email: string, password: string) {
+    return await this.authService.signin(email, password);
   }
 }

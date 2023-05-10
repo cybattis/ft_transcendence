@@ -2,11 +2,12 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
+  IsStrongPassword,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
-export class IntraUserDto {
+export class IntraSignupDto {
   @IsNotEmpty()
   @IsString()
   login: string;
@@ -14,6 +15,10 @@ export class IntraUserDto {
   image: {
     link: string;
   };
+
+  @IsNotEmpty()
+  @IsString()
+  displayname: string;
 
   @IsEmail()
   email: string;
@@ -30,15 +35,13 @@ export class SignupDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
-  @MaxLength(32)
-  // @IsStrongPassword()
-  password: string;
-}
+  firstname: string;
 
-export interface SigninDto {
-  nickname: string;
-  email: string;
-  IsIntra: boolean;
+  @IsString()
+  lastname: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsStrongPassword()
+  password: string;
 }
