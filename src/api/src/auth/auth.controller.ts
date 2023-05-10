@@ -39,10 +39,12 @@ export class AuthController {
         const token42 = await this.authService.intraSignin(dataUser.email);
         res.redirect('http://localhost:3000/loading?' + token42.token);
       }
-      res.redirect('http://localhost:3000/'); // TODO send data to display popup error
+
+      throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
-      res.redirect('http://localhost:3000/'); // TODO send error to display popup error
+      // TODO: send error to display popup error in client after redirection
+      res.redirect('http://localhost:3000/');
     }
   }
 
