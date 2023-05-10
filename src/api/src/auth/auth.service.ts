@@ -61,7 +61,7 @@ export class AuthService {
   async signin(user: User): Promise<any> {
     const foundUser = await this.usersService.findByEmail(user.email);
 
-    if (foundUser) {
+    if (foundUser && !foundUser.IsIntra) {
       const password = foundUser.password;
       if (await bcrypt.compare(user.password, password)) {
         const payload = { email: user.email };
@@ -98,7 +98,6 @@ export class AuthService {
 
     user.nickname = body.nickname;
     user.email = body.email;
-    user.password = '';
     user.IsIntra = true;
 
     return this.userRepository.save(user);
