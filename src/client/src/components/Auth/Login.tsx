@@ -6,8 +6,6 @@ import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import "./Auth.css";
-import { AuthContext, FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   email: string;
@@ -18,7 +16,7 @@ interface UserCredential {
 export default function Login() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
-  const { setAuth } = useContext(AuthContext);
+  const { setAuthToken } = useContext(AuthContext);
   const { setLoginForm } = useContext(FormContext);
   const inputs = {
     email: '',
@@ -69,7 +67,7 @@ export default function Login() {
       .then((res) => {
         const data = res.data;
         localStorage.setItem("token", data.token);
-        setAuth(data.token);
+        setAuthToken(data.token);
         setLoginForm(false);
         return <Navigate to="/" />;
       })

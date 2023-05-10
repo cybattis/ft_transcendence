@@ -18,7 +18,7 @@ export default function Signup() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
   const { setSignupForm } = useContext(FormContext);
-  const { setAuth } = useContext(AuthContext);
+  const { setAuthToken } = useContext(AuthContext);
   const inputs = {
     nickname: '',
     firstname: '',
@@ -148,7 +148,7 @@ export default function Signup() {
       .then((res) => {
         const data = res.data;
         localStorage.setItem("token", data.token);
-        setAuth(data.token);
+        setAuthToken(data.token);
         setSignupForm(false);
       })
       .catch((error) => {
