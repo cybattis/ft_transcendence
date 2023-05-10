@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
@@ -45,6 +45,23 @@ export class AuthService {
     return data;
   }
 
+  async checkToken(token: string) {
+    const user = this.jwtService.decode(token);
+    if (user)
+    {
+      if (user as {[key: string] : any}) {
+        const dic = user as {[key: string] : any}
+        if (dic["exp"] > (new Date().getTime() / 1000))
+          return HttpStatus.OK;
+        else
+          return new UnauthorizedException('Token iInvalid');
+      }
+     
+    }
+    else
+      return new UnauthorizedException('Token iInvalid');
+  }
+
   async infoUser(token: IntraTokenDto): Promise<IntraUserDto> {
     const meUrl = 'https://api.intra.42.fr/v2/me';
     const response = await fetch(meUrl, {
@@ -88,10 +105,6 @@ export class AuthService {
     return this.userRepository.find();
   }
 
-  async findUser(email: string, password: string): Promise<User | null> {
-    return this.userRepository.findOne({where: {email, password}});
-  }
-
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({where: {email}});
   }
@@ -116,10 +129,6 @@ export class AuthService {
 
   async findAllUserIntra(): Promise<UserIntra[]> {
     return this.userIntraRepository.find();
-  }
-
-  async findOneBy(login: string, email: string): Promise<UserIntra | null> {
-    return this.userIntraRepository.findOne({where: {login, email}});
   }
 
   async createIntraUser(body: IntraUserDto): Promise<UserIntra> {

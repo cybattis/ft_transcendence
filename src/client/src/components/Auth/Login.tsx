@@ -2,6 +2,7 @@ import React, { FormEvent } from "react";
 import axios from 'axios';
 import InputForm from "../InputForm";
 import { Authed, LoggedInProps, LoginFormProps } from "../../App";
+import validator from 'validator';
 import Logo from "../Logo/Logo";
 import "./Auth.css";
 
@@ -12,21 +13,56 @@ interface UserCredential {
 }
 
 export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
-  const [errrorMessage, setErrorMessage] = React.useState('');
+  const [errorInput, setErrorInput] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const inputs = {
+    email: '',
+    password: '',
+    remember: false
+  };
+
+  const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  
+    inputs.email = e.currentTarget.email.value;
+    inputs.password = e.currentTarget.password.value;
+    inputs.remember = e.currentTarget.rememberMe.checked;
+  }
+
+  const validateInput = async () => {
+    let isValid = true;
+      if (!inputs.email) {
+        setErrorInput("Please enter an Email.");
+        isValid = false;
+      }
+      else if (!validator.isEmail(inputs.email)) {
+        setErrorInput("Please enter a valid Email.");
+        isValid = false;
+      }
+      else if (!inputs.password) {
+        setErrorInput("Please enter a Password.");
+        isValid = false;
+      }
+    return isValid;
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    await changeInputs(e);
+    if (! await validateInput())
+      return ;
+
     const user: UserCredential = {
-      email: e.currentTarget.email.value,
-      password: e.currentTarget.password.value,
-      remember: e.currentTarget.rememberMe.checked,
+      email: inputs.email,
+      password: inputs.password,
+      remember: inputs.remember,
     };
 
     const { data } = await axios.post("http://localhost:5400/auth/signin", user);
     if (data.status === parseInt('401')) {
       setErrorMessage(data.response);
-      console.log(errrorMessage);
+      console.log(errorMessage);
     } else {
       localStorage.setItem('token', data.token);
       props.loggedInCallback(true);
@@ -39,6 +75,7 @@ export default function Login(props: LoggedInProps & LoginFormProps & Authed) {
       <div className="authForm">
         <Logo />
         <div className="desc">Sign in to your account</div>
+        {errorInput && <p className="error"> {errorInput} </p>}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="email" />
           <br />

@@ -14,7 +14,7 @@ import { secret } from '../utils/constant';
     imports: [TypeOrmModule.forFeature([AllUsers, User, UserIntra]),
     JwtModule.register({
         secret,
-        signOptions: { expiresIn: '2h' },
+        signOptions: { expiresIn: '30s' },
       }),],
     controllers: [AuthController, UserController],
     providers: [AuthService, UserService],

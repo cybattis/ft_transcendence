@@ -12,4 +12,14 @@ export class UserController {
   async findAll(): Promise<AllUsers[]> {
       return this.userService.findAll();
   }
+
+  @Get('check/login/:input')
+    async checkNicknameInUse(@Param('input') input: string) {
+      return this.userService.findByLogin(input);
+    }
+
+  @Get('check/email/:input')
+    async checkEmailInUse(@Param('input') input: string) {
+      return this.userService.findByEmail(input);
+    }
 }

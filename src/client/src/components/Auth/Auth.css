@@ -132,3 +132,7 @@
 .authFooter > .link {
     color: var(--cyan);
 }
+
+.error {
+    color: red;
+}
