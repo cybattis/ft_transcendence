@@ -29,21 +29,20 @@ export class AuthController {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
-      const user = await this.usersService.findByEmail(dataUser.email);
+      let user = await this.usersService.findByEmail(dataUser.email);
 
       if (!user) {
-        await this.authService.createUserIntra(dataUser);
+        user = await this.authService.createUserIntra(dataUser);
       }
 
-      if (user?.IsIntra) {
+      if (user.IsIntra) {
         const token42 = await this.authService.intraSignin(dataUser.email);
         res.redirect('http://localhost:3000/loading?' + token42.token);
       }
       res.redirect('http://localhost:3000/'); // TODO send data to display popup error
     } catch (err) {
       console.error(err);
-      res.redirect('http://localhost:3000/');
-      return err;
+      res.redirect('http://localhost:3000/'); // TODO send error to display popup error
     }
   }
 
