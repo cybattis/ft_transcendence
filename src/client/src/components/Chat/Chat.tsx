@@ -1,15 +1,15 @@
 import { KeyboardEvent, useCallback, useRef, useState } from "react";
-import { useSend } from "../../App";
+// import { useSend } from "../../App";
 import "./Chat.css";
 
 export function Chat() {
-  const { messages } = useSend();
+  // const { messages } = useSend();
 
   return (
     <div className="chatBox">
       <div className="chat">
         <Tabs />
-        <MessageList messages={messages} />
+        <MessageList messages={[]} />
         <InputMessage />
       </div>
       <div className="friendList">Friends list</div>
@@ -99,7 +99,7 @@ function InputMessage() {
     background: "var(--black)",
   };
 
-  const { send } = useSend();
+  // const { send } = useSend();
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -108,13 +108,13 @@ function InputMessage() {
       if (event.key === "Enter") {
         console.log("enter");
         if (value) {
-          send(value);
+          // send(value);
           setValue("");
           inputRef?.current?.focus();
         }
       }
     },
-    [send, value]
+    [value] // [send, value]
   );
 
   return (
@@ -134,7 +134,7 @@ function InputMessage() {
         style={sendButton}
         onClick={() => {
           if (value) {
-            send(value);
+            // send(value);
             setValue("");
             inputRef?.current?.focus();
           }
