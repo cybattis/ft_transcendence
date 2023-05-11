@@ -6,10 +6,13 @@ function GameMode(props: { name: string }) {
   const content = {
     display: "flex",
     flexDirection: "column" as "column",
-    flex: "auto",
+    width: "100%",
+    boxSizing: "border-box" as "border-box",
 
     alignItems: "center",
     justifyContent: "center",
+
+    margin: "10px",
   };
 
   return (
@@ -67,12 +70,12 @@ export function HomeLogged() {
 
   const leftSide = {
     display: "flex",
+    flex: "1",
     flexDirection: "column" as "column",
     alignItems: "center",
-    flex: "1.5 1 100px",
-    width: "100%",
 
     height: "95%",
+    maxWidth: "50%",
     gap: "20px",
   };
 

@@ -17,7 +17,7 @@ export default function Login() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
   const { setAuthToken } = useContext(AuthContext);
-  const { setLoginForm } = useContext(FormContext);
+  const { setLoginForm, setSignupForm } = useContext(FormContext);
   const inputs = {
     email: '',
     password: '',
@@ -26,7 +26,7 @@ export default function Login() {
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+
     inputs.email = e.currentTarget.email.value;
     inputs.password = e.currentTarget.password.value;
     inputs.remember = e.currentTarget.rememberMe.checked;
@@ -121,9 +121,15 @@ export default function Login() {
         </a>
         <div className="authFooter">
           <div>New to PongFever?</div>
-          <a className="link" href="blank" target="_blank">
+          <button
+            className="link"
+            onClick={() => {
+              setSignupForm(true);
+              setLoginForm(false);
+            }}
+          >
             Sign up!
-          </a>
+          </button>
         </div>
       </div>
     </div>
