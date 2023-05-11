@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
-import { IntraSignupDto, SignupDto } from './dto/auth.dto';
+import { IntraSignupDto, SigninDto, SignupDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
@@ -67,19 +67,19 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(email: string): Promise<any> {
-    const payload = { email: email };
+  async intraSignin(user: User): Promise<any> {
+    const payload = { email: user.email };
     return {
       token: await this.jwtService.signAsync(payload),
     };
   }
 
-  async signin(email: string, password: string): Promise<any> {
-    const foundUser = await this.usersService.findByEmail(email);
+  async signin(user: SigninDto): Promise<any> {
+    const foundUser = await this.usersService.findByEmail(user.email);
 
     if (foundUser && !foundUser.IsIntra) {
-      if (await bcrypt.compare(password, foundUser.password)) {
-        const payload = { email: email };
+      if (await bcrypt.compare(user.password, foundUser.password)) {
+        const payload = { email: foundUser.email };
         return {
           token: await this.jwtService.signAsync(payload),
         };
