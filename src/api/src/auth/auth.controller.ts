@@ -12,7 +12,7 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SignupDto } from './dto/auth.dto';
+import { SigninDto, SignupDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -36,11 +36,9 @@ export class AuthController {
       }
 
       if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email);
+        const token42 = await this.authService.intraSignin(user);
         res.redirect('http://localhost:3000/loading?' + token42.token);
-      }
-
-      throw new BadRequestException('Email already in use');
+      } else throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
       // TODO: send error to display popup error in client after redirection
@@ -58,11 +56,17 @@ export class AuthController {
     const niknameExist = await this.usersService.findByLogin(body.nickname);
 
     if (!niknameExist) {
-      const emailExist = await this.usersService.findByEmail(body.email);
+      const user = await this.usersService.findByEmail(body.email);
 
-      if (!emailExist) {
+      if (!user) {
         await this.authService.createUser(body);
-        return await this.authService.signin(body.email, body.password);
+
+        const data: SigninDto = {
+          email: body.email,
+          password: body.password,
+          remember: false,
+        };
+        return await this.authService.signin(data);
       }
       throw new BadRequestException('Email is already taken!');
     }
@@ -70,7 +74,7 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signIn(@Body() email: string, password: string) {
-    return await this.authService.signin(email, password);
+  async signin(@Body() user: SigninDto): Promise<string | any> {
+    return await this.authService.signin(user);
   }
 }
