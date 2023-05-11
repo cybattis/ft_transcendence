@@ -125,11 +125,8 @@ export default function Signup() {
         setSignupForm(false);
       })
       .catch((error) => {
-        if (error.response.status === 400) {
-          if (error.response.data.message.length > 1)
-            setErrorMessage(error.response.data.message[0]);
-          else setErrorMessage(error.response.data.message);
-        } else setErrorMessage("Server busy... try again");
+        console.log("Error: ", error.response.status);
+        setErrorMessage("Server error... try again");
       });
   };
 
