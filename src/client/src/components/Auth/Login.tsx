@@ -1,27 +1,27 @@
 import React, { useContext } from "react";
 import axios from "axios";
 import InputForm from "../InputForm";
-import validator from 'validator';
+import validator from "validator";
 import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import "./Auth.css";
 
-interface UserCredential {
+interface SigninDto {
   email: string;
   password: string;
   remember: boolean;
 }
 
 export default function Login() {
-  const [errorInput, setErrorInput] = React.useState('');
-  const [errorMessage, setErrorMessage] = React.useState('');
+  const [errorInput, setErrorInput] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState("");
   const { setAuthToken } = useContext(AuthContext);
   const { setLoginForm, setSignupForm } = useContext(FormContext);
   const inputs = {
-    email: '',
-    password: '',
-    remember: false
+    email: "",
+    password: "",
+    remember: false,
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -30,33 +30,30 @@ export default function Login() {
     inputs.email = e.currentTarget.email.value;
     inputs.password = e.currentTarget.password.value;
     inputs.remember = e.currentTarget.rememberMe.checked;
-  }
+  };
 
   const validateInput = async () => {
     let isValid = true;
-      if (!inputs.email) {
-        setErrorInput("Please enter an Email.");
-        isValid = false;
-      }
-      else if (!validator.isEmail(inputs.email)) {
-        setErrorInput("Please enter a valid Email.");
-        isValid = false;
-      }
-      else if (!inputs.password) {
-        setErrorInput("Please enter a Password.");
-        isValid = false;
-      }
+    if (!inputs.email) {
+      setErrorInput("Please enter an Email.");
+      isValid = false;
+    } else if (!validator.isEmail(inputs.email)) {
+      setErrorInput("Please enter a valid Email.");
+      isValid = false;
+    } else if (!inputs.password) {
+      setErrorInput("Please enter a Password.");
+      isValid = false;
+    }
     return isValid;
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     await changeInputs(e);
-    if (! await validateInput())
-      return ;
+    if (!(await validateInput())) return;
 
-    const user: UserCredential = {
+    const user: SigninDto = {
       email: inputs.email,
       password: inputs.password,
       remember: inputs.remember,
@@ -64,16 +61,12 @@ export default function Login() {
 
     await axios
       .post("http://localhost:5400/auth/signin", user)
-      .then((res) => {
-        if (res.data.status === parseInt('401')) {
-          setErrorMessage(res.data.response);
-        } else {
-          const data = res.data;
-          localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
-          setLoginForm(false);
-          return <Navigate to="/" />;
-        }
+      .then((response) => {
+        const data = response.data;
+        localStorage.setItem("token", data.token);
+        setAuthToken(data.token);
+        setLoginForm(false);
+        return <Navigate to="/" />;
       })
       .catch((error) => {
         console.log(error);
