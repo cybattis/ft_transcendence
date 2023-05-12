@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -22,4 +28,18 @@ export class User {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   password: string;
+
+  // User data ans stats
+  // ============================================================
+  @CreateDateColumn()
+  creationDate: Date;
+
+  @UpdateDateColumn()
+  updateDate: Date;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  avatarUrl: string;
+
+  @Column({ type: 'integer', default: 0 })
+  xp: number;
 }
