@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -20,13 +21,14 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private usersService: UserService,
+    private mailService: MailService,
   ) {}
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
     const clientId =
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
-      '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';
+      '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
@@ -74,10 +76,14 @@ export class AuthService {
     };
   }
 
+  async findUser(email: string, password: string): Promise<User | null> {
+    return this.usersService.findUser(email, password);
+  }
+
   async signin(email: string, password: string): Promise<any> {
     const foundUser = await this.usersService.findByEmail(email);
 
-    if (foundUser && !foundUser.IsIntra) {
+    if (foundUser && foundUser.IsIntra === false) {
       if (await bcrypt.compare(password, foundUser.password)) {
         const payload = { email: email };
         return {
@@ -107,6 +113,8 @@ export class AuthService {
     user.password = hash;
     user.IsIntra = false;
 
+    const token = Math.floor(1000 + Math.random() * 9000).toString();
+    await this.mailService.sendUserConfirmation(user, token);
     return this.userRepository.save(user);
   }
 
@@ -114,7 +122,6 @@ export class AuthService {
     const user: User = new User();
 
     user.nickname = body.login;
-
     const parts = body.displayname.split(' ');
     user.firstname = parts[0];
     user.lastname = parts[1];

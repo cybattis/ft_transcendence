@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
@@ -15,10 +15,21 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({ where: { email: email } });
+  }
+
+  async findUser(email: string, password: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email: email, password: password } });
   }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
+  }
+
+  async updateValidation(login: string) {
+    console.log(login);
+    return this.usersRepository.update(login, {
+      isVerified: true,
+    })
   }
 }

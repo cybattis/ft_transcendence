@@ -7,9 +7,10 @@ import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entity/Users.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { secret } from '../utils/constant';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [
+  imports: [MailModule, 
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret,

@@ -121,8 +121,8 @@ export default function Signup() {
       .then((res) => {
         const data = res.data;
         localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
         setSignupForm(false);
+        setAuthToken(data.token);
       })
       .catch((error) => {
         if (error.response.status === 400) {

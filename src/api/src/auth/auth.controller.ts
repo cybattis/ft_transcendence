@@ -8,6 +8,7 @@ import {
   Post,
   Query,
   Res,
+  Put
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -70,7 +71,13 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signIn(@Body() email: string, password: string) {
-    return await this.authService.signin(email, password);
+  async signIn(@Body() body: any) {
+    return await this.authService.signin(body.email, body.password);
+  }
+
+  @Put(':name')
+  async update(@Param('name') name: string) {
+    console.log('HERE');
+    return await this.usersService.updateValidation(name);
   }
 }
