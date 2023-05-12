@@ -4,7 +4,10 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
+import { Game } from '../../game/entity/Game.entity';
 
 @Entity()
 export class User {
@@ -42,4 +45,9 @@ export class User {
 
   @Column({ type: 'integer', default: 0 })
   xp: number;
+
+  // Player games
+  @ManyToMany(() => Game, (game: Game) => game.players)
+  @JoinTable()
+  games: Game[];
 }
