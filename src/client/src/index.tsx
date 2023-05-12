@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
-import Team from "./pages/Team";
+import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
