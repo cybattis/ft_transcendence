@@ -8,6 +8,8 @@ import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
+import { Profile } from "./pages/Profile/Profile";
+import { Game } from "./pages/Game/Game";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +31,19 @@ const router = createBrowserRouter([
       {
         path: "team",
         element: <Team />,
+      },
+      {
+        path: "profile/:login",
+        element: <Profile />,
+        loader: async ({ request, params }) => {
+          return fetch(`http://localhost:5400/user/${params.login}`, {
+            signal: request.signal,
+          });
+        },
+      },
+      {
+        path: "game",
+        element: <Game />,
       },
     ],
   },
