@@ -53,11 +53,11 @@ export class PongState {
     this.leftScore = 0;
     this.rightScore = 0;
 
-    this.backgroundColor = "rgba(0, 0, 0, 255)";
-    this.leftPaddleColor = "rgba(255, 255, 255, 255)";
-    this.rightPaddleColor = "rgba(255, 255, 255, 255)";
-    this.ballColor = "rgba(255, 255, 255, 255)";
-    this.netColor = "rgba(255, 255, 255, 255)";
+    this.backgroundColor = "rgba(0, 0, 0, 1)";
+    this.leftPaddleColor = "rgba(255, 255, 255, 1)";
+    this.rightPaddleColor = "rgba(255, 255, 255, 1)";
+    this.ballColor = "rgba(255, 255, 255, 1)";
+    this.netColor = "rgba(255, 255, 255, 1)";
 
     this.primarySize = Math.min(canvas.width / 2, canvas.height);
     this.fontSize = 48 * this.primarySize / 400;
@@ -165,6 +165,22 @@ export class PongState {
     return 0;
   }
 
+  public getBallEnding(): Vec2 {
+    if (this.ball.vel.x > 0) {
+      const xOffset = (this.rightPaddle.pos.x - this.ball.radius) - this.ball.pos.x;
+      const xCoef = xOffset / this.ball.vel.x;
+      const yPos = this.ball.pos.y + this.ball.vel.y * xCoef;
+      const xPos = this.ball.pos.x + this.ball.vel.x * xCoef;
+      return new Vec2(xPos, yPos);
+    } else {
+      const xOffset = this.ball.pos.x - (this.ball.radius + this.leftPaddle.pos.x + this.leftPaddle.size.x);
+      const xCoef = xOffset / -this.ball.vel.x;
+      const yPos = this.ball.pos.y + this.ball.vel.y * xCoef;
+      const xPos = this.ball.pos.x + this.ball.vel.x * xCoef;
+      return new Vec2(xPos, yPos);
+    }
+  }
+
   public restartGame() {
     this.leftScore = 0;
     this.rightScore = 0;
@@ -208,9 +224,9 @@ export class PongState {
     drawText(ctx, this.leftScore.toString(), "top", this.canvas.width / 4, 10, this.font);
     drawText(ctx, this.rightScore.toString(), "top", this.canvas.width / 4 * 3, 10, this.font);
 
-    this.ball.render(ctx);
     this.leftPaddle.render(ctx);
     this.rightPaddle.render(ctx);
+    this.ball.render(ctx);
 
     if (!this.playing) {
       ctx.fillStyle = "rgba(25, 25, 25, 0.95)";

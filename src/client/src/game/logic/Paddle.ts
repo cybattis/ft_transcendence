@@ -30,6 +30,11 @@ export default class Paddle {
     this.pos.y = this.canvasHeight / 2 - this.size.y / 2;
   }
 
+  setPosition(newPosition: Vec2) {
+    this.pos.x = newPosition.x;
+    this.pos.y = newPosition.y;
+  }
+
   move(dy: number) {
     this.pos.y += dy;
     if (this.pos.y < 0)

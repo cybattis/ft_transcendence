@@ -38,12 +38,10 @@ export default class AIOnlyPongState {
   update(frameTime: DOMHighResTimeStamp) {
     if (this.state.isPlaying()) {
       let timeLeft = frameTime;
-      let count = 0;
       while (timeLeft > 0.0001) {
         const leftMovement = this.movePaddleAI(this.state.getLeftPaddleCenter().y, this.leftSpeed, timeLeft);
         const rightMovement = this.movePaddleAI(this.state.getRightPaddleCenter().y, this.rightSpeed, timeLeft);
         timeLeft = this.state.update(leftMovement, rightMovement, timeLeft);
-        count++;
       }
     } else
       this.updateGameOver(frameTime);
@@ -67,7 +65,7 @@ export default class AIOnlyPongState {
     // Very primitive AI
     // It tracks down the exact current y position of the ball
     // The difficulty affects the max speed of the paddle
-    const ballPos = this.state.getBallPos().y;
+    const ballPos = this.state.getBallEnding().y;
     const delta = ballPos - paddleCenterY;
     if (Math.abs(delta) <= speed * frameTime) {
       return delta;
