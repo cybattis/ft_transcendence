@@ -1,0 +1,66 @@
+.chat{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 400px;
+    height: 700px;
+    border-radius: 10px;
+    background: rgba(254, 254, 254, 0.1) ;
+    text-align: center;
+}
+
+.rcv-mess-container{
+    flex-grow: 2;
+    width: 100%;
+    overflow-y: scroll;
+}
+
+.send-mess-container input{
+    background-color: white;
+    color: black;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+.list-msg-container{
+    margin: 0;
+    padding: 0;
+}
+
+.Rcv {
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: left;
+    margin: 5px;
+}
+
+.Emt {
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: right;
+    margin: 5px;
+}
+
+.Rcv .contain-msg{
+    display: grid;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #4E458C;
+}
+
+.Emt .contain-msg{
+    display: table;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #00CCCC;
+}
