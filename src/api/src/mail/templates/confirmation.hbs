@@ -1,20 +1,13 @@
-<script>
-    function sentConfirmation(name: string) {
-        await axios.put("http://localhost:5400/auth/" + name);
-    }
-
-</script>
-
 <!DOCTYPE html>
 <html>
 <body>
     <div>
         <p>Hey {{ name }},</p>
-        <p>This is your confirmation code. Please return to our Website and enter the code</p>
+        <p>This is your confirmation link. Please click on it to Validate and Confirm your email</p>
         <p>
-            <button onclick="sentConfirmation({{ name }})" >Confirm</button>
+            <a href={{ url }}>Confirmation</a>
         </p>
         <p>If you did not request this email you can safely ignore it.</p>
     </div>
 </body>
-</html>  
+</html>

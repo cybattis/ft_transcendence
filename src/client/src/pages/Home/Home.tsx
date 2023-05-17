@@ -16,8 +16,8 @@ async function CheckToken(token: string | null) {
 }
 
 export default function Home() {
-  const { authed } = useContext(AuthContext);
   CheckToken(localStorage.getItem("token"));
+  const { authed } = useContext(AuthContext);
 
   return (
     <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>

@@ -69,8 +69,9 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(email: string): Promise<any> {
-    const payload = { email: email };
+  async intraSignin(email: string, login: string): Promise<any> {
+    while (await this.usersService.isVerified(email) === null);
+    const payload = { email: email, login: login };
     return {
       token: await this.jwtService.signAsync(payload),
     };
@@ -84,14 +85,22 @@ export class AuthService {
     const foundUser = await this.usersService.findByEmail(email);
 
     if (foundUser && foundUser.IsIntra === false) {
-      if (await bcrypt.compare(password, foundUser.password)) {
-        const payload = { email: email };
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
+      const isVerified = await this.usersService.isVerified(email);
+      if (isVerified)
+      {
+        if (await bcrypt.compare(password, foundUser.password)) {
+          const payload = { email: email };
+          return {
+            token: await this.jwtService.signAsync(payload),
+          };
+        }
+        throw new HttpException(
+          'Incorrect email or password',
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       throw new HttpException(
-        'Incorrect email or password',
+        'You must verify your email before logging in.',
         HttpStatus.UNAUTHORIZED,
       );
     }
@@ -101,7 +110,11 @@ export class AuthService {
     );
   }
 
-  async createUser(body: SignupDto): Promise<User> {
+  async sendEmail(user: User) {
+    return await this.mailService.sendUserConfirmation(user);
+  }
+
+  async createUser(body: SignupDto) {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
     const user: User = new User();
@@ -113,12 +126,11 @@ export class AuthService {
     user.password = hash;
     user.IsIntra = false;
 
-    const token = Math.floor(1000 + Math.random() * 9000).toString();
-    await this.mailService.sendUserConfirmation(user, token);
-    return this.userRepository.save(user);
+    const newUser = await this.userRepository.save(user);
+    await this.mailService.sendUserConfirmation(newUser);
   }
 
-  async createUserIntra(body: IntraSignupDto): Promise<User> {
+  async createUserIntra(body: IntraSignupDto) {
     const user: User = new User();
 
     user.nickname = body.login;
@@ -129,6 +141,18 @@ export class AuthService {
     user.email = body.email;
     user.IsIntra = true;
 
-    return this.userRepository.save(user);
+    return  await this.userRepository.save(user);
+  }
+
+  async updateValidation(id: number) {
+    this.usersService.updateValidation(id);
+    const user = await this.usersService.findById(id);
+    if (user)
+    {
+      const payload = { email: user.email };
+      return {
+        token: await this.jwtService.signAsync(payload),
+      };
+    }
   }
 }

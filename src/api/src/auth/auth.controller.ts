@@ -34,10 +34,11 @@ export class AuthController {
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
+        await this.authService.sendEmail(user);
       }
 
       if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email);
+        const token42 = await this.authService.intraSignin(dataUser.email, dataUser.login);
         res.redirect('http://localhost:3000/loading?' + token42.token);
       }
 
@@ -55,15 +56,13 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignupDto): Promise<string | any> {
-    const niknameExist = await this.usersService.findByLogin(body.nickname);
-
-    if (!niknameExist) {
+  async signUp(@Body() body: SignupDto): Promise<any> {
+    const nicknameExist = await this.usersService.findByLogin(body.nickname);
+    console.log(nicknameExist);
+    if (!nicknameExist) {
       const emailExist = await this.usersService.findByEmail(body.email);
-
       if (!emailExist) {
-        await this.authService.createUser(body);
-        return await this.authService.signin(body.email, body.password);
+        return await this.authService.createUser(body);
       }
       throw new BadRequestException('Email is already taken!');
     }
@@ -75,9 +74,8 @@ export class AuthController {
     return await this.authService.signin(body.email, body.password);
   }
 
-  @Put(':name')
-  async update(@Param('name') name: string) {
-    console.log('HERE');
-    return await this.usersService.updateValidation(name);
+  @Put(':id')
+  async update(@Param('id') id: number) {
+    return await this.authService.updateValidation(id);
   }
 }

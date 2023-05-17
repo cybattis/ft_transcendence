@@ -6,8 +6,8 @@ import { User } from 'src/user/entity/Users.entity';
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
-  async sendUserConfirmation(user: User, token: string) {
-    const url = `http://localhost:3000/`;
+  async sendUserConfirmation(user: User) {
+    const url = `http://localhost:3000/confirmation?` + user.id;
 
     await this.mailerService.sendMail({
       to: user.email,
