@@ -1,20 +1,24 @@
-import { Body, Controller, Get, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game } from './entity/Game.entity';
-import { GameDto } from './dto/game.dto';
+import { GameBodyDto } from '../type/game.type';
 
 @Controller('game')
 export class GameController {
-  @Inject(GameService)
-  private readonly gameService: GameService;
+  constructor(private readonly gameService: GameService) {}
 
   @Get()
   async findAll(): Promise<Game[]> {
     return this.gameService.findAll();
   }
 
+  @Get(':userId')
+  async findGames(@Param('userId') userId: number): Promise<any> {
+    return this.gameService.findGame(userId);
+  }
+
   @Post('create')
-  async createGame(@Body() body: GameDto): Promise<Game> {
+  async createGame(@Body() body: GameBodyDto): Promise<Game> {
     return this.gameService.createGame(body);
   }
 }
