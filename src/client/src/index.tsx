@@ -36,9 +36,15 @@ const router = createBrowserRouter([
         path: "profile/:login",
         element: <Profile />,
         loader: async ({ request, params }) => {
-          return fetch(`http://localhost:5400/user/${params.login}`, {
+          return fetch(`http://localhost:5400/user/${params.id}`, {
             signal: request.signal,
-          });
+          })
+            .then((response) => {
+              console.log(response);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         },
       },
       {

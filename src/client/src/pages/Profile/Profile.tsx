@@ -1,14 +1,8 @@
 import { useLoaderData } from "react-router-dom";
-
-interface User {
-  id: number;
-  nickname: string;
-  firstname: string;
-  lastname: string;
-}
+import { UserProfileDto } from "../../type/user.type";
 
 export function Profile() {
-  let data = useLoaderData() as User;
+  let data = useLoaderData() as UserProfileDto;
 
   return (
     <>
