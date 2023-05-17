@@ -80,6 +80,12 @@ export default class Ball {
   }
 
   checkCollision(paddle: Paddle) {
+
+    // Check if the ball is near a paddle
+    if (Math.abs(this.pos.x - paddle.centerX) > this.maxStepSize * 5) {
+      return;
+    }
+
     // Compute the bounds of the paddle
     const pBounds = {
       top: paddle.pos.y,
