@@ -26,7 +26,7 @@ export class AuthService {
     const clientId =
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
-      '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';
+      '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
@@ -51,7 +51,7 @@ export class AuthService {
       if (user as { [key: string]: any }) {
         const dic = user as { [key: string]: any };
         if (dic['exp'] > new Date().getTime() / 1000) return HttpStatus.OK;
-        else return new UnauthorizedException('Token iInvalid');
+        else return new UnauthorizedException('Token invalid');
       }
     } else return new UnauthorizedException('Token invalid');
   }
@@ -68,7 +68,7 @@ export class AuthService {
   }
 
   async intraSignin(user: User): Promise<any> {
-    const payload = { email: user.email };
+    const payload = { id: user.id };
     return {
       token: await this.jwtService.signAsync(payload),
     };
@@ -79,7 +79,7 @@ export class AuthService {
 
     if (foundUser && !foundUser.IsIntra) {
       if (await bcrypt.compare(user.password, foundUser.password)) {
-        const payload = { email: foundUser.email };
+        const payload = { id: foundUser.id };
         return {
           token: await this.jwtService.signAsync(payload),
         };
@@ -121,6 +121,8 @@ export class AuthService {
 
     user.email = body.email;
     user.IsIntra = true;
+
+    user.avatarUrl = body.image.link;
 
     return this.userRepository.save(user);
   }
