@@ -1,31 +1,19 @@
 import axios from "axios";
-
-export enum GameType {
-  PRACTICE = "Practice",
-  CASUAL = "Casual",
-  RANKED = "Ranked",
-}
-
-export enum GameMode {
-  V1 = "1v1",
-  V2 = "2v2",
-}
-
-export interface GameDto {
-  type: GameType;
-  mode: GameMode;
-  Players: number[];
-  scoreP1: number;
-  scoreP2: number;
-}
+import {
+  GameBodyDto,
+  GameMode,
+  GameStatus,
+  GameType,
+} from "../../type/game.type";
 
 export function Game() {
-  const data: GameDto = {
-    type: GameType.PRACTICE,
+  const data: GameBodyDto = {
+    type: GameType.CASUAL,
     mode: GameMode.V1,
-    Players: [1, 1],
+    players: [1, 2],
     scoreP1: 11,
     scoreP2: 7,
+    status: GameStatus.FINISHED,
   };
 
   async function createGame() {

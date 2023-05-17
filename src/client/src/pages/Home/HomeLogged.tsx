@@ -1,6 +1,11 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
 import { Chat } from "../../components/Chat/Chat";
+import jwt_decode from "jwt-decode";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { UserInfo } from "../../type/user.type";
+import { Link } from "react-router-dom";
 
 function GameMode(props: { name: string }) {
   const content = {
@@ -18,7 +23,7 @@ function GameMode(props: { name: string }) {
   return (
     <div style={content}>
       <h5>{props.name}</h5>
-      <button className="gamemode"></button>
+      <Link to="game" className="gamemode" />
     </div>
   );
 }
@@ -36,21 +41,66 @@ function GameLauncher() {
   );
 }
 
+interface Decoded {
+  id: string;
+}
+
 function UserProfile() {
+  let decoded: Decoded | null = null;
+
+  try {
+    decoded = jwt_decode(localStorage.getItem("token")!);
+  } catch (e) {
+    console.log(e);
+  }
+
+  const [data, setData] = useState<UserInfo>({
+    nickname: "",
+    xp: 0,
+    games: [],
+  });
+
+  useEffect(() => {
+    console.log(decoded);
+    async function fetchData(id: string) {
+      await axios
+        .get(`http://localhost:5400/user/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          setData(response.data);
+          console.log(response.data);
+        });
+    }
+
+    if (decoded !== null) fetchData(decoded.id).then((r) => console.log(r));
+  }, []);
+
   return (
     <div className="user">
       <div className="infobox">
-        <Avatar size="20%" />
+        <Avatar size="20%" img={data.avatar} />
         <div className="info">
-          <h5>Nickname</h5>
-          <p>LVL 10</p>
-          <p>300 xp</p>
+          <h5>{data.nickname}</h5>
+          <p>LVL {data.xp / 1000}</p>
+          <p>{data.xp} xp</p>
           <div id="progressbar">
             <div></div>
           </div>
         </div>
       </div>
       <h5>Last matches</h5>
+      {data.games?.map((game) => (
+        <div>
+          <h6>{game.type}</h6>
+          <h6>{game.mode}</h6>
+          <h6>{game.scoreP1}</h6>
+          <h6>{game.scoreP2}</h6>
+        </div>
+      ))}
     </div>
   );
 }
@@ -78,8 +128,6 @@ export function HomeLogged() {
     maxWidth: "50%",
     gap: "20px",
   };
-
-  //TODO: fetch relevant user data
 
   return (
     <div style={home}>
