@@ -80,3 +80,25 @@
     height: 10px;
     border-radius: 10px;
 }
+
+.lastmatch {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.gameResult {
+    border-radius: 8px;
+    min-width: 60px;
+    height: 50px;
+    text-align: center;
+}
+
+.win {
+    color: green;
+}
+
+.loose {
+    color: red;
+}

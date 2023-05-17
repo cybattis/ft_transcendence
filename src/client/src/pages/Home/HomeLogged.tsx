@@ -93,14 +93,22 @@ function UserProfile() {
         </div>
       </div>
       <h5>Last matches</h5>
-      {data.games?.map((game) => (
-        <div>
-          <h6>{game.type}</h6>
-          <h6>{game.mode}</h6>
-          <h6>{game.scoreP1}</h6>
-          <h6>{game.scoreP2}</h6>
-        </div>
-      ))}
+      <div className={"lastmatch"}>
+        {data.games?.map((game) => (
+          <div className={"gameResult"}>
+            <div>
+              {game.scoreP1 > game.scoreP2 ? (
+                <div className="win">Win</div>
+              ) : (
+                <div className="loose">Loose</div>
+              )}
+            </div>
+            <div>
+              {game.scoreP1}-{game.scoreP2}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
