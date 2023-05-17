@@ -4,8 +4,8 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToMany,
   JoinTable,
+  ManyToMany,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -46,8 +46,16 @@ export class User {
   @Column({ type: 'integer', default: 0 })
   xp: number;
 
+  @Column({ type: 'integer', default: 0 })
+  level: number;
+
+  @Column({ type: 'integer', default: 0 })
+  ranking: number;
+
   // Player games
-  @ManyToMany(() => Game, (game: Game) => game.players)
+  @ManyToMany(() => Game, (game: Game) => game.players, {
+    cascade: true,
+  })
   @JoinTable()
-  games: Game[];
+  games!: Game[];
 }

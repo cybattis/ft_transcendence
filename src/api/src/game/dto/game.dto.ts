@@ -1,5 +1,6 @@
-import { IsArray, IsEnum, IsNumber } from 'class-validator';
-import { GameMode, GameType } from '../entity/Game.entity';
+import { IsEnum, IsNumber } from 'class-validator';
+import { User } from '../../user/entity/Users.entity';
+import { GameMode, GameType } from '../../type/game.type';
 
 export class GameDto {
   @IsEnum(GameType)
@@ -8,8 +9,8 @@ export class GameDto {
   @IsEnum(GameMode)
   mode: GameMode;
 
-  @IsArray()
-  Players: number[];
+  @IsNumber({}, { each: true })
+  players: User[];
 
   @IsNumber()
   scoreP1: number;
