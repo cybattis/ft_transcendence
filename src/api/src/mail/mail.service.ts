@@ -20,4 +20,19 @@ export class MailService {
       },
     });
   }
+
+  async sendCodeConfirmation(user: User) {
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      from : process.env.EMAIL_USR,
+      subject: 'Code confirmation for the login',
+      template: 'confirmation',
+      context: {
+        name: user.nickname,
+        code,
+      },
+    });
+  }
 }
