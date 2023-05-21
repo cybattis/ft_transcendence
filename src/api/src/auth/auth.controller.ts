@@ -78,4 +78,9 @@ export class AuthController {
   async update(@Param('id') id: number) {
     return await this.authService.updateValidation(id);
   }
+  
+  @Post('2fa')
+  async getCodeAuth(@Body() body: number) {
+    return await 
+  }
 }

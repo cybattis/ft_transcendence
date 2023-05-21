@@ -88,7 +88,15 @@ export class AuthService {
       const isVerified = await this.usersService.isVerified(email);
       if (isVerified)
       {
+        //mettre un while et if de si il a active 2fa
+        //Mettre creation token et truc dans 2fa si active sinon laisse la
+        //move ca dans fonction post du code 2fa 
         if (await bcrypt.compare(password, foundUser.password)) {
+          const code = await this.mailService.sendCodeConfirmation(email);
+          if (code != this.usersService.getCode(email))
+          {
+            return new HttpException('Authentification code invalid.', HttpStatus.UNAUTHORIZED);
+          }
           const payload = { email: email };
           return {
             token: await this.jwtService.signAsync(payload),
