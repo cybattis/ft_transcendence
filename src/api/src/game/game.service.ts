@@ -27,7 +27,6 @@ export class GameService implements OnModuleInit {
   }
 
   async findGame(userId: number): Promise<Game[] | string> {
-    console.log('ID: ', userId);
     const user: User | null = await this.userRepository.findOne({
       relations: ['games'],
       where: { id: userId },
@@ -39,9 +38,6 @@ export class GameService implements OnModuleInit {
 
   async createGame(body: GameBodyDto): Promise<Game> {
     const game: Game = new Game();
-
-    console.log(body);
-    console.log(body.players[0], body.players[1]);
 
     game.mode = body.mode;
     game.type = body.type;
@@ -57,13 +53,6 @@ export class GameService implements OnModuleInit {
     game.scoreP1 = body.scoreP1;
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
-
-    // await this.userRepository
-    //   .createQueryBuilder()
-    //   .update(User)
-    //   .set({ games: [game] })
-    //   .where('id = :id', { id: body.players[0] })
-    //   .execute();
 
     return this.gameRepository.save(game);
   }
