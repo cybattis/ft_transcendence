@@ -1,3 +1,20 @@
+.home {
+    display: flex;
+    flex-direction: row;
+    height: var(--vp-size);
+    margin: 10px;
+    gap: 10px;
+}
+
+.leftside {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+
+    box-sizing: border-box;
+}
+
 .launcher {
     box-sizing: border-box;
     display: flex;
@@ -89,6 +106,7 @@
 }
 
 .gameResult {
+    border: #8449BF 2px solid;
     border-radius: 8px;
     min-width: 60px;
     height: 50px;

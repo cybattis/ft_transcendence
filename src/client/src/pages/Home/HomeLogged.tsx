@@ -45,6 +45,30 @@ interface Decoded {
   id: string;
 }
 
+function LastMatch(props: { data: UserInfo }) {
+  return (
+    <>
+      <h5>Last matches</h5>
+      <div className={"lastmatch"}>
+        {props.data.games?.slice(0, 5).map((game) => (
+          <div className={"gameResult"}>
+            <div>
+              {game.scoreP1 > game.scoreP2 ? (
+                <div className="win">Win</div>
+              ) : (
+                <div className="loose">Loose</div>
+              )}
+            </div>
+            <div>
+              {game.scoreP1}-{game.scoreP2}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function UserProfile() {
   let decoded: Decoded | null = null;
 
@@ -56,7 +80,9 @@ function UserProfile() {
 
   const [data, setData] = useState<UserInfo>({
     nickname: "",
+    level: 0,
     xp: 0,
+    ranking: 0,
     games: [],
   });
 
@@ -72,6 +98,7 @@ function UserProfile() {
         })
         .then((response) => {
           setData(response.data);
+
           console.log(response.data);
         });
     }
@@ -85,61 +112,22 @@ function UserProfile() {
         <Avatar size="20%" img={data.avatar} />
         <div className="info">
           <h5>{data.nickname}</h5>
-          <p>LVL {data.xp / 1000}</p>
+          <p>LVL {data.level}</p>
           <p>{data.xp} xp</p>
           <div id="progressbar">
             <div></div>
           </div>
         </div>
       </div>
-      <h5>Last matches</h5>
-      <div className={"lastmatch"}>
-        {data.games?.map((game) => (
-          <div className={"gameResult"}>
-            <div>
-              {game.scoreP1 > game.scoreP2 ? (
-                <div className="win">Win</div>
-              ) : (
-                <div className="loose">Loose</div>
-              )}
-            </div>
-            <div>
-              {game.scoreP1}-{game.scoreP2}
-            </div>
-          </div>
-        ))}
-      </div>
+      <LastMatch data={data} />
     </div>
   );
 }
 
 export function HomeLogged() {
-  const home = {
-    display: "flex",
-    flexDirection: "row" as "row",
-    alignItems: "center",
-
-    height: "var(--vp-size)",
-
-    marginRight: "5%",
-    marginLeft: "5%",
-    gap: "2%",
-  };
-
-  const leftSide = {
-    display: "flex",
-    flex: "1",
-    flexDirection: "column" as "column",
-    alignItems: "center",
-
-    height: "95%",
-    maxWidth: "50%",
-    gap: "20px",
-  };
-
   return (
-    <div style={home}>
-      <div style={leftSide}>
+    <div className={"home"}>
+      <div className={"leftside"}>
         <GameLauncher />
         <UserProfile />
       </div>
