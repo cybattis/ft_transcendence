@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
+  VirtualColumn,
+  AfterLoad,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -57,5 +59,5 @@ export class User {
     cascade: true,
   })
   @JoinTable()
-  games!: Game[];
+  games: Game[];
 }
