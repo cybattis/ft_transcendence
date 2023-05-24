@@ -1,16 +1,28 @@
 import { useLoaderData } from "react-router-dom";
-import { UserProfileDto } from "../../type/user.type";
+import { UserInfo } from "../../type/user.type";
 
 export function Profile() {
-  let data = useLoaderData() as UserProfileDto;
+  let data = useLoaderData() as UserInfo;
+
+  console.log(data);
+
+  const style = {
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "var(--page-height)",
+  };
 
   return (
-    <>
+    <div style={style}>
       <div>Profile</div>
-      <div>{data.id}</div>
-      <div>{data.nickname}</div>
-      <div>{data.firstname}</div>
-      <div>{data.lastname}</div>
-    </>
+      <div>nickname: {data.nickname}</div>
+      <div>level: {data.level}</div>
+      <div>xp: {data.xp}</div>
+      <div>ranking: {data.ranking}</div>
+      <div>Game played: {data.games?.length}</div>
+      <div>Winrate: 0%</div>
+    </div>
   );
 }
