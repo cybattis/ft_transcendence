@@ -33,18 +33,13 @@ const router = createBrowserRouter([
         element: <Team />,
       },
       {
-        path: "profile/:login",
+        path: "profile/:id",
         element: <Profile />,
         loader: async ({ request, params }) => {
+          console.log("loader", params);
           return fetch(`http://localhost:5400/user/${params.id}`, {
             signal: request.signal,
-          })
-            .then((response) => {
-              console.log(response);
-            })
-            .catch((error) => {
-              console.log(error);
-            });
+          });
         },
       },
       {
