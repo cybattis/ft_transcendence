@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
+import { UserInfo } from '../type/user.type';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -34,15 +35,18 @@ export class UserService implements OnModuleInit {
     return this.usersRepository.find();
   }
 
-  async userInfo(id: number) {
+  async userInfo(id: number): Promise<UserInfo | any> {
     const user = await this.findByID(id);
-
     if (!user) return null;
+
     return {
       nickname: user.nickname,
+      level: user.level,
       xp: user.xp,
+      ranking: user.ranking,
       avatar: user.avatarUrl,
       games: await this.gameService.findGame(id),
+
       // Stats
       // Channel list ?
       // Friends list ?
