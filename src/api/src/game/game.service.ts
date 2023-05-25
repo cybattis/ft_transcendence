@@ -1,10 +1,14 @@
-import { forwardRef, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game } from './entity/Game.entity';
 import { Repository } from 'typeorm';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from '../user/user.service';
-import { GameBodyDto } from '../type/game.type';
+import { GameBodyDto, GameType } from '../type/game.type';
 import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
@@ -42,18 +46,68 @@ export class GameService implements OnModuleInit {
     game.mode = body.mode;
     game.type = body.type;
 
-    const user1 = await this.userService.findByID(body.players[0]);
-    if (!user1) throw new Error('User not found');
+    const user1 = await this.userService.findByID(body.ids[0]);
+    if (!user1) throw new InternalServerErrorException('User not found');
 
-    const user2 = await this.userService.findByID(body.players[1]);
-    if (!user2) throw new Error('User not found');
+    const user2 = await this.userService.findByID(body.ids[1]);
+    if (!user2) throw new InternalServerErrorException('User not found');
 
     game.players = [user1, user2];
+
+    game.ids = body.ids;
 
     game.scoreP1 = body.scoreP1;
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
 
-    return this.gameRepository.save(game);
+    await this.gameRepository.save(game);
+
+    if (body.scoreP1 > body.scoreP2) {
+      await this.updateUserStats(user1, user2, body.type);
+    } else await this.updateUserStats(user2, user1, body.type);
+
+    return game;
+  }
+
+  async updateUserStats(
+    user1: User,
+    user2: User,
+    ranked: GameType,
+  ): Promise<void> {
+    await this.userRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({
+        totalGameWon: user1.totalGameWon + 1,
+        xp: user1.xp + 150,
+      })
+      .where('id = :id', { id: user1.id })
+      .execute();
+    await this.userRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({
+        xp: user2.xp + 100,
+      })
+      .where('id = :id', { id: user2.id })
+      .execute();
+    if (ranked === GameType.RANKED) {
+      await this.userRepository
+        .createQueryBuilder()
+        .update(User)
+        .set({
+          ranking: user1.ranking + 10,
+        })
+        .where('id = :id', { id: user1.id })
+        .execute();
+      await this.userRepository
+        .createQueryBuilder()
+        .update(User)
+        .set({
+          ranking: user2.ranking - 10,
+        })
+        .where('id = :id', { id: user2.id })
+        .execute();
+    }
   }
 }
