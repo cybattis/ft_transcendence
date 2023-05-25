@@ -6,8 +6,6 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
-  VirtualColumn,
-  AfterLoad,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -48,10 +46,10 @@ export class User {
   @Column({ type: 'integer', default: 0 })
   xp: number;
 
-  @Column({ type: 'integer', default: 0 })
+  @Column({ type: 'integer', default: 1 })
   level: number;
 
-  @Column({ type: 'integer', default: 0 })
+  @Column({ type: 'integer', default: 1000 })
   ranking: number;
 
   // Player games
@@ -60,4 +58,7 @@ export class User {
   })
   @JoinTable()
   games: Game[];
+
+  @Column({ type: 'integer', default: 0 })
+  totalGameWon: number;
 }
