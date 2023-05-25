@@ -17,7 +17,7 @@ export enum GameStatus {
 export interface GameBodyDto {
   type: GameType;
   mode: GameMode;
-  players: number[];
+  ids: number[];
   scoreP1: number;
   scoreP2: number;
   status: GameStatus;
