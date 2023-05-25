@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link } from "react-router-dom";
+import { GameBodyDto, GameType } from "../../type/game.type";
 
-function GameMode(props: { name: string }) {
+function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
     display: "flex",
     flexDirection: "column" as "column",
@@ -23,7 +24,7 @@ function GameMode(props: { name: string }) {
   return (
     <div style={content}>
       <h5>{props.name}</h5>
-      <Link to="game" className="gamemode" />
+      <Link to="game" state={{ type: props.gameType }} className="gamemode" />
     </div>
   );
 }
@@ -33,9 +34,9 @@ function GameLauncher() {
     <div className="launcher">
       <h4>Game mode</h4>
       <div className="buttons">
-        <GameMode name="Practice" />
-        <GameMode name="Casual " />
-        <GameMode name="Ranked" />
+        <GameMode name="Practice" gameType={GameType.PRACTICE} />
+        <GameMode name="Casual " gameType={GameType.CASUAL} />
+        <GameMode name="Ranked" gameType={GameType.RANKED} />
       </div>
     </div>
   );
@@ -45,27 +46,52 @@ interface Decoded {
   id: string;
 }
 
+function Result(props: { game: GameBodyDto; data: UserInfo }) {
+  return (
+    <div className={"gameResult"}>
+      <div>
+        {(props.game.ids[0] == props.data.id &&
+          props.game.scoreP1 > props.game.scoreP2) ||
+        (props.game.ids[1] == props.data.id &&
+          props.game.scoreP1 < props.game.scoreP2) ? (
+          <div className={"win"}>Win</div>
+        ) : (
+          <div className={"loose"}>Loose</div>
+        )}
+      </div>
+      <div>
+        {props.game.scoreP1}-{props.game.scoreP2}
+      </div>
+    </div>
+  );
+}
+
 function LastMatch(props: { data: UserInfo }) {
   return (
-    <>
+    <div className={"statsBox"}>
       <h5>Last matches</h5>
       <div className={"lastmatch"}>
-        {props.data.games?.slice(0, 5).map((game) => (
-          <div className={"gameResult"}>
-            <div>
-              {game.scoreP1 > game.scoreP2 ? (
-                <div className="win">Win</div>
-              ) : (
-                <div className="loose">Loose</div>
-              )}
-            </div>
-            <div>
-              {game.scoreP1}-{game.scoreP2}
-            </div>
+        {props.data.games?.slice(-5).map((game, index) => (
+          <div key={index}>
+            <Result game={game} data={props.data} />
           </div>
         ))}
       </div>
-    </>
+    </div>
+  );
+}
+
+function Winrate(props: { data: UserInfo }) {
+  const winrate: number =
+    props.data.totalGameWon && props.data.games?.length
+      ? (props.data.totalGameWon * 100) / props.data.games?.length
+      : 0;
+
+  return (
+    <div>
+      <h5>Winrate</h5>
+      <div>{winrate.toFixed(0)}%</div>
+    </div>
   );
 }
 
@@ -79,6 +105,7 @@ function UserProfile() {
   }
 
   const [data, setData] = useState<UserInfo>({
+    id: 0,
     nickname: "",
     level: 0,
     xp: 0,
@@ -119,7 +146,14 @@ function UserProfile() {
           </div>
         </div>
       </div>
-      <LastMatch data={data} />
+      <div className="stats">
+        <LastMatch data={data} />
+        <Winrate data={data} />
+        <div>
+          <h5>ELO</h5>
+          <div>{data.ranking}</div>
+        </div>
+      </div>
     </div>
   );
 }
