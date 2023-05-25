@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { User } from '../../user/entity/Users.entity';
 import { GameMode, GameStatus, GameType } from '../../type/game.type';
 
@@ -6,6 +12,9 @@ import { GameMode, GameStatus, GameType } from '../../type/game.type';
 export class Game {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @CreateDateColumn()
+  creationDate: Date;
 
   @Column({ type: 'enum', enum: GameType })
   type: GameType;
@@ -15,6 +24,9 @@ export class Game {
 
   @ManyToMany(() => User, (user: User) => user.games)
   players: User[];
+
+  @Column({ type: 'simple-array', nullable: true })
+  ids: number[];
 
   @Column({ type: 'integer', default: 0 })
   scoreP1: number;
