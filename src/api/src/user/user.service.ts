@@ -40,14 +40,15 @@ export class UserService implements OnModuleInit {
     if (!user) return null;
 
     return {
+      id: user.id,
       nickname: user.nickname,
       level: user.level,
       xp: user.xp,
       ranking: user.ranking,
       avatar: user.avatarUrl,
       games: await this.gameService.findGame(id),
+      totalGameWon: user.totalGameWon,
 
-      // Stats
       // Channel list ?
       // Friends list ?
       // Achievements ?
