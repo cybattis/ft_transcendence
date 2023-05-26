@@ -88,8 +88,9 @@ function Winrate(props: { data: UserInfo }) {
       : 0;
 
   return (
-    <div>
+    <div className={"statsBox"}>
       <h5>Winrate</h5>
+      <br />
       <div>{winrate.toFixed(0)}%</div>
     </div>
   );
@@ -141,16 +142,15 @@ function UserProfile() {
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
           <p>{data.xp} xp</p>
-          <div id="progressbar">
-            <div></div>
-          </div>
+          <progress id="progressbar" max={1000} value={data.xp}></progress>
         </div>
       </div>
       <div className="stats">
         <LastMatch data={data} />
         <Winrate data={data} />
-        <div>
+        <div className={"statsBox"}>
           <h5>ELO</h5>
+          <br />
           <div>{data.ranking}</div>
         </div>
       </div>

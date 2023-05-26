@@ -81,20 +81,22 @@
     background-color: var(--cyan);
 }
 
-#progressbar {
-    flex: auto;
-    background-color: black;
-    border-radius: 13px;
-    /* (height of inner div) / 2 + padding */
-    padding: 3px;
+progress[value] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: auto;
+    height: 15px;
+    background-color: var(--black);
+    border-radius: 20px;
+    border-color: var(--cyan);
 }
 
-#progressbar>div {
+progress {
     background-color: var(--cyan);
-    width: 40%;
-    /* Adjust with JavaScript */
-    height: 10px;
-    border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--cyan) !important;
 }
 
 .lastmatch {
@@ -118,14 +120,14 @@
     color: red;
 }
 
-.stats {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-}
-
 .statsBox {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.stats {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
 }
