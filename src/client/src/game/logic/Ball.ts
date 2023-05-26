@@ -117,10 +117,12 @@ export default class Ball {
 
       const impactVector = new Vec2(this.pos.x - paddle.centerX, this.pos.y - paddle.centerY);
       impactVector.normalize();
-      const mag = Math.sqrt(Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2)) / 2;
+      const mag = Math.sqrt(Math.pow(this.vel.x, 2) + Math.pow(this.vel.y, 2));
       this.vel.normalize();
-      this.vel.x = (-this.vel.x + impactVector.x) * mag;
-      this.vel.y = (this.vel.y + impactVector.y) * mag;
+      const resultVector = new Vec2(-this.vel.x + impactVector.x, this.vel.y + impactVector.y);
+      resultVector.normalize();
+      this.vel.x = resultVector.x * mag;
+      this.vel.y = resultVector.y * mag;
 
       if (this.serving) {
         // Increase the speed of the ball to its normal speed after the first hit
