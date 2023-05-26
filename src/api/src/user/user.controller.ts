@@ -2,13 +2,16 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
+import { ModuleRef } from '@nestjs/core';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private userService: UserService,
-    private gameService: GameService,
-  ) {}
+  private gameService: GameService;
+  constructor(private userService: UserService, private moduleRef: ModuleRef) {}
+
+  onModuleInit() {
+    this.gameService = this.moduleRef.get(GameService, { strict: false });
+  }
 
   @Get()
   async findAll(): Promise<User[]> {
