@@ -1,15 +1,12 @@
 import AIOnlyPongState from "./states/AIOnlyPongState";
 import PracticePongState from "./states/PracticePongState";
 
-export type AIDifficulty = "Easy" | "Medium" | "Hard" | "Godlike";
-
 let lastFrameTimestamp: DOMHighResTimeStamp = 0;
 let AIOnlyGameList: AIOnlyPongState[] = new Array<AIOnlyPongState>();
 let practiceGameList: PracticePongState[] = new Array<PracticePongState>();
 
 let upArrowPressed: boolean = false;
 let downArrowPressed: boolean = false;
-let tPressed = false;
 
 export function startPongManager() {
   window.addEventListener("keydown", (e) => {
@@ -31,8 +28,6 @@ export function startPongManager() {
       practiceGameList.forEach((game) => {
         game.start();
       });
-    } else if (e.key === "t") {
-      tPressed = true;
     }
   });
 
@@ -41,8 +36,6 @@ export function startPongManager() {
 }
 
 export function updatePongGames(timestamp: DOMHighResTimeStamp) {
-  if (tPressed)
-    return;
   AIOnlyGameList.forEach((game) => {
     game.update((timestamp - lastFrameTimestamp) / 1000.0);
     game.render();

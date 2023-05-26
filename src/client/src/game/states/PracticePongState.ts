@@ -1,27 +1,18 @@
 import {PongState} from "../logic/PongState";
 import {drawText} from "../util/Utils";
-import {AIDifficulty} from "../PongManager";
+import {AIDifficulty, PongAi} from "../logic/PongAi";
 
 export default class PracticePongState {
   public readonly state: PongState;
 
   private readonly canvas: HTMLCanvasElement;
-  private readonly aiSpeed: number;
   private readonly playerSpeed: number;
+  private ai: PongAi;
 
   constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
     this.canvas = canvas;
     this.state = new PongState(name, canvas, "AI", "Player");
-
-    if (aiDifficulty === "Easy")
-      this.aiSpeed = canvas.height / 6;
-    else if (aiDifficulty === "Medium")
-      this.aiSpeed = canvas.height / 4;
-    else if (aiDifficulty === "Hard")
-      this.aiSpeed = canvas.height / 2;
-    else
-      this.aiSpeed = canvas.height * 100;
-
+    this.ai = new PongAi(this.state.getLeftPaddle(), aiDifficulty, canvas, this.state);
     this.playerSpeed = canvas.height / 2;
   }
 
@@ -37,8 +28,8 @@ export default class PracticePongState {
     let timeLeft = frameTime;
     while (timeLeft > 0.0001) {
       const playerMovement = this.getPlayerMovement(timeLeft, upArrow, downArrow);
-      const aiMovement = this.movePaddleAI(this.state.getRightPaddleCenter().y, this.aiSpeed, timeLeft);
-      timeLeft = this.state.update(aiMovement, playerMovement, timeLeft);
+      const aiMovement = this.ai.getMovement(timeLeft);
+      timeLeft = this.state.update(aiMovement, this.ai.maxSpeed, playerMovement, this.playerSpeed, timeLeft);
     }
   }
 
@@ -63,23 +54,6 @@ export default class PracticePongState {
       if (!ctx) return;
 
       drawText(ctx, "Press space to start...", "middle", this.canvas.width / 2, this.canvas.height / 2 + this.state.getFontSize() * 2, this.state.getFont());
-    }
-  }
-
-  private movePaddleAI(paddleCenterY: number, speed: number, frameTime: DOMHighResTimeStamp): number {
-
-    // Very primitive AI
-    // It tracks down the exact current y position of the ball
-    // The difficulty affects the max speed of the paddle
-    const ballPos = this.state.getBallPos().y;
-    const delta = ballPos - paddleCenterY;
-    if (Math.abs(delta) <= speed * frameTime) {
-      return delta;
-    } else {
-      if (delta >= 0)
-        return speed * frameTime;
-      else
-        return -speed * frameTime;
     }
   }
 }

@@ -1,14 +1,13 @@
 import {PongState} from "../logic/PongState";
-import {AIDifficulty} from "../PongManager";
+import {AIDifficulty, PongAi} from "../logic/PongAi";
 
 export default class AIOnlyPongState {
   public state: PongState;
 
   private canvas: HTMLCanvasElement;
   private timeSinceGameOver: DOMHighResTimeStamp;
-
-  private leftSpeed: number;
-  private rightSpeed: number;
+  private leftAi: PongAi;
+  private rightAi: PongAi;
 
   constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
     this.canvas = canvas;
@@ -16,32 +15,17 @@ export default class AIOnlyPongState {
     this.state.restartGame();
     this.timeSinceGameOver = 0;
 
-    if (leftDifficulty === "Easy")
-      this.leftSpeed = canvas.height / 6;
-    else if (leftDifficulty === "Medium")
-      this.leftSpeed = canvas.height / 4;
-    else if (leftDifficulty === "Hard")
-      this.leftSpeed = canvas.height / 2;
-    else
-      this.leftSpeed = canvas.height * 100;
-
-    if (rightDifficulty === "Easy")
-      this.rightSpeed = canvas.height / 6;
-    else if (rightDifficulty === "Medium")
-      this.rightSpeed = canvas.height / 4;
-    else if (rightDifficulty === "Hard")
-      this.rightSpeed = canvas.height / 2;
-    else
-      this.rightSpeed = canvas.height * 100;
+    this.leftAi = new PongAi(this.state.getLeftPaddle(), leftDifficulty, canvas, this.state);
+    this.rightAi = new PongAi(this.state.getRightPaddle(), rightDifficulty, canvas, this.state);
   }
 
   update(frameTime: DOMHighResTimeStamp) {
     if (this.state.isPlaying()) {
       let timeLeft = frameTime;
       while (timeLeft > 0.0001) {
-        const leftMovement = this.movePaddleAI(this.state.getLeftPaddleCenter().y, this.leftSpeed, timeLeft);
-        const rightMovement = this.movePaddleAI(this.state.getRightPaddleCenter().y, this.rightSpeed, timeLeft);
-        timeLeft = this.state.update(leftMovement, rightMovement, timeLeft);
+        const leftMovement = this.leftAi.getMovement(timeLeft);
+        const rightMovement = this.rightAi.getMovement(timeLeft);
+        timeLeft = this.state.update(leftMovement, this.leftAi.maxSpeed, rightMovement, this.rightAi.maxSpeed, timeLeft);
       }
     } else
       this.updateGameOver(frameTime);
@@ -58,22 +42,5 @@ export default class AIOnlyPongState {
 
   render() {
     this.state.render();
-  }
-
-  private movePaddleAI(paddleCenterY: number, speed: number, frameTime: DOMHighResTimeStamp): number {
-
-    // Very primitive AI
-    // It tracks down the exact current y position of the ball
-    // The difficulty affects the max speed of the paddle
-    const ballPos = this.state.getBallEnding().y;
-    const delta = ballPos - paddleCenterY;
-    if (Math.abs(delta) <= speed * frameTime) {
-      return delta;
-    } else {
-      if (delta >= 0)
-        return speed * frameTime;
-      else
-        return -speed * frameTime;
-    }
   }
 }

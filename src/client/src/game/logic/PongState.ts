@@ -83,6 +83,10 @@ export class PongState {
     return this.ball.pos;
   }
 
+  public getBallVel(): Vec2 {
+    return this.ball.vel;
+  }
+
   public getLeftPaddleCenter(): Vec2 {
     return new Vec2(this.leftPaddle.centerX, this.leftPaddle.centerY);
   }
@@ -101,6 +105,14 @@ export class PongState {
 
   public getName(): string {
     return this.name;
+  }
+
+  public getLeftPaddle(): Paddle {
+    return this.leftPaddle;
+  }
+
+  public getRightPaddle(): Paddle {
+    return this.rightPaddle;
   }
 
   public setBackgroundColor(color: string): void {
@@ -123,18 +135,23 @@ export class PongState {
     this.netColor = color;
   }
 
-  public update(leftPaddleMovement: number, rightPaddleMovement: number, frameTime: DOMHighResTimeStamp): number {
+  public update(leftMovement: number, leftMaxSpeed: number,
+                rightMovement: number, rightMaxSpeed: number,
+                frameTime: DOMHighResTimeStamp): number {
     if (this.playing) {
       // Calculate the number of sub updates to perform based on the maximum step size
-      const leftPaddlestepTime = this.calculatePaddleStepTime(leftPaddleMovement, frameTime);
-      const rightPaddlestepTime = this.calculatePaddleStepTime(rightPaddleMovement, frameTime);
+      const leftPaddlestepTime = this.calculatePaddleStepTime(leftMovement, frameTime);
+      const rightPaddlestepTime = this.calculatePaddleStepTime(rightMovement, frameTime);
       const ballstepTime = this.ball.calculateStepTime(this.ballMaxStepSize, frameTime);
       const stepTime = Math.min(leftPaddlestepTime, rightPaddlestepTime, ballstepTime);
-      const frameTimePercent = stepTime / frameTime;
 
       // Move paddles and ball by a fraction of the total movement
-      this.leftPaddle.move(leftPaddleMovement * frameTimePercent);
-      this.rightPaddle.move(rightPaddleMovement * frameTimePercent);
+      const realLeftMaxSpeed = leftMaxSpeed * stepTime;
+      const realLeftMovement = Math.max(-realLeftMaxSpeed, Math.min(realLeftMaxSpeed, leftMovement));
+      this.leftPaddle.move(realLeftMovement);
+      const realRightMaxSpeed = rightMaxSpeed * stepTime;
+      const realRightMovement = Math.max(-realRightMaxSpeed, Math.min(realRightMaxSpeed, rightMovement));
+      this.rightPaddle.move(realRightMovement);
       this.ball.update(stepTime);
 
       // Check for collisions
@@ -224,8 +241,11 @@ export class PongState {
     drawText(ctx, this.leftScore.toString(), "top", this.canvas.width / 4, 10, this.font);
     drawText(ctx, this.rightScore.toString(), "top", this.canvas.width / 4 * 3, 10, this.font);
 
+    ctx.fillStyle = this.leftPaddleColor;
     this.leftPaddle.render(ctx);
+    ctx.fillStyle = this.rightPaddleColor;
     this.rightPaddle.render(ctx);
+    ctx.fillStyle = this.ballColor;
     this.ball.render(ctx);
 
     if (!this.playing) {
