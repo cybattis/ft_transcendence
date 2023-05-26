@@ -12,6 +12,7 @@ async function ValidateEmail() {
   await axios
   .put("http://localhost:5400/auth/" + id, true)
   .then((res) => {
+    console.log(res);
     const data = res.data;
     localStorage.setItem("token", data.token);
     setAuthToken(data.token);

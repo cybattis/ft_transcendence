@@ -17,7 +17,7 @@ interface UserCredential {
 export default function Signup() {
   const [errorInput, setErrorInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { setSignupForm, setLoginForm } = useContext(FormContext);
+  const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
 
   const inputs = {
     nickname: "",
@@ -123,7 +123,7 @@ export default function Signup() {
       })
       .then((res) => {
         setSignupForm(false);
-        alert("An email has been sent to verify your email address. Please check this out before continuing")
+        alert("An email has been sent to verify your email address. Please check this out before continuing.")
       })
       .catch((error) => {
         if (error.response.status === 400) {
@@ -184,6 +184,7 @@ export default function Signup() {
             onClick={() => {
               setSignupForm(false);
               setLoginForm(true);
+              setCodeForm(false);
             }}
           >
             Sign in!

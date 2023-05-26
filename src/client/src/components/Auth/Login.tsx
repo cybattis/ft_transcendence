@@ -3,8 +3,7 @@ import axios from "axios";
 import InputForm from "../InputForm";
 import validator from 'validator';
 import Logo from "../Logo/Logo";
-import { AuthContext, FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
+import { FormContext } from "./dto";
 import "./Auth.css";
 
 interface UserCredential {
@@ -16,8 +15,7 @@ interface UserCredential {
 export default function Login() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
-  const { setAuthToken } = useContext(AuthContext);
-  const { setLoginForm, setSignupForm } = useContext(FormContext);
+  const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
   const inputs = {
     email: '',
     password: '',
@@ -65,20 +63,18 @@ export default function Login() {
     await axios
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
-        if (res.data.status === parseInt('401')) {
+        if (res.status === parseInt('401')) {
           setErrorMessage(res.data.response);
         } else {
-          const data = res.data;
-          localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
+          localStorage.setItem('email', user.email);
           setLoginForm(false);
-          return <Navigate to="/" />;
+          setCodeForm(true);
         }
       })
       .catch((error) => {
         console.log(error);
-        if (error.response.status === 401) {
-          setErrorMessage(error.response.data.message);
+        if (error.status === 401) {
+          setErrorMessage(error.data.message);
         } else setErrorMessage("Server busy... try again");
       });
   };
@@ -116,6 +112,10 @@ export default function Login() {
           className="link42"
           href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
           rel="noopener noreferrer"
+          onClick={() => {
+            setLoginForm(false);
+            setCodeForm(true);
+          }}
         >
           Login with 42
         </a>
@@ -126,6 +126,7 @@ export default function Login() {
             onClick={() => {
               setSignupForm(true);
               setLoginForm(false);
+              setCodeForm(false);
             }}
           >
             Sign up!

@@ -4,11 +4,13 @@ import InputForm from "../InputForm";
 import validator from 'validator';
 import Logo from "../Logo/Logo";
 import { Navigate } from "react-router-dom";
+import { AuthContext } from "./dto";
 import "./Auth.css";
 
 export default function ConfirmEmail() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const { setAuthToken } = useContext(AuthContext);
   const inputs = {
     code: '',
   };
@@ -45,6 +47,7 @@ export default function ConfirmEmail() {
         } else {
           const data = res.data;
           localStorage.setItem("token", data.token);
+          setAuthToken(data.token);
           return <Navigate to="/" />;
         }
       })

@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   UnauthorizedException,
+  Inject
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +14,9 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
 import { MailService } from 'src/mail/mail.service';
+import { GlobalService } from './global.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +26,8 @@ export class AuthService {
     private jwtService: JwtService,
     private usersService: UserService,
     private mailService: MailService,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
@@ -69,12 +75,20 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(email: string, login: string): Promise<any> {
+  async createJwtToken(email: string, login: string): Promise<any> {
     while (await this.usersService.isVerified(email) === null);
+    //mettre verif 2fa
     const payload = { email: email, login: login };
     return {
       token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async intraSignin(email: string): Promise<any> {
+    while (await this.usersService.isVerified(email) === null);
+    //mettre verif 2fa
+    const code = await this.mailService.sendCodeConfirmation(email);
+    await this.cacheManager.set(code, email, 600000);
   }
 
   async findUser(email: string, password: string): Promise<User | null> {
@@ -88,19 +102,9 @@ export class AuthService {
       const isVerified = await this.usersService.isVerified(email);
       if (isVerified)
       {
-        //mettre un while et if de si il a active 2fa
-        //Mettre creation token et truc dans 2fa si active sinon laisse la
-        //move ca dans fonction post du code 2fa 
+        //if de si il a active 2fa
         if (await bcrypt.compare(password, foundUser.password)) {
-          const code = await this.mailService.sendCodeConfirmation(email);
-          if (code != this.usersService.getCode(email))
-          {
-            return new HttpException('Authentification code invalid.', HttpStatus.UNAUTHORIZED);
-          }
-          const payload = { email: email };
-          return {
-            token: await this.jwtService.signAsync(payload),
-          };
+          return this.mailService.sendCodeConfirmation(email);
         }
         throw new HttpException(
           'Incorrect email or password',
@@ -162,5 +166,20 @@ export class AuthService {
         token: await this.jwtService.signAsync(payload),
       };
     }
+  }
+
+  async checkCode(code: string, email: string | null) {
+    for(let i: number = 1; GlobalService.emails[i]; i++)
+    {
+      if (((email && GlobalService.emails[i] === email) || (!email && GlobalService.emails[i] === await this.cacheManager.get(code))) && GlobalService.codes[i] === code)
+      {
+        const payload = { email: email };
+        await this.cacheManager.del(code);
+        return {
+          token: await this.jwtService.signAsync(payload),
+        };
+      }
+    }
+    throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED,);
   }
 }

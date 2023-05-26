@@ -14,6 +14,8 @@ import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { SignupDto } from './dto/auth.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +23,8 @@ export class AuthController {
   private readonly authService: AuthService;
   @Inject(UserService)
   private readonly usersService: UserService;
+  @Inject(CACHE_MANAGER)
+  private cacheManager: Cache;
 
   @Get('42')
   async redirectToAppSignup(
@@ -35,11 +39,12 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
+        const tok42 = await this.authService.createJwtToken(dataUser.email, dataUser.login);
+        return res.redirect('http://localhost:3000/loading?' + tok42.token);
       }
 
-      if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email, dataUser.login);
-        res.redirect('http://localhost:3000/loading?' + token42.token);
+      else if (user.IsIntra) {
+        return await this.authService.intraSignin(dataUser.email);
       }
 
       throw new BadRequestException('Email already in use');
@@ -58,7 +63,6 @@ export class AuthController {
   @Post('signup')
   async signUp(@Body() body: SignupDto): Promise<any> {
     const nicknameExist = await this.usersService.findByLogin(body.nickname);
-    console.log(nicknameExist);
     if (!nicknameExist) {
       const emailExist = await this.usersService.findByEmail(body.email);
       if (!emailExist) {
@@ -74,13 +78,13 @@ export class AuthController {
     return await this.authService.signin(body.email, body.password);
   }
 
+  @Post('2fa')
+  async checkCode(@Body() body: any) {
+    return await this.authService.checkCode(body.code, body.email);
+  }
+
   @Put(':id')
   async update(@Param('id') id: number) {
     return await this.authService.updateValidation(id);
-  }
-  
-  @Post('2fa')
-  async getCodeAuth(@Body() body: number) {
-    return await 
   }
 }
