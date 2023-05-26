@@ -1,12 +1,12 @@
 .launcher {
     box-sizing: border-box;
     display: flex;
+    width: 100%;
     flex-direction: column;
 
     align-items: center;
     justify-content: center;
 
-    width: 100%;
     padding: 15px 30px 25px;
 
     border-radius: 8px;
@@ -15,24 +15,27 @@
 
 .buttons {
     display: flex;
+    width: 100%;
     flex-direction: row;
+    box-sizing: border-box;
 
     align-items: center;
     justify-content: center;
-
-    width: 100%;
 }
 
 .user {
-    box-sizing: border-box;
     display: flex;
-    flex-direction: column;
-    flex: auto;
     width: 100%;
+    height: 100%;
+    flex-direction: column;
+
+    box-sizing: border-box;
+
     border-radius: 8px;
     border: 2px solid #8449BF;
     padding: 15px 50px;
     gap: 21px;
+
 }
 
 .infobox {
@@ -49,27 +52,13 @@
     flex-direction: column;
 }
 
-
-.chat {
-    flex: auto;
-    display: flex;
-    flex-direction: column;
-    height: 95%;
-    box-sizing: border-box;
-
-    border: 2px solid #8449BF;
-
-    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-    border-radius: 8px;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgba(78, 191, 217, 0.3) 100%);
-}
-
 .gamemode {
-    width: 300px;
-    height: 250px;
-    border-radius: 20px;
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
     background-color: #858584;
 }
+
 .gamemode:hover {
     background-color: var(--cyan);
 }

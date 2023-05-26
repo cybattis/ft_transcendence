@@ -3,20 +3,21 @@ import { HomeLogged } from "./HomeLogged";
 import { AIOnlyPong } from "../../game/components/AIOnlyPong";
 import { AuthContext } from "../../components/Auth/dto";
 import { useContext } from "react";
-import axios from 'axios';
+import axios from "axios";
 
 async function CheckToken(token: string | null) {
-  if (token === null)
-    return ;
-  const { data } =  await axios.get('http://localhost:5400/auth/validation/' + token);
-  if (data.status === parseInt('401')) {
-    localStorage.removeItem('token');
+  if (token === null) return;
+  const { data } = await axios.get(
+    "http://localhost:5400/auth/validation/" + token
+  );
+  if (data.status === parseInt("401")) {
+    localStorage.removeItem("token");
   }
 }
 
 export default function Home() {
   const { authed } = useContext(AuthContext);
-  CheckToken(localStorage.getItem('token'));
+  CheckToken(localStorage.getItem("token"));
 
   return (
     <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>

@@ -12,14 +12,6 @@ import {
 } from "./components/Auth/dto";
 import { AuthForms } from "./components/Auth/Forms";
 
-export interface Authed {
-  authed: boolean;
-}
-
-export interface SetAuthed {
-  authCallback: (value: any) => void;
-}
-
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);

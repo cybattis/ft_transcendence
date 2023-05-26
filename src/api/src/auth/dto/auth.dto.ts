@@ -1,6 +1,13 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsStrongPassword,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class IntraUserDto {
+export class IntraSignupDto {
   @IsNotEmpty()
   @IsString()
   login: string;
@@ -15,4 +22,26 @@ export class IntraUserDto {
 
   @IsEmail()
   email: string;
+}
+
+export class SignupDto {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  nickname: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  firstname: string;
+
+  @IsString()
+  lastname: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsStrongPassword()
+  password: string;
 }
