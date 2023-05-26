@@ -1,10 +1,14 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
+import { GameService } from '../game/game.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private gameService: GameService,
+  ) {}
 
   @Get()
   async findAll(): Promise<User[]> {
@@ -24,5 +28,10 @@ export class UserController {
   @Get('check/email/:input')
   async checkEmailInUse(@Param('input') input: string) {
     return this.userService.findByEmail(input);
+  }
+
+  @Get(':id')
+  async findGames(@Param('id') id: number): Promise<any> {
+    return this.gameService.findGame(id);
   }
 }
