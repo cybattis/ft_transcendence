@@ -7,6 +7,7 @@ import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
+import { Decoded } from "../../type/client.type";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
@@ -40,10 +41,6 @@ function GameLauncher() {
       </div>
     </div>
   );
-}
-
-interface Decoded {
-  id: string;
 }
 
 function Result(props: { game: GameBodyDto; data: UserInfo }) {
