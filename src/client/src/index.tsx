@@ -10,6 +10,7 @@ import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
+import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 
 const router = createBrowserRouter([
   {
@@ -45,6 +46,16 @@ const router = createBrowserRouter([
       {
         path: "game",
         element: <Game />,
+      },
+      {
+        path: "leaderboard",
+        element: <Leaderboard />,
+        // loader: async ({ request, params }) => {
+        //   console.log("loader", params);
+        //   return fetch(`http://localhost:5400/user/leaderboard`, {
+        //     signal: request.signal,
+        //   });
+        // },
       },
     ],
   },
