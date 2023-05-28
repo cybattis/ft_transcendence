@@ -5,14 +5,19 @@ import {
   GameStatus,
   GameType,
 } from "../../type/game.type";
+import { useLocation } from "react-router-dom";
 
 export function Game() {
+  const location = useLocation();
+  const props = location.state;
+  console.log(props);
+
   const data: GameBodyDto = {
-    type: GameType.CASUAL,
+    type: props.type as GameType,
     mode: GameMode.V1,
-    players: [1, 2],
-    scoreP1: 11,
-    scoreP2: 7,
+    ids: [2, 1],
+    scoreP1: 7,
+    scoreP2: 11,
     status: GameStatus.FINISHED,
   };
 
