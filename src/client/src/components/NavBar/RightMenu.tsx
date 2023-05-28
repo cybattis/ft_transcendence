@@ -56,8 +56,8 @@ function Logged() {
 
   return (
     <>
-      <Link to={`/profile/${decoded?.id}`}>
-        <Avatar size="5%" />
+      <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
+        Profile
       </Link>
       <button className="disconnect" onClick={handleDisconnect}>
         Disconnect
@@ -67,14 +67,9 @@ function Logged() {
 }
 
 export default function RightMenu() {
-  const rightMenu = {
-    display: "flex",
-    flexDirection: "row" as "row",
-    maxWidth: "max-content",
-    paddingRight: "6em",
-  };
-
   const { authed } = useContext(AuthContext);
 
-  return <div style={rightMenu}>{!authed ? <Unlogged /> : <Logged />}</div>;
+  return (
+    <div className={"rightMenu"}>{!authed ? <Unlogged /> : <Logged />}</div>
+  );
 }
