@@ -1,8 +1,12 @@
 import React, { useContext } from "react";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
+import { Avatar } from "../Avatar";
+import "./RightMenu.css";
+import jwt_decode from "jwt-decode";
+import { Decoded } from "../../type/client.type";
 
 function Unlogged() {
   const logoSignup = {
@@ -34,17 +38,28 @@ function Unlogged() {
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
-  const naviguate = useNavigate();
+  const navigate = useNavigate();
+
+  let decoded: Decoded | null = null;
+
+  try {
+    decoded = jwt_decode(localStorage.getItem("token")!);
+  } catch (e) {
+    console.log(e);
+  }
 
   const handleDisconnect = () => {
     localStorage.removeItem("token");
     setAuthToken(null);
-    naviguate("/");
+    navigate("/");
   };
 
   return (
     <>
-      <button className="" onClick={handleDisconnect}>
+      <Link to={`/profile/${decoded?.id}`}>
+        <Avatar size="5%" />
+      </Link>
+      <button className="disconnect" onClick={handleDisconnect}>
         Disconnect
       </button>
     </>
