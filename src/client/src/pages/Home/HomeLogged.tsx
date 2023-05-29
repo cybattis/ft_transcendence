@@ -133,7 +133,7 @@ function UserProfile() {
   return (
     <div className="user">
       <div className="infobox">
-        <Avatar size="20%" img={data.avatarUrl} />
+        <Avatar size="200px" img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>

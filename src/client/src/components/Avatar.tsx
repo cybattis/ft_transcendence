@@ -9,11 +9,9 @@ export interface AvatarProps {
 export function Avatar(props: AvatarProps) {
   const style = {
     boxSizing: "border-box" as "border-box",
-    flex: "auto",
     borderRadius: "50%",
-    height: "100%",
-    maxWidth: props.size,
-    maxHeight: "100%",
+    height: props.size,
+    width: props.size,
     objectFit: "cover" as "cover",
   };
 
