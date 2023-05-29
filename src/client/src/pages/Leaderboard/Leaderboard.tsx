@@ -1,7 +1,8 @@
 import "./Leaderboard.css";
 import { useLoaderData } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
-import { LeaderboardItemProps } from "../../type/client.type";
+import { UserInfo } from "../../type/user.type";
+import { GameBodyDto } from "../../type/game.type";
 
 function TableHeader() {
   return (
@@ -15,36 +16,30 @@ function TableHeader() {
   );
 }
 
+export interface LeaderboardProps {
+  nickname: string;
+  avatar: string;
+  games: GameBodyDto[];
+  totalGameWon: number;
+  elo: number;
+}
+
 export function Leaderboard() {
-  let data = useLoaderData();
-  const fakeData: LeaderboardItemProps[] = [
-    {
-      rank: 1,
-      nickname: "test",
-      avatar: "https://www.w3schools.com/howto/img_avatar.png",
-      winrate: 60,
-      gamePlayed: 20,
-      elo: 1050,
-    },
-    {
-      rank: 2,
-      nickname: "test2",
-      avatar: "https://www.w3schools.com/howto/img_avatar.png",
-      winrate: 45,
-      gamePlayed: 25,
-      elo: 880,
-    },
-  ];
+  let data = useLoaderData() as UserInfo[];
+  console.log("Leaderboard: ", data);
 
   return (
     <div className={"Leaderboard"}>
       <h5 id={"title"}>Leaderboard</h5>
       <TableHeader />
-      {fakeData.map((item, index) => (
-        <div key={index}>
-          <LeaderboardItem data={fakeData[index]} />
-        </div>
-      ))}
+      {data &&
+        data.map((item, index) => (
+          <div key={index}>
+            {item.games && item.games?.length > 0 ? (
+              <LeaderboardItem rank={index} data={data[index]} />
+            ) : null}
+          </div>
+        ))}
     </div>
   );
 }
