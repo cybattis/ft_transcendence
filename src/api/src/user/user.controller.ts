@@ -1,24 +1,18 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
-import { GameService } from '../game/game.service';
-import { ModuleRef } from '@nestjs/core';
+import { UserInfo } from '../type/user.type';
 
 @Controller('user')
 export class UserController {
-  private gameService: GameService;
-  constructor(private userService: UserService, private moduleRef: ModuleRef) {}
-
-  onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, { strict: false });
-  }
+  constructor(private userService: UserService) {}
 
   @Get()
   async findAll(): Promise<User[]> {
     return this.userService.findAll();
   }
 
-  @Get(':id')
+  @Get('profile/:id')
   async userInfo(@Param('id') id: number): Promise<any> {
     return this.userService.userInfo(id);
   }
@@ -33,8 +27,8 @@ export class UserController {
     return this.userService.findByEmail(input);
   }
 
-  @Get(':id')
-  async findGames(@Param('id') id: number): Promise<any> {
-    return this.gameService.findGame(id);
+  @Get('leaderboard')
+  async leaderboard(): Promise<UserInfo[]> {
+    return this.userService.leaderboard();
   }
 }

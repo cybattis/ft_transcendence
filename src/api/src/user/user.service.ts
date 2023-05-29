@@ -45,7 +45,7 @@ export class UserService implements OnModuleInit {
       level: user.level,
       xp: user.xp,
       ranking: user.ranking,
-      avatar: user.avatarUrl,
+      avatarUrl: user.avatarUrl,
       games: await this.gameService.findGame(id),
       totalGameWon: user.totalGameWon,
 
@@ -53,5 +53,22 @@ export class UserService implements OnModuleInit {
       // Friends list ?
       // Achievements ?
     };
+  }
+
+  async leaderboard(): Promise<UserInfo[] | any> {
+    return this.usersRepository.find({
+      order: { ranking: 'DESC' },
+      take: 10,
+      select: {
+        id: true,
+        nickname: true,
+        ranking: true,
+        avatarUrl: true,
+        totalGameWon: true,
+      },
+      relations: {
+        games: true,
+      },
+    });
   }
 }
