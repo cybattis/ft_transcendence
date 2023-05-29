@@ -8,7 +8,6 @@ function TableHeader() {
   return (
     <div className={"tableHeader"}>
       <div id={"tableLeft"}>
-        <div>Rank</div>
         <div>Player</div>
       </div>
       <div id={"tableRight"}>

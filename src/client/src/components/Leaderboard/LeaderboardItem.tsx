@@ -12,7 +12,7 @@ export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
     <div className={"container"}>
       <div className={"leaderboardItem"}>
         <div id={"leftSide"}>
-          <div>{props.rank + 1}</div>
+          <div id={"pastille"}>{props.rank + 1}</div>
           <Avatar size={"40px"} img={props.data.avatarUrl} />
           <div>{props.data.nickname}</div>
         </div>
