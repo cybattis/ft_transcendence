@@ -105,6 +105,7 @@ function UserProfile() {
   const [data, setData] = useState<UserInfo>({
     id: 0,
     nickname: "",
+    avatarUrl: "",
     level: 0,
     xp: 0,
     ranking: 0,
@@ -115,7 +116,7 @@ function UserProfile() {
     console.log(decoded);
     async function fetchData(id: string) {
       await axios
-        .get(`http://localhost:5400/user/${id}`, {
+        .get(`http://localhost:5400/user/profile/${id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -123,8 +124,6 @@ function UserProfile() {
         })
         .then((response) => {
           setData(response.data);
-
-          console.log(response.data);
         });
     }
 
@@ -134,7 +133,7 @@ function UserProfile() {
   return (
     <div className="user">
       <div className="infobox">
-        <Avatar size="20%" img={data.avatar} />
+        <Avatar size="20%" img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
