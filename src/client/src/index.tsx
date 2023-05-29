@@ -37,8 +37,7 @@ const router = createBrowserRouter([
         path: "profile/:id",
         element: <Profile />,
         loader: async ({ request, params }) => {
-          console.log("loader", params);
-          return fetch(`http://localhost:5400/user/${params.id}`, {
+          return fetch(`http://localhost:5400/user/profile/${params.id}`, {
             signal: request.signal,
           });
         },
@@ -50,12 +49,9 @@ const router = createBrowserRouter([
       {
         path: "leaderboard",
         element: <Leaderboard />,
-        // loader: async ({ request, params }) => {
-        //   console.log("loader", params);
-        //   return fetch(`http://localhost:5400/user/leaderboard`, {
-        //     signal: request.signal,
-        //   });
-        // },
+        loader: async () => {
+          return fetch(`http://localhost:5400/user/leaderboard`);
+        },
       },
     ],
   },
