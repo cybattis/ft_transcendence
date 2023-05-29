@@ -7,11 +7,14 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
+import {ChannelModule} from "./channel/channel.module";
+import {ChannelService} from "./channel/channel.service";
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    ChannelModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -25,6 +28,6 @@ import { ChatGateway } from './chat/chat.gateway';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  providers: [AppService, ChatGateway, ChannelService],
 })
 export class AppModule {}

@@ -8,6 +8,7 @@ import Team from "./pages/Team";
 import Home from "./pages/Home/Home";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
+import ChatClient from "./pages/Chat/Chat";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "chat",
+        element: <ChatClient />,
       },
       {
         path: "loading",

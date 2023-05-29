@@ -36,7 +36,7 @@ export class AuthController {
       }
 
       if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email);
+        const token42 = await this.authService.intraSignin(dataUser.email, dataUser.login);
         res.redirect('http://localhost:3000/loading?' + token42.token);
       }
 

@@ -67,8 +67,8 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(email: string): Promise<any> {
-    const payload = { email: email };
+  async intraSignin(email: string, login: string): Promise<any> {
+    const payload = { email: email, login: login };
     return {
       token: await this.jwtService.signAsync(payload),
     };
