@@ -3,8 +3,6 @@ import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
-import { Avatar } from "../Avatar";
-import "./RightMenu.css";
 import jwt_decode from "jwt-decode";
 import { Decoded } from "../../type/client.type";
 
