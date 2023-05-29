@@ -7,11 +7,15 @@ import { GameBodyDto } from "../../type/game.type";
 function TableHeader() {
   return (
     <div className={"tableHeader"}>
-      <div>Rank</div>
-      <div>Player</div>
-      <div>Winrate</div>
-      <div>Game played</div>
-      <div>ELO</div>
+      <div id={"tableLeft"}>
+        <div>Rank</div>
+        <div>Player</div>
+      </div>
+      <div id={"tableRight"}>
+        <div>Winrate</div>
+        <div>Game played</div>
+        <div>ELO</div>
+      </div>
     </div>
   );
 }
@@ -29,7 +33,7 @@ export function Leaderboard() {
   console.log("Leaderboard: ", data);
 
   return (
-    <div className={"Leaderboard"}>
+    <div className={"leaderboard"}>
       <h5 id={"title"}>Leaderboard</h5>
       <TableHeader />
       {data &&
