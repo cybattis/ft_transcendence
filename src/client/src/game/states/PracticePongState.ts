@@ -13,7 +13,7 @@ export default class PracticePongState {
     this.canvas = canvas;
     this.state = new PongState(name, canvas, "AI", "Player");
     this.ai = new PongAi(this.state.getLeftPaddle(), aiDifficulty, canvas, this.state);
-    this.playerSpeed = canvas.height / 2;
+    this.playerSpeed = canvas.height * 0.8;
   }
 
   start() {

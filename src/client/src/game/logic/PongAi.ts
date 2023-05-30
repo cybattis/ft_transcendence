@@ -28,17 +28,17 @@ export class PongAi {
     this.isLeft = paddle.pos.x < canvas.width / 2;
 
     if (difficulty === "Easy") {
-      this.speed = canvas.height / 1.5;
+      this.speed = canvas.height * 0.8;
       this.errorFactor = 0.5;
       this.timeToUpdate = 0.1;
       this.returnToCenter = false;
     } else if (difficulty === "Medium") {
-      this.speed = canvas.height / 1.5;
+      this.speed = canvas.height * 0.8;
       this.errorFactor = 0.25;
       this.timeToUpdate = 0.5;
       this.returnToCenter = true;
     } else if (difficulty === "Hard") {
-      this.speed = canvas.height / 1.5;
+      this.speed = canvas.height * 0.8;
       this.errorFactor = 0.125;
       this.timeToUpdate = 0.25;
       this.returnToCenter = true;

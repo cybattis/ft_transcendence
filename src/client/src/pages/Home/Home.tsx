@@ -1,13 +1,12 @@
-import React from "react";
-import { HomeLogged } from "./HomeLogged";
-import { AIOnlyPong } from "../../game/components/AIOnlyPong";
-import { AuthContext } from "../../components/Auth/dto";
-import { useContext } from "react";
+import React, {useContext} from "react";
+import {HomeLogged} from "./HomeLogged";
+import {AuthContext} from "../../components/Auth/dto";
 import axios from "axios";
+import {PracticePong} from "../../game/components/PracticePong";
 
 async function CheckToken(token: string | null) {
   if (token === null) return;
-  const { data } = await axios.get(
+  const {data} = await axios.get(
     "http://localhost:5400/auth/validation/" + token
   );
   if (data.status === parseInt("401")) {
@@ -16,11 +15,11 @@ async function CheckToken(token: string | null) {
 }
 
 export default function Home() {
-  const { authed } = useContext(AuthContext);
+  const {authed} = useContext(AuthContext);
   CheckToken(localStorage.getItem("token"));
 
   return (
-    <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>
+    <div className="full">{!authed ? <HomeUnlogged/> : <HomeLogged/>}</div>
   );
 }
 
@@ -61,12 +60,11 @@ function HomeUnlogged() {
         Come play to the new and fun multiplayer pong game !
       </h4>
       <div style={game}>
-        <AIOnlyPong
+        <PracticePong
           name={"Home game"}
           width={954}
           height={537}
-          leftDifficulty={"Medium"}
-          rightDifficulty={"Hard"}
+          aiDifficulty={"Medium"}
         />
       </div>
     </div>
