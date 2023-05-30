@@ -1,3 +1,5 @@
+import "./XPBar.css";
+
 export function XPBar(props: { xp: number; lvl: number }) {
   return (
     <>
