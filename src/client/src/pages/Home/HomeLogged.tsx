@@ -8,6 +8,7 @@ import { UserInfo } from "../../type/user.type";
 import { Link } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
+import { XPBar } from "../../components/XPBar/XPBar";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
@@ -138,7 +139,7 @@ function UserProfile() {
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
           <p>{data.xp} xp</p>
-          <progress id="progressbar" max={1000} value={data.xp}></progress>
+          <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
       <div className="stats">
