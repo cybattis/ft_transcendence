@@ -46,7 +46,7 @@ export class UserService implements OnModuleInit {
       xp: user.xp,
       ranking: user.ranking,
       avatarUrl: user.avatarUrl,
-      games: await this.gameService.findGame(id),
+      games: await this.gameService.findUserGames(id),
       totalGameWon: user.totalGameWon,
 
       // Channel list ?
