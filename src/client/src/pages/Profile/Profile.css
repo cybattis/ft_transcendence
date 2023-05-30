@@ -1,0 +1,75 @@
+.profilePage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: var(--vp-size);
+}
+
+.profilePage #nickname {
+    margin-bottom: 30px;
+}
+
+.profilePage #infobox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    width: 1000px;
+    margin-top: 30px;
+    gap: 50px;
+}
+
+.profilePage #info {
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+
+    margin: 10px;
+}
+
+.profilePage #stats {
+    display: flex;
+    flex-direction: row;
+
+    justify-content: center;
+
+    width: 1000px;
+    gap: 50px;
+    margin-top: 25px;
+
+    /*border: #8449BF 2px solid;*/
+    /*border-radius: 25px;*/
+}
+
+.dataBox {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+}
+
+.profilePage #gamesStatsBox {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: left;
+
+    width: 1000px;
+    margin-top: 25px;
+    gap: 10px;
+}
+
+#gamesStatsBoxTitle {
+    margin: 0;
+    padding: 0;
+}
+
+.profilePage #hrbar {
+    width: 100%;
+    border: 0;
+    height: 3px;
+    background: var(--purple-wave);
+}
