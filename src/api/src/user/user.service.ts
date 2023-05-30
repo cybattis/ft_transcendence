@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Not, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
@@ -68,6 +68,9 @@ export class UserService implements OnModuleInit {
       },
       relations: {
         games: true,
+      },
+      where: {
+        games: MoreThan(0),
       },
     });
   }
