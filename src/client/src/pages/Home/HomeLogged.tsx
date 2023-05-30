@@ -8,8 +8,22 @@ import { UserInfo } from "../../type/user.type";
 import { Link } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
+import { io, Manager } from "socket.io-client";
+
+const socketManager = new Manager("ws://localhost:5400");
+const socket = socketManager.socket("/");
+
+socket.on("connect", () => {
+  console.log("connected to matchmaking server");
+});
+
+socket.on("disconnect", () => {
+  console.log("disconnected from matchmaking server");
+});
 
 function GameMode(props: { name: string; gameType: GameType }) {
+  const [searching, setSearching] = useState(false);
+
   const content = {
     display: "flex",
     flexDirection: "column" as "column",
@@ -22,10 +36,48 @@ function GameMode(props: { name: string; gameType: GameType }) {
     margin: "10px",
   };
 
+  const handleClick = () => {
+    let decoded: Decoded | null = null;
+    try {
+      decoded = jwt_decode(localStorage.getItem("token")!);
+    } catch (e) {
+    }
+
+    if (decoded) {
+      if (searching) {
+        switch (props.gameType) {
+          case GameType.PRACTICE:
+            // TODO: Practice game shouldn't be searchable
+            break;
+          case GameType.CASUAL:
+            socket.emit("leave-matchmaking-casual", {playerId: decoded.id});
+            break;
+          case GameType.RANKED:
+            socket.emit("leave-matchmaking-ranked", {playerId: decoded.id});
+            break;
+        }
+      } else {
+        switch (props.gameType) {
+          case GameType.PRACTICE:
+            // TODO: Practice game shouldn't be searchable
+            break;
+          case GameType.CASUAL:
+            socket.emit("join-matchmaking-casual", {playerId: decoded.id});
+            break;
+          case GameType.RANKED:
+            socket.emit("join-matchmaking-ranked", {playerId: decoded.id});
+            break;
+        }
+      }
+    }
+
+    setSearching(!searching);
+  }
+
   return (
     <div style={content}>
       <h5>{props.name}</h5>
-      <Link to="game" state={{ type: props.gameType }} className="gamemode" />
+      {searching ? (<button onClick={handleClick} className="gamemode-searching"/>) : (<button onClick={handleClick} className="gamemode"/>)}
     </div>
   );
 }
