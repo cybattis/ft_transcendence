@@ -36,7 +36,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.join(roomChan);
     socket.emit('join', roomChan);
     this.channelService.addChannel(roomChan, socket.id);
-    this.channelService.findAllChannels();
   }
   
   @SubscribeMessage('ping')

@@ -13,25 +13,37 @@ export class ChannelService {
             this.channelStruct.push(new ChannelStructure(nameChannel, username));
             return ;
         }
-        let index = 0;
-        for (index; index < this.channelStruct.length; index++){
+        for (let index = 0; index < this.channelStruct.length; ++index){
             if (nameChannel === this.channelStruct[index].name)
             {
-                if (!this.channelStruct[index].isUser(username))
-                    return ;
-                else
+                if (this.channelStruct[index].isUser(username)){
                     this.channelStruct[index].newUser(username);
+                }
+                return;
             }
         }
         this.channelStruct.push(new ChannelStructure(nameChannel, username));
+        this.findAllChannels();
     }
 
     findAllChannels(){
-        for (let index = 0; index < this.channelStruct.length; index++)
+        console.log('Fichus FindAllChannels');
+        console.log(`length ${this.channelStruct.length}`);
+        for (let index = 0; index < this.channelStruct.length; ++index)
         {
-            console.log(`Channel : ${this.channelStruct[index].name}`);
-            for (let indexUsers = 0; indexUsers < this.channelStruct[index].players.length; indexUsers++)
+            console.log(`Channel : ${this.channelStruct[index].getName()} length ${this.channelStruct[index].players.length}`);
+            for (let indexUsers = 0; indexUsers < this.channelStruct[index].players.length; ++indexUsers)
                 console.log(this.channelStruct[index].players[indexUsers])
         }
+    }
+
+    listUsersChannel(channel: string){
+        console.log(`length ${this.channelStruct.length}`);
+        for (let index = 0; index < this.channelStruct.length; ++index){
+            if (channel === this.channelStruct[index].name) {
+                return (this.channelStruct[index].players)
+            }
+        }
+        return null;
     }
 }

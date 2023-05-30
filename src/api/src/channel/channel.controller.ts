@@ -1,23 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import {Controller, Get, Param, Inject, Injectable} from '@nestjs/common';
+import {ChannelService} from "./channel.service";
 
-@Controller('channels')
+@Injectable()
+@Controller('channel')
 export class ChannelController {
-    private channelList: string[] = [];
+    constructor(@Inject(ChannelService) private readonly channelService: ChannelService) {}
 
-    @Get()
-    getChannels(): string[] {
-        return this.channelList;
-    }
-
-    addChannel(newChannel : string){
-        console.log("OUI");
-        if (this.channelList.length === 0)
-            this.channelList.push(newChannel);
-        for (let channel in this.channelList) {
-            if (channel === newChannel)
-                return ;
-        }
-        console.log('AddnewChan');
-        this.channelList.push(newChannel);
+    @Get(`/users`)
+    getUsers(@Param('name') name : string){
+        console.log("Inside getUsers")
+        return (this.channelService.listUsersChannel(name));
     }
 }
