@@ -30,7 +30,7 @@ export class GameService implements OnModuleInit {
     return this.gameRepository.find();
   }
 
-  async findGame(userId: number): Promise<Game[] | string> {
+  async findUserGames(userId: number): Promise<Game[] | string> {
     const user: User | null = await this.userRepository.findOne({
       relations: ['games'],
       where: { id: userId },

@@ -35,6 +35,6 @@ export class UserController {
 
   @Get(':id')
   async findGames(@Param('id') id: number): Promise<any> {
-    return this.gameService.findGame(id);
+    return this.gameService.findUserGames(id);
   }
 }
