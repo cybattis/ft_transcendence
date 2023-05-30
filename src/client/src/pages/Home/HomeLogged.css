@@ -77,8 +77,38 @@
     border-radius: 8px;
 }
 
+.gamemode-searching {
+    width: 80%;
+    height: 0;
+    padding-bottom: 80%;
+    background-color: #ff0000;
+    border-radius: 8px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+}
+
 .gamemode:hover {
     background-color: var(--cyan);
+}
+
+.gamemode-searching:hover {
+    background-color: #700000;
 }
 
 progress[value] {

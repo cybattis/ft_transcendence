@@ -9,9 +9,11 @@ import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
+import { MatchmakingModule } from "./matchmaking/matchmaking.module";
 
 @Module({
   imports: [
+    MatchmakingModule,
     UserModule,
     AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
