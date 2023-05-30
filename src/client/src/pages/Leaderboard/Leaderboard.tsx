@@ -2,7 +2,6 @@ import "./Leaderboard.css";
 import { useLoaderData } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
-import { GameBodyDto } from "../../type/game.type";
 
 function TableHeader() {
   return (
@@ -19,16 +18,9 @@ function TableHeader() {
   );
 }
 
-export interface LeaderboardProps {
-  nickname: string;
-  avatar: string;
-  games: GameBodyDto[];
-  totalGameWon: number;
-  elo: number;
-}
-
 export function Leaderboard() {
   let data = useLoaderData() as UserInfo[];
+
   console.log("Leaderboard: ", data);
 
   return (
@@ -38,9 +30,7 @@ export function Leaderboard() {
       {data &&
         data.map((item, index) => (
           <div key={index}>
-            {item.games && item.games?.length > 0 ? (
-              <LeaderboardItem rank={index} data={data[index]} />
-            ) : null}
+            <LeaderboardItem rank={index} data={item} />
           </div>
         ))}
     </div>
