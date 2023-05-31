@@ -82,3 +82,8 @@
     margin: 0;
     background: var(--dark-grey);
 }
+
+.matchesTable {
+    overflow-y: scroll;
+    height: 350px;
+}

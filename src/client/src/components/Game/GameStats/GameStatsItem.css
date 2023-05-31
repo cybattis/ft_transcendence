@@ -9,6 +9,8 @@
     height: 50px;
     gap: 100px;
 
+    margin-bottom: 10px;
+
     border-radius: 8px;
 
     background-color: var(--purple-dark);
@@ -34,7 +36,6 @@
     width: 1000px;
     height: 40px;
     gap: 100px;
-    margin-bottom: -10px;
 
     border-radius: 8px;
     border: 2px solid var(--purple-wave);
@@ -52,7 +53,15 @@
     margin-left: 15px;
 }
 
-.gameStatHeader #opponent {
+#opponent {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 15px;
+
     margin-left: -10px;
 }
 

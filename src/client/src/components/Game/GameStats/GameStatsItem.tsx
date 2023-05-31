@@ -1,6 +1,8 @@
 import { GameStatsDto, GameType } from "../../../type/game.type";
 import "./GameStatsItem.css";
 import { Link } from "react-router-dom";
+import { Avatar } from "../../Avatar";
+import { MatcheScore } from "../MatcheScore";
 
 export function GameStatsHeader() {
   return (
@@ -27,11 +29,12 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
       opponentId = props.game.players[0].id;
     }
     return (
-      <div id={"opponent"}>
-        <Link to={`/profile/${opponentId}`} className={"opponentProfile"}>
+      <Link to={`/profile/${opponentId}`} className={"opponentProfile"}>
+        <div id={"opponent"}>
+          <Avatar size={"30px"} />
           {name}
-        </Link>
-      </div>
+        </div>
+      </Link>
     );
   }
 
@@ -55,11 +58,11 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
         (props.game.ids[1] == props.id &&
           props.game.scoreP1 < props.game.scoreP2) ? (
           <div id={"win"}>
-            {props.game.scoreP1}-{props.game.scoreP2}
+            <MatcheScore game={props.game} userId={props.id} />
           </div>
         ) : (
           <div id={"loose"}>
-            {props.game.scoreP1}-{props.game.scoreP2}
+            <MatcheScore game={props.game} userId={props.id} />
           </div>
         )}
       </div>

@@ -47,12 +47,13 @@ export function Profile() {
         <h5 id={"gamesStatsBoxTitle"}>Matche history</h5>
         <hr id={"hrbar"} />
         <GameStatsHeader />
-        <div id={"gamesStats"}></div>
-        {data.games?.map((game: GameStatsDto, index) => (
-          <div key={index}>
-            <GameStatsItem game={game} id={data.id} />
-          </div>
-        ))}
+        <div className={"matchesTable"}>
+          {data.games?.map((game: GameStatsDto, index) => (
+            <div key={index}>
+              <GameStatsItem game={game} id={data.id} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
