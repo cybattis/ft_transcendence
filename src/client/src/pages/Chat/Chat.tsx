@@ -58,7 +58,7 @@ export default function ChatClient() {
     newSocket.on('rcv', (data: { msg: string, channel: string }) => {
       console.log(`RCV: ${data.msg}, socket ${data.channel}`);
       setRecvMess(data.msg);
-      if (!inMyChannel(data.channel) || !activeChannel(data.channel)) {
+      if (!inMyChannel(data.channel)){
         return;
       }
       const rcv: ChatInterface = { user: "Rcv", channel: data.channel, message: data.msg };
@@ -103,7 +103,22 @@ export default function ChatClient() {
       if (canal) {
         canal.innerHTML = channel;
       }
-    } else {
+    }
+    else if (cmd === "/op"){
+      const channel = takeActiveCanal();
+      const username: string = "Emet";
+      const target: string = "target";
+      const cmd: string = "+o";
+      const op: string = "op"
+      const message = {op : op, channel : channel, username: username, cmd: cmd, target: target};
+      socketRef.current.emit('op', message);
+      console.log(`message op ${msg}`);
+    } else if (cmd === "/info") {
+      console.log(`message info ${msg}`);
+      const channel = takeActiveCanal();
+      console.log(`active ${channel}`);
+      socketRef.current.emit('info', {channel});
+    }else {
       const channel = takeActiveCanal();
       msg = channel + " %" + msg;
       console.log(`Send normal message: ${msg}`);

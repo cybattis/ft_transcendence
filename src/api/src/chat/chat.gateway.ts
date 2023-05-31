@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { WsResponse ,WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, WsResponse ,WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import {ChannelService} from "../channel/channel.service";
 
@@ -37,7 +37,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.emit('join', roomChan);
     this.channelService.addChannel(roomChan, socket.id);
   }
-  
+
+  @SubscribeMessage('op')
+  handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log(socket.id, data);
+    //this.channelService.newOp();
+    //this.channelService.delOp();
+  }
+
+  @SubscribeMessage('info')
+  handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    const channel = data.channel;
+    const msg = this.channelService.infoChannel(channel);
+    if (msg != null) {
+      console.log(msg);
+      socket.broadcast.emit('rcv', {msg, channel});
+    }
+  }
   @SubscribeMessage('ping')
   handlePing(socket: Socket) {
     console.log(`Received ping`);
