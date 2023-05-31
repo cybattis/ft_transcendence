@@ -8,7 +8,7 @@ export class ChannelController {
 
     @Get(`/users`)
     getUsers(@Param('name') name : string){
-        console.log("Inside getUsers")
+        /*console.log("Inside getUsers")*/
         return (this.channelService.listUsersChannel(name));
     }
 }

@@ -31,6 +31,7 @@ export class ChannelService {
         console.log(`length ${this.channelStruct.length}`);
         for (let index = 0; index < this.channelStruct.length; ++index)
         {
+            console.log(`index ${index}`);
             console.log(`Channel : ${this.channelStruct[index].getName()} length ${this.channelStruct[index].players.length}`);
             for (let indexUsers = 0; indexUsers < this.channelStruct[index].players.length; ++indexUsers)
                 console.log(this.channelStruct[index].players[indexUsers])
@@ -41,6 +42,7 @@ export class ChannelService {
         console.log(`length ${this.channelStruct.length}`);
         for (let index = 0; index < this.channelStruct.length; ++index){
             if (channel === this.channelStruct[index].name) {
+                console.log(this.channelStruct[index].players);
                 return (this.channelStruct[index].players)
             }
         }
