@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
 import { XPBar } from "../../components/XPBar/XPBar";
+import { calculateWinrate } from "../../utils/calculateWinrate";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
@@ -80,10 +81,7 @@ function LastMatch(props: { data: UserInfo }) {
 }
 
 function Winrate(props: { data: UserInfo }) {
-  const winrate: number =
-    props.data.totalGameWon && props.data.games?.length
-      ? (props.data.totalGameWon * 100) / props.data.games?.length
-      : 0;
+  const winrate: number = calculateWinrate(props.data);
 
   return (
     <div className={"statsBox"}>
