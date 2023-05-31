@@ -51,25 +51,34 @@
     gap: 10px;
 }
 
-.profilePage #gamesStatsBox {
+.gamesStatsBox {
     display: flex;
     flex-direction: column;
 
     justify-content: left;
 
     width: 1000px;
-    margin-top: 25px;
+    margin-top: 10px;
     gap: 10px;
 }
 
 #gamesStatsBoxTitle {
-    margin: 0;
+    margin: 0 0 0 50px;
     padding: 0;
 }
 
-.profilePage #hrbar {
+.gamesStatsBox #hrbar {
     width: 100%;
     border: 0;
-    height: 3px;
-    background: var(--purple-wave);
+    height: 2px;
+    margin: 5px 0 0;
+    background: var(--grey);
+}
+
+.gamesStatsBox #hrbar2 {
+    width: 100%;
+    border: 0;
+    height: 2px;
+    margin: 0;
+    background: var(--dark-grey);
 }

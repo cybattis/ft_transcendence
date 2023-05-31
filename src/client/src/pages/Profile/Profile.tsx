@@ -3,10 +3,18 @@ import { useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import { XPBar } from "../../components/XPBar/XPBar";
+import {
+  GameStatsHeader,
+  GameStatsItem,
+} from "../../components/Game/GameStats/GameStatsItem";
+import { calculateWinrate } from "../../utils/calculateWinrate";
+import { GameStatsDto } from "../../type/game.type";
 
 export function Profile() {
+  // TODO: check token validity
+
   let data = useLoaderData() as UserInfo;
-  const winrate = 0;
+  const winrate: number = calculateWinrate(data);
 
   console.log(data);
 
@@ -35,10 +43,16 @@ export function Profile() {
           <div>{winrate}%</div>
         </div>
       </div>
-      <div id={"gamesStatsBox"}>
-        <h3 id={"gamesStatsBoxTitle"}>Games</h3>
+      <div className={"gamesStatsBox"}>
+        <h5 id={"gamesStatsBoxTitle"}>Matche history</h5>
         <hr id={"hrbar"} />
+        <GameStatsHeader />
         <div id={"gamesStats"}></div>
+        {data.games?.map((game: GameStatsDto, index) => (
+          <div key={index}>
+            <GameStatsItem game={game} id={data.id} />
+          </div>
+        ))}
       </div>
     </div>
   );
