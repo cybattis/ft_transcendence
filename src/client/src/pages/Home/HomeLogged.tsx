@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link } from "react-router-dom";
-import { GameBodyDto, GameType } from "../../type/game.type";
+import { GameStatsDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
+import { MatcheScore } from "../../components/Game/MatcheScore";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
@@ -45,22 +46,26 @@ function GameLauncher() {
   );
 }
 
-function Result(props: { game: GameBodyDto; data: UserInfo }) {
+function Result(props: { game: GameStatsDto; userId: number }) {
+  const isWin =
+    (props.game.players[0].id == props.userId &&
+      props.game.scoreP1 > props.game.scoreP2) ||
+    (props.game.ids[1] == props.userId &&
+      props.game.scoreP1 < props.game.scoreP2);
+
   return (
     <div className={"gameResult"}>
-      <div>
-        {(props.game.ids[0] == props.data.id &&
-          props.game.scoreP1 > props.game.scoreP2) ||
-        (props.game.ids[1] == props.data.id &&
-          props.game.scoreP1 < props.game.scoreP2) ? (
+      {isWin ? (
+        <div>
           <div className={"win"}>Win</div>
-        ) : (
+          <MatcheScore game={props.game} userId={props.userId} />
+        </div>
+      ) : (
+        <div>
           <div className={"loose"}>Loose</div>
-        )}
-      </div>
-      <div>
-        {props.game.scoreP1}-{props.game.scoreP2}
-      </div>
+          <MatcheScore game={props.game} userId={props.userId} />
+        </div>
+      )}
     </div>
   );
 }
@@ -72,7 +77,7 @@ function LastMatch(props: { data: UserInfo }) {
       <div className={"lastmatch"}>
         {props.data.games?.slice(-5).map((game, index) => (
           <div key={index}>
-            <Result game={game} data={props.data} />
+            <Result game={game} userId={props.data.id} />
           </div>
         ))}
       </div>
