@@ -88,7 +88,7 @@ export default function FaCode() {
     <div className="background">
       <div className="authForm">
         <Logo />
-        <div className="desc">Enter the Confirmation Code</div>
+        <div className="desc">Enter the Confirmation Code that has been sent to you by email.</div>
         {errorInput && <p className="error"> {errorInput} </p>}
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>

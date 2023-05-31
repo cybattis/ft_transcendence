@@ -44,7 +44,10 @@ export class AuthController {
       }
 
       else if (user.IsIntra) {
-        return await this.authService.intraSignin(dataUser.email);
+        const token42 = await this.authService.intraSignin(dataUser.email);
+        if (token42 != null)
+          res.redirect('http://localhost:3000/loading?' + token42.token);
+        return;
       }
 
       throw new BadRequestException('Email already in use');
@@ -67,7 +70,7 @@ export class AuthController {
       const emailExist = await this.usersService.findByEmail(body.email);
       if (!emailExist) {
         return await this.authService.createUser(body);
-      }
+    }
       throw new BadRequestException('Email is already taken!');
     }
     throw new BadRequestException('Nickname is already taken!');

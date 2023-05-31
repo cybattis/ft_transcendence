@@ -35,9 +35,19 @@ export class UserService {
     return this.usersRepository.findOne({where: {email: email, isVerified: true}})
   }
 
+  async authActivated(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({where: {email: email, authActivated: true}})
+  }
+
   async updateValidation(id: number) {
     this.usersRepository.update(id, {
       isVerified: true,
+    });
+  }
+
+  async updateAuth(id: number) {
+    this.usersRepository.update(id, {
+      authActivated: true,
     });
   }
 }

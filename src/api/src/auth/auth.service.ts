@@ -77,18 +77,26 @@ export class AuthService {
 
   async createJwtToken(email: string, login: string): Promise<any> {
     while (await this.usersService.isVerified(email) === null);
-    //mettre verif 2fa
-    const payload = { email: email, login: login };
+    const payload = { email: email };
     return {
       token: await this.jwtService.signAsync(payload),
     };
   }
 
   async intraSignin(email: string): Promise<any> {
+    if (await this.usersService.authActivated(email) === null && await this.usersService.isVerified(email) != null)
+    {
+      const payload = { email: email };
+      return {
+        token: await this.jwtService.signAsync(payload),
+    };
+    }
     while (await this.usersService.isVerified(email) === null);
-    //mettre verif 2fa
+    if (await this.usersService.authActivated(email) === null)
+      return ;
     const code = await this.mailService.sendCodeConfirmation(email);
     await this.cacheManager.set(code, email, 600000);
+    return null;
   }
 
   async findUser(email: string, password: string): Promise<User | null> {
@@ -102,9 +110,22 @@ export class AuthService {
       const isVerified = await this.usersService.isVerified(email);
       if (isVerified)
       {
-        //if de si il a active 2fa
-        if (await bcrypt.compare(password, foundUser.password)) {
-          return this.mailService.sendCodeConfirmation(email);
+        if (await this.usersService.authActivated(email) != null)
+        {
+          if (await bcrypt.compare(password, foundUser.password)) {
+            this.mailService.sendCodeConfirmation(email);
+            return ;
+          }
+          throw new HttpException(
+            'Incorrect email or password',
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
+        else if (await bcrypt.compare(password, foundUser.password)) {
+          const payload = { email: email };
+          return {
+            token: await this.jwtService.signAsync(payload),
+          };
         }
         throw new HttpException(
           'Incorrect email or password',

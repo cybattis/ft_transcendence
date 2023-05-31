@@ -5,6 +5,7 @@ import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
 import { FormContext } from "./dto";
+import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   nickname: string;
@@ -27,10 +28,6 @@ export default function Signup() {
     confirmEmail: "",
     password: "",
     confirmPassword: "",
-  };
-
-  const alertUser = () => {
-    return alert("An email has been sent to verify your email address. Please check this out before continuing")
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -113,7 +110,8 @@ export default function Signup() {
       email: inputs.email,
       password: inputs.password,
     };
-
+    
+    
     await axios
       .post("http://localhost:5400/auth/signup", user, {
         headers: {
@@ -123,7 +121,7 @@ export default function Signup() {
       })
       .then((res) => {
         setSignupForm(false);
-        alert("An email has been sent to verify your email address. Please check this out before continuing.")
+        alert("An email has been sent to verify your email address. Please check this out before continuing.");
       })
       .catch((error) => {
         if (error.response.status === 400) {
@@ -173,7 +171,6 @@ export default function Signup() {
           className="link42"
           href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
           rel="noopener noreferrer"
-          onClick={() => alertUser()}
         >
           Signup with 42
         </a>

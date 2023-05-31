@@ -8,13 +8,11 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
-import { AlsModule } from './als.module';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
-    AlsModule,
     CacheModule.register({ isGlobal: true}),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
