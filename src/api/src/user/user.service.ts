@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Not, Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
@@ -28,7 +28,14 @@ export class UserService implements OnModuleInit {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({ where: { email: email } });
+  }
+
+  async findUserAndGetCredential(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email },
+      select: ['id', 'nickname', 'email', 'password', 'IsIntra'],
+    });
   }
 
   async findAll(): Promise<User[]> {

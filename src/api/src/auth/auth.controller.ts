@@ -29,7 +29,9 @@ export class AuthController {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
-      let user = await this.usersService.findByEmail(dataUser.email);
+      let user = await this.usersService.findUserAndGetCredential(
+        dataUser.email,
+      );
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
@@ -56,7 +58,7 @@ export class AuthController {
     const niknameExist = await this.usersService.findByLogin(body.nickname);
 
     if (!niknameExist) {
-      const user = await this.usersService.findByEmail(body.email);
+      const user = await this.usersService.findUserAndGetCredential(body.email);
 
       if (!user) {
         await this.authService.createUser(body);
