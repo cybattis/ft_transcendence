@@ -11,7 +11,6 @@ import { Server, Socket } from "socket.io";
 import { MatchmakingService } from "./matchmaking.service";
 import { UserService } from "../user/user.service";
 import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
-import { ModuleRef } from "@nestjs/core";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { UseGuards } from "@nestjs/common";
 
@@ -21,14 +20,8 @@ export class MatchmakingGateway implements OnGatewayConnection, OnGatewayDisconn
   @WebSocketServer()
   server: Server;
 
-  private userService: UserService;
-
   constructor(private matchmakingService: MatchmakingService,
-              private moduleRef: ModuleRef) {}
-
-  onModuleInit() {
-    this.userService = this.moduleRef.get(UserService, {strict: false});
-  }
+              private userService: UserService) {}
 
   handleConnection(socket: Socket) {
     // TODO: verify the JWT token
