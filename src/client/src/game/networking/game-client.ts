@@ -29,6 +29,7 @@ function checkConnection() {
     reconnectionDelay: 3000,
     timeout: 10000,
     auth: token ? {token} : {},
+    path: '/matchmaking',
   };
 
   const endpoint: string = "ws://localhost:5400";

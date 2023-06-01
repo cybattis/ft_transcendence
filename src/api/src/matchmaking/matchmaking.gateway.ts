@@ -17,7 +17,7 @@ import { JwtService } from "@nestjs/jwt";
 import { AuthedSocket } from "../auth/types/auth.types";
 
 @UseGuards(WsAuthGuard)
-@WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}})
+@WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: '/matchmaking'})
 export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
