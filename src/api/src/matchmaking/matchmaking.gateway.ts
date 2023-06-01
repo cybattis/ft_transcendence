@@ -2,7 +2,7 @@ import {
   ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
-  OnGatewayDisconnect,
+  OnGatewayDisconnect, OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer, WsException
@@ -13,15 +13,32 @@ import { UserService } from "../user/user.service";
 import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { UseGuards } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { AuthedSocket } from "../auth/types/auth.types";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}})
-export class MatchmakingGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   constructor(private matchmakingService: MatchmakingService,
-              private userService: UserService) {}
+              private userService: UserService,
+              private jwtService: JwtService) {}
+
+  afterInit(server: Server) {
+    this.server = server;
+
+    this.server.use((socket: AuthedSocket, next) => {
+      if (WsAuthGuard.validateSocketToken(socket, this.jwtService)) {
+        console.log("An authorized user connected to the matchmaking server");
+        next();
+      } else {
+        console.log("Am unauthorized user tried to connect to the matchmaking server");
+        next(new WsException("Unauthorized"));
+      }
+    });
+  }
 
   handleConnection(socket: Socket) {
     // TODO: verify the JWT token
