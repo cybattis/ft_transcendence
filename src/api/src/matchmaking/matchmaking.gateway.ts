@@ -11,9 +11,11 @@ import { Server, Socket } from "socket.io";
 import { MatchmakingService } from "./matchmaking.service";
 import { UserService } from "../user/user.service";
 import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
-import { User } from "../user/entity/Users.entity";
 import { ModuleRef } from "@nestjs/core";
+import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
+import { UseGuards } from "@nestjs/common";
 
+@UseGuards(WsAuthGuard)
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}})
 export class MatchmakingGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
