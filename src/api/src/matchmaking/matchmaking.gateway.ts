@@ -41,7 +41,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
   }
 
   handleConnection(socket: Socket) {
-    // TODO: verify the JWT token
     console.log("A user connected to the matchmaking server");
   }
 
@@ -51,9 +50,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('join-matchmaking-casual')
   async handleJoinMatchmakingCasual(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: verify the JWT token
-    // TODO: verify that the user is not already in the matchmaking
-    // TODO: verify that the user is not already in a game
     // TODO: use a dedicated function to check if the user exists in the database
 
     const user = await this.userService.findByID(playerId);
@@ -70,8 +66,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('leave-matchmaking-casual')
   async handleLeaveMatchmakingCasual(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: verify the JWT token
-    // TODO: verify that the user is already in the matchmaking
     // TODO: use a dedicated function to check if the user exists in the database
     await this.userService.findByID(playerId).then(user => {
 
@@ -92,9 +86,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('join-matchmaking-ranked')
   async handleJoinMatchmakingRanked(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: verify the JWT token
-    // TODO: verify that the user is not already in the matchmaking
-    // TODO: verify that the user is not already in a game
     // TODO: use a dedicated function to check if the user exists in the database
     const user = await this.userService.findByID(playerId);
 
@@ -110,8 +101,6 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('leave-matchmaking-ranked')
   async handleLeaveMatchmakingRanked(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: verify the JWT token
-    // TODO: verify that the user is already in the matchmaking
     // TODO: use a dedicated function to check if the user exists in the database
     await this.userService.findByID(playerId).then(user => {
 
