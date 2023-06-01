@@ -40,83 +40,39 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     });
   }
 
-  handleConnection(socket: Socket) {
+  handleConnection(socket: AuthedSocket) {
     console.log("A user connected to the matchmaking server");
   }
 
-  handleDisconnect(socket: Socket) {
+  handleDisconnect(client: AuthedSocket) {
     console.log("A user disconnected from the matchmaking server");
   }
 
   @SubscribeMessage('join-matchmaking-casual')
-  async handleJoinMatchmakingCasual(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: use a dedicated function to check if the user exists in the database
+  async handleJoinMatchmakingCasual(@ConnectedSocket() client: AuthedSocket): Promise<void> {
 
-    const user = await this.userService.findByID(playerId);
-
-    // If the user was found, join the matchmaking
-    if (user) {
-      const matchmakingPlayer: CasualMatchmakingPlayer = {socket: client, id: playerId};
-      await this.matchmakingService.joinMatchmakingCasual(matchmakingPlayer);
-    } else {
-      // If the user was not found, send an error message
-      throw new WsException("Couldn't authenticate the user");
+    if (!await this.matchmakingService.joinMatchmakingCasual(client, client.userId)) {
+      // If an error occurred, send an error message
+      throw new WsException("Couldn't join the casual matchmaking");
     }
   }
 
   @SubscribeMessage('leave-matchmaking-casual')
-  async handleLeaveMatchmakingCasual(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: use a dedicated function to check if the user exists in the database
-    await this.userService.findByID(playerId).then(user => {
-
-      // If the user was found, join the matchmaking
-      if (user) {
-        const matchmakingPlayer: CasualMatchmakingPlayer = {socket: client, id: playerId};
-        this.matchmakingService.leaveMatchmakingCasual(matchmakingPlayer);
-      } else {
-        // If the user was not found, send an error message
-        throw new WsException("Couldn't authenticate the user");
-      }
-
-    }).catch(e => {
-      // If an error occurred, send an error message
-      throw new WsException("Couldn't authenticate the user");
-    });
+  async handleLeaveMatchmakingCasual(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    this.matchmakingService.leaveMatchmakingCasual(client.userId);
   }
 
   @SubscribeMessage('join-matchmaking-ranked')
-  async handleJoinMatchmakingRanked(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: use a dedicated function to check if the user exists in the database
-    const user = await this.userService.findByID(playerId);
-
-    // If the user was found, join the matchmaking
-    if (user) {
-      const matchmakingPlayer: RankedMatchmakingPlayer = {socket: client, id: playerId, rankPoints: user.ranking};
-      await this.matchmakingService.joinMatchmakingRanked(matchmakingPlayer);
-    } else {
-      // If the user was not found, send an error message
-      throw new WsException("Couldn't authenticate the user");
+  async handleJoinMatchmakingRanked(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    if (!await this.matchmakingService.joinMatchmakingRanked(client, client.userId)) {
+      // If an error occurred, send an error message
+      throw new WsException("Couldn't join the ranked matchmaking");
     }
   }
 
   @SubscribeMessage('leave-matchmaking-ranked')
-  async handleLeaveMatchmakingRanked(@ConnectedSocket() client: Socket, @MessageBody('playerId') playerId: number) {
-    // TODO: use a dedicated function to check if the user exists in the database
-    await this.userService.findByID(playerId).then(user => {
-
-      // If the user was found, join the matchmaking
-      if (user) {
-        const matchmakingPlayer: RankedMatchmakingPlayer = {socket: client, id: playerId, rankPoints: user.ranking};
-        this.matchmakingService.leaveMatchmakingRanked(matchmakingPlayer);
-      } else {
-        // If the user was not found, send an error message
-        throw new WsException("Couldn't authenticate the user");
-      }
-
-    }).catch(e => {
-      // If an error occurred, send an error message
-      throw new WsException("Couldn't authenticate the user");
-    });
+  async handleLeaveMatchmakingRanked(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    await this.matchmakingService.leaveMatchmakingRanked(client.userId);
   }
 
 }
