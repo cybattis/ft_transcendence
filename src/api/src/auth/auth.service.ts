@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
+import { JwtPayload } from "../type/jwt.type";
 
 @Injectable()
 export class AuthService {
@@ -68,7 +69,7 @@ export class AuthService {
   }
 
   async intraSignin(user: User): Promise<any> {
-    const payload = { id: user.id };
+    const payload: JwtPayload = { id: user.id };
     return {
       token: await this.jwtService.signAsync(payload),
     };
@@ -79,7 +80,7 @@ export class AuthService {
 
     if (foundUser && !foundUser.IsIntra) {
       if (await bcrypt.compare(user.password, foundUser.password)) {
-        const payload = { id: foundUser.id };
+        const payload: JwtPayload = { id: foundUser.id };
         return {
           token: await this.jwtService.signAsync(payload),
         };
