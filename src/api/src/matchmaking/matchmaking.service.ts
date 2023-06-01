@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
 import { GameService } from "../game/game.service";
 import { GameBodyDto, GameMode, GameStatus, GameType } from "../type/game.type";
-import { ModuleRef } from "@nestjs/core";
 
 @Injectable()
 export class MatchmakingService {
@@ -10,13 +9,7 @@ export class MatchmakingService {
   private casualMatchmakingQueue: CasualMatchmakingPlayer[] = [];
   private rankedMatchmakingQueue: RankedMatchmakingPlayer[] = [];
 
-  private gameService: GameService;
-
-  constructor(private moduleRef: ModuleRef) {}
-
-  onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, { strict: false });
-  }
+  constructor(private gameService: GameService) {}
 
   public async joinMatchmakingCasual(player: CasualMatchmakingPlayer) {
     if (this.isPlayerInCasualMatchmaking(player)) return;
