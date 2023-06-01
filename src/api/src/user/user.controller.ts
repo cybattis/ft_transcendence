@@ -18,8 +18,9 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get(':id')
+  @Get('profile/:id')
   async userInfo(@Param('id') id: number): Promise<any> {
+    console.log('id:', id);
     return this.userService.userInfo(id);
   }
 
@@ -31,10 +32,5 @@ export class UserController {
   @Get('check/email/:input')
   async checkEmailInUse(@Param('input') input: string) {
     return this.userService.findByEmail(input);
-  }
-
-  @Get(':id')
-  async findGames(@Param('id') id: number): Promise<any> {
-    return this.gameService.findUserGames(id);
   }
 }

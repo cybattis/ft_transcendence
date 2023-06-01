@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
+import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
@@ -33,11 +34,15 @@ const router = createBrowserRouter([
         element: <Team />,
       },
       {
+        path: "confirmation",
+        element: <Confirmation />,
+      },
+      {
         path: "profile/:id",
         element: <Profile />,
         loader: async ({ request, params }) => {
           console.log("loader", params);
-          return fetch(`http://localhost:5400/user/${params.id}`, {
+          return fetch(`http://localhost:5400/user/profile/${params.id}`, {
             signal: request.signal,
           });
         },

@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   UnauthorizedException,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +13,10 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
+import { MailService } from 'src/mail/mail.service';
+import { GlobalService } from './global.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +25,9 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private usersService: UserService,
+    private mailService: MailService,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
@@ -67,25 +75,65 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(user: User): Promise<any> {
-    const payload = { id: user.id };
+  async createJwtToken(user: User): Promise<any> {
+    while ((await this.usersService.isVerified(user.email)) === null) {}
+    const payload = { email: user.email, id: user.id };
+
     return {
       token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async intraSignin(user: User): Promise<any> {
+    if (
+      (await this.usersService.authActivated(user.email)) === null &&
+      (await this.usersService.isVerified(user.email)) != null
+    ) {
+      const payload = { email: user.email, id: user.id };
+      return {
+        token: await this.jwtService.signAsync(payload),
+      };
+    }
+
+    while ((await this.usersService.isVerified(user.email)) === null) {}
+
+    if (await this.usersService.authActivated(user.email)) {
+      const code = await this.mailService.sendCodeConfirmation(user.email);
+      await this.cacheManager.set(code, user.email, 600000);
+      return;
+    }
+    return null; // TODO: return error
   }
 
   async signin(user: SigninDto): Promise<any> {
     const foundUser = await this.usersService.findByEmail(user.email);
 
     if (foundUser && !foundUser.IsIntra) {
-      if (await bcrypt.compare(user.password, foundUser.password)) {
-        const payload = { id: foundUser.id };
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
+      const isVerified = await this.usersService.isVerified(user.email);
+
+      if (isVerified) {
+        if ((await this.usersService.authActivated(user.email)) != null) {
+          if (await bcrypt.compare(user.password, foundUser.password)) {
+            await this.mailService.sendCodeConfirmation(user.email);
+            return;
+          }
+          throw new HttpException(
+            'Incorrect email or password',
+            HttpStatus.UNAUTHORIZED,
+          );
+        } else if (await bcrypt.compare(user.password, foundUser.password)) {
+          const payload = { email: user.email, id: foundUser.id };
+          return {
+            token: await this.jwtService.signAsync(payload),
+          };
+        }
+        throw new HttpException(
+          'Incorrect email or password',
+          HttpStatus.UNAUTHORIZED,
+        );
       }
       throw new HttpException(
-        'Incorrect email or password',
+        'You must verify your email before logging in.',
         HttpStatus.UNAUTHORIZED,
       );
     }
@@ -95,7 +143,11 @@ export class AuthService {
     );
   }
 
-  async createUser(body: SignupDto): Promise<User> {
+  async sendEmail(user: User) {
+    return await this.mailService.sendUserConfirmation(user);
+  }
+
+  async createUser(body: SignupDto): Promise<void> {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
     const user: User = new User();
@@ -107,7 +159,8 @@ export class AuthService {
     user.password = hash;
     user.IsIntra = false;
 
-    return this.userRepository.save(user);
+    const newUser = await this.userRepository.save(user);
+    await this.mailService.sendUserConfirmation(newUser);
   }
 
   async createUserIntra(body: IntraSignupDto): Promise<User> {
@@ -125,5 +178,34 @@ export class AuthService {
     user.avatarUrl = body.image.link;
 
     return this.userRepository.save(user);
+  }
+
+  async updateValidation(id: number) {
+    await this.usersService.updateValidation(id);
+    const user = await this.usersService.findByID(id);
+    if (user) {
+      const payload = { email: user.email };
+      return {
+        token: await this.jwtService.signAsync(payload),
+      };
+    }
+  }
+
+  async checkCode(code: string, email: string | null) {
+    for (let i = 1; GlobalService.emails[i]; i++) {
+      if (
+        ((email && GlobalService.emails[i] === email) ||
+          (!email &&
+            GlobalService.emails[i] === (await this.cacheManager.get(code)))) &&
+        GlobalService.codes[i] === code
+      ) {
+        const payload = { email: email };
+        await this.cacheManager.del(code);
+        return {
+          token: await this.jwtService.signAsync(payload),
+        };
+      }
+    }
+    throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
   }
 }

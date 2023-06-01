@@ -32,6 +32,12 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true })
   password: string;
 
+  @Column({ type: 'boolean', default: false, nullable: true })
+  isVerified: boolean;
+
+  @Column({ type: 'boolean', default: false, nullable: true })
+  authActivated: boolean;
+
   // User data ans stats
   // ============================================================
   @CreateDateColumn()

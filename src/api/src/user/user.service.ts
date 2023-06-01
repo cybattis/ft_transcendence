@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
@@ -53,5 +53,29 @@ export class UserService implements OnModuleInit {
       // Friends list ?
       // Achievements ?
     };
+  }
+
+  async isVerified(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, isVerified: true },
+    });
+  }
+
+  async authActivated(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, authActivated: true },
+    });
+  }
+
+  async updateValidation(id: number) {
+    await this.usersRepository.update(id, {
+      isVerified: true,
+    });
+  }
+
+  async updateAuth(id: number) {
+    await this.usersRepository.update(id, {
+      authActivated: true,
+    });
   }
 }

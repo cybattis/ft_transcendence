@@ -15,6 +15,7 @@ import { AuthForms } from "./components/Auth/Forms";
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
+  const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
 
   return (
@@ -23,7 +24,7 @@ function App() {
         value={{ authed: authToken, setAuthToken: setAuthToken }}
       >
         <FormContext.Provider
-          value={{ loginForm, setLoginForm, signupForm, setSignupForm }}
+          value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
         >
           <NavBar />
           <AuthForms />
