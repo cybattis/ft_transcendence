@@ -2,6 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
 import { GameService } from "../game/game.service";
 import { GameBodyDto, GameMode, GameStatus, GameType } from "../type/game.type";
+import { UserService } from "../user/user.service";
+import { User } from "../user/entity/Users.entity";
+import { Socket } from "socket.io";
 
 @Injectable()
 export class MatchmakingService {
@@ -9,47 +12,139 @@ export class MatchmakingService {
   private casualMatchmakingQueue: CasualMatchmakingPlayer[] = [];
   private rankedMatchmakingQueue: RankedMatchmakingPlayer[] = [];
 
-  constructor(private gameService: GameService) {}
+  constructor(private gameService: GameService,
+              private userService: UserService) {}
 
-  public async joinMatchmakingCasual(player: CasualMatchmakingPlayer) {
-    if (this.isPlayerInCasualMatchmaking(player)) return;
+  /*
+    == API ==
+   */
+
+  /*
+   * Add a player to the casual matchmaking queue
+   *
+   * @param socket The socket of the player
+   * @param playerId The id of the player
+   */
+  public async joinMatchmakingCasual(socket: Socket, playerId: number): Promise<boolean> {
+
+    // Find the player in the database
+    const user: User | null = await this.getUserFromDb(playerId);
+
+    // If the player was not found, return
+    if (!user) return false;
+
+    // Create a new player object
+    const player: CasualMatchmakingPlayer = {socket: socket, id: playerId};
+
+    // Make him join the matchmaking
+    await this.addPlayerToCasualQueue(player);
 
     console.log("A registered player joined the casual matchmaking server");
+    return true;
+  }
 
+  /*
+   * Remove a player from the casual matchmaking queue
+   *
+   * @param playerId The id of the player
+   */
+  public leaveMatchmakingCasual(playerId: number): void {
+    // If the player is in the ranked matchmaking queue, remove him
+    const player: CasualMatchmakingPlayer | undefined = this.findPlayerInCasualMatchmaking(playerId);
+    if (player) {
+      this.removePlayerFromCasualQueue(player);
+      console.log("A registered player left the casual matchmaking server");
+    }
+  }
+
+  /*
+    * Add a player to the ranked matchmaking queue
+    *
+    * @param socket The socket of the player
+    * @param playerId The id of the player
+   */
+  public async joinMatchmakingRanked(socket: Socket, playerId: number): Promise<boolean> {
+
+    // Find the player in the database
+    const user: User | null = await this.getUserFromDb(playerId);
+
+    // If the player was not found, return
+    if (!user) return false;
+
+    // Create a new player object
+    const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.ranking};
+
+    // Make him join the matchmaking
+    await this.addPlayerToRankedQueue(player);
+
+    console.log("A registered player joined the ranked matchmaking server");
+    return true;
+  }
+
+  /*
+    * Remove a player from the ranked matchmaking queue
+    *
+    * @param playerId The id of the player
+   */
+  public leaveMatchmakingRanked(playerId: number): void {
+    // If the player is in the ranked matchmaking queue, remove him
+    const player: RankedMatchmakingPlayer | undefined = this.findPlayerInRankedMatchmaking(playerId);
+    if (player) {
+      this.removePlayerFromRankedQueue(player);
+      console.log("A registered player left the ranked matchmaking server");
+    }
+  }
+
+  /*
+    * Makes the player leave any matchmaking queues he is in
+    *
+    * @param playerId The id of the player
+   */
+  public leaveMatchmaking(playerId: number): void {
+    this.leaveMatchmakingCasual(playerId);
+    this.leaveMatchmakingRanked(playerId);
+  }
+
+  /*
+    == Implementation ==
+   */
+
+  private async addPlayerToCasualQueue(player: CasualMatchmakingPlayer): Promise<void> {
+    console.log("addPlayerToCasualQueue1");
+    if (this.isPlayerInCasualMatchmaking(player)) return;
+
+    console.log("addPlayerToCasualQueue2");
     // If there is at least one player in the queue, match them together
     if (this.casualMatchmakingQueue.length >= 1) {
+      console.log("addPlayerToCasualQueue4");
       await this.createCasualGame(this.casualMatchmakingQueue[0], player);
-      this.leaveMatchmakingCasual(this.casualMatchmakingQueue[0]);
+      this.removePlayerFromCasualQueue(this.casualMatchmakingQueue[0]);
       return;
     }
 
+    console.log("addPlayerToCasualQueue3");
     // Else add the player to the queue
     this.casualMatchmakingQueue.push(player);
   }
 
-  public isPlayerInCasualMatchmaking(player: CasualMatchmakingPlayer): boolean {
+  private isPlayerInCasualMatchmaking(player: CasualMatchmakingPlayer): boolean {
     return this.casualMatchmakingQueue.find((p) => p.id === player.id) !== undefined;
   }
 
-  public leaveMatchmakingCasual(player: CasualMatchmakingPlayer) {
-    if (!this.isPlayerInCasualMatchmaking(player)) return;
-
-    console.log("A registered player left the casual matchmaking server");
-
-    const index: number = this.indexOfPlayerInCasualMatchmaking(player);
+  private removePlayerFromCasualQueue(player: CasualMatchmakingPlayer): void {
+    const index: number = this.indexOfPlayerInCasualMatchmaking(player.id);
     this.casualMatchmakingQueue.splice(index, 1);
   }
 
-  public async joinMatchmakingRanked(player: RankedMatchmakingPlayer) {
+  private async addPlayerToRankedQueue(player: RankedMatchmakingPlayer): Promise<void> {
     // TODO: match players based on their rank
-    if (this.isPlayerInRankedMatchmaking(player)) return;
 
-    console.log("A registered player joined the ranked matchmaking server");
+    if (this.isPlayerInRankedMatchmaking(player)) return;
 
     // If there is at least one player in the queue, match them together
     if (this.rankedMatchmakingQueue.length >= 1) {
       await this.createRankedGame(this.rankedMatchmakingQueue[0], player);
-      this.leaveMatchmakingRanked(this.rankedMatchmakingQueue[0]);
+      this.removePlayerFromRankedQueue(this.rankedMatchmakingQueue[0]);
       return;
     }
 
@@ -57,20 +152,16 @@ export class MatchmakingService {
     this.rankedMatchmakingQueue.push(player);
   }
 
-  public isPlayerInRankedMatchmaking(player: RankedMatchmakingPlayer): boolean {
+  private isPlayerInRankedMatchmaking(player: RankedMatchmakingPlayer): boolean {
     return this.rankedMatchmakingQueue.find((p) => p.id === player.id) !== undefined;
   }
 
-  public leaveMatchmakingRanked(player: RankedMatchmakingPlayer) {
-    if (!this.isPlayerInRankedMatchmaking(player)) return;
-
-    console.log("A registered player left the ranked matchmaking server");
-
-    const index: number = this.indexOfPlayerInRankedMatchmaking(player);
+  private removePlayerFromRankedQueue(player: RankedMatchmakingPlayer): void {
+    const index: number = this.indexOfPlayerInRankedMatchmaking(player.id);
     this.rankedMatchmakingQueue.splice(index, 1);
   }
 
-  private async createCasualGame(player1: CasualMatchmakingPlayer, player2: CasualMatchmakingPlayer) {
+  private async createCasualGame(player1: CasualMatchmakingPlayer, player2: CasualMatchmakingPlayer): Promise<boolean> {
     // TODO: do this in the MatchService
     const gameDto: GameBodyDto = {
       type: GameType.CASUAL,
@@ -80,11 +171,18 @@ export class MatchmakingService {
       scoreP2: 0,
       status: GameStatus.IN_PROGRESS,
     };
-    await this.gameService.createGame(gameDto);
-    console.log("Casual game created");
+
+    try {
+      console.log("HEY");
+      await this.gameService.createGame(gameDto);
+      console.log("Casual game created");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  private async createRankedGame(player1: RankedMatchmakingPlayer, player2: RankedMatchmakingPlayer) {
+  private async createRankedGame(player1: RankedMatchmakingPlayer, player2: RankedMatchmakingPlayer): Promise<boolean> {
     // TODO: do this in the MatchService
     const gameDto: GameBodyDto = {
       type: GameType.RANKED,
@@ -94,15 +192,33 @@ export class MatchmakingService {
       scoreP2: 0,
       status: GameStatus.IN_PROGRESS,
     };
-    await this.gameService.createGame(gameDto);
-    console.log("Ranked game created");
+
+    try {
+      await this.gameService.createGame(gameDto);
+      console.log("Ranked game created");
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  private indexOfPlayerInCasualMatchmaking(player: CasualMatchmakingPlayer): number {
-    return this.casualMatchmakingQueue.findIndex((p) => p.id === player.id);
+  private indexOfPlayerInCasualMatchmaking(playerId: number): number {
+    return this.casualMatchmakingQueue.findIndex((p) => p.id === playerId);
   }
 
-  private indexOfPlayerInRankedMatchmaking(player: RankedMatchmakingPlayer): number {
-    return this.rankedMatchmakingQueue.findIndex((p) => p.id === player.id);
+  private indexOfPlayerInRankedMatchmaking(playerId: number): number {
+    return this.rankedMatchmakingQueue.findIndex((p) => p.id === playerId);
+  }
+
+  private findPlayerInCasualMatchmaking(playerId: number): CasualMatchmakingPlayer | undefined {
+    return this.casualMatchmakingQueue.find((p) => p.id === playerId);
+  }
+
+  private findPlayerInRankedMatchmaking(playerId: number): RankedMatchmakingPlayer | undefined {
+    return this.rankedMatchmakingQueue.find((p) => p.id === playerId);
+  }
+
+  private async getUserFromDb(playerId: number): Promise<User | null> {
+    return await this.userService.findByID(playerId);
   }
 }
