@@ -18,5 +18,6 @@ import { secret } from '../utils/constant';
   ],
   controllers: [AuthController, UserController],
   providers: [AuthService, UserService],
+  exports: [JwtModule],
 })
 export class AuthModule {}
