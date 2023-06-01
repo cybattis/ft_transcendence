@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthedSocket } from "../types/auth.types";
 import { JwtService } from "@nestjs/jwt";
+import { JwtPayload } from "../../type/jwt.type";
 
 /*
  * This guard is used to authenticate websocket communications using the Jwt.
@@ -40,8 +41,9 @@ export class WsAuthGuard implements CanActivate {
 
     const validateToken = (token: string): boolean => {
       try {
-        const payload = jwtService.verify(token);
-        client.userId = payload.userId;
+        const payload: JwtPayload = jwtService.verify<JwtPayload>(token);
+        if (!payload) return false;
+        client.userId = payload.id;
         return true;
       } catch (e) {
         return false;
