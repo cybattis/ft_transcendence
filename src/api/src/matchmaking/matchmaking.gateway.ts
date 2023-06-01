@@ -46,6 +46,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   handleDisconnect(client: AuthedSocket) {
     console.log("A user disconnected from the matchmaking server");
+    this.matchmakingService.leaveMatchmaking(client.userId);
   }
 
   @SubscribeMessage('join-matchmaking-casual')
