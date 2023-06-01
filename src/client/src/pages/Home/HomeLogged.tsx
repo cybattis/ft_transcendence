@@ -5,21 +5,13 @@ import jwt_decode from "jwt-decode";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
-import { Link } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
-import { io, Manager } from "socket.io-client";
-
-const socketManager = new Manager("ws://localhost:5400");
-const socket = socketManager.socket("/");
-
-socket.on("connect", () => {
-  console.log("connected to matchmaking server");
-});
-
-socket.on("disconnect", () => {
-  console.log("disconnected from matchmaking server");
-});
+import {
+  joinMatchmakingCasual, joinMatchmakingRanked,
+  leaveMatchmakingCasual,
+  leaveMatchmakingRanked
+} from "../../game/networking/game-client";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const [searching, setSearching] = useState(false);
@@ -50,10 +42,10 @@ function GameMode(props: { name: string; gameType: GameType }) {
             // TODO: Practice game shouldn't be searchable
             break;
           case GameType.CASUAL:
-            socket.emit("leave-matchmaking-casual", {playerId: decoded.id});
+            leaveMatchmakingCasual();
             break;
           case GameType.RANKED:
-            socket.emit("leave-matchmaking-ranked", {playerId: decoded.id});
+            leaveMatchmakingRanked();
             break;
         }
       } else {
@@ -62,10 +54,10 @@ function GameMode(props: { name: string; gameType: GameType }) {
             // TODO: Practice game shouldn't be searchable
             break;
           case GameType.CASUAL:
-            socket.emit("join-matchmaking-casual", {playerId: decoded.id});
+            joinMatchmakingCasual();
             break;
           case GameType.RANKED:
-            socket.emit("join-matchmaking-ranked", {playerId: decoded.id});
+            joinMatchmakingRanked();
             break;
         }
       }
@@ -151,7 +143,7 @@ function UserProfile() {
   try {
     decoded = jwt_decode(localStorage.getItem("token")!);
   } catch (e) {
-    console.log(e);
+    //console.log(e);
   }
 
   const [data, setData] = useState<UserInfo>({
