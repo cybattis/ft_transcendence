@@ -11,6 +11,7 @@ import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import { Settings } from "./pages/Settings/Settings";
 
 const router = createBrowserRouter([
   {
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
         loader: async () => {
           return fetch(`http://localhost:5400/user/leaderboard`);
         },
+      },
+      {
+        path: "settings",
+        element: <Settings />,
       },
     ],
   },
