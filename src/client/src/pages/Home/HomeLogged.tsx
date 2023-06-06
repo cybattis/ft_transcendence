@@ -12,7 +12,7 @@ import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 
-
+let usernameChange = '';
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
     display: "flex",
@@ -128,13 +128,14 @@ function UserProfile() {
           },
         })
         .then((response) => {
-          setData(response.data);
+      setData(response.data);
         });
     }
 
     if (decoded !== null) fetchData(decoded.id).then((r) => console.log(r));
   }, []);
 
+  console.log(`Nickname :${data.nickname}`);
   return (
     <div className="user">
       <div className="infobox">
@@ -166,7 +167,7 @@ export function HomeLogged() {
         <GameLauncher />
         <UserProfile />
       </div>
-      <ChatClient />
+      <ChatClient/>
     </div>
   );
 }

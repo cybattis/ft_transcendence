@@ -27,10 +27,6 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "chat",
-        element: <ChatClient />,
-      },
-      {
         path: "loading",
         element: <RedirectionPage />,
       },

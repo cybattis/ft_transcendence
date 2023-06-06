@@ -4,6 +4,11 @@ import "./Chat.css";
 import { ChatInterface } from "./chat.interface";
 import MyChannelList from "./MyChannelList";
 import ListUsersChannel from "./ListUsersChannel";
+import {Decoded} from "../../type/client.type";
+import jwt_decode from "jwt-decode";
+import { UserInfo } from "../../type/user.type";
+
+
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -32,6 +37,30 @@ export default function ChatClient() {
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
   const socketRef = useRef<any>(null);
+
+  let decoded: Decoded | null = null;
+
+  try {
+    decoded = jwt_decode(localStorage.getItem("token")!);
+    console.log(`Decode ${decoded?.id}`);
+  } catch (e) {
+    console.log(`Decode error ${e}`);
+  }
+
+  fetchData(decoded?.id)
+  async function fetchData(id: string) {
+    await axios
+        .get(`http://localhost:5400/user/profile/${id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          user : UserInfo = response.data;
+        });
+    return user;
+  }
 
   useEffect(() => {
     const newSocket = io('http://localhost:5400');
