@@ -110,19 +110,15 @@ export class MatchmakingService {
    */
 
   private async addPlayerToCasualQueue(player: CasualMatchmakingPlayer): Promise<void> {
-    console.log("addPlayerToCasualQueue1");
     if (this.isPlayerInCasualMatchmaking(player)) return;
 
-    console.log("addPlayerToCasualQueue2");
     // If there is at least one player in the queue, match them together
     if (this.casualMatchmakingQueue.length >= 1) {
-      console.log("addPlayerToCasualQueue4");
       await this.createCasualGame(this.casualMatchmakingQueue[0], player);
       this.removePlayerFromCasualQueue(this.casualMatchmakingQueue[0]);
       return;
     }
 
-    console.log("addPlayerToCasualQueue3");
     // Else add the player to the queue
     this.casualMatchmakingQueue.push(player);
   }
@@ -173,7 +169,6 @@ export class MatchmakingService {
     };
 
     try {
-      console.log("HEY");
       await this.gameService.createGame(gameDto);
       console.log("Casual game created");
       return true;
