@@ -9,6 +9,8 @@ import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
 import {ChannelModule} from "./channel/channel.module";
 import {ChannelService} from "./channel/channel.service";
+import { GameModule } from './game/game.module';
+import { Game } from './game/entity/Game.entity';
 
 @Module({
   imports: [
@@ -23,9 +25,10 @@ import {ChannelService} from "./channel/channel.service";
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [User],
+      entities: [User, Game],
       synchronize: true,
     }),
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService, ChatGateway, ChannelService],

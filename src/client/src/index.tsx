@@ -4,11 +4,14 @@ import "./index.css";
 import App from "./App";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
-import Team from "./pages/Team";
+import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import { startPongManager } from "./game/PongManager";
 import ChatClient from "./pages/Chat/Chat";
+import { Profile } from "./pages/Profile/Profile";
+import { Game } from "./pages/Game/Game";
+import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +37,26 @@ const router = createBrowserRouter([
       {
         path: "team",
         element: <Team />,
+      },
+      {
+        path: "profile/:id",
+        element: <Profile />,
+        loader: async ({ request, params }) => {
+          return fetch(`http://localhost:5400/user/profile/${params.id}`, {
+            signal: request.signal,
+          });
+        },
+      },
+      {
+        path: "game",
+        element: <Game />,
+      },
+      {
+        path: "leaderboard",
+        element: <Leaderboard />,
+        loader: async () => {
+          return fetch(`http://localhost:5400/user/leaderboard`);
+        },
       },
     ],
   },

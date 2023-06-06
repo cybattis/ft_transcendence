@@ -54,6 +54,12 @@ export default function Signup() {
     if (!inputs.nickname) {
       setErrorInput("Please enter a Nickname.");
       isValid = false;
+    } else if (inputs.nickname.length < 3) {
+      setErrorInput("Nickname is too short. (min 3 characters)");
+      isValid = false;
+    } else if (inputs.nickname.length > 20) {
+      setErrorInput("Nickname is too long. (max 20 characters)");
+      isValid = false;
     } else if (await inUse("login", inputs.nickname)) {
       setErrorInput("Nickname already in use.");
       isValid = false;
@@ -125,11 +131,8 @@ export default function Signup() {
         setSignupForm(false);
       })
       .catch((error) => {
-        if (error.response.status === 400) {
-          if (error.response.data.message.length > 1)
-            setErrorMessage(error.response.data.message[0]);
-          else setErrorMessage(error.response.data.message);
-        } else setErrorMessage("Server busy... try again");
+        console.log("Error: ", error.response.status);
+        setErrorMessage("Server error... try again");
       });
   };
 
@@ -138,8 +141,11 @@ export default function Signup() {
       <div className="authForm">
         <Logo />
         <div className="desc">Join the Fever</div>
-        {errorInput && <p className="error"> {errorInput} </p>}
-        {errorMessage && <p className="error"> {errorMessage} </p>}
+        {errorInput ? (
+          <p className="error"> {errorInput} </p>
+        ) : errorMessage ? (
+          <p className="error"> {errorMessage} </p>
+        ) : null}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="nickname" />
           <div className="halfInput">

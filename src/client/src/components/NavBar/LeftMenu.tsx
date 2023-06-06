@@ -7,10 +7,10 @@ import { useContext } from "react";
 function Unlogged() {
   return (
     <>
-      <Link to="/" className="leftLink">
+      <Link to="/" className="navLink">
         Home
       </Link>
-      <Link to="about" className="leftLink">
+      <Link to="about" className="navLink">
         About
       </Link>
     </>
@@ -35,13 +35,13 @@ function Logged() {
 
   return (
     <>
-      <Link to="about" className="leftLink">
+      <Link to="about" className="navLink">
         About
       </Link>
       <Link to="/" style={playLink}>
         Play
       </Link>
-      <Link to="/ranking" className="leftLink">
+      <Link to="/leaderboard" className="navLink">
         Ranking
       </Link>
     </>

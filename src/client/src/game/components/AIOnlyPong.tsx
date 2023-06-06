@@ -1,28 +1,29 @@
 import {useEffect, useRef} from "react";
-import {AIDifficulty, createNewAIOnlyGame, removeAiOnlyGame} from "../PongManager";
+import {createNewAIOnlyGame, removeAiOnlyGame} from "../PongManager";
+import {AIDifficulty} from "../logic/PongAi";
 import AIOnlyPongState from "../states/AIOnlyPongState"
 
 export type AIOnlyPongProps = {
-	name: string;
-	width: number;
-	height: number;
-	leftDifficulty: AIDifficulty;
-	rightDifficulty: AIDifficulty;
+  name: string;
+  width: number;
+  height: number;
+  leftDifficulty: AIDifficulty;
+  rightDifficulty: AIDifficulty;
 }
 
-export function AIOnlyPong({ name, width, height, leftDifficulty, rightDifficulty } : AIOnlyPongProps) {
+export function AIOnlyPong({name, width, height, leftDifficulty, rightDifficulty}: AIOnlyPongProps) {
 
-	let canvasRef = useRef<HTMLCanvasElement>(null);
+  let canvasRef = useRef<HTMLCanvasElement>(null);
 
-	useEffect(() => {
-		if (!canvasRef || !canvasRef.current) return;
-		const canvas = canvasRef.current;
-		createNewAIOnlyGame(new AIOnlyPongState(name, canvas, leftDifficulty, rightDifficulty));
+  useEffect(() => {
+    if (!canvasRef || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    createNewAIOnlyGame(new AIOnlyPongState(name, canvas, leftDifficulty, rightDifficulty));
 
-		return () => removeAiOnlyGame(name);
-	}, [name, height, leftDifficulty, rightDifficulty, width]);
+    return () => removeAiOnlyGame(name);
+  }, [name, height, leftDifficulty, rightDifficulty, width]);
 
-	return (
-		<canvas ref={canvasRef} width={width} height={height}>A pong game</canvas>
-	);
+  return (
+    <canvas ref={canvasRef} width={width} height={height}>A pong game</canvas>
+  );
 }

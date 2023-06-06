@@ -1,4 +1,4 @@
-.leftLink {
+.navLink {
     display: flex;
 
     width: 70px;
@@ -13,7 +13,7 @@
     text-decoration: none;
 }
 
-.leftLink:hover {
+.navLink:hover {
     background-color: var(--cyan);
 }
 
@@ -65,4 +65,19 @@
 
 .signup-button:hover{
     background: #00CCCC;
+}
+
+.rightMenu {
+    display: flex;
+    flex-direction: row;
+    padding-right: 6em;
+    gap: 10px;
+}
+
+.disconnect {
+    text-align: center;
+    border: none;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
 }
