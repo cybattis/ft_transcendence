@@ -41,8 +41,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('op')
   handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    //this.channelService.newOp();
-    //this.channelService.delOp();
+    this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
   }
 
   @SubscribeMessage('info')
@@ -51,9 +50,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const msg = this.channelService.infoChannel(channel);
     if (msg != null) {
       console.log(msg);
-      socket.broadcast.emit('rcv', {msg, channel});
+      this.server.emit('rcv', {msg, channel});
     }
   }
+
+  @SubscribeMessage('cmd')
+  handleCmd(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    const channel = data.channel;
+    const msg = this.channelService.allCmd();
+    this.server.emit('rcv', {msg, channel});
+  }
+
   @SubscribeMessage('ping')
   handlePing(socket: Socket) {
     console.log(`Received ping`);

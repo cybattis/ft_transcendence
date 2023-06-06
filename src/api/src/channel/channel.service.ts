@@ -49,10 +49,6 @@ export class ChannelService {
         return null;
     }
 
-    newOp(message: string) {
-
-    }
-
     infoChannel(channel: string) {
         for (let index = 0; index < this.channelStruct.length; index++) {
             if (channel === this.channelStruct[index].name) {
@@ -73,4 +69,45 @@ export class ChannelService {
         return null;
     }
 
+    allCmd(){
+        let cmd = "/join #channel => join channel if is existing or create channel.\n";
+        cmd += "/info => List user channel of active channel.\n";
+        cmd += "/cmd => All command.\n";
+        cmd += "/op => Give operator power.\n";
+        return cmd;
+    }
+
+    opChannel(channel: string, cmd: string, author: string, target: string){
+        this.newOp(channel, author, target);
+    }
+
+    newOp(channel: string, author: string, target: string){
+        if(this.isOpe(author, channel))
+            this.addNewOp(channel, target);
+    }
+
+    isOpe(author: string, channel: string){
+        for (let index = 0; index < this.channelStruct.length; index++){
+            if (this.channelStruct[index].name === channel) {
+                for (let indexOp = 0; indexOp < this.channelStruct[index].operator.length; indexOp++){
+                    if (this.channelStruct[index].operator[indexOp] === author)
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    addNewOp(channel: string, target: string){
+        for (let index = 0; index < this.channelStruct.length; index++){
+            if (this.channelStruct[index].name === channel) {
+                for (let indexOp = 0; indexOp < this.channelStruct[index].operator.length; indexOp++){
+                    if (this.channelStruct[index].operator[indexOp] === target)
+                        return ;
+                    if (this.channelStruct[index].operator.length === indexOp)
+                        this.channelStruct[index].operator.push(target);
+                }
+            }
+        }
+    }
 }

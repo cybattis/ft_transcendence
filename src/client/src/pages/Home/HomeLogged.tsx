@@ -1,6 +1,6 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
-import { Chat } from "../../components/Chat/Chat";
+import ChatClient from "../Chat/Chat";
 
 function GameMode(props: { name: string }) {
   const content = {
@@ -87,7 +87,7 @@ export function HomeLogged() {
         <GameLauncher />
         <UserProfile />
       </div>
-      <Chat />
+      <ChatClient />
     </div>
   );
 }

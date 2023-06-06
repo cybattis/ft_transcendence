@@ -106,11 +106,11 @@ export default function ChatClient() {
     }
     else if (cmd === "/op"){
       const channel = takeActiveCanal();
-      const username: string = "Emet";
+      const author: string = "author";
       const target: string = "target";
       const cmd: string = "+o";
       const op: string = "op"
-      const message = {op : op, channel : channel, username: username, cmd: cmd, target: target};
+      const message = {op : op, channel : channel, author: author, cmd: cmd, target: target};
       socketRef.current.emit('op', message);
       console.log(`message op ${msg}`);
     } else if (cmd === "/info") {
@@ -118,7 +118,12 @@ export default function ChatClient() {
       const channel = takeActiveCanal();
       console.log(`active ${channel}`);
       socketRef.current.emit('info', {channel});
-    }else {
+    } else if (cmd === "/cmd") {
+      console.log(`message cmd ${msg}`);
+      const channel = takeActiveCanal();
+      console.log(`active ${channel}`);
+      socketRef.current.emit('cmd', {channel});
+    } else {
       const channel = takeActiveCanal();
       msg = channel + " %" + msg;
       console.log(`Send normal message: ${msg}`);
@@ -159,7 +164,7 @@ export default function ChatClient() {
 
   return (
       <div className='chat'>
-        <ListUsersChannel channel={roomChange} />
+        {/*<ListUsersChannel channel={roomChange} />*/}
         <h1>Chat</h1>
         <div className='chat-container'>
           <MyChannelList channelList={channelList} onStringChange={handleStringChange} />
