@@ -7,10 +7,11 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { Game } from "../game/entity/Game.entity";
 import { User } from "../user/entity/Users.entity";
 import { AuthModule } from "../auth/auth.module";
+import { MultiplayerService } from "../multiplayer/multiplayer.service";
 
 @Module({
   imports: [TypeOrmModule.forFeature([Game, User]), AuthModule],
   controllers: [],
-  providers: [MatchmakingGateway, MatchmakingService, UserService, GameService],
+  providers: [MatchmakingGateway, MatchmakingService, UserService, GameService, MultiplayerService],
 })
 export class MatchmakingModule {}

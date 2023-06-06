@@ -5,6 +5,8 @@ import { GameBodyDto, GameMode, GameStatus, GameType } from "../type/game.type";
 import { UserService } from "../user/user.service";
 import { User } from "../user/entity/Users.entity";
 import { Socket } from "socket.io";
+import { Game } from "../game/entity/Game.entity";
+import { MultiplayerService } from "../multiplayer/multiplayer.service";
 
 @Injectable()
 export class MatchmakingService {
@@ -12,8 +14,9 @@ export class MatchmakingService {
   private casualMatchmakingQueue: CasualMatchmakingPlayer[] = [];
   private rankedMatchmakingQueue: RankedMatchmakingPlayer[] = [];
 
-  constructor(private gameService: GameService,
-              private userService: UserService) {}
+  constructor(private readonly gameService: GameService,
+              private readonly userService: UserService,
+              private readonly multiplayerService: MultiplayerService) {}
 
   /*
     == API ==
@@ -169,7 +172,8 @@ export class MatchmakingService {
     };
 
     try {
-      await this.gameService.createGame(gameDto);
+      const newGame: Game = await this.gameService.createGame(gameDto);
+      this.multiplayerService.createRoom(newGame, player1.id, player2.id);
       console.log("Casual game created");
       return true;
     } catch (e) {
@@ -189,7 +193,8 @@ export class MatchmakingService {
     };
 
     try {
-      await this.gameService.createGame(gameDto);
+      const newGame: Game = await this.gameService.createGame(gameDto);
+      this.multiplayerService.createRoom(newGame, player1.id, player2.id);
       console.log("Ranked game created");
       return true;
     } catch (e) {
