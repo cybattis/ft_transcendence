@@ -61,8 +61,6 @@ export default function FaCode() {
         email: localStorage.getItem('email'),
     }
 
-    console.log(loggin);
-
     await axios
       .post("http://localhost:5400/auth/2fa", loggin)
       .then((res) => {

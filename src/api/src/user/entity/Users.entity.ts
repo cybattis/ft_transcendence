@@ -26,6 +26,6 @@ export class User {
   @Column({ default: false, nullable: true })
   isVerified: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: true, nullable: true })
   authActivated: boolean;
 }

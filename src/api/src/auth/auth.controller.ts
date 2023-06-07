@@ -40,20 +40,17 @@ export class AuthController {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
         const tok42 = await this.authService.createJwtToken(dataUser.email, dataUser.login);
-        return res.redirect('http://localhost:3000/loading?' + tok42.token);
+        return res.redirect('http://localhost:3000/loading?' + tok42);
       }
 
       else if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email);
-        if (token42 != null)
-          res.redirect('http://localhost:3000/loading?' + token42.token);
-        return;
+        await this.authService.intraSignin(dataUser.email);
+        return res.redirect('http://localhost:3000/code?' + dataUser.email);
       }
 
       throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
-      // TODO: send error to display popup error in client after redirection
       res.redirect('http://localhost:3000/');
     }
   }

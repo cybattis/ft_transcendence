@@ -5,7 +5,6 @@ import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
 import { FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   nickname: string;
