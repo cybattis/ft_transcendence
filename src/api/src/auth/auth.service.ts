@@ -76,7 +76,7 @@ export class AuthService {
   }
 
   async createJwtToken(email: string, login: string): Promise<any> {
-    while (await this.usersService.isVerified(email) === null);
+    await this.usersService.isVerified(email) === null;
     const payload = { email: email };
     return {
       token: await this.jwtService.signAsync(payload),
