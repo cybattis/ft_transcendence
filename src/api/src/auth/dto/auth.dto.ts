@@ -4,7 +4,6 @@ import {
   IsString,
   IsStrongPassword,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 
 export class IntraSignupDto {
@@ -27,7 +26,6 @@ export class IntraSignupDto {
 export class SignupDto {
   @IsNotEmpty()
   @IsString()
-  @MinLength(3)
   @MaxLength(20)
   nickname: string;
 

@@ -1,7 +1,8 @@
 import React, { useContext } from "react";
+import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
 
 function Unlogged() {
@@ -34,12 +35,13 @@ function Unlogged() {
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
-  const naviguate = useNavigate();
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    let JWTToken = localStorage.getItem("token");
     localStorage.removeItem("token");
     setAuthToken(null);
-    naviguate("/");
+    await axios.put("http://localhost:5400/user/disconnect", false, { headers: {"Authorization": `Bearer ${JWTToken}`}});
+    return <Navigate to="/" />;
   };
 
   return (

@@ -4,7 +4,7 @@ import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
-import { AuthContext, FormContext } from "./dto";
+import { FormContext } from "./dto";
 
 interface UserCredential {
   nickname: string;
@@ -17,8 +17,7 @@ interface UserCredential {
 export default function Signup() {
   const [errorInput, setErrorInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { setSignupForm, setLoginForm } = useContext(FormContext);
-  const { setAuthToken } = useContext(AuthContext);
+  const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
 
   const inputs = {
     nickname: "",
@@ -110,7 +109,8 @@ export default function Signup() {
       email: inputs.email,
       password: inputs.password,
     };
-
+    
+    
     await axios
       .post("http://localhost:5400/auth/signup", user, {
         headers: {
@@ -119,10 +119,8 @@ export default function Signup() {
         },
       })
       .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
         setSignupForm(false);
+        alert("An email has been sent to verify your email address. Please check this out before continuing.");
       })
       .catch((error) => {
         if (error.response.status === 400) {
@@ -182,6 +180,7 @@ export default function Signup() {
             onClick={() => {
               setSignupForm(false);
               setLoginForm(true);
+              setCodeForm(false);
             }}
           >
             Sign in!

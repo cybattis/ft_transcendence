@@ -8,11 +8,14 @@ import {
   Post,
   Query,
   Res,
+  Put
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { SignupDto } from './dto/auth.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Controller('auth')
 export class AuthController {
@@ -20,6 +23,8 @@ export class AuthController {
   private readonly authService: AuthService;
   @Inject(UserService)
   private readonly usersService: UserService;
+  @Inject(CACHE_MANAGER)
+  private cacheManager: Cache;
 
   @Get('42')
   async redirectToAppSignup(
@@ -33,17 +38,19 @@ export class AuthController {
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
+        await this.authService.sendEmail(user);
+        const tok42 = await this.authService.createJwtToken(dataUser.email, user.id);
+        return res.redirect('http://localhost:3000/loading?' + tok42);
       }
 
-      if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(dataUser.email);
-        res.redirect('http://localhost:3000/loading?' + token42.token);
+      else if (user.IsIntra) {
+        await this.authService.intraSignin(dataUser.email);
+        return res.redirect('http://localhost:3000/code?' + dataUser.email);
       }
 
       throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
-      // TODO: send error to display popup error in client after redirection
       res.redirect('http://localhost:3000/');
     }
   }
@@ -54,23 +61,30 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignupDto): Promise<string | any> {
-    const niknameExist = await this.usersService.findByLogin(body.nickname);
-
-    if (!niknameExist) {
+  async signUp(@Body() body: SignupDto): Promise<any> {
+    const nicknameExist = await this.usersService.findByLogin(body.nickname);
+    if (!nicknameExist) {
       const emailExist = await this.usersService.findByEmail(body.email);
-
       if (!emailExist) {
-        await this.authService.createUser(body);
-        return await this.authService.signin(body.email, body.password);
-      }
+        return await this.authService.createUser(body);
+    }
       throw new BadRequestException('Email is already taken!');
     }
     throw new BadRequestException('Nickname is already taken!');
   }
 
   @Post('signin')
-  async signIn(@Body() email: string, password: string) {
-    return await this.authService.signin(email, password);
+  async signIn(@Body() body: any) {
+    return await this.authService.signin(body.email, body.password);
+  }
+
+  @Post('2fa')
+  async checkCode(@Body() body: any) {
+    return await this.authService.checkCode(body.code, body.email);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: number) {
+    return await this.authService.updateValidation(id);
   }
 }

@@ -3,9 +3,11 @@ import axios from "axios";
 import InputForm from "../InputForm";
 import validator from 'validator';
 import Logo from "../Logo/Logo";
-import { AuthContext, FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
+import { FormContext } from "./dto";
 import "./Auth.css";
+import { AuthContext } from "./dto";
+import { Navigate } from "react-router-dom";
+import { emit } from "process";
 
 interface UserCredential {
   email: string;
@@ -16,8 +18,8 @@ interface UserCredential {
 export default function Login() {
   const [errorInput, setErrorInput] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
   const { setAuthToken } = useContext(AuthContext);
-  const { setLoginForm, setSignupForm } = useContext(FormContext);
   const inputs = {
     email: '',
     password: '',
@@ -65,18 +67,26 @@ export default function Login() {
     await axios
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
-        if (res.data.status === parseInt('401')) {
+        console.log(res);
+        if (res.status === parseInt('401')) {
           setErrorMessage(res.data.response);
         } else {
-          const data = res.data;
-          localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
           setLoginForm(false);
+          if (res.data)
+          {
+            localStorage.setItem('token', res.data.token);
+            setAuthToken(res.data.token);
+          }
+          else if (!res.data)
+          {
+            localStorage.setItem('email',user.email);
+            setCodeForm(true);
+            return ;
+          }
           return <Navigate to="/" />;
         }
       })
       .catch((error) => {
-        console.log(error);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
@@ -126,6 +136,7 @@ export default function Login() {
             onClick={() => {
               setSignupForm(true);
               setLoginForm(false);
+              setCodeForm(false);
             }}
           >
             Sign up!
