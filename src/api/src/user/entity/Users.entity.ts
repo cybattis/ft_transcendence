@@ -28,4 +28,10 @@ export class User {
 
   @Column({ default: true, nullable: true })
   authActivated: boolean;
+
+  @Column({ default: true, nullable: true })
+  online: boolean;
+
+  @Column({ default: false, nullable: true })
+  inGame: boolean;
 }

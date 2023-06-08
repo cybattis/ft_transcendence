@@ -75,9 +75,9 @@ export class AuthService {
     return await response.json();
   }
 
-  async createJwtToken(email: string, login: string): Promise<any> {
+  async createJwtToken(email: string, id: number): Promise<any> {
     await this.usersService.isVerified(email) === null;
-    const payload = { email: email };
+    const payload = { email: email, id: id };
     return {
       token: await this.jwtService.signAsync(payload),
     };
@@ -86,7 +86,8 @@ export class AuthService {
   async intraSignin(email: string): Promise<any> {
     if (await this.usersService.authActivated(email) === null && await this.usersService.isVerified(email) != null)
     {
-      const payload = { email: email };
+      let user = await this.usersService.findByEmail(email);
+      const payload = { email: email, id: user.id };
       return {
         token: await this.jwtService.signAsync(payload),
     };
@@ -122,7 +123,8 @@ export class AuthService {
           );
         }
         else if (await bcrypt.compare(password, foundUser.password)) {
-          const payload = { email: email };
+          await this.usersService.changeOnlineStatus(foundUser.id, true);
+          const payload = { email: email, id: foundUser.id };
           return {
             token: await this.jwtService.signAsync(payload),
           };
@@ -182,19 +184,21 @@ export class AuthService {
     const user = await this.usersService.findById(id);
     if (user)
     {
-      const payload = { email: user.email };
+      const payload = { email: user.email, id: id };
       return {
         token: await this.jwtService.signAsync(payload),
       };
     }
   }
 
-  async checkCode(code: string, email: string | null) {
+  async checkCode(code: string, email: string) {
     for(let i: number = 1; GlobalService.emails[i]; i++)
     {
       if (((email && GlobalService.emails[i] === email) || (!email && GlobalService.emails[i] === await this.cacheManager.get(code))) && GlobalService.codes[i] === code)
       {
-        const payload = { email: email };
+        let user = await this.usersService.findByEmail(email);
+        await this.usersService.changeOnlineStatus(user.id, true);
+        const payload = { email: email, id: user.id};
         await this.cacheManager.del(code);
         return {
           token: await this.jwtService.signAsync(payload),

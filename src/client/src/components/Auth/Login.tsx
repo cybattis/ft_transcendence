@@ -7,6 +7,7 @@ import { FormContext } from "./dto";
 import "./Auth.css";
 import { AuthContext } from "./dto";
 import { Navigate } from "react-router-dom";
+import { emit } from "process";
 
 interface UserCredential {
   email: string;
@@ -75,6 +76,12 @@ export default function Login() {
           {
             localStorage.setItem('token', res.data.token);
             setAuthToken(res.data.token);
+          }
+          else if (!res.data)
+          {
+            localStorage.setItem('email',user.email);
+            setCodeForm(true);
+            return ;
           }
           return <Navigate to="/" />;
         }

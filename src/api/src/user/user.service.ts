@@ -1,6 +1,5 @@
 import { Injectable, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthService } from 'src/auth/auth.service';
 import { Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 
@@ -9,7 +8,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+    ) {}
 
   async findByLogin(nickname: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { nickname: nickname } });
@@ -49,5 +48,11 @@ export class UserService {
     this.usersRepository.update(id, {
       authActivated: true,
     });
+  }
+
+  async changeOnlineStatus(id: number, state: boolean) {
+    this.usersRepository.update(id, {
+      online: state,
+    })
   }
 }

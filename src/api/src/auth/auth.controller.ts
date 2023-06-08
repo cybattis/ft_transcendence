@@ -39,7 +39,7 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
-        const tok42 = await this.authService.createJwtToken(dataUser.email, dataUser.login);
+        const tok42 = await this.authService.createJwtToken(dataUser.email, user.id);
         return res.redirect('http://localhost:3000/loading?' + tok42);
       }
 
