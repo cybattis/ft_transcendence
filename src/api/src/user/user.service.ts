@@ -31,6 +31,10 @@ export class UserService implements OnModuleInit {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  async findUser(email: string, password: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email: email, password: password } });
+  }
+
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
@@ -77,5 +81,9 @@ export class UserService implements OnModuleInit {
     await this.usersRepository.update(id, {
       authActivated: true,
     });
+  }
+
+  async changeOnlineStatus(id: number, state: boolean) {
+    await this.usersRepository.update(id, { online: state });
   }
 }

@@ -8,6 +8,7 @@ import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
+import CodeConfirmation from "./pages/Confirmation/CodeConfirm";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
@@ -15,41 +16,49 @@ import { Game } from "./pages/Game/Game";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
     children: [
       {
-        path: "*",
-        element: <Error404 />,
-      },
-      {
-        path: "/",
-        element: <Home />,
-      },
-      {
-        path: "loading",
-        element: <RedirectionPage />,
-      },
-      {
-        path: "team",
-        element: <Team />,
-      },
-      {
-        path: "confirmation",
-        element: <Confirmation />,
-      },
-      {
-        path: "profile/:id",
-        element: <Profile />,
-        loader: async ({ request, params }) => {
-          console.log("loader", params);
-          return fetch(`http://localhost:5400/user/profile/${params.id}`, {
-            signal: request.signal,
-          });
-        },
-      },
-      {
-        path: "game",
-        element: <Game />,
+        element: <App />,
+        children: [
+          {
+            path: "*",
+            element: <Error404 />,
+          },
+          {
+            path: "",
+            element: <Home />,
+          },
+          {
+            path: "team",
+            element: <Team />,
+          },
+          {
+            path: "profile/:id",
+            element: <Profile />,
+            loader: async ({ request, params }) => {
+              console.log("loader", params);
+              return fetch(`http://localhost:5400/user/profile/${params.id}`, {
+                signal: request.signal,
+              });
+            },
+          },
+          {
+            path: "game",
+            element: <Game />,
+          },
+          {
+            path: "loading",
+            element: <RedirectionPage />,
+          },
+          {
+            path: "confirmation",
+            element: <Confirmation />,
+          },
+          {
+            path: "code",
+            element: <CodeConfirmation />,
+          },
+        ],
       },
     ],
   },

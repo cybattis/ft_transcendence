@@ -1,13 +1,18 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UserController {
   private gameService: GameService;
-  constructor(private userService: UserService, private moduleRef: ModuleRef) {}
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+    private moduleRef: ModuleRef,
+  ) {}
 
   onModuleInit() {
     this.gameService = this.moduleRef.get(GameService, { strict: false });
@@ -32,5 +37,13 @@ export class UserController {
   @Get('check/email/:input')
   async checkEmailInUse(@Param('input') input: string) {
     return this.userService.findByEmail(input);
+  }
+
+  @Put('disconnect')
+  async disconnectUser(@Req() req: any, @Body() body: boolean) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.changeOnlineStatus(payload.id, body);
   }
 }

@@ -123,9 +123,7 @@ export default function Signup() {
       })
       .then((res) => {
         setSignupForm(false);
-        alert(
-          "An email has been sent to verify your email address. Please check this out before continuing."
-        );
+        alert("An email has been sent to verify your email address. Please check this out before continuing.");
       })
       .catch((error) => {
         console.log("Error: ", error.response.status);

@@ -34,7 +34,7 @@ export class AuthService {
     const clientId =
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
-      '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';
+      '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
@@ -75,34 +75,24 @@ export class AuthService {
     return await response.json();
   }
 
-  async createJwtToken(user: User): Promise<any> {
-    while ((await this.usersService.isVerified(user.email)) === null) {}
-    const payload = { email: user.email, id: user.id };
-
-    return {
-      token: await this.jwtService.signAsync(payload),
-    };
-  }
-
   async intraSignin(user: User): Promise<any> {
     if (
-      (await this.usersService.authActivated(user.email)) === null &&
-      (await this.usersService.isVerified(user.email)) != null
+      (await this.usersService.authActivated(user?.email)) === null &&
+      (await this.usersService.isVerified(user?.email)) != null
     ) {
-      const payload = { email: user.email, id: user.id };
-      return {
-        token: await this.jwtService.signAsync(payload),
-      };
+      if (user) {
+        const payload = { email: user.email, id: user.id };
+        return {
+          token: await this.jwtService.signAsync(payload),
+        };
+      }
     }
 
     while ((await this.usersService.isVerified(user.email)) === null) {}
-
-    if (await this.usersService.authActivated(user.email)) {
-      const code = await this.mailService.sendCodeConfirmation(user.email);
-      await this.cacheManager.set(code, user.email, 600000);
-      return;
-    }
-    return null; // TODO: return error
+    if ((await this.usersService.authActivated(user.email)) === null) return;
+    const code = await this.mailService.sendCodeConfirmation(user.email);
+    await this.cacheManager.set(code, user.email, 600000);
+    return null;
   }
 
   async signin(user: SigninDto): Promise<any> {
@@ -110,7 +100,6 @@ export class AuthService {
 
     if (foundUser && !foundUser.IsIntra) {
       const isVerified = await this.usersService.isVerified(user.email);
-
       if (isVerified) {
         if ((await this.usersService.authActivated(user.email)) != null) {
           if (await bcrypt.compare(user.password, foundUser.password)) {
@@ -122,6 +111,7 @@ export class AuthService {
             HttpStatus.UNAUTHORIZED,
           );
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
+          await this.usersService.changeOnlineStatus(foundUser.id, true);
           const payload = { email: user.email, id: foundUser.id };
           return {
             token: await this.jwtService.signAsync(payload),
@@ -177,21 +167,21 @@ export class AuthService {
 
     user.avatarUrl = body.image.link;
 
-    return this.userRepository.save(user);
+    return await this.userRepository.save(user);
   }
 
   async updateValidation(id: number) {
     await this.usersService.updateValidation(id);
     const user = await this.usersService.findByID(id);
     if (user) {
-      const payload = { email: user.email };
+      const payload = { email: user.email, id: id };
       return {
         token: await this.jwtService.signAsync(payload),
       };
     }
   }
 
-  async checkCode(code: string, email: string | null) {
+  async checkCode(code: string, email: string) {
     for (let i = 1; GlobalService.emails[i]; i++) {
       if (
         ((email && GlobalService.emails[i] === email) ||
@@ -199,11 +189,15 @@ export class AuthService {
             GlobalService.emails[i] === (await this.cacheManager.get(code)))) &&
         GlobalService.codes[i] === code
       ) {
-        const payload = { email: email };
-        await this.cacheManager.del(code);
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
+        const user = await this.usersService.findByEmail(email);
+        if (user) {
+          await this.usersService.changeOnlineStatus(user.id, true);
+          const payload = { email: email, id: user.id };
+          await this.cacheManager.del(code);
+          return {
+            token: await this.jwtService.signAsync(payload),
+          };
+        }
       }
     }
     throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);

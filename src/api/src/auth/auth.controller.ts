@@ -33,20 +33,22 @@ export class AuthController {
   ): Promise<string | any> {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
+      // TODO: add throw if error in token.
       const dataUser = await this.authService.infoUser(token);
       let user = await this.usersService.findByEmail(dataUser.email);
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
-        const tok42 = await this.authService.createJwtToken(user);
-        return res.redirect('http://localhost:3000/loading?' + tok42.token);
+        return res.redirect('http://localhost:3000/');
       } else if (user.IsIntra) {
-        const token42 = await this.authService.intraSignin(user);
-        if (token42 != null)
-          res.redirect('http://localhost:3000/loading?' + token42.token);
-        return;
-      } else throw new BadRequestException('Email already in use');
+        const token = await this.authService.intraSignin(user);
+        if (token) {
+          console.log('token', token);
+          return res.redirect('http://localhost:3000/loading?' + token.token);
+        }
+        return res.redirect('http://localhost:3000/code?' + dataUser.email);
+      }
 
       throw new BadRequestException('Email already in use');
     } catch (err) {
@@ -63,12 +65,10 @@ export class AuthController {
 
   @Post('signup')
   async signUp(@Body() body: SignupDto): Promise<string | any> {
-    const niknameExist = await this.usersService.findByLogin(body.nickname);
-
-    if (!niknameExist) {
-      const user = await this.usersService.findByEmail(body.email);
-
-      if (!user) {
+    const nicknameExist = await this.usersService.findByLogin(body.nickname);
+    if (!nicknameExist) {
+      const emailExist = await this.usersService.findByEmail(body.email);
+      if (!emailExist) {
         return await this.authService.createUser(body);
       }
       throw new BadRequestException('Email is already taken!');
@@ -77,7 +77,7 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signin(@Body() user: SigninDto): Promise<string | any> {
+  async signIn(@Body() user: SigninDto): Promise<string | any> {
     return await this.authService.signin(user);
   }
 
