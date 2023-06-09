@@ -5,7 +5,7 @@ import jwt_decode from "jwt-decode";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { GameBodyDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
 
@@ -95,21 +95,21 @@ function Winrate(props: { data: UserInfo }) {
 
 function UserProfile() {
   let decoded: Decoded | null = null;
+  const [data, setData] = useState<UserInfo>({
+    id: 0,
+    nickname: "",
+    avatarUrl: "",
+    level: 0,
+    xp: 0,
+    ranking: 0,
+    games: [],
+  });
 
   try {
     decoded = jwt_decode(localStorage.getItem("token")!);
   } catch (e) {
     console.log(e);
   }
-
-  const [data, setData] = useState<UserInfo>({
-    id: 0,
-    nickname: "",
-    level: 0,
-    xp: 0,
-    ranking: 0,
-    games: [],
-  });
 
   useEffect(() => {
     console.log("token: ", decoded);
@@ -123,18 +123,20 @@ function UserProfile() {
         })
         .then((response) => {
           setData(response.data);
-
-          console.log(response.data);
         });
     }
 
     if (decoded !== null) fetchData(decoded.id).then((r) => console.log(r));
   }, []);
 
+  if (decoded === null) {
+    return <Navigate to="/" />;
+  }
+
   return (
     <div className="user">
       <div className="infobox">
-        <Avatar size="20%" img={data.avatar} />
+        <Avatar size="200px" img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>

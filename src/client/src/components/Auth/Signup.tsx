@@ -5,7 +5,6 @@ import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
 import { FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
 
 interface UserCredential {
   nickname: string;
@@ -121,9 +120,11 @@ export default function Signup() {
           "Access-Control-Allow-Origin": "*",
         },
       })
-      .then((res) => {
+      .then(() => {
         setSignupForm(false);
-        alert("An email has been sent to verify your email address. Please check this out before continuing.");
+        alert(
+          "An email has been sent to verify your email address. Please check this out before continuing."
+        );
       })
       .catch((error) => {
         console.log("Error: ", error.response.status);

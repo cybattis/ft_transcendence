@@ -6,7 +6,7 @@ export interface UserInfo {
   xp: number;
   level: number;
   ranking: number;
-  avatar?: string;
+  avatarUrl?: string;
   games?: GameBodyDto[];
   totalGameWon?: number;
 }

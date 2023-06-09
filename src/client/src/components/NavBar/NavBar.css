@@ -75,9 +75,20 @@
 }
 
 .disconnect {
-    text-align: center;
-    border: none;
-    background-color: transparent;
+    display: flex;
+
+    width: 110px;
+    height: 30px;
+    margin: 0 10px 0 10px;
+    padding: 0 5px;
+    border-radius: 8px;
+
     color: white;
-    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+.disconnect:hover {
+    background-color: var(--purple-dark);
 }

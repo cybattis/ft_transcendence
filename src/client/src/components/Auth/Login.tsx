@@ -6,8 +6,6 @@ import validator from "validator";
 import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
-import { emit } from "process";
-
 
 interface SigninDto {
   email: string;
@@ -16,14 +14,14 @@ interface SigninDto {
 }
 
 export default function Login() {
-  const [errorInput, setErrorInput] = React.useState('');
-  const [errorMessage, setErrorMessage] = React.useState('');
+  const [errorInput, setErrorInput] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState("");
   const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
   const { setAuthToken } = useContext(AuthContext);
   const inputs = {
-    email: '',
-    password: '',
-    remember: false
+    email: "",
+    password: "",
+    remember: false,
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -65,20 +63,17 @@ export default function Login() {
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
         console.log(res);
-        if (res.status === parseInt('401')) {
+        if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
         } else {
           setLoginForm(false);
-          if (res.data)
-          {
-            localStorage.setItem('token', res.data.token);
+          if (res.data) {
+            localStorage.setItem("token", res.data.token);
             setAuthToken(res.data.token);
-          }
-          else if (!res.data)
-          {
-            localStorage.setItem('email',user.email);
+          } else if (!res.data) {
+            localStorage.setItem("email", user.email);
             setCodeForm(true);
-            return ;
+            return;
           }
           return <Navigate to="/" />;
         }

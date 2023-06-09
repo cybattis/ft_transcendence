@@ -1,10 +1,13 @@
-import { useLoaderData } from "react-router-dom";
+import { Navigate, useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
 
 export function Profile() {
   let data = useLoaderData() as UserInfo;
+  if (localStorage.getItem("token") === null) {
+    return <Navigate to="/" />;
+  }
 
-  console.log(data);
+  console.log("Profile: ", data);
 
   const style = {
     display: "flex",
