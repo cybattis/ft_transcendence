@@ -2,8 +2,10 @@ import React, { useContext } from "react";
 import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
+import jwt_decode from "jwt-decode";
+import { Decoded } from "../../type/client.type";
 
 function Unlogged() {
   const logoSignup = {
@@ -35,6 +37,13 @@ function Unlogged() {
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
+  let decoded: Decoded | null = null;
+
+  try {
+    decoded = jwt_decode(localStorage.getItem("token")!);
+  } catch (e) {
+    console.log(e);
+  }
 
   const handleDisconnect = async () => {
     let JWTToken = localStorage.getItem("token");
@@ -46,7 +55,10 @@ function Logged() {
 
   return (
     <>
-      <button className="" onClick={handleDisconnect}>
+      <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
+        Profile
+      </Link>
+      <button className="disconnect" onClick={handleDisconnect}>
         Disconnect
       </button>
     </>
@@ -54,14 +66,9 @@ function Logged() {
 }
 
 export default function RightMenu() {
-  const rightMenu = {
-    display: "flex",
-    flexDirection: "row" as "row",
-    maxWidth: "max-content",
-    paddingRight: "6em",
-  };
-
   const { authed } = useContext(AuthContext);
 
-  return <div style={rightMenu}>{!authed ? <Unlogged /> : <Logged />}</div>;
+  return (
+    <div className={"rightMenu"}>{!authed ? <Unlogged /> : <Logged />}</div>
+  );
 }

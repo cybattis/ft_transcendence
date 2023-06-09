@@ -1,7 +1,24 @@
+.home {
+    display: flex;
+    flex-direction: row;
+    height: var(--vp-size);
+    gap: 10px;
+}
+
+.leftside {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+
+    box-sizing: border-box;
+}
+
 .launcher {
     box-sizing: border-box;
     display: flex;
     width: 100%;
+    height: 50%;
     flex-direction: column;
 
     align-items: center;
@@ -26,22 +43,22 @@
 .user {
     display: flex;
     width: 100%;
-    height: 100%;
+    height: 50%;
     flex-direction: column;
+    flex: 2;
 
     box-sizing: border-box;
 
     border-radius: 8px;
     border: 2px solid #8449BF;
     padding: 15px 50px;
-    gap: 21px;
-
 }
 
 .infobox {
     display: flex;
     flex-direction: row;
     align-items: center;
+    min-height: 50%;
     gap: 10px;
 }
 
@@ -53,28 +70,64 @@
 }
 
 .gamemode {
-    width: 100%;
+    width: 80%;
     height: 0;
-    padding-bottom: 100%;
+    padding-bottom: 80%;
     background-color: #858584;
+    border-radius: 8px;
 }
 
 .gamemode:hover {
     background-color: var(--cyan);
 }
 
-#progressbar {
-    flex: auto;
-    background-color: black;
-    border-radius: 13px;
-    /* (height of inner div) / 2 + padding */
-    padding: 3px;
+progress[value] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: auto;
+    height: 15px;
+    background-color: var(--black);
+    border-radius: 20px;
+    border-color: var(--cyan);
 }
 
-#progressbar>div {
+progress {
     background-color: var(--cyan);
-    width: 40%;
-    /* Adjust with JavaScript */
-    height: 10px;
-    border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--cyan) !important;
+}
+
+.lastmatch {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.gameResult {
+    min-width: 60px;
+    height: 50px;
+    text-align: center;
+}
+
+.win {
+    color: green;
+}
+
+.loose {
+    color: red;
+}
+
+.statsBox {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stats {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
 }

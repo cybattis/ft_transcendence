@@ -1,18 +1,32 @@
-import { Body, Controller, Get, Inject, Param, Put, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
+import { GameService } from '../game/game.service';
+import { ModuleRef } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UserController {
-  @Inject(UserService)
-  private readonly userService: UserService;
-  @Inject(JwtService)
-  private jwtService: JwtService;
+  private gameService: GameService;
+  constructor(
+    private userService: UserService,
+    private jwtService: JwtService,
+    private moduleRef: ModuleRef,
+  ) {}
+
+  onModuleInit() {
+    this.gameService = this.moduleRef.get(GameService, { strict: false });
+  }
 
   @Get()
   async findAll(): Promise<User[]> {
     return this.userService.findAll();
+  }
+
+  @Get('profile/:id')
+  async userInfo(@Param('id') id: number): Promise<any> {
+    console.log('id:', id);
+    return this.userService.userInfo(id);
   }
 
   @Get('check/login/:input')
@@ -27,7 +41,9 @@ export class UserController {
 
   @Put('disconnect')
   async disconnectUser(@Req() req: any, @Body() body: boolean) {
-    let payload: any = this.jwtService.decode(req.headers.authorization.split(" ")[1]);
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
     return await this.userService.changeOnlineStatus(payload.id, body);
   }
 }

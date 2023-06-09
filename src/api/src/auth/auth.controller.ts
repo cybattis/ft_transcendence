@@ -8,12 +8,12 @@ import {
   Post,
   Query,
   Res,
-  Put
+  Put,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SignupDto } from './dto/auth.dto';
+import { SigninDto, SignupDto } from './dto/auth.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -33,24 +33,27 @@ export class AuthController {
   ): Promise<string | any> {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
+      // TODO: add throw if error in token.
       const dataUser = await this.authService.infoUser(token);
       let user = await this.usersService.findByEmail(dataUser.email);
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
-        const tok42 = await this.authService.createJwtToken(dataUser.email, user.id);
-        return res.redirect('http://localhost:3000/loading?' + tok42);
-      }
-
-      else if (user.IsIntra) {
-        await this.authService.intraSignin(dataUser.email);
+        return res.redirect('http://localhost:3000/');
+      } else if (user.IsIntra) {
+        const token = await this.authService.intraSignin(user);
+        if (token) {
+          console.log('token', token);
+          return res.redirect('http://localhost:3000/loading?' + token.token);
+        }
         return res.redirect('http://localhost:3000/code?' + dataUser.email);
       }
 
       throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
+      // TODO: send error to display popup error in client after redirection
       res.redirect('http://localhost:3000/');
     }
   }
@@ -61,21 +64,21 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signUp(@Body() body: SignupDto): Promise<any> {
+  async signUp(@Body() body: SignupDto): Promise<string | any> {
     const nicknameExist = await this.usersService.findByLogin(body.nickname);
     if (!nicknameExist) {
       const emailExist = await this.usersService.findByEmail(body.email);
       if (!emailExist) {
         return await this.authService.createUser(body);
-    }
+      }
       throw new BadRequestException('Email is already taken!');
     }
     throw new BadRequestException('Nickname is already taken!');
   }
 
   @Post('signin')
-  async signIn(@Body() body: any) {
-    return await this.authService.signin(body.email, body.password);
+  async signIn(@Body() user: SigninDto): Promise<string | any> {
+    return await this.authService.signin(user);
   }
 
   @Post('2fa')

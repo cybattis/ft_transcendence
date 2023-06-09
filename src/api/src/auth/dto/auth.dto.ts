@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsString,
@@ -29,17 +30,28 @@ export class SignupDto {
   @MaxLength(20)
   nickname: string;
 
-  @IsEmail()
-  email: string;
-
   @IsString()
   firstname: string;
 
   @IsString()
   lastname: string;
 
+  @IsEmail()
+  email: string;
+
   @IsString()
   @IsNotEmpty()
   @IsStrongPassword()
   password: string;
+}
+
+export class SigninDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+
+  @IsBoolean()
+  remember: boolean;
 }

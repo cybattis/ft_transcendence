@@ -1,15 +1,15 @@
 import React, { useContext } from "react";
+import "./Auth.css";
 import axios from "axios";
 import InputForm from "../InputForm";
-import validator from 'validator';
+import validator from "validator";
 import Logo from "../Logo/Logo";
-import { FormContext } from "./dto";
-import "./Auth.css";
-import { AuthContext } from "./dto";
+import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import { emit } from "process";
 
-interface UserCredential {
+
+interface SigninDto {
   email: string;
   password: string;
   remember: boolean;
@@ -32,33 +32,30 @@ export default function Login() {
     inputs.email = e.currentTarget.email.value;
     inputs.password = e.currentTarget.password.value;
     inputs.remember = e.currentTarget.rememberMe.checked;
-  }
+  };
 
   const validateInput = async () => {
     let isValid = true;
-      if (!inputs.email) {
-        setErrorInput("Please enter an Email.");
-        isValid = false;
-      }
-      else if (!validator.isEmail(inputs.email)) {
-        setErrorInput("Please enter a valid Email.");
-        isValid = false;
-      }
-      else if (!inputs.password) {
-        setErrorInput("Please enter a Password.");
-        isValid = false;
-      }
+    if (!inputs.email) {
+      setErrorInput("Please enter an Email.");
+      isValid = false;
+    } else if (!validator.isEmail(inputs.email)) {
+      setErrorInput("Please enter a valid Email.");
+      isValid = false;
+    } else if (!inputs.password) {
+      setErrorInput("Please enter a Password.");
+      isValid = false;
+    }
     return isValid;
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     await changeInputs(e);
-    if (! await validateInput())
-      return ;
+    if (!(await validateInput())) return;
 
-    const user: UserCredential = {
+    const user: SigninDto = {
       email: inputs.email,
       password: inputs.password,
       remember: inputs.remember,

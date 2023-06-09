@@ -11,12 +11,13 @@ import { MailModule } from 'src/mail/mail.module';
 import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
-  imports: [MailModule, 
+  imports: [
+    MailModule,
     CacheModule.register({ isGlobal: true }),
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret,
-      signOptions: { expiresIn: '30s' },
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   controllers: [AuthController, UserController],

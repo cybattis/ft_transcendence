@@ -3,12 +3,12 @@ import {
   HttpStatus,
   Injectable,
   UnauthorizedException,
-  Inject
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
-import { IntraSignupDto, SignupDto } from './dto/auth.dto';
+import { IntraSignupDto, SigninDto, SignupDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
@@ -34,7 +34,7 @@ export class AuthService {
     const clientId =
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
-      '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';
+      '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
@@ -59,7 +59,7 @@ export class AuthService {
       if (user as { [key: string]: any }) {
         const dic = user as { [key: string]: any };
         if (dic['exp'] > new Date().getTime() / 1000) return HttpStatus.OK;
-        else return new UnauthorizedException('Token iInvalid');
+        else return new UnauthorizedException('Token invalid');
       }
     } else return new UnauthorizedException('Token invalid');
   }
@@ -75,56 +75,44 @@ export class AuthService {
     return await response.json();
   }
 
-  async createJwtToken(email: string, id: number): Promise<any> {
-    await this.usersService.isVerified(email) === null;
-    const payload = { email: email, id: id };
-    return {
-      token: await this.jwtService.signAsync(payload),
-    };
-  }
-
-  async intraSignin(email: string): Promise<any> {
-    if (await this.usersService.authActivated(email) === null && await this.usersService.isVerified(email) != null)
-    {
-      let user = await this.usersService.findByEmail(email);
-      const payload = { email: email, id: user.id };
-      return {
-        token: await this.jwtService.signAsync(payload),
-    };
+  async intraSignin(user: User): Promise<any> {
+    if (
+      (await this.usersService.authActivated(user?.email)) === null &&
+      (await this.usersService.isVerified(user?.email)) != null
+    ) {
+      if (user) {
+        const payload = { email: user.email, id: user.id };
+        return {
+          token: await this.jwtService.signAsync(payload),
+        };
+      }
     }
-    while (await this.usersService.isVerified(email) === null);
-    if (await this.usersService.authActivated(email) === null)
-      return ;
-    const code = await this.mailService.sendCodeConfirmation(email);
-    await this.cacheManager.set(code, email, 600000);
+
+    while ((await this.usersService.isVerified(user.email)) === null) {}
+    if ((await this.usersService.authActivated(user.email)) === null) return;
+    const code = await this.mailService.sendCodeConfirmation(user.email);
+    await this.cacheManager.set(code, user.email, 600000);
     return null;
   }
 
-  async findUser(email: string, password: string): Promise<User | null> {
-    return this.usersService.findUser(email, password);
-  }
+  async signin(user: SigninDto): Promise<any> {
+    const foundUser = await this.usersService.findByEmail(user.email);
 
-  async signin(email: string, password: string): Promise<any> {
-    const foundUser = await this.usersService.findByEmail(email);
-
-    if (foundUser && foundUser.IsIntra === false) {
-      const isVerified = await this.usersService.isVerified(email);
-      if (isVerified)
-      {
-        if (await this.usersService.authActivated(email) != null)
-        {
-          if (await bcrypt.compare(password, foundUser.password)) {
-            this.mailService.sendCodeConfirmation(email);
-            return ;
+    if (foundUser && !foundUser.IsIntra) {
+      const isVerified = await this.usersService.isVerified(user.email);
+      if (isVerified) {
+        if ((await this.usersService.authActivated(user.email)) != null) {
+          if (await bcrypt.compare(user.password, foundUser.password)) {
+            await this.mailService.sendCodeConfirmation(user.email);
+            return;
           }
           throw new HttpException(
             'Incorrect email or password',
             HttpStatus.UNAUTHORIZED,
           );
-        }
-        else if (await bcrypt.compare(password, foundUser.password)) {
+        } else if (await bcrypt.compare(user.password, foundUser.password)) {
           await this.usersService.changeOnlineStatus(foundUser.id, true);
-          const payload = { email: email, id: foundUser.id };
+          const payload = { email: user.email, id: foundUser.id };
           return {
             token: await this.jwtService.signAsync(payload),
           };
@@ -149,7 +137,7 @@ export class AuthService {
     return await this.mailService.sendUserConfirmation(user);
   }
 
-  async createUser(body: SignupDto) {
+  async createUser(body: SignupDto): Promise<void> {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
     const user: User = new User();
@@ -165,10 +153,11 @@ export class AuthService {
     await this.mailService.sendUserConfirmation(newUser);
   }
 
-  async createUserIntra(body: IntraSignupDto) {
+  async createUserIntra(body: IntraSignupDto): Promise<User> {
     const user: User = new User();
 
     user.nickname = body.login;
+
     const parts = body.displayname.split(' ');
     user.firstname = parts[0];
     user.lastname = parts[1];
@@ -176,14 +165,15 @@ export class AuthService {
     user.email = body.email;
     user.IsIntra = true;
 
-    return  await this.userRepository.save(user);
+    user.avatarUrl = body.image.link;
+
+    return await this.userRepository.save(user);
   }
 
   async updateValidation(id: number) {
-    this.usersService.updateValidation(id);
-    const user = await this.usersService.findById(id);
-    if (user)
-    {
+    await this.usersService.updateValidation(id);
+    const user = await this.usersService.findByID(id);
+    if (user) {
       const payload = { email: user.email, id: id };
       return {
         token: await this.jwtService.signAsync(payload),
@@ -192,19 +182,24 @@ export class AuthService {
   }
 
   async checkCode(code: string, email: string) {
-    for(let i: number = 1; GlobalService.emails[i]; i++)
-    {
-      if (((email && GlobalService.emails[i] === email) || (!email && GlobalService.emails[i] === await this.cacheManager.get(code))) && GlobalService.codes[i] === code)
-      {
-        let user = await this.usersService.findByEmail(email);
-        await this.usersService.changeOnlineStatus(user.id, true);
-        const payload = { email: email, id: user.id};
-        await this.cacheManager.del(code);
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
+    for (let i = 1; GlobalService.emails[i]; i++) {
+      if (
+        ((email && GlobalService.emails[i] === email) ||
+          (!email &&
+            GlobalService.emails[i] === (await this.cacheManager.get(code)))) &&
+        GlobalService.codes[i] === code
+      ) {
+        const user = await this.usersService.findByEmail(email);
+        if (user) {
+          await this.usersService.changeOnlineStatus(user.id, true);
+          const payload = { email: email, id: user.id };
+          await this.cacheManager.del(code);
+          return {
+            token: await this.jwtService.signAsync(payload),
+          };
+        }
       }
     }
-    throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED,);
+    throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
   }
 }

@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinTable,
+  ManyToMany,
+} from 'typeorm';
+import { Game } from '../../game/entity/Game.entity';
 
 @Entity()
 export class User {
@@ -23,10 +32,10 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true })
   password: string;
 
-  @Column({ default: true, nullable: true }) //TODO: change to false. This is for testing.
+  @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
   isVerified: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: true, nullable: true })
   authActivated: boolean;
 
   @Column({ default: false, nullable: true })
@@ -34,4 +43,34 @@ export class User {
 
   @Column({ default: false, nullable: true })
   inGame: boolean;
+
+  // User data ans stats
+  // ============================================================
+  @CreateDateColumn()
+  creationDate: Date;
+
+  @UpdateDateColumn()
+  updateDate: Date;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  avatarUrl: string;
+
+  @Column({ type: 'integer', default: 0 })
+  xp: number;
+
+  @Column({ type: 'integer', default: 1 })
+  level: number;
+
+  @Column({ type: 'integer', default: 1000 })
+  ranking: number;
+
+  // Player games
+  @ManyToMany(() => Game, (game: Game) => game.players, {
+    cascade: true,
+  })
+  @JoinTable()
+  games: Game[];
+
+  @Column({ type: 'integer', default: 0 })
+  totalGameWon: number;
 }
