@@ -1,5 +1,5 @@
 import "./Leaderboard.css";
-import { useLoaderData } from "react-router-dom";
+import { Navigate, useLoaderData } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
 
@@ -20,6 +20,10 @@ function TableHeader() {
 
 export function Leaderboard() {
   let data = useLoaderData() as UserInfo[];
+
+  if (localStorage.getItem("token") === null) {
+    return <Navigate to="/" />;
+  }
 
   console.log("Leaderboard: ", data);
 
