@@ -1,0 +1,17 @@
+progress[value] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: auto;
+    height: 15px;
+    background-color: var(--black);
+    border-radius: 20px;
+    border-color: var(--cyan);
+}
+
+progress {
+    background-color: var(--cyan);
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--cyan) !important;
+}

@@ -1,31 +1,61 @@
+import "./Profile.css";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
+import { Avatar } from "../../components/Avatar";
+import { XPBar } from "../../components/XPBar/XPBar";
+import {
+  GameStatsHeader,
+  GameStatsItem,
+} from "../../components/Game/GameStats/GameStatsItem";
+import { calculateWinrate } from "../../utils/calculateWinrate";
+import { GameStatsDto } from "../../type/game.type";
 
 export function Profile() {
+  // TODO: check token validity
+
   let data = useLoaderData() as UserInfo;
   if (localStorage.getItem("token") === null) {
     return <Navigate to="/" />;
   }
-
-  console.log("Profile: ", data);
-
-  const style = {
-    display: "flex",
-    flexDirection: "column" as "column",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "var(--page-height)",
-  };
+  const winrate: number = calculateWinrate(data);
 
   return (
-    <div style={style}>
-      <div>Profile</div>
-      <div>nickname: {data.nickname}</div>
-      <div>level: {data.level}</div>
-      <div>xp: {data.xp}</div>
-      <div>ranking: {data.ranking}</div>
-      <div>Game played: {data.games?.length}</div>
-      <div>Winrate: 0%</div>
+    <div className={"profilePage"}>
+      <div id={"infobox"}>
+        <Avatar size="200px" img={data.avatarUrl} />
+        <div id="info">
+          <h1 id={"nickname"}>{data.nickname}</h1>
+          <div>LVL {data.level}</div>
+          <p>{data.xp} xp</p>
+          <XPBar xp={data.xp} lvl={data.level} />
+        </div>
+      </div>
+      <div id={"stats"}>
+        <div id={"elo"} className={"dataBox"}>
+          <div>ELO</div>
+          <div>{data.ranking}</div>
+        </div>
+        <div id={"gamePlayed"} className={"dataBox"}>
+          <div>Game played</div>
+          <div>{data.games?.length}</div>
+        </div>
+        <div id={"winrate"} className={"dataBox"}>
+          <div>Winrate</div>
+          <div>{winrate}%</div>
+        </div>
+      </div>
+      <div className={"gamesStatsBox"}>
+        <h5 id={"gamesStatsBoxTitle"}>Matche history</h5>
+        <hr id={"hrbar"} />
+        <GameStatsHeader />
+        <div className={"matchesTable"}>
+          {data.games?.map((game: GameStatsDto, index) => (
+            <div key={index}>
+              <GameStatsItem game={game} id={data.id} />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

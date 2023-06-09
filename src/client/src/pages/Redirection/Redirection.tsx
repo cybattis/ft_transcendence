@@ -10,7 +10,7 @@ export default function RedirectionPage() {
 
   if (token !== undefined && token !== null)
     localStorage.setItem("token", token);
-  else console.log(token);
+  else console.log("no token");
 
   setAuthToken(localStorage.getItem("token"));
   return <Navigate to="/" />;

@@ -28,7 +28,14 @@ export class UserService implements OnModuleInit {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({ where: { email: email } });
+  }
+
+  async findUserAndGetCredential(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email },
+      select: ['id', 'nickname', 'email', 'password', 'IsIntra'],
+    });
   }
 
   async findAll(): Promise<User[]> {
