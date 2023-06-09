@@ -10,7 +10,6 @@ import { useLocation } from "react-router-dom";
 export function Game() {
   const location = useLocation();
   const props = location.state;
-  console.log(props);
 
   const data: GameBodyDto = {
     type: props.type as GameType,

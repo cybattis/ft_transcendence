@@ -81,4 +81,32 @@ export class UserService implements OnModuleInit {
       },
     });
   }
+
+  async isVerified(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, isVerified: true },
+    });
+  }
+
+  async authActivated(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, authActivated: true },
+    });
+  }
+
+  async updateValidation(id: number) {
+    await this.usersRepository.update(id, {
+      isVerified: true,
+    });
+  }
+
+  async updateAuth(id: number) {
+    await this.usersRepository.update(id, {
+      authActivated: true,
+    });
+  }
+
+  async changeOnlineStatus(id: number, state: boolean) {
+    await this.usersRepository.update(id, { online: state });
+  }
 }

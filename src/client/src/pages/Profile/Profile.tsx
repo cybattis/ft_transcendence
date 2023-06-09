@@ -1,5 +1,5 @@
 import "./Profile.css";
-import { useLoaderData } from "react-router-dom";
+import { Navigate, useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import { XPBar } from "../../components/XPBar/XPBar";
@@ -14,9 +14,10 @@ export function Profile() {
   // TODO: check token validity
 
   let data = useLoaderData() as UserInfo;
+  if (localStorage.getItem("token") === null) {
+    return <Navigate to="/" />;
+  }
   const winrate: number = calculateWinrate(data);
-
-  console.log(data);
 
   return (
     <div className={"profilePage"}>

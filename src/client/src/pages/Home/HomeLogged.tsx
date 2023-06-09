@@ -5,7 +5,7 @@ import jwt_decode from "jwt-decode";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { GameStatsDto, GameType } from "../../type/game.type";
 import { Decoded } from "../../type/client.type";
 import { XPBar } from "../../components/XPBar/XPBar";
@@ -99,13 +99,6 @@ function Winrate(props: { data: UserInfo }) {
 
 function UserProfile() {
   let decoded: Decoded | null = null;
-
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    console.log(e);
-  }
-
   const [data, setData] = useState<UserInfo>({
     id: 0,
     nickname: "",
@@ -116,8 +109,13 @@ function UserProfile() {
     games: [],
   });
 
+  try {
+    decoded = jwt_decode(localStorage.getItem("token")!);
+  } catch (e) {
+    console.log(e);
+  }
+
   useEffect(() => {
-    console.log(decoded);
     async function fetchData(id: string) {
       await axios
         .get(`http://localhost:5400/user/profile/${id}`, {
@@ -131,8 +129,12 @@ function UserProfile() {
         });
     }
 
-    if (decoded !== null) fetchData(decoded.id).then((r) => console.log(r));
+    if (decoded !== null) fetchData(decoded.id);
   }, []);
+
+  if (decoded === null) {
+    return <Navigate to="/" />;
+  }
 
   return (
     <div className="user">
