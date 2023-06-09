@@ -113,7 +113,7 @@ function UserProfile() {
   });
 
   useEffect(() => {
-    console.log(decoded);
+    console.log("token: ", decoded);
     async function fetchData(id: string) {
       await axios
         .get(`http://localhost:5400/user/profile/${id}`, {

@@ -32,6 +32,18 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true })
   password: string;
 
+  @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
+  isVerified: boolean;
+
+  @Column({ default: true, nullable: true })
+  authActivated: boolean;
+
+  @Column({ default: false, nullable: true })
+  online: boolean;
+
+  @Column({ default: false, nullable: true })
+  inGame: boolean;
+
   // User data ans stats
   // ============================================================
   @CreateDateColumn()

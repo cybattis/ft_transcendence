@@ -1,7 +1,8 @@
 import React, { useContext } from "react";
+import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
 import jwt_decode from "jwt-decode";
 import { Decoded } from "../../type/client.type";
@@ -36,8 +37,6 @@ function Unlogged() {
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
-  const navigate = useNavigate();
-
   let decoded: Decoded | null = null;
 
   try {
@@ -46,10 +45,12 @@ function Logged() {
     console.log(e);
   }
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    let JWTToken = localStorage.getItem("token");
     localStorage.removeItem("token");
     setAuthToken(null);
-    navigate("/");
+    await axios.put("http://localhost:5400/user/disconnect", false, { headers: {"Authorization": `Bearer ${JWTToken}`}});
+    return <Navigate to="/" />;
   };
 
   return (

@@ -4,7 +4,7 @@ import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
-import { AuthContext, FormContext } from "./dto";
+import { FormContext } from "./dto";
 
 interface UserCredential {
   nickname: string;
@@ -17,8 +17,7 @@ interface UserCredential {
 export default function Signup() {
   const [errorInput, setErrorInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { setSignupForm, setLoginForm } = useContext(FormContext);
-  const { setAuthToken } = useContext(AuthContext);
+  const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
 
   const inputs = {
     nickname: "",
@@ -53,9 +52,6 @@ export default function Signup() {
     let isValid = true;
     if (!inputs.nickname) {
       setErrorInput("Please enter a Nickname.");
-      isValid = false;
-    } else if (inputs.nickname.length < 3) {
-      setErrorInput("Nickname is too short. (min 3 characters)");
       isValid = false;
     } else if (inputs.nickname.length > 20) {
       setErrorInput("Nickname is too long. (max 20 characters)");
@@ -124,11 +120,11 @@ export default function Signup() {
           "Access-Control-Allow-Origin": "*",
         },
       })
-      .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
+      .then(() => {
         setSignupForm(false);
+        alert(
+          "An email has been sent to verify your email address. Please check this out before continuing."
+        );
       })
       .catch((error) => {
         console.log("Error: ", error.response.status);
@@ -188,6 +184,7 @@ export default function Signup() {
             onClick={() => {
               setSignupForm(false);
               setLoginForm(true);
+              setCodeForm(false);
             }}
           >
             Sign in!

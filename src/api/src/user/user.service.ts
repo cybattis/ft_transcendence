@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Not, Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
@@ -73,5 +73,33 @@ export class UserService implements OnModuleInit {
         games: MoreThan(0),
       },
     });
+  }
+
+  async isVerified(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, isVerified: true },
+    });
+  }
+
+  async authActivated(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email, authActivated: true },
+    });
+  }
+
+  async updateValidation(id: number) {
+    await this.usersRepository.update(id, {
+      isVerified: true,
+    });
+  }
+
+  async updateAuth(id: number) {
+    await this.usersRepository.update(id, {
+      authActivated: true,
+    });
+  }
+
+  async changeOnlineStatus(id: number, state: boolean) {
+    await this.usersRepository.update(id, { online: state });
   }
 }
