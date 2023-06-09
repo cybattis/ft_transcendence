@@ -66,11 +66,11 @@ const router = createBrowserRouter([
             path: "code",
             element: <CodeConfirmation />,
           },
+          {
+            path: "settings",
+            element: <Settings />,
+          },
         ],
-      },
-      {
-        path: "settings",
-        element: <Settings />,
       },
     ],
   },

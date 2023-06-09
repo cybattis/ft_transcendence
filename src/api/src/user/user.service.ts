@@ -42,6 +42,13 @@ export class UserService implements OnModuleInit {
     return this.usersRepository.find();
   }
 
+  async userSettings(id: number): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { id: id },
+      select: ['id', 'nickname', 'avatarUrl', 'email', 'firstname', 'lastname'],
+    });
+  }
+
   async userInfo(id: number): Promise<UserInfo | any> {
     const user = await this.findByID(id);
     if (!user) return null;
@@ -108,5 +115,13 @@ export class UserService implements OnModuleInit {
 
   async changeOnlineStatus(id: number, state: boolean) {
     await this.usersRepository.update(id, { online: state });
+  }
+
+  async updateAvatar(path: string, id: number) {
+    const user = await this.usersRepository.findOne({ where: { id: id } });
+    if (!user) return null;
+    user.avatarUrl = 'http://localhost:5400/' + path;
+    await this.usersRepository.save(user);
+    return user.avatarUrl;
   }
 }

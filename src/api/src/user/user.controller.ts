@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Param, Put, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import { UserInfo } from '../type/user.type';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UserController {
@@ -17,7 +28,7 @@ export class UserController {
   ) {}
 
   onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, {strict: false});
+    this.gameService = this.moduleRef.get(GameService, { strict: false });
   }
 
   @Get()
@@ -26,7 +37,7 @@ export class UserController {
   }
 
   @Get('profile/:id')
-  async userInfo(@Param('id') id: number): Promise<any> {
+  async userInfo(@Param('id') id: number): Promise<UserInfo | any> {
     return this.userService.userInfo(id);
   }
 
@@ -51,5 +62,23 @@ export class UserController {
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
     return this.userService.leaderboard();
+  }
+
+  @Get('settings/:id')
+  async userSettings(@Param('id') id: number): Promise<User | null> {
+    return this.userService.userSettings(id);
+  }
+
+  @Post('upload/:id')
+  @UseInterceptors(
+    FileInterceptor('avatar', { dest: 'avatar/', preservePath: true }),
+  )
+  uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('id') id: number,
+  ) {
+    console.log('controller: ', file);
+    this.userService.updateAvatar(file.path, id).then((r) => console.log(r));
+    return { file: file.path };
   }
 }

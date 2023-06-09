@@ -10,3 +10,12 @@ export interface UserInfo {
   games?: GameStatsDto[];
   totalGameWon?: number;
 }
+
+export interface UserSettings {
+  id: number;
+  nickname: string;
+  avatarUrl?: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+}
