@@ -35,7 +35,9 @@ export class AuthController {
       const token = await this.authService.exchangeCodeForToken(code);
       // TODO: add throw if error in token.
       const dataUser = await this.authService.infoUser(token);
-      let user = await this.usersService.findByEmail(dataUser.email);
+      let user = await this.usersService.findUserAndGetCredential(
+        dataUser.email,
+      );
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
@@ -77,7 +79,7 @@ export class AuthController {
   }
 
   @Post('signin')
-  async signIn(@Body() user: SigninDto): Promise<string | any> {
+  async signin(@Body() user: SigninDto): Promise<string | any> {
     return await this.authService.signin(user);
   }
 

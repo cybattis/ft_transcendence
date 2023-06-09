@@ -59,6 +59,9 @@ function Logged() {
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
         Profile
       </Link>
+      <Link to={`/settings`} className={"navLink"}>
+        Settings
+      </Link>
       <Link to="/" className="disconnect" onClick={handleDisconnect}>
         Disconnect
       </Link>

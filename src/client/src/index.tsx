@@ -13,6 +13,7 @@ import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import { Settings } from "./pages/Settings/Settings";
 
 const router = createBrowserRouter([
   {
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
             element: <CodeConfirmation />,
           },
         ],
+      },
+      {
+        path: "settings",
+        element: <Settings />,
       },
     ],
   },
