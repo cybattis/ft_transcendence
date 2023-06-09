@@ -35,7 +35,7 @@ export class User {
   @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
   isVerified: boolean;
 
-  @Column({ default: true, nullable: true })
+  @Column({ default: false, nullable: true })
   authActivated: boolean;
 
   @Column({ default: false, nullable: true })

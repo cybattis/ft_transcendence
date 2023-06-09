@@ -49,8 +49,9 @@ function Logged() {
     let JWTToken = localStorage.getItem("token");
     localStorage.removeItem("token");
     setAuthToken(null);
-    await axios.put("http://localhost:5400/user/disconnect", false, { headers: {"Authorization": `Bearer ${JWTToken}`}});
-    return <Navigate to="/" />;
+    await axios.put("http://localhost:5400/user/disconnect", false, {
+      headers: { Authorization: `Bearer ${JWTToken}` },
+    });
   };
 
   return (
@@ -58,9 +59,9 @@ function Logged() {
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
         Profile
       </Link>
-      <button className="disconnect" onClick={handleDisconnect}>
+      <Link to="/" className="disconnect" onClick={handleDisconnect}>
         Disconnect
-      </button>
+      </Link>
     </>
   );
 }
