@@ -32,7 +32,7 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   password: string;
 
-  @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
+  @Column({ default: false, nullable: true }) //TODO: if true change to false, this is for testing.
   isVerified: boolean;
 
   @Column({ default: false, nullable: true })

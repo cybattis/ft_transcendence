@@ -25,8 +25,6 @@ export function Leaderboard() {
     return <Navigate to="/" />;
   }
 
-  console.log("Leaderboard: ", data);
-
   return (
     <div className={"leaderboard"}>
       <h5 id={"title"}>Leaderboard</h5>

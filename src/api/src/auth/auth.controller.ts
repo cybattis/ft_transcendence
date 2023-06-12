@@ -35,9 +35,7 @@ export class AuthController {
       const token = await this.authService.exchangeCodeForToken(code);
       // TODO: add throw if error in token.
       const dataUser = await this.authService.infoUser(token);
-      let user = await this.usersService.findUserAndGetCredential(
-        dataUser.email,
-      );
+      let user = await this.usersService.findByEmail(dataUser.email);
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
