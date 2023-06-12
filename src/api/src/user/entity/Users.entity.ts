@@ -35,7 +35,7 @@ export class User {
   @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
   isVerified: boolean;
 
-  @Column({ default: true, nullable: true })
+  @Column({ default: false, nullable: true })
   authActivated: boolean;
 
   @Column({ default: false, nullable: true })
@@ -65,6 +65,7 @@ export class User {
   ranking: number;
 
   // Player games
+  // ============================================================
   @ManyToMany(() => Game, (game: Game) => game.players, {
     cascade: true,
   })
@@ -73,4 +74,12 @@ export class User {
 
   @Column({ type: 'integer', default: 0 })
   totalGameWon: number;
+
+  // Friends
+  // ============================================================
+  @Column({ type: 'User', nullable: true})
+  @ManyToMany(() => User, (user: User) => user.id)
+  @JoinTable()
+  friends: User[];
+
 }

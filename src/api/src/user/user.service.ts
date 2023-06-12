@@ -36,7 +36,11 @@ export class UserService implements OnModuleInit {
   }
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+    return this.usersRepository.find({
+      relations: {
+        friends: true,
+      },
+    });
   }
 
   async userInfo(id: number): Promise<UserInfo | any> {
@@ -74,6 +78,7 @@ export class UserService implements OnModuleInit {
   async updateValidation(id: number) {
     await this.usersRepository.update(id, {
       isVerified: true,
+      online: true,
     });
   }
 
