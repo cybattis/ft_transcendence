@@ -77,7 +77,7 @@ export class User {
 
   // Friends
   // ============================================================
-  @Column({ type: 'User', nullable: true})
+  @Column({ type: 'json', nullable: true})
   @ManyToMany(() => User, (user: User) => user.id)
   @JoinTable()
   friends: User[];

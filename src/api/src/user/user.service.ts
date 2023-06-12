@@ -91,4 +91,9 @@ export class UserService implements OnModuleInit {
   async changeOnlineStatus(id: number, state: boolean) {
     await this.usersRepository.update(id, { online: state });
   }
+
+  async addFriend(myId: number, friendId: number) {
+    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
+    await this.usersRepository.update(myId, friend)
+  }
 }

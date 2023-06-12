@@ -46,4 +46,9 @@ export class UserController {
     );
     return await this.userService.changeOnlineStatus(payload.id, body);
   }
+
+  @Put('add/:id')
+  async addFriend(@Param('id') id: number, @Body() body: number) {
+    return await this.userService.addFriend(id, body);
+  }
 }
