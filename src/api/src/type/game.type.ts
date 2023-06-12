@@ -1,3 +1,5 @@
+import { UserInfo } from './user.type';
+
 export enum GameType {
   PRACTICE = 'Practice',
   CASUAL = 'Casual',
@@ -21,4 +23,9 @@ export interface GameBodyDto {
   scoreP1: number;
   scoreP2: number;
   status: GameStatus;
+}
+
+export interface GameStatsDto extends GameBodyDto {
+  creationDate: string;
+  players: UserInfo[];
 }

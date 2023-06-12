@@ -18,8 +18,6 @@ export default function Home() {
   const { authed } = useContext(AuthContext);
   CheckToken(localStorage.getItem("token"));
 
-  console.log(authed);
-
   return (
     <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>
   );

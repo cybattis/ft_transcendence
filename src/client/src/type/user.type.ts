@@ -1,4 +1,4 @@
-import { GameBodyDto } from "./game.type";
+import { GameStatsDto } from "./game.type";
 
 export interface UserInfo {
   id: number;
@@ -6,7 +6,7 @@ export interface UserInfo {
   xp: number;
   level: number;
   ranking: number;
-  avatar?: string;
-  games?: GameBodyDto[];
+  avatarUrl?: string;
+  games?: GameStatsDto[];
   totalGameWon?: number;
 }

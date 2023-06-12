@@ -12,6 +12,7 @@ import CodeConfirmation from "./pages/Confirmation/CodeConfirm";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
+import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 
 const router = createBrowserRouter([
   {
@@ -36,10 +37,16 @@ const router = createBrowserRouter([
             path: "profile/:id",
             element: <Profile />,
             loader: async ({ request, params }) => {
-              console.log("loader", params);
               return fetch(`http://localhost:5400/user/profile/${params.id}`, {
                 signal: request.signal,
               });
+            },
+          },
+          {
+            path: "leaderboard",
+            element: <Leaderboard />,
+            loader: async () => {
+              return fetch(`http://localhost:5400/user/leaderboard`);
             },
           },
           {

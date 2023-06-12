@@ -1,6 +1,6 @@
-import { Injectable, OnModuleInit, Body } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
@@ -28,11 +28,14 @@ export class UserService implements OnModuleInit {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({ where: { email: email } });
   }
 
-  async findUser(email: string, password: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email: email, password: password } });
+  async findUserAndGetCredential(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email: email },
+      select: ['id', 'nickname', 'email', 'password', 'IsIntra'],
+    });
   }
 
   async findAll(): Promise<User[]> {
@@ -53,7 +56,7 @@ export class UserService implements OnModuleInit {
       level: user.level,
       xp: user.xp,
       ranking: user.ranking,
-      avatar: user.avatarUrl,
+      avatarUrl: user.avatarUrl,
       games: await this.gameService.findUserGames(id),
       totalGameWon: user.totalGameWon,
 
@@ -61,6 +64,26 @@ export class UserService implements OnModuleInit {
       // Friends list ?
       // Achievements ?
     };
+  }
+
+  async leaderboard(): Promise<UserInfo[] | any> {
+    return this.usersRepository.find({
+      order: { ranking: 'DESC' },
+      take: 10,
+      select: {
+        id: true,
+        nickname: true,
+        ranking: true,
+        avatarUrl: true,
+        totalGameWon: true,
+      },
+      relations: {
+        games: true,
+      },
+      where: {
+        games: MoreThan(0),
+      },
+    });
   }
 
   async isVerified(email: string): Promise<User | null> {

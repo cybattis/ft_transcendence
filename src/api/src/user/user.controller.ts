@@ -4,10 +4,12 @@ import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
+import { UserInfo } from '../type/user.type';
 
 @Controller('user')
 export class UserController {
   private gameService: GameService;
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
@@ -15,7 +17,7 @@ export class UserController {
   ) {}
 
   onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, { strict: false });
+    this.gameService = this.moduleRef.get(GameService, {strict: false});
   }
 
   @Get()
@@ -25,7 +27,6 @@ export class UserController {
 
   @Get('profile/:id')
   async userInfo(@Param('id') id: number): Promise<any> {
-    console.log('id:', id);
     return this.userService.userInfo(id);
   }
 
@@ -50,5 +51,10 @@ export class UserController {
   @Put('add/:id')
   async addFriend(@Param('id') id: number, @Body() body: number) {
     return await this.userService.addFriend(id, body);
+  }
+}
+  @Get('leaderboard')
+  async leaderboard(): Promise<UserInfo[]> {
+    return this.userService.leaderboard();
   }
 }

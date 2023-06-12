@@ -96,7 +96,9 @@ export class AuthService {
   }
 
   async signin(user: SigninDto): Promise<any> {
-    const foundUser = await this.usersService.findByEmail(user.email);
+    const foundUser = await this.usersService.findUserAndGetCredential(
+      user.email,
+    );
 
     if (foundUser && !foundUser.IsIntra) {
       const isVerified = await this.usersService.isVerified(user.email);

@@ -17,22 +17,22 @@ export class User {
   @Column({ type: 'varchar', length: 30, unique: true })
   nickname: string;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, select: false })
   firstname: string;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, select: false })
   lastname: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true, select: false })
   email: string;
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', select: false })
   IsIntra: boolean;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   password: string;
 
-  @Column({ default: false, nullable: true }) //TODO: change to false. This is for testing.
+  @Column({ default: false, nullable: true }) //TODO: if true change to false, this is for testing.
   isVerified: boolean;
 
   @Column({ default: false, nullable: true })
@@ -46,10 +46,10 @@ export class User {
 
   // User data ans stats
   // ============================================================
-  @CreateDateColumn()
+  @CreateDateColumn({ select: false })
   creationDate: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: false })
   updateDate: Date;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
