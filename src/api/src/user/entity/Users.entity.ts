@@ -46,10 +46,10 @@ export class User {
 
   // User data ans stats
   // ============================================================
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({ select: true })
   creationDate: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn({ select: true })
   updateDate: Date;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -66,7 +66,9 @@ export class User {
 
   // Player games
   @ManyToMany(() => Game, (game: Game) => game.players, {
-    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinTable()
   games: Game[];

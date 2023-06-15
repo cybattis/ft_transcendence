@@ -22,8 +22,10 @@ export class Game {
   @Column({ type: 'enum', enum: GameMode })
   mode: GameMode;
 
-  @Column({ type: 'json', nullable: true })
-  @ManyToMany(() => User, (user: User) => user.games)
+  @ManyToMany(() => User, (user: User) => user.games, {
+    cascade: true,
+    onUpdate: 'CASCADE',
+  })
   players: User[];
 
   @Column({ type: 'simple-array', nullable: true })
