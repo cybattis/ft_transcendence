@@ -108,16 +108,6 @@ function UserProfile() {
     ranking: 0,
     games: [],
   });
-
-  const handleButton = async () => {
-    await axios.put(`http://localhost:5400/user/add/${data.id}`, 2)
-    .then((res) => {
-      console.log(res);
-    })
-    .catch(error => {
-      console.log(error);
-    })
-  }
   
   try {
     decoded = jwt_decode(localStorage.getItem("token")!);
@@ -165,7 +155,6 @@ function UserProfile() {
           <br />
           <div>{data.ranking}</div>
         </div>
-        <button type="button" onClick={handleButton}>Add Friend</button>
       </div>
     </div>
   );

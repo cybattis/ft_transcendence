@@ -1,6 +1,7 @@
 import { KeyboardEvent, useCallback, useRef, useState } from "react";
 // import { useSend } from "../../App";
 import "./Chat.css";
+import { Friends } from "../Friends/Friends";
 
 export function Chat() {
   // const { messages } = useSend();
@@ -12,7 +13,10 @@ export function Chat() {
         <MessageList messages={[]} />
         <InputMessage />
       </div>
-      <div className="friendList">Friends list</div>
+      <div className="friendList">
+        Friends list
+        <Friends />
+      </div>
     </div>
   );
 }

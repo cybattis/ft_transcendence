@@ -44,7 +44,6 @@ export class AuthController {
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
         if (token) {
-          console.log('token', token);
           return res.redirect('http://localhost:3000/loading?' + token.token);
         }
         return res.redirect('http://localhost:3000/code?' + dataUser.email);

@@ -39,11 +39,7 @@ export class UserService implements OnModuleInit {
   }
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find({
-      relations: {
-        friends: true,
-      },
-    });
+    return this.usersRepository.find();
   }
 
   async userInfo(id: number): Promise<UserInfo | any> {
@@ -115,8 +111,53 @@ export class UserService implements OnModuleInit {
     await this.usersRepository.update(id, { online: state });
   }
 
-  async addFriend(myId: number, friendId: number) {
-    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
-    await this.usersRepository.update(myId, friend)
+  async requestFriend(myId: number, friend: any) {
+    const user: any = await this.usersRepository.findOne({where : {id: myId}});
+    if (user.friendsId)
+    {
+      for (let i = 0; user.friendsId[i]; i ++)
+      {
+        if (user.friendsId[i] === friend.id)
+          return ;
+      }
+    }
+    user.friendsId.push(friend.id);
+    await this.usersRepository.save(user);
+  }
+
+  async getOnlineFriendsList(id: number) {
+    const user: any = await this.usersRepository.findOne({where : {id: id}});
+    if (user && user.friendsId)
+    {
+      let friends: User[] = [];
+      for (let i = 0; user.friendsId[i]; i ++)
+      {
+          let friend: any = await this.usersRepository.findOne({
+            select: ['nickname', 'avatarUrl', 'online', 'inGame'],
+            where : {id: user.friendsId[i]}});
+          if (friend.online === true)
+            friends.push(friend);
+      }
+      return (friends);
+    }
+    return null;
+  }
+
+  async getOfflineFriendsList(id: number) {
+    const user: any = await this.usersRepository.findOne({where : {id: id}});
+    if (user && user.friendsId)
+    {
+      let friends: User[] = [];
+      for (let i = 0; user.friendsId[i]; i ++)
+      {
+        let friend: any = await this.usersRepository.findOne({
+          select: ['nickname', 'avatarUrl', 'online', 'inGame'],
+          where : {id: user.friendsId[i]}});
+        if (friend.online === false)
+          friends.push(friend);
+      }
+      return (friends);
+    }
+    return null;
   }
 }

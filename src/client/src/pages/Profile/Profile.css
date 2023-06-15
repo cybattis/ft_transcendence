@@ -5,8 +5,15 @@
     height: var(--vp-size);
 }
 
+.profilePage #header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .profilePage #nickname {
     margin-bottom: 30px;
+    align-content: baseline;
 }
 
 .profilePage #infobox {
@@ -86,4 +93,18 @@
 .matchesTable {
     overflow-y: scroll;
     height: 350px;
+}
+
+.friendButton {
+    width: 100px;
+    height: 50px;
+    margin-left: 20px;
+    padding: 0px 5px;
+    border-radius: 8px;
+    color: white;
+    background-color: var(--purple-wave);
+    justify-content: center;
+    align-items: center;
+    font-weight: 1000;
+    cursor: pointer;
 }

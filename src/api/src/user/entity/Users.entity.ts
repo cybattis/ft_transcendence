@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
+  OneToMany
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -26,7 +27,7 @@ export class User {
   @Column({ type: 'varchar', length: 100, unique: true, select: false })
   email: string;
 
-  @Column({ type: 'boolean', select: false })
+  @Column({ type: 'boolean', select: true })
   IsIntra: boolean;
 
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
@@ -77,9 +78,10 @@ export class User {
 
   // Friends
   // ============================================================
-  @Column({ type: 'json', nullable: true})
-  @ManyToMany(() => User, (user: User) => user.id)
-  @JoinTable()
-  friends: User[];
+  @Column('int', { array: true, default: [] })
+  friendsId: number[];
+
+  @Column('int', { array: true, default: [] })
+  requestedId: number[];
 
 }

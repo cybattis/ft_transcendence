@@ -25,6 +25,22 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('friends/online')
+  async getOnlineFriendsList(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getOnlineFriendsList(payload.id);
+  }
+
+  @Get('friends/offline')
+  async getOfflineFriendsList(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getOfflineFriendsList(payload.id);
+  }
+
   @Get('profile/:id')
   async userInfo(@Param('id') id: number): Promise<any> {
     return this.userService.userInfo(id);
@@ -48,11 +64,11 @@ export class UserController {
     return await this.userService.changeOnlineStatus(payload.id, body);
   }
 
-  @Put('add/:id')
-  async addFriend(@Param('id') id: number, @Body() body: number) {
-    return await this.userService.addFriend(id, body);
+  @Put('request/:id')
+  async requestFriend(@Param('id') id: number, @Body() body: number) {
+    return await this.userService.requestFriend(id, body);
   }
-}
+
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
     return this.userService.leaderboard();

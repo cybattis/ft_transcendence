@@ -81,6 +81,7 @@ export class AuthService {
       (await this.usersService.isVerified(user?.email)) != null
     ) {
       if (user) {
+        await this.usersService.changeOnlineStatus(user.id, true);
         const payload = { email: user.email, id: user.id };
         return {
           token: await this.jwtService.signAsync(payload),

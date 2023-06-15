@@ -13,6 +13,7 @@ import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import Notifications from "./pages/Notifications/Notifications";
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,15 @@ const router = createBrowserRouter([
                 signal: request.signal,
               });
             },
+          },
+          {
+            path: "notifications/:id",
+            element: <Notifications />,
+            /*loader: async ({ request, params }) => {
+              return fetch(`http://localhost:5400/user/profile/${params.id}`, {
+                signal: request.signal,
+              });
+            },*/
           },
           {
             path: "leaderboard",

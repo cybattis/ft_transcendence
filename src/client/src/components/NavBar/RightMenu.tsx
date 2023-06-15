@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
+import notifsLogo from "../../resource/logo-notifications.png"
 import { Link, Navigate } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
 import jwt_decode from "jwt-decode";
@@ -28,7 +29,7 @@ function Unlogged() {
         Login
       </button>
       <button className="signup-button" onClick={toggleSignupForm}>
-        <img style={logoSignup} src={logo} alt="logo" />
+      <img style={logoSignup} src={logo} alt="logo" />
         SignUp
       </button>
     </>
@@ -54,8 +55,17 @@ function Logged() {
     });
   };
 
+  const logoNotifs = {
+    width: "45px",
+    height: "45px",
+  }
+
   return (
     <>
+      <Link to={`/notifications/${decoded?.id}`} className="notifs">
+        <img style={logoNotifs} src={notifsLogo} />
+        Notifs
+      </Link>
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
         Profile
       </Link>
