@@ -19,11 +19,9 @@ export function Settings() {
   let [error, setError] = useState("");
 
   useEffect(() => {
-    function fetchData(token: string) {
+    async function fetchData(token: string) {
       if (token === null) return;
-      console.log("fetch setting");
-      console.log("token: ", token);
-      axios
+      await axios
         .get(`http://localhost:5400/user/settings/${token}`, {
           method: "GET",
           headers: {
@@ -40,7 +38,7 @@ export function Settings() {
         });
     }
 
-    fetchData(token!);
+    fetchData(token!).then(() => {});
   }, []);
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {

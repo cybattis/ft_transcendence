@@ -113,8 +113,8 @@ function UserProfile() {
   ) as TokenData;
 
   useEffect(() => {
-    function fetchData(id: number) {
-      axios
+    async function fetchData(id: number) {
+      await axios
         .get(`http://localhost:5400/user/profile/${id}`, {
           method: "GET",
           headers: {
@@ -126,7 +126,7 @@ function UserProfile() {
         });
     }
 
-    fetchData(decoded.id);
+    fetchData(decoded.id).then(() => {});
   }, []);
 
   if (decoded === null) {
