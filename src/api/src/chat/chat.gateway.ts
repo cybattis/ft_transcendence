@@ -25,17 +25,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
-  handleMessage(socket: Socket, message: string) {
-    const channel = this.takeChannel(message);
-    const msg: string = this.takeMess(message);
-    socket.broadcast.emit('rcv', { msg, channel });
+  handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    let channel = data.channel;
+    const msg = data.msg;
+    const sender = data.username;
+    const send = {sender, msg, channel}
+    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`)
+    if (data.channel[0] === "#")
+      socket.broadcast.emit('rcv', send);
+    else
+    {
+      const target = this.channelService.takeSocketByUsername(channel);
+      channel = sender;
+      const prv = {sender, msg, channel};
+      if (target)
+        socket.to(target).emit('rcv', prv);
+    }
   }
 
   @SubscribeMessage('join')
-  handleJoin(socket: Socket, roomChan: string){
-    socket.join(roomChan);
-    socket.emit('join', roomChan);
-    this.channelService.addChannel(roomChan, socket.id);
+  handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const channel = data.channel;
+    const username = data.username;
+    let pass: string = '';
+    if (data.password !== '')
+      pass = data.password;
+    if (this.channelService.verifyUserSocket(socket.id, username))
+      this.channelService.joinOldChannel(socket, username);
+    console.log(data);
+    this.channelService.joinChannel(socket, username, channel, pass);
+  }
+
+  @SubscribeMessage('prv')
+  handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
+    console.log(` d ${data}`);
+    this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
   @SubscribeMessage('op')
@@ -44,6 +68,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
   }
 
+  @SubscribeMessage('quit')
+  handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log(`Quit : ${data.channel}`);
+    this.channelService.quitChannel(data.cmd, data.username, data.channel);
+    const channel = data.channel;
+    this.server.to(socket.id).emit("quit", channel);
+  }
+  @SubscribeMessage('ban')
+  handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log(socket.id, data);
+    this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
+    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    const channel = data.channel;
+    if (targetSocket)
+    {
+      console.log(`inside`) ;
+      this.server.to(targetSocket).emit("quit", channel);
+
+    }
+  }
   @SubscribeMessage('info')
   handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     const channel = data.channel;
@@ -51,6 +95,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (msg != null) {
       console.log(msg);
       this.server.emit('rcv', {msg, channel});
+    }
+  }
+
+  @SubscribeMessage('kick')
+  handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log(socket.id, data);
+    this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
+    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    const channel = data.channel;
+    if (targetSocket)
+    {
+      console.log(`inside`) ;
+      this.server.to(targetSocket).emit("quit", channel);
+
     }
   }
 
@@ -65,18 +123,5 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handlePing(socket: Socket) {
     console.log(`Received ping`);
     this.server.emit('pong');
-  }
-
-  takeChannel(message: string){
-    if(message.indexOf("#") == -1)
-      return (gChannel);
-    const channel = message.substring(message.indexOf("#"));
-    if (channel.indexOf(" ") != -1)
-      return (channel.substring(0, channel.indexOf(" ")));
-    return channel;
-  }
-
-  takeMess(mess: string):string{
-    return (mess.substring(mess.indexOf('%') + 1));
   }
 }
