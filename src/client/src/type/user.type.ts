@@ -12,12 +12,10 @@ export interface UserInfo {
 }
 
 export interface UserSettings {
-  id: number;
   nickname: string;
-  avatarUrl?: string;
+  firstname: string;
+  lastname: string;
   email: string;
-  firstName: string;
-  lastName: string;
 }
 
 export interface tokenData {

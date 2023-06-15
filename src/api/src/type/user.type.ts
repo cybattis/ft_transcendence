@@ -11,7 +11,14 @@ export interface UserInfo {
   totalGameWon?: number;
 }
 
-export interface tokenData {
+export interface UserSettings {
+  nickname: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+
+export interface TokenData {
   email: string;
   id: number;
   iat: number;
