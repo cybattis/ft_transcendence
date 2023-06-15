@@ -1,19 +1,22 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { tokenData, UserInfo } from '../type/user.type';
+import { TokenData, UserInfo, UserSettings } from '../type/user.type';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private mailService: MailService,
     private moduleRef: ModuleRef,
   ) {}
 
@@ -48,7 +51,15 @@ export class UserService implements OnModuleInit {
   async userSettings(id: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { id: id },
-      select: ['id', 'nickname', 'avatarUrl', 'email', 'firstname', 'lastname'],
+      select: [
+        'id',
+        'nickname',
+        'avatarUrl',
+        'email',
+        'firstname',
+        'lastname',
+        'authActivated',
+      ],
     });
   }
 
@@ -110,9 +121,15 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async updateAuth(id: number) {
-    await this.usersRepository.update(id, {
-      authActivated: true,
+  async update2FA(token: string) {
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    const user = await this.usersRepository.findOne({
+      where: { id: decoded.id },
+    });
+    if (!user) return null;
+
+    return await this.usersRepository.update(decoded.id, {
+      authActivated: !user.authActivated,
     });
   }
 
@@ -122,7 +139,7 @@ export class UserService implements OnModuleInit {
 
   async updateAvatar(path: string, token: string) {
     if (!token) return null;
-    const decoded: tokenData = this.jwtService.decode(token) as tokenData;
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
     const user = await this.usersRepository.findOne({
       where: { id: decoded.id },
       relations: ['games'],
@@ -132,5 +149,26 @@ export class UserService implements OnModuleInit {
     await this.usersRepository.save(user);
 
     return user.avatarUrl;
+  }
+
+  async updateUserSettings(body: UserSettings, token: TokenData) {
+    const user = await this.usersRepository.findOne({
+      where: { id: token.id },
+    });
+    if (!user) return null;
+
+    if (token.email !== body.email) {
+      const checkEmail = await this.findByEmail(body.email);
+      if (checkEmail) {
+        throw new BadRequestException('Email already in use');
+      }
+      await this.mailService.sendNewEmailConfirmation(user, body.email);
+    }
+
+    user.nickname = body.nickname;
+    user.firstname = body.firstname;
+    user.lastname = body.lastname;
+    await this.usersRepository.save(user);
+    return user;
   }
 }

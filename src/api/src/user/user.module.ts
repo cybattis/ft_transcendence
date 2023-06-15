@@ -8,6 +8,7 @@ import { GameService } from '../game/game.service';
 import { JwtModule } from '@nestjs/jwt';
 import { secret } from '../utils/constant';
 import { MulterModule } from '@nestjs/platform-express';
+import { MailService } from '../mail/mail.service';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { MulterModule } from '@nestjs/platform-express';
     MulterModule.register({ dest: './avatar' }),
   ],
   controllers: [UserController],
-  providers: [UserService, GameService],
+  providers: [UserService, GameService, MailService],
 })
 export class UserModule {}

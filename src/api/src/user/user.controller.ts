@@ -1,24 +1,23 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
-  HttpStatus,
   Param,
-  ParseFilePipeBuilder,
   Post,
   Put,
   Req,
   UploadedFile,
   UseInterceptors,
+  Headers,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { UserInfo } from '../type/user.type';
+import { TokenData, UserInfo, UserSettings } from '../type/user.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
-import { tokenData } from '../type/user.type';
 import { diskStorage } from 'multer';
 import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
@@ -72,7 +71,7 @@ export class UserController {
 
   @Get('settings/:token')
   async userSettings(@Param('token') token: string): Promise<User | null> {
-    const decoded: tokenData = this.jwtService.decode(token) as tokenData;
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
     return this.userService.userSettings(decoded.id);
   }
 
@@ -82,18 +81,13 @@ export class UserController {
       limits: { fileSize: 2097152 },
       fileFilter: (req, file, callback) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return callback(
-            new Error(
-              'Only image files with jpg/jpeg/png/gif extensions are allowed!',
-            ),
-            false,
-          );
-        }
-        callback(null, true);
+          req.fileValidationError = 'UNSUPPORTED_FILE_TYPE';
+          callback(null, false);
+        } else callback(null, true);
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: tokenData = jwt_decode(
+          const userId: TokenData = jwt_decode(
             req.url.split('/user/upload/')[1],
           );
           const path = `./avatar/${userId.id}`;
@@ -102,12 +96,14 @@ export class UserController {
 
           fs.readdir(path, (err, files) => {
             if (err) throw err;
+            if (files.length === 0) {
+              return;
+            }
 
             fs.unlink(path + '/' + files[0], (err) => {
               if (err) throw err;
             });
           });
-
           callback(null, path);
         },
       }),
@@ -117,8 +113,36 @@ export class UserController {
     @UploadedFile()
     file: Express.Multer.File,
     @Param('token') token: string,
+    @Req() req: any,
   ) {
-    console.log('controller: ', file);
+    if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
+      throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
+    }
     return this.userService.updateAvatar(file.path, token);
+  }
+
+  @Put('update')
+  async updateSettings(
+    @Body() body: UserSettings,
+    @Headers('token') header: Headers,
+  ) {
+    const decoded: TokenData = this.jwtService.decode(
+      header.toString(),
+    ) as TokenData;
+    try {
+      return await this.userService.updateUserSettings(body, decoded);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  @Put('update/2fa')
+  async update2FA(@Headers('token') header: Headers) {
+    console.log(header);
+    try {
+      return await this.userService.update2FA(header.toString());
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
   }
 }

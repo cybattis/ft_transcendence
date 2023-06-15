@@ -12,8 +12,24 @@ export class MailService {
 
     await this.mailerService.sendMail({
       to: user.email,
-      from : process.env.EMAIL_USR,
+      from: process.env.EMAIL_USR,
       subject: 'Welcome to ThePong! Confirm your Email',
+      template: 'confirmation',
+      context: {
+        name: user.nickname,
+        url,
+      },
+    });
+  }
+
+  // TODO: send email to confirm new email
+  async sendNewEmailConfirmation(user: User, newEmail: string) {
+    const url = `http://localhost:3000/confirmation?` + user.id;
+
+    await this.mailerService.sendMail({
+      to: newEmail,
+      from: process.env.EMAIL_USR,
+      subject: 'ThePong Game! Confirm your Email',
       template: 'confirmation',
       context: {
         name: user.nickname,
@@ -27,25 +43,22 @@ export class MailService {
     const emails = GlobalService.emails;
     let find = false;
     let i: number = 1;
-    while (emails && emails[i] != null)
-    {
-      if (emails[i] === email)
-      {
+    while (emails && emails[i] != null) {
+      if (emails[i] === email) {
         find = true;
         GlobalService.codes[i] = code;
-        break ;
+        break;
       }
-      i ++;
+      i++;
     }
-    if (find === false)
-    {
+    if (find === false) {
       GlobalService.emails[i] = email;
       GlobalService.codes[i] = code;
     }
 
     await this.mailerService.sendMail({
       to: email,
-      from : process.env.EMAIL_USR,
+      from: process.env.EMAIL_USR,
       subject: 'Code confirmation for the login',
       template: 'code',
       context: {
