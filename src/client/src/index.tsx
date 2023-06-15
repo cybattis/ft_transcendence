@@ -14,6 +14,7 @@ import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
+import ChatClient from "./pages/Chat/Chat";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
           {
             path: "team",
             element: <Team />,
+          },
+          {
+            path: "chat",
+            element: <ChatClient />,
           },
           {
             path: "profile/:id",

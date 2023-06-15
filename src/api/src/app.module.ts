@@ -10,11 +10,14 @@ import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
+import {ChannelModule} from "./channel/channel.module";
+import {ChannelService} from "./channel/channel.service";
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    ChannelModule,
     CacheModule.register({ isGlobal: true}),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
@@ -30,6 +33,6 @@ import { Game } from './game/entity/Game.entity';
     GameModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  providers: [AppService, ChatGateway, ChannelService],
 })
 export class AppModule {}
