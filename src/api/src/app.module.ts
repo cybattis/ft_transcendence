@@ -8,10 +8,11 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
 import { ChatGateway } from './chat/chat.gateway';
-import { GameModule } from './game/game.module';
-import { Game } from './game/entity/Game.entity';
 import {ChannelModule} from "./channel/channel.module";
 import {ChannelService} from "./channel/channel.service";
+import { GameModule } from './game/game.module';
+import { Game } from './game/entity/Game.entity';
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import {ChannelService} from "./channel/channel.service";
     ChannelModule,
     CacheModule.register({ isGlobal: true}),
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'postgres',

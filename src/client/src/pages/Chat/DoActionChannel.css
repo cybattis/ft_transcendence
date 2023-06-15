@@ -1,0 +1,47 @@
+.DoAction {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    height: 200px;
+}
+
+.ButtonToJoin {
+    width: 50px;
+    background-color: #8449BF;
+}
+
+.ButtonToPvm {
+    width: 50px;
+    background-color: #00CCCC;
+}
+
+#container-create-channel{
+    display: none;
+    background-color: red;
+}
+
+#container-private-message{
+    display: none;
+    background-color: darkgoldenrod;
+}
+
+.FormCreateChannel{
+    display: flex;
+    flex-direction: column;
+}
+
+.container-option-to-do{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.FormPrivateMessage{
+    display: flex;
+    flex-direction: column;
+}
+
+.FormCreateChannel{
+    display: flex;
+    flex-direction: column;
+}

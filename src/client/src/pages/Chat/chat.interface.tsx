@@ -1,5 +1,6 @@
 export interface ChatInterface{
-    user: string;
+    event: string
+    username: string;
     channel: string;
     message: string;
 }

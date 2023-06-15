@@ -1,6 +1,6 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
-import { Chat } from "../../components/Chat/Chat";
+import ChatClient from "../Chat/Chat";
 import jwt_decode from "jwt-decode";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -12,6 +12,7 @@ import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 
+let usernameChange = '';
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
     display: "flex",
@@ -125,7 +126,7 @@ function UserProfile() {
           },
         })
         .then((response) => {
-          setData(response.data);
+      setData(response.data);
         });
     }
 
@@ -167,7 +168,7 @@ export function HomeLogged() {
         <GameLauncher />
         <UserProfile />
       </div>
-      <Chat />
+      <ChatClient/>
     </div>
   );
 }

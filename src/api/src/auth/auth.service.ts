@@ -82,7 +82,7 @@ export class AuthService {
     ) {
       if (user) {
         await this.usersService.changeOnlineStatus(user.id, true);
-        const payload = { email: user.email, id: user.id };
+        const payload = { email: user.email, id: user.id, username: user.nickname };
         return {
           token: await this.jwtService.signAsync(payload),
         };
