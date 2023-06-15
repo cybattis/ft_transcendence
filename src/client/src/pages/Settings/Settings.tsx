@@ -2,47 +2,42 @@ import "./Settings.css";
 import { Avatar } from "../../components/Avatar";
 import axios from "axios";
 import { ChangeEvent, useEffect, useState } from "react";
-import { Decoded } from "../../type/client.type";
-import jwt_decode from "jwt-decode";
 import { UserSettings } from "../../type/user.type";
 import InputForm from "../../components/InputForm";
 
 export function Settings() {
   // TODO: check token validity
-  let decoded: Decoded | null = null;
+  const token = localStorage.getItem("token");
 
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    console.log(e);
-  }
-
-  const [data, setData] = useState<UserSettings>({
-    id: 0,
-    nickname: "",
-    avatarUrl: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-  });
+  let [nickname, setNickname] = useState("");
+  let [firstName, setFirstName] = useState("");
+  let [lastName, setLastName] = useState("");
+  let [email, setEmail] = useState("");
+  let [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    console.log("Token: ", decoded);
-    async function fetchData(id: string) {
+    if (token === null) return;
+    console.log("fetch setting");
+    async function fetchData(token: string) {
+      console.log("token: ", token);
       await axios
-        .get(`http://localhost:5400/user/settings/${id}`, {
+        .get(`http://localhost:5400/user/settings/${token}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
         })
         .then((response) => {
-          setData(response.data);
+          setNickname(response.data.nickname);
+          setFirstName(response.data.firstName);
+          setLastName(response.data.lastName);
+          setEmail(response.data.email);
+          setAvatarUrl(response.data.avatarUrl);
           console.log(response.data);
         });
     }
 
-    if (decoded !== null) fetchData(decoded.id).then(() => {});
+    fetchData(token!);
   }, []);
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
@@ -56,14 +51,14 @@ export function Settings() {
     formData.append("avatar", event.target.files[0]);
 
     axios
-      .post(`http://localhost:5400/user/upload/${data.id}`, formData, {
-        //TODO: send token
+      .post(`http://localhost:5400/user/upload/${token}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
       .then((res) => {
         console.log("image uploaded: ", res);
+        setAvatarUrl(res.data);
       })
       .catch((error) => {
         console.log(error);
@@ -75,7 +70,7 @@ export function Settings() {
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
-          <Avatar size="200px" img={data.avatarUrl} />
+          <Avatar size="200px" img={avatarUrl} />
           <button onClick={() => document?.getElementById("avatar")?.click()}>
             Change avatar
           </button>
@@ -91,17 +86,20 @@ export function Settings() {
         </div>
         <div className={"settingPage_form"}>
           <form method="post">
-            <InputForm name={"Nickname"} type={"text"} value={data.nickname} />
             <InputForm
-              name={"First Name"}
+              name={"Nickname"}
               type={"text"}
-              value={data.firstName}
+              value={nickname}
+              onChange={(event) => {
+                setNickname(event.target.value);
+              }}
             />
-            <InputForm name={"Last Name"} type={"text"} value={data.lastName} />
+            <InputForm name={"First Name"} type={"text"} value={firstName} />
+            <InputForm name={"Last Name"} type={"text"} value={lastName} />
           </form>
           <hr id={"hr1"} />
           <form method="post">
-            <InputForm name={"Email"} type={"email"} value={data.email} />
+            <InputForm name={"Email"} type={"email"} value={email} />
             <button type="submit" className="submitButton">
               Update email address
             </button>

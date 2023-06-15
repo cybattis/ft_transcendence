@@ -10,6 +10,7 @@ interface LabelProps {
   value?: string;
   label?: string;
   half?: boolean;
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export default function InputForm(props: LabelProps) {
@@ -44,6 +45,7 @@ export default function InputForm(props: LabelProps) {
         type={props.type}
         name={props.name}
         value={props.value}
+        onChange={props.onChange}
       />
     </label>
   );
