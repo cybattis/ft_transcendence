@@ -1,9 +1,9 @@
 import "./Settings.css";
 import { Avatar } from "../../components/Avatar";
 import axios from "axios";
-import { ChangeEvent, useEffect, useState } from "react";
-import { UserSettings } from "../../type/user.type";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import InputForm from "../../components/InputForm";
+import { UserSettings } from "../../type/user.type";
 
 export function Settings() {
   // TODO: check token validity
@@ -14,11 +14,14 @@ export function Settings() {
   let [lastName, setLastName] = useState("");
   let [email, setEmail] = useState("");
   let [avatarUrl, setAvatarUrl] = useState("");
+  let [tfa, setTfa] = useState(false);
+
+  let [error, setError] = useState("");
 
   useEffect(() => {
-    if (token === null) return;
-    console.log("fetch setting");
     async function fetchData(token: string) {
+      if (token === null) return;
+      console.log("fetch setting");
       console.log("token: ", token);
       await axios
         .get(`http://localhost:5400/user/settings/${token}`, {
@@ -28,12 +31,13 @@ export function Settings() {
           },
         })
         .then((response) => {
+          console.log(response.data);
           setNickname(response.data.nickname);
-          setFirstName(response.data.firstName);
-          setLastName(response.data.lastName);
+          setFirstName(response.data.firstname);
+          setLastName(response.data.lastname);
           setEmail(response.data.email);
           setAvatarUrl(response.data.avatarUrl);
-          console.log(response.data);
+          setTfa(response.data.authActivated);
         });
     }
 
@@ -43,8 +47,8 @@ export function Settings() {
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files === null) return;
     console.log("File: ", event.target.files[0]);
-    if (event.target.files[0].size > 4194304) {
-      console.log("File too big");
+    if (event.target.files[0].size > 2097152) {
+      setError("File too large");
       return;
     }
     const formData = new FormData();
@@ -57,13 +61,62 @@ export function Settings() {
         },
       })
       .then((res) => {
-        console.log("image uploaded: ", res);
+        console.log("image uploaded: ", res.data);
         setAvatarUrl(res.data);
       })
       .catch((error) => {
-        console.log(error);
+        console.log(error.response.data.message);
+        setError(error.response.data.message);
       });
   }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const user: UserSettings = {
+      nickname: nickname,
+      firstname: firstName,
+      lastname: lastName,
+      email: email,
+    };
+
+    await axios
+      .put("http://localhost:5400/user/update", user, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          token: token,
+        },
+      })
+      .then(() => {})
+      .catch((error) => {
+        console.log("Error: ", error.response.status);
+        setError("Server error... try again");
+      });
+  };
+
+  const handle2fa = async () => {
+    await axios
+      .put(
+        "http://localhost:5400/user/update/2fa",
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            token: token,
+          },
+        }
+      )
+      .then((res) => {
+        console.log(res);
+        setTfa(!tfa);
+      })
+      .catch((error) => {
+        console.log("Error: ", error.response.status);
+        setError("Server error... try again");
+      });
+  };
 
   return (
     <div className={"settingPage"}>
@@ -83,33 +136,41 @@ export function Settings() {
             alt={"Change avatar"}
             onChange={submitImage}
           />
+          {error !== "" ? <div>{error}.</div> : <></>}
         </div>
         <div className={"settingPage_form"}>
-          <form method="post">
+          <form method="post" onSubmit={handleSubmit}>
             <InputForm
               name={"Nickname"}
               type={"text"}
-              value={nickname}
+              value={nickname ?? ""}
               onChange={(event) => {
                 setNickname(event.target.value);
               }}
             />
-            <InputForm name={"First Name"} type={"text"} value={firstName} />
-            <InputForm name={"Last Name"} type={"text"} value={lastName} />
-          </form>
-          <hr id={"hr1"} />
-          <form method="post">
-            <InputForm name={"Email"} type={"email"} value={email} />
+            <InputForm
+              name={"First Name"}
+              type={"text"}
+              value={firstName ?? ""}
+              onChange={(event) => {
+                setFirstName(event.target.value);
+              }}
+            />
+            <InputForm
+              name={"Last Name"}
+              type={"text"}
+              value={lastName ?? ""}
+              onChange={(event) => {
+                setLastName(event.target.value);
+              }}
+            />
             <button type="submit" className="submitButton">
-              Update email address
+              Update
             </button>
           </form>
           <hr id={"hr1"} />
-          <button type="submit" className="submitButton">
-            Update password
-          </button>
-          <button type="submit" className="submitButton">
-            Activate 2FA
+          <button type="submit" className="submitButton" onClick={handle2fa}>
+            {!tfa ? "Activate 2FA" : "Deactivate 2FA"}
           </button>
         </div>
       </div>
