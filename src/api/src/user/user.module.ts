@@ -7,6 +7,7 @@ import { Game } from '../game/entity/Game.entity';
 import { GameService } from '../game/game.service';
 import { JwtModule } from '@nestjs/jwt';
 import { secret } from '../utils/constant';
+import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { secret } from '../utils/constant';
       signOptions: { expiresIn: '1h' },
     }),
     TypeOrmModule.forFeature([User, Game]),
+    MulterModule.register({ dest: './avatar' }),
   ],
   controllers: [UserController],
   providers: [UserService, GameService],

@@ -2,7 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Param,
+  ParseFilePipeBuilder,
   Post,
   Put,
   Req,
@@ -16,6 +18,10 @@ import { ModuleRef } from '@nestjs/core';
 import { UserInfo } from '../type/user.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
+import { tokenData } from '../type/user.type';
+import { diskStorage } from 'multer';
+import jwt_decode from 'jwt-decode';
+import * as fs from 'fs';
 
 @Controller('user')
 export class UserController {
@@ -64,21 +70,55 @@ export class UserController {
     return this.userService.leaderboard();
   }
 
-  @Get('settings/:id')
-  async userSettings(@Param('id') id: number): Promise<User | null> {
-    return this.userService.userSettings(id);
+  @Get('settings/:token')
+  async userSettings(@Param('token') token: string): Promise<User | null> {
+    const decoded: tokenData = this.jwtService.decode(token) as tokenData;
+    return this.userService.userSettings(decoded.id);
   }
 
-  @Post('upload/:id')
+  @Post('upload/:token')
   @UseInterceptors(
-    FileInterceptor('avatar', { dest: 'avatar/', preservePath: true }),
+    FileInterceptor('avatar', {
+      limits: { fileSize: 2097152 },
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+          return callback(
+            new Error(
+              'Only image files with jpg/jpeg/png/gif extensions are allowed!',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      storage: diskStorage({
+        destination: (req, file, callback) => {
+          const userId: tokenData = jwt_decode(
+            req.url.split('/user/upload/')[1],
+          );
+          const path = `./avatar/${userId.id}`;
+
+          fs.mkdirSync(path, { recursive: true });
+
+          fs.readdir(path, (err, files) => {
+            if (err) throw err;
+
+            fs.unlink(path + '/' + files[0], (err) => {
+              if (err) throw err;
+            });
+          });
+
+          callback(null, path);
+        },
+      }),
+    }),
   )
   uploadFile(
-    @UploadedFile() file: Express.Multer.File,
-    @Param('id') id: number,
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Param('token') token: string,
   ) {
     console.log('controller: ', file);
-    this.userService.updateAvatar(file.path, id).then((r) => console.log(r));
-    return { file: file.path };
+    return this.userService.updateAvatar(file.path, token);
   }
 }

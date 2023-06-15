@@ -19,3 +19,10 @@ export interface UserSettings {
   firstName: string;
   lastName: string;
 }
+
+export interface tokenData {
+  email: string;
+  id: number;
+  iat: number;
+  exp: number;
+}

@@ -4,11 +4,13 @@ import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { UserInfo } from '../type/user.type';
+import { tokenData, UserInfo } from '../type/user.type';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
+  private jwtService: JwtService;
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -17,6 +19,7 @@ export class UserService implements OnModuleInit {
 
   onModuleInit() {
     this.gameService = this.moduleRef.get(GameService, { strict: false });
+    this.jwtService = this.moduleRef.get(JwtService, { strict: false });
   }
 
   async findByLogin(nickname: string): Promise<User | null> {
@@ -50,23 +53,23 @@ export class UserService implements OnModuleInit {
   }
 
   async userInfo(id: number): Promise<UserInfo | any> {
-    const user = await this.findByID(id);
-    if (!user) return null;
+    const user: User | null = await this.usersRepository.findOne({
+      select: {
+        id: true,
+        nickname: true,
+        level: true,
+        ranking: true,
+        avatarUrl: true,
+        totalGameWon: true,
+      },
+      where: {
+        id: id,
+      },
+    });
 
-    return {
-      id: user.id,
-      nickname: user.nickname,
-      level: user.level,
-      xp: user.xp,
-      ranking: user.ranking,
-      avatarUrl: user.avatarUrl,
-      games: await this.gameService.findUserGames(id),
-      totalGameWon: user.totalGameWon,
-
-      // Channel list ?
-      // Friends list ?
-      // Achievements ?
-    };
+    if (!user) return 'User not found';
+    user.games = await this.gameService.fetchUserGames(user);
+    return user;
   }
 
   async leaderboard(): Promise<UserInfo[] | any> {
@@ -117,11 +120,17 @@ export class UserService implements OnModuleInit {
     await this.usersRepository.update(id, { online: state });
   }
 
-  async updateAvatar(path: string, id: number) {
-    const user = await this.usersRepository.findOne({ where: { id: id } });
+  async updateAvatar(path: string, token: string) {
+    if (!token) return null;
+    const decoded: tokenData = this.jwtService.decode(token) as tokenData;
+    const user = await this.usersRepository.findOne({
+      where: { id: decoded.id },
+      relations: ['games'],
+    });
     if (!user) return null;
     user.avatarUrl = 'http://localhost:5400/' + path;
     await this.usersRepository.save(user);
+
     return user.avatarUrl;
   }
 }

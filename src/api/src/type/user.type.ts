@@ -10,3 +10,10 @@ export interface UserInfo {
   games?: GameStatsDto[];
   totalGameWon?: number;
 }
+
+export interface tokenData {
+  email: string;
+  id: number;
+  iat: number;
+  exp: number;
+}
