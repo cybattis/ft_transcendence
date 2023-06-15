@@ -19,11 +19,11 @@ export function Settings() {
   let [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchData(token: string) {
+    function fetchData(token: string) {
       if (token === null) return;
       console.log("fetch setting");
       console.log("token: ", token);
-      await axios
+      axios
         .get(`http://localhost:5400/user/settings/${token}`, {
           method: "GET",
           headers: {
@@ -31,7 +31,6 @@ export function Settings() {
           },
         })
         .then((response) => {
-          console.log(response.data);
           setNickname(response.data.nickname);
           setFirstName(response.data.firstname);
           setLastName(response.data.lastname);

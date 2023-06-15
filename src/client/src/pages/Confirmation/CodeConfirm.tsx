@@ -20,7 +20,7 @@ export default function FaCode() {
   };
 
   const location = useLocation();
-  const email = location.search.substr(1);
+  const email = location.search.substring(1);
 
   const isOnlyDigits = async (code: string) => {
     let isValid = true;

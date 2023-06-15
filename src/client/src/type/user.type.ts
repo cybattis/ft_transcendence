@@ -18,7 +18,7 @@ export interface UserSettings {
   email: string;
 }
 
-export interface tokenData {
+export interface TokenData {
   email: string;
   id: number;
   iat: number;

@@ -7,11 +7,9 @@ async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
 
   const location = useLocation();
-  const id = location.search.substr(1);
+  const id = location.search.substring(1);
 
-  await axios
-  .put("http://localhost:5400/auth/" + id, true)
-  .then((res) => {
+  await axios.put("http://localhost:5400/auth/" + id, true).then((res) => {
     console.log(res);
     const data = res.data;
     localStorage.setItem("token", data.token);
@@ -26,7 +24,7 @@ export default function Confirmation() {
     alignItems: "center",
     height: "var(--vp-size)",
   };
-  
+
   const title = {
     width: "715px",
     height: "112px",
@@ -40,8 +38,8 @@ export default function Confirmation() {
     <div style={home}>
       <h3>Email Confirmed!</h3>
       <h4 style={title}>
-        Thanks for joining us!
-        You can now return to the game and close this Page.
+        Thanks for joining us! You can now return to the game and close this
+        Page.
       </h4>
     </div>
   );

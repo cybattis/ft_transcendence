@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
 import jwt_decode from "jwt-decode";
 import { Decoded } from "../../type/client.type";
