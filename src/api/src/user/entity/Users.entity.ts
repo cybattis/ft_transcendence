@@ -35,13 +35,13 @@ export class User {
   @Column({ default: false, nullable: true }) //TODO: if true change to false, this is for testing.
   isVerified: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   authActivated: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   online: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   inGame: boolean;
 
   // User data ans stats
