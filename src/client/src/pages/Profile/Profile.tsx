@@ -19,6 +19,8 @@ export function Profile() {
   }
   const winrate: number = calculateWinrate(data);
 
+  console.log("data: ", data);
+
   return (
     <div className={"profilePage"}>
       <div id={"infobox"}>

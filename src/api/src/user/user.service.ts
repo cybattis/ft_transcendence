@@ -72,6 +72,7 @@ export class UserService implements OnModuleInit {
         ranking: true,
         avatarUrl: true,
         totalGameWon: true,
+        xp: true,
       },
       where: {
         id: id,

@@ -4,6 +4,7 @@ import axios from "axios";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
+import {ErrorModal} from "../../components/Error/ErrorModal";
 
 export function Settings() {
   // TODO: check token validity
@@ -133,7 +134,7 @@ export function Settings() {
             alt={"Change avatar"}
             onChange={submitImage}
           />
-          {error !== "" ? <div>{error}.</div> : <></>}
+          {error !== "" ? <ErrorModal error={error}/> : <></>}
         </div>
         <div className={"settingPage_form"}>
           <form method="post" onSubmit={handleSubmit}>

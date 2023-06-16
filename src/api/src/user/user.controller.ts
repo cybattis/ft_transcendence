@@ -21,6 +21,7 @@ import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
 import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
+import {Callback} from "typeorm";
 
 @Controller('user')
 export class UserController {
