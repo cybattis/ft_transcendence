@@ -4,7 +4,7 @@ import axios from "axios";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
-import {ErrorModal} from "../../components/Error/ErrorModal";
+import { ErrorModal } from "../../components/Error/ErrorModal";
 
 export function Settings() {
   // TODO: check token validity
@@ -46,7 +46,7 @@ export function Settings() {
     if (event.target.files === null) return;
     console.log("File: ", event.target.files[0]);
     if (event.target.files[0].size > 2097152) {
-      setError("File too large");
+      setError("File has to be less than 2MB");
       return;
     }
     const formData = new FormData();
@@ -64,7 +64,7 @@ export function Settings() {
       })
       .catch((error) => {
         console.log(error.response.data.message);
-        setError(error.response.data.message);
+        setError(error.response.data.message + "!");
       });
   }
 
@@ -88,8 +88,8 @@ export function Settings() {
       })
       .then(() => {})
       .catch((error) => {
-        console.log("Error: ", error.response.status);
-        setError("Server error... try again");
+        console.log("Error: ", error.response.data);
+        setError(error.response.data.message + "!");
       });
   };
 
@@ -111,13 +111,14 @@ export function Settings() {
         setTfa(!tfa);
       })
       .catch((error) => {
-        console.log("Error: ", error.response.status);
+        console.log("Error: ", error);
         setError("Server error... try again");
       });
   };
 
   return (
     <div className={"settingPage"}>
+      <ErrorModal error={error} onClose={() => setError("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
@@ -134,7 +135,6 @@ export function Settings() {
             alt={"Change avatar"}
             onChange={submitImage}
           />
-          {error !== "" ? <ErrorModal error={error}/> : <></>}
         </div>
         <div className={"settingPage_form"}>
           <form method="post" onSubmit={handleSubmit}>

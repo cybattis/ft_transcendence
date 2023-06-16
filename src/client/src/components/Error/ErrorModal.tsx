@@ -1,22 +1,28 @@
-import './ErrorModal.css'
+import "./ErrorModal.css";
+import { useRef, MouseEvent } from "react";
 
-export function ErrorModal(props: { error: string }) {
-	let dialog = document.getElementById('dialog');
-	let closeButton = document.getElementById('close');
+export function ErrorModal(props: { error: string; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
 
-	if (dialog !== null) {
-		dialog.addEventListener('close', function onClose() {
-			dialog?.removeEventListener('close', onClose);
-			dialog = null;
-		});
-	}
-
-	return (
-		<dialog id="dialog" open>
-			<p>{props.error}</p>
-			<form method="dialog">
-				<button id="close">X</button>
-			</form>
-		</dialog>
-	)
+  return (
+    <div
+      ref={ref}
+      onClick={(event: MouseEvent) => {
+        if (event.target === ref.current) {
+          props.onClose();
+        }
+      }}
+    >
+      {props.error ? (
+        <dialog id={"error-modal"} open>
+          <p>{props.error}</p>
+          <form method="dialog">
+            <button id="close" onClick={props.onClose}>
+              X
+            </button>
+          </form>
+        </dialog>
+      ) : null}
+    </div>
+  );
 }
