@@ -64,3 +64,9 @@
     padding: 5px;
     background-color: #00CCCC;
 }
+
+.container-action-chat {
+    width: 80%;
+    display: flex;
+    flex-direction: row;
+}

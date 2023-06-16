@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import "./MyChannelList.css"
+import "./ChannelList.css"
 
 interface ChannelListProps {
     onStringChange: (newString: string) => void;
     channelList: string [];
 }
 
-export default function MyChannelList({ channelList, onStringChange }: ChannelListProps) {
+export default function ChannelList({ channelList, onStringChange }: ChannelListProps) {
     const [inputValue, setInputValue] = useState('');
 
     function choiceCanal(value: string) {
-        console.log(`input : ${value}`);
         let principal = document.getElementById('canal');
         if (principal) principal.innerHTML = value;
         setInputValue(value);

@@ -1,22 +1,28 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {io} from 'socket.io-client';
 import "./Chat.css";
-import {ChatInterface} from "./chat.interface";
-import MyChannelList from "./MyChannelList";
+import {ChatInterface} from "./Interface/chat.interface";
+import ChannelList from "./List/ChannelList";
 import {Decoded} from "../../type/client.type";
 import jwt_decode from "jwt-decode";
-import DoActionChannel from "./DoActionChannel";
-
+import DoJoinChannel from "./ActionChannel/DoJoinChannel";
+import DoPrivateMessage from "./ActionChannel/DoPrivateMessage";
+import DoOperator from "./ActionChannel/DoOperator";
+import DoBanChannel from "./ActionChannel/DoBanChannel";
+import DoKickChannel from "./ActionChannel/DoKickChannel";
+import DoQuitChannel from "./ActionChannel/DoQuitChannel"
+import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
 const chatList: ChatInterface[] = [];
+
 let username = '';
 function inMyChannel(channel: string) {
   return channelList.includes(channel);
 }
 
-function MyChatMap() {
+function ChatMap() {
   const activeChannel = document.getElementById('canal')?.innerHTML || '';
   const filteredElements = chatList
       .filter((rcv) => rcv.channel === activeChannel)
@@ -34,6 +40,8 @@ export default function ChatClient() {
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
   const socketRef = useRef<any>(null);
+  const blocedList :string[] = [];
+
 
   let decoded: Decoded | null = null;
   if (username === '') {
@@ -145,7 +153,9 @@ export default function ChatClient() {
 
   function choiceCmd(input: string): string {
     if (input.indexOf("/") === 0) {
-      return input.substring(0, input.indexOf(" "));
+      if(input.indexOf(" ") !== -1)
+        return input.substring(0, input.indexOf(" "));
+      return input;
     }
     return "/msg";
   }
@@ -153,23 +163,11 @@ export default function ChatClient() {
   function doCmd(cmd: string, msg: string) {
     console.log(`${cmd}`);
     const channel = takeActiveCanal();
-    if (cmd === "/join")
-      join(msg);
-    else if (cmd === "/op")
-      op(msg, channel);
-    else if (cmd === "/ban")
-      ban(msg, channel);
-    else if (cmd === "/info")
+    if (cmd === "/info")
       socketRef.current.emit('info', {channel});
     else if (cmd === "/cmd") {
       socketRef.current.emit('cmd', {channel});
-    } else if (cmd === "/kick") {
-      kick(msg, channel)
-    } else if (cmd === "/quit") {
-      quit(channel);
-    } else if (cmd === "/pass") {
-      pass(msg, channel);
-    }else {
+    } else {
       const send = {username: username, channel: channel, msg: msg}
       console.log(send);
       socketRef.current.emit('send :', send);
@@ -180,55 +178,48 @@ export default function ChatClient() {
     }
   }
 
-  function quit(channel: string){
-    const cmd = "quit";
-    const sendQuit = {msg: "Cmd quit sen", cmd: cmd, username: username, channel: channel}
+  const PrivateMessageForm = (target : string) => {
+    const sendPrv = {username: username, target: target};
+    socketRef.current.emit('prv', sendPrv);
+    return;
+  };
+
+  const JoinByForm = (channel: string, password: string) => {
+    if (channel.indexOf("#") === -1)
+      channel = '#' + channel;
+    const sendJoin = {username: username, channel: channel, password: password};
+    socketRef.current.emit('join', sendJoin);
+  }
+  const OperatorForm = (target: string, action: string) => {
+    const author: string = username;
+    const channel = takeActiveCanal();
+    const message = {op : "op", channel : channel, author: author, cmd: action, target: target};
+    socketRef.current.emit('op', message);
+  }
+
+  const BanForm = (target: string, action: string, time: string) => {
+    const channel = takeActiveCanal();
+    const sendBan = {cmd: action, username: username, target: target, channel: channel, time: time}
+    socketRef.current.emit('ban', sendBan);
+  }
+
+  const KickForm = (target: string) => {
+    const channel = takeActiveCanal();
+    const sendKick = {cmd: "kick", username: username, target: target, channel: channel}
+    socketRef.current.emit('kick', sendKick);
+  }
+
+  const QuitForm = () => {
+    const channel = takeActiveCanal();
+    const sendQuit = {cmd: "quit", username: username, channel: channel}
     socketRef.current.emit('quit', sendQuit);
   }
 
-  function pass(msg: string, channel: string){
-    console.log(`pass ${msg}`);
-    const sendPass = {pass: "pass", channel: channel, username: username}
-    socketRef.current.emit('pass', sendPass);
-  }
-  function kick(msg: string, channel: string) {
-    const cmd = "kick";
-    const target = takeTarget(msg);
-    const sendKick = {cmd: cmd, username: username, target: target, channel: channel}
-    socketRef.current.emit('kick', sendKick);
-  }
-  function ban(msg: string, channel: string){
-    const cmd = takeOperation(msg);
-    const target = takeTarget(msg);
-    const time = takeTime(msg);
-    const sendBan = {cmd: cmd, username: username, target: target, channel: channel, time: time}
-    socketRef.current.emit('ban', sendBan);
-  }
-  function join(msg : string){
-    if (msg.indexOf("#") === -1) {
-      return;
-    }
-    const channelJoin = takeChannelInMessage(msg);
-    const sendJoin = {username: username, channel: channelJoin}
-    socketRef.current.emit('join', sendJoin);
+  const BlockedForm = (target: string, cmd: string) => {
+    const sendBlock = {cmd: cmd, target: target};
+    socketRef.current.emit('blocked', sendBlock);
   }
 
-  const CommandByForm = (data : any) => {
-    console.log("Valeur du formulaire :", data);
-    if (data.target){
-      const sendPrv = {username: username, target: data.target};
-      socketRef.current.emit('prv', sendPrv);
-    }
-    const sendJoin = {username: username, channel: data.channel, password: data.password}
-    socketRef.current.emit('join', sendJoin);
-  };
-  function op(msg: string, channel: string){
-    const author: string = username;
-    const target: string = takeTarget(msg);
-    const cmd: string = takeOperation(msg);
-    const message = {op : "op", channel : channel, author: author, cmd: cmd, target: target};
-    socketRef.current.emit('op', message);
-  }
   function takeMess(mess: string): string {
     return mess.substring(mess.indexOf('%') + 1);
   }
@@ -236,43 +227,6 @@ export default function ChatClient() {
   function takeActiveCanal(): string {
     const canal = document.getElementById('canal');
     return canal?.innerHTML || '';
-  }
-
-  function takeTarget(msg: string): string {
-    let res = msg.substring(msg.indexOf(' ') + 1);
-    res = res.substring(res.indexOf(' ') + 1);
-    if (res.indexOf(' ') !== -1)
-      return res.substring(0, res.indexOf(' '));
-    return res;
-  }
-
-  function takeTime(msg: string){
-    const time = msg.substring(msg.lastIndexOf(' ') + 1);
-    console.log(`time ${time}`);
-    return time;
-  }
-
-  function  takeOperation(msg: string): string {
-    let op;
-    if (msg.indexOf('+') !== -1){
-      op = msg.substring(msg.indexOf('+'));
-      op = op.substring(0, op.indexOf(' '));
-    }
-    else if (msg.indexOf('-') !== -1){
-      op = msg.substring(msg.indexOf('-'));
-      op = op.substring(0, op.indexOf(' '));
-    }
-    else
-      op = ''
-    return op;
-  }
-
-  function takeChannelInMessage(msg: string): string {
-    let channelToJoin = msg.substring(msg.indexOf("#"));
-    if (channelToJoin.indexOf(' ') !== -1) {
-      channelToJoin = channelToJoin.substring(channelToJoin.indexOf(' '));
-    }
-    return channelToJoin;
   }
 
   function handleStringChange(newString: string) {
@@ -283,11 +237,19 @@ export default function ChatClient() {
       <div className='chat'>
         <h1>Chat</h1>
         <div className='chat-container'>
-          <DoActionChannel onSubmit={CommandByForm}/>
-          <MyChannelList channelList={channelList} onStringChange={handleStringChange} />
+          <div className='container-action-chat'>
+            <DoJoinChannel onSubmit={JoinByForm}/>
+            <DoPrivateMessage onSubmit={PrivateMessageForm}/>
+            <DoOperator onSubmit={OperatorForm}/>
+            <DoBanChannel onSubmit={BanForm}/>
+            <DoKickChannel onSubmit={KickForm}/>
+            <DoQuitChannel onSubmit={QuitForm}/>
+            <DoBlockUsers onSubmit={BlockedForm}/>
+          </div>
+            <ChannelList channelList={channelList} onStringChange={handleStringChange} />
           <h3 id='canal'>{defaultChannelGen}</h3>
           <div className="rcv-mess-container">
-            <MyChatMap />
+            <ChatMap />
           </div>
           <div className='send-mess-container'>
             <input ref={inputRef} type="text" />

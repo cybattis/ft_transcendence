@@ -30,7 +30,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const msg = data.msg;
     const sender = data.username;
     const send = {sender, msg, channel}
-    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`)
+    console.log(`send : s->${send.sender} m->${send.msg} c->${send.channel}`)
     if (data.channel[0] === "#")
       socket.broadcast.emit('rcv', send);
     else
@@ -45,6 +45,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('join')
   handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    console.log(`data ${data}`);
     const channel = data.channel;
     const username = data.username;
     let pass: string = '';
@@ -70,7 +71,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('quit')
   handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(`Quit : ${data.channel}`);
     this.channelService.quitChannel(data.cmd, data.username, data.channel);
     const channel = data.channel;
     this.server.to(socket.id).emit("quit", channel);

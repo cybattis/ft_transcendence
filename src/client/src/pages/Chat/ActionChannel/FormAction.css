@@ -1,0 +1,66 @@
+#container-create-channel, #container-ban-channel, #container-operator-channel, #container-private-message,  #container-kick-channel, #container-blocked-users{
+    display: none;
+}
+
+#container-all-ban{
+    order: 0;
+}
+
+#container-all-join{
+    order: 1;
+}
+
+#container-all-blocked{
+    order: 2;
+}
+
+#container-all-kick{
+    order: 3;
+}
+
+#container-all-operator{
+    order: 4;
+}
+
+#container-all-private{
+    order: 5;
+}
+
+#container-quit-channel{
+    order: 6;
+}
+
+.form-action {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-form-command {
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.submit-button-form {
+    margin: auto;
+    font-family: "Space Mono", monospace;
+    width: 70px;
+    text-decoration: none;
+    color: white;
+    border-radius: 5px;
+    background-color: var(--purple-wave);
+    padding: 2px;
+    border: 1px solid var(--purple-wave);
+    font-weight: bold;
+}
+
+.cache-input {
+    display: none;
+}
+
+.logo-chat{
+    width: 50px;
+}
+.logo-chat:hover{
+    width: 75px;
+    cursor: pointer;
+}
