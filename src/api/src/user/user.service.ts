@@ -158,15 +158,14 @@ export class UserService implements OnModuleInit {
     });
     if (!user) return null;
 
-    if (token.email !== body.email) {
-      const checkEmail = await this.findByEmail(body.email);
-      if (checkEmail) {
-        throw new BadRequestException('Email already in use');
+    if (user.nickname !== body.nickname) {
+      const checkNickname = await this.findByLogin(body.nickname);
+      if (checkNickname) {
+        throw new BadRequestException('Nickname already taken');
       }
-      await this.mailService.sendNewEmailConfirmation(user, body.email);
+      user.nickname = body.nickname;
     }
 
-    user.nickname = body.nickname;
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);

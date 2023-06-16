@@ -21,7 +21,6 @@ import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
 import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
-import {Callback} from "typeorm";
 
 @Controller('user')
 export class UserController {
@@ -139,7 +138,6 @@ export class UserController {
 
   @Put('update/2fa')
   async update2FA(@Headers('token') header: Headers) {
-    console.log(header);
     try {
       return await this.userService.update2FA(header.toString());
     } catch (e) {
