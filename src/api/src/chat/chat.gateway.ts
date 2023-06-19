@@ -63,6 +63,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
+
+  @SubscribeMessage('blocked')
+  handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
+    this.channelService.blockedUser(this.server ,socket, data.target);
+  }
   @SubscribeMessage('op')
   handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);

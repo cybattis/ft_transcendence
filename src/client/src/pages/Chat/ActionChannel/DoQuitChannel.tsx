@@ -9,6 +9,7 @@ export default function DoQuitForm({ onSubmit } : any) {
         let privateElement = document.getElementById("container-private-message");
         let banElement = document.getElementById("container-ban-channel");
         let kickElement = document.getElementById("container-kick-channel");
+
         if (kickElement && channelElement && operatorElement && banElement && privateElement) {
             channelElement.style.display = 'none';
             banElement.style.display = 'none';

@@ -1,16 +1,26 @@
 #container-create-channel, #container-ban-channel, #container-operator-channel, #container-private-message,  #container-kick-channel, #container-blocked-users{
+    position: absolute;
     display: none;
+    left: -80px;
+    top: 70px;
+    border-radius: 5px;
+    background-color: #8449BF;
+    padding: 10px;
 }
-
-#container-all-ban{
-    order: 0;
+#container-all-join, #container-all-private,#container-all-operator,#container-all-kick,#container-all-ban,#container-all-blocked,#container-all-blocked,#container-quit-channel{
+    position: relative;
+    width: 80px;
 }
 
 #container-all-join{
+    order: 0;
+}
+
+#container-all-private{
     order: 1;
 }
 
-#container-all-blocked{
+#container-all-operator{
     order: 2;
 }
 
@@ -18,11 +28,11 @@
     order: 3;
 }
 
-#container-all-operator{
+#container-all-ban{
     order: 4;
 }
 
-#container-all-private{
+#container-all-blocked{
     order: 5;
 }
 
@@ -45,9 +55,9 @@
     font-family: "Space Mono", monospace;
     width: 70px;
     text-decoration: none;
-    color: white;
+    color: black;
     border-radius: 5px;
-    background-color: var(--purple-wave);
+    background-color: white;
     padding: 2px;
     border: 1px solid var(--purple-wave);
     font-weight: bold;
@@ -60,7 +70,20 @@
 .logo-chat{
     width: 50px;
 }
+
 .logo-chat:hover{
-    width: 75px;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.cmd-container-channel{
+    font-size: 20px;
+}
+
+.button-close-cmd{
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    border-radius: 20px;
     cursor: pointer;
 }

@@ -12,6 +12,7 @@
     "@types/react-dom": "^18.0.11",
     "@types/validator": "^13.7.15",
     "axios": "^1.4.0",
+    "jquery": "^3.7.0",
     "jwt-decode": "^3.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -48,6 +49,7 @@
     ]
   },
   "devDependencies": {
+    "@types/jquery": "^3.5.16",
     "@types/validator": "^13.7.15",
     "validator": "^13.9.0"
   }

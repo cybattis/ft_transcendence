@@ -12,6 +12,7 @@ import DoBanChannel from "./ActionChannel/DoBanChannel";
 import DoKickChannel from "./ActionChannel/DoKickChannel";
 import DoQuitChannel from "./ActionChannel/DoQuitChannel"
 import DoBlockUsers from "./ActionChannel/DoBlockUsers";
+import $ from "jquery";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -81,6 +82,10 @@ export default function ChatClient() {
       }
     });
 
+    newSocket.on('blocked', (target: string) => {
+       blocedList.push(target);
+    });
+
     newSocket.on('quit', (room: string) => {
       console.log(`quit ${room}`);
       //do quit channel and change room
@@ -124,6 +129,8 @@ export default function ChatClient() {
 
     newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
       console.log(`RCV: ${data.msg}, socket ${data.channel}`);
+      if (senderIsBlocked(data.sender))
+        return ;
       setRecvMess(data.msg);
       if (!inMyChannel(data.channel)){
         return;
@@ -178,6 +185,15 @@ export default function ChatClient() {
     }
   }
 
+  function senderIsBlocked(sender : string){
+    for (let index = 0; index < blocedList.length; index++)
+    {
+      if (sender === blocedList[index])
+        return true;
+    }
+    return false;
+  }
+
   const PrivateMessageForm = (target : string) => {
     const sendPrv = {username: username, target: target};
     socketRef.current.emit('prv', sendPrv);
@@ -216,7 +232,7 @@ export default function ChatClient() {
   }
 
   const BlockedForm = (target: string, cmd: string) => {
-    const sendBlock = {cmd: cmd, target: target};
+    const sendBlock = {target: target};
     socketRef.current.emit('blocked', sendBlock);
   }
 
@@ -252,7 +268,7 @@ export default function ChatClient() {
             <ChatMap />
           </div>
           <div className='send-mess-container'>
-            <input ref={inputRef} type="text" />
+            <input id="focus-principal-chat" ref={inputRef} type="text" />
             <button onClick={sendMessage}>Send</button>
           </div>
         </div>

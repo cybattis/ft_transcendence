@@ -347,4 +347,10 @@ export class ChannelService {
         if (this.channelStruct[posActualChannel].nbUsersInChannel() === 0)
             this.channelStruct.splice(posActualChannel, 1);
     }
+
+    blockedUser(server: Server, socket: Socket, target: string){
+        const targetUser = this.takeSocketByUsername(target);
+        if (targetUser != null)
+            server.to(socket.id).emit("blocked", target);
+    }
 }

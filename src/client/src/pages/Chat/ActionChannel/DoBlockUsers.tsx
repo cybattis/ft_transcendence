@@ -11,10 +11,25 @@ export default function DoBlockUsers({ onSubmit } : any) {
         let privateElement = document.getElementById("container-private-message");
         let kickElement = document.getElementById("container-kick-channel");
         let blockedElement = document.getElementById("container-blocked-users");
-        let pos = document.getElementById("test");
-        if (blockedElement) {
+
+        let channel = document.getElementById("container-all-join");
+        let operator = document.getElementById("container-all-operator");
+        let prv = document.getElementById("container-all-private");
+        let ban = document.getElementById("container-all-ban");
+        let kick = document.getElementById("container-all-kick");
+        let blocked = document.getElementById("container-all-blocked");
+        let quit = document.getElementById("container-quit-channel");
+        let focus = document.getElementById("focus-blocked");
+        if (blockedElement && channel && operator && prv && ban && kick && blocked && quit && focus) {
             if (blockedElement.style.display === 'block')
+            {
                 blockedElement.style.display = 'none';
+                operator.style.order = '2';
+                kick.style.order = '3';
+                ban.style.order = '4';
+                blocked.style.order = '5';
+                quit.style.order = '6';
+            }
             else
             {
                 if (privateElement && channelElement && operatorElement && kickElement && banElement){
@@ -24,10 +39,38 @@ export default function DoBlockUsers({ onSubmit } : any) {
                     kickElement.style.display = 'none';
                     banElement.style.display = 'none'
                 }
+                channel.style.order = '0';
+                prv.style.order = '1';
+                operator.style.order = '2';
+                kick.style.order = '4';
+                ban.style.order = '5';
+                blocked.style.order = '3';
+                quit.style.order = '6';
                 blockedElement.style.display = 'block';
-                if(pos)
-                    pos.style.order = '0';
+                focus.focus();
             }
+        }
+    }
+
+    function close(){
+        let blockedElement = document.getElementById("container-blocked-users");
+        let channel = document.getElementById("container-all-join");
+        let operator = document.getElementById("container-all-operator");
+        let prv = document.getElementById("container-all-private");
+        let ban = document.getElementById("container-all-ban");
+        let kick = document.getElementById("container-all-kick");
+        let blocked = document.getElementById("container-all-blocked");
+        let quit = document.getElementById("container-quit-channel");
+
+        if (blockedElement && channel && operator && prv && ban && kick && blocked && quit) {
+            blockedElement.style.display = 'none';
+            channel.style.order = '0';
+            prv.style.order = '1';
+            operator.style.order = '2';
+            kick.style.order = '3';
+            ban.style.order = '4';
+            blocked.style.order = '5';
+            quit.style.order = '6';
         }
     }
 
@@ -37,16 +80,13 @@ export default function DoBlockUsers({ onSubmit } : any) {
                 <img className="logo-chat" src={ban} alt="Blocked" title={"Blocked"} />
             </div>
             <label id="container-blocked-users">
+                <button className={"button-close-cmd"} onClick={close}>X</button>
+                <h4 className={"cmd-container-channel"}>Blocked</h4>
                 <form
                     className="form-action"
                     onSubmit={handleSubmit((data) => onSubmit(data.target, data.cmd))}
                 >
-                    <label>Target : <input className='input-form-command' {...register("target")} name="target"/></label>
-                    <select {...register("cmd")} name="cmd" >
-                        <option value="+b">Blocked</option>
-                        <option value="-b">Unblocked</option>
-                    </select>
-                    <label>Time : <input className='input-form-command' {...register("time")} name="time"/></label>
+                    <input id="focus-blocked" className='input-form-command' {...register("target")} placeholder={"Target"} name="target"/>
                     <input className='submit-button-form' type="submit" value="Submit" />
                 </form>
             </label>
