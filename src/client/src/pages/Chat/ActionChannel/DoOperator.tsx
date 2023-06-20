@@ -1,26 +1,20 @@
 import "./FormAction.css";
 import { useForm } from "react-hook-form";
 import operator from "../../../resource/operator.svg";
+import React  from 'react';
 
 export default function DoOperator({ onSubmit } : any) {
-    const { register, handleSubmit} = useForm();
-    function blocDoOperator() {
-        let channelElement = document.getElementById("container-create-channel");
-        let operatorElement = document.getElementById("container-operator-channel");
-        let privateElement = document.getElementById("container-private-message");
-        let banElement = document.getElementById("container-ban-channel");
-        let blockedElement = document.getElementById("container-blocked-users");
-        let kickElement = document.getElementById("container-kick-channel");
-        let focus = document.getElementById("focus-ope");
+    const { register, handleSubmit, reset} = useForm();
 
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-        if (operatorElement && channel && operator && prv && ban && kick && blocked && quit && focus) {
+    let channelElement = document.getElementById("container-create-channel");
+    let operatorElement = document.getElementById("container-operator-channel");
+    let privateElement = document.getElementById("container-private-message");
+    let banElement = document.getElementById("container-ban-channel");
+    let blockedElement = document.getElementById("container-blocked-users");
+    let kickElement = document.getElementById("container-kick-channel");
+    let focus = document.getElementById("focus-ope");
+    function blocDoOperator() {
+        if (operatorElement && focus) {
             if (operatorElement.style.display === 'block')
                 close();
             else
@@ -34,37 +28,16 @@ export default function DoOperator({ onSubmit } : any) {
                 }
                 operatorElement.style.display = 'block';
                 focus.focus();
-                channel.style.order = '0';
-                prv.style.order = '1';
-                operator.style.order = '3';
-                kick.style.order = '2';
-                ban.style.order = '4';
-                blocked.style.order = '5';
-                quit.style.order = '6';
             }
         }
     }
-
     function close(){
-        let operatorElement = document.getElementById("container-operator-channel");
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-        if (operatorElement && channel && operator && prv && ban && kick && blocked && quit) {
+        if( operatorElement) {
             operatorElement.style.display = 'none';
-            channel.style.order = '0';
-            prv.style.order = '1';
-            operator.style.order = '2';
-            kick.style.order = '3';
-            ban.style.order = '4';
-            blocked.style.order = '5';
-            quit.style.order = '6';
         }
+        reset();
     }
+
     return (
         <div id="container-all-operator">
             <div onClick={blocDoOperator} className="button-action-form">
@@ -75,7 +48,7 @@ export default function DoOperator({ onSubmit } : any) {
                 <h4 className={"cmd-container-channel"}>Operator</h4>
                 <form
                     className="form-action"
-                    onSubmit={handleSubmit((data) => onSubmit(data.ope, data.selectAct))}
+                    onSubmit={handleSubmit((data) => {onSubmit(data.ope,data.selectAct); close();})}
                 >
                     <input id="focus-ope" className='input-form-command' {...register("ope")} name="ope" placeholder={"Target"}/>
                     <select {...register("selectAct")} name="selectAct" >

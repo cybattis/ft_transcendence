@@ -31,10 +31,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const sender = data.username;
     const send = {sender, msg, channel}
     console.log(`send : s->${send.sender} m->${send.msg} c->${send.channel}`)
-    if (data.channel[0] === "#")
+    if (data.channel[0] === "#") {
+      console.log("erf");
       socket.broadcast.emit('rcv', send);
-    else
-    {
+      console.log("next");
+    } else {
       const target = this.channelService.takeSocketByUsername(channel);
       channel = sender;
       const prv = {sender, msg, channel};
@@ -121,6 +122,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleCmd(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     const channel = data.channel;
     const msg = this.channelService.allCmd();
+    console.log('');
     this.server.emit('rcv', {msg, channel});
   }
 

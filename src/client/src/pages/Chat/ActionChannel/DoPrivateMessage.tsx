@@ -1,26 +1,20 @@
 import { useForm } from "react-hook-form";
 import "./FormAction.css";
+import React  from 'react';
 import operator from "../../../resource/operator.svg";
 
 export default function DoPrivateMessage({ onSubmit } : any) {
-    const { register, handleSubmit} = useForm();
+    const { register, handleSubmit, reset} = useForm();
+    let focus = document.getElementById("focus-prv");
+    let kickElement = document.getElementById("container-kick-channel");
+    let channelElement = document.getElementById("container-create-channel");
+    let operatorElement = document.getElementById("container-operator-channel");
+    let privateElement = document.getElementById("container-private-message");
+    let banElement = document.getElementById("container-ban-channel")
+    let blockedElement = document.getElementById("container-blocked-users");
     function blocPrivateMessage() {
-        let kickElement = document.getElementById("container-kick-channel");
-        let channelElement = document.getElementById("container-create-channel");
-        let operatorElement = document.getElementById("container-operator-channel");
-        let privateElement = document.getElementById("container-private-message");
-        let banElement = document.getElementById("container-ban-channel")
-        let blockedElement = document.getElementById("container-blocked-users");
 
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-        let focus = document.getElementById("focus-prv");
-        if (privateElement && channel && operator && prv && ban && kick && blocked && quit && focus) {
+        if (privateElement && operator && focus) {
             if (privateElement.style.display === 'block')
                 close();
             else {
@@ -31,43 +25,24 @@ export default function DoPrivateMessage({ onSubmit } : any) {
                     operatorElement.style.display = 'none';
                     kickElement.style.display = 'none';
                 }
-                focus.focus();
                 privateElement.style.display = 'block';
-                channel.style.order = '0';
-                prv.style.order = '3';
-                operator.style.order = '2';
-                kick.style.order = '2';
-                ban.style.order = '4';
-                blocked.style.order = '5';
-                quit.style.order = '6';
+                focus.focus();
             }
         }
     }
-
     function close(){
-        let privateElement = document.getElementById("container-private-message");
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-
-        if (privateElement && channel && operator && prv && ban && kick && blocked && quit) {
+        if (privateElement)
             privateElement.style.display = 'none';
-            channel.style.order = '0';
-            prv.style.order = '1';
-            operator.style.order = '2';
-            kick.style.order = '3';
-            ban.style.order = '4';
-            blocked.style.order = '5';
-            quit.style.order = '6';
-        }
+        reset();
     }
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        console.log(`Key pressed: ${event.key}`);
+        if (event.key === "Enter")
+            close();
+    };
+
     return (
-
-
         <div id="container-all-private">
             <div onClick={blocPrivateMessage} className="button-action-form">
                 <img className="logo-chat" src={operator} alt="Private Message" title={"Private Message"}/>
@@ -77,7 +52,7 @@ export default function DoPrivateMessage({ onSubmit } : any) {
                 <h4 className={"cmd-container-channel"}>Message Private</h4>
                 <form
                     className="form-action"
-                    onSubmit={handleSubmit((data) => onSubmit(data.target))}
+                    onSubmit={handleSubmit((data) => {onSubmit(data.target); close();})}
                 >
                     <input id="focus-prv" placeholder={"Target"} className='input-form-command' {...register("target")} />
                     <input className='submit-button-form' type="submit" value="Submit" />

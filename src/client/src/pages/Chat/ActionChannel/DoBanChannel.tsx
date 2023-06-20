@@ -1,26 +1,21 @@
 import "./FormAction.css";
 import { useForm } from "react-hook-form";
 import ban  from "../../../resource/ban.svg";
+import React  from 'react';
+
 
 export default function DoBanChannel({ onSubmit } : any) {
-    const { register, handleSubmit} = useForm();
+    const { register, handleSubmit, reset} = useForm();
+    let banElement = document.getElementById("container-ban-channel");
+    let channelElement = document.getElementById("container-create-channel");
+    let operatorElement = document.getElementById("container-operator-channel");
+    let privateElement = document.getElementById("container-private-message");
+    let kickElement = document.getElementById("container-kick-channel");
+    let blockedElement = document.getElementById("container-blocked-users");
+    let focus = document.getElementById("target-ban");
     function blocDoOperator() {
-        let banElement = document.getElementById("container-ban-channel");
-        let channelElement = document.getElementById("container-create-channel");
-        let operatorElement = document.getElementById("container-operator-channel");
-        let privateElement = document.getElementById("container-private-message");
-        let kickElement = document.getElementById("container-kick-channel");
-        let blockedElement = document.getElementById("container-blocked-users");
 
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-        let focus = document.getElementById("target-ban");
-        if (banElement && channel && operator && prv && ban && kick && blocked && quit && focus) {
+        if (banElement && focus) {
             if (banElement.style.display === 'block')
                 close();
             else
@@ -34,37 +29,14 @@ export default function DoBanChannel({ onSubmit } : any) {
                 }
                 banElement.style.display = 'block';
                 focus.focus();
-                channel.style.order = '0';
-                prv.style.order = '1';
-                operator.style.order = '2';
-                kick.style.order = '4';
-                ban.style.order = '3';
-                blocked.style.order = '5';
-                quit.style.order = '6';
             }
         }
     }
 
     function close(){
-        let banElement = document.getElementById("container-ban-channel");
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-
-        if (banElement && channel && operator && prv && ban && kick && blocked && quit) {
+        if (banElement)
             banElement.style.display = 'none';
-            channel.style.order = '0';
-            prv.style.order = '1';
-            operator.style.order = '2';
-            kick.style.order = '3';
-            ban.style.order = '4';
-            blocked.style.order = '5';
-            quit.style.order = '6';
-        }
+        reset();
     }
 
     return (
@@ -77,7 +49,7 @@ export default function DoBanChannel({ onSubmit } : any) {
                 <h4 className={"cmd-container-channel"}>Ban</h4>
                 <form
                     className="form-action"
-                    onSubmit={handleSubmit((data) => onSubmit(data.target, data.selectAct, data.time))}
+                    onSubmit={handleSubmit((data) => {onSubmit(data.target, data.selectAct, data.time); close();})}
                 >
                     <input id="target-ban" className='input-form-command' {...register("target")} placeholder={'Target'} name="target"/>
                     <select {...register("selectAct")} name="selectAct" >

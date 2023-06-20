@@ -12,7 +12,6 @@ import DoBanChannel from "./ActionChannel/DoBanChannel";
 import DoKickChannel from "./ActionChannel/DoKickChannel";
 import DoQuitChannel from "./ActionChannel/DoQuitChannel"
 import DoBlockUsers from "./ActionChannel/DoBlockUsers";
-import $ from "jquery";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -36,13 +35,14 @@ function ChatMap() {
   return <ul className="list-msg-container">{filteredElements}</ul>;
 }
 
+
+
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
   const socketRef = useRef<any>(null);
   const blocedList :string[] = [];
-
 
   let decoded: Decoded | null = null;
   if (username === '') {
@@ -72,7 +72,6 @@ export default function ChatClient() {
     });
 
     newSocket.on('join', (room: string) => {
-      console.log(`JOIN ${room}`);
       if (!channelList.includes(room)) {
         channelList.push(room);
         setRoomChange(room);
@@ -87,8 +86,6 @@ export default function ChatClient() {
     });
 
     newSocket.on('quit', (room: string) => {
-      console.log(`quit ${room}`);
-      //do quit channel and change room
       for (let index = 0; index < channelList.length; index++){
         console.log(channelList[index]);
         if (room === channelList[index])
@@ -106,7 +103,6 @@ export default function ChatClient() {
     });
 
     newSocket.on('inv', (data: {username: string, target: string}) =>{
-      console.log("Invite to private message");
       if (data.target === username) {
         if (!channelList.includes(data.username)) {
           channelList.push(data.username);
@@ -128,15 +124,11 @@ export default function ChatClient() {
     });
 
     newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
-      console.log(`RCV: ${data.msg}, socket ${data.channel}`);
+      console.log(`rcv :${data.msg}`);
       if (senderIsBlocked(data.sender))
         return ;
       setRecvMess(data.msg);
-      if (!inMyChannel(data.channel)){
-        return;
-      }
       const rcv: ChatInterface = { event:"Rcv", username: data.sender, channel: data.channel, message: data.msg };
-      console.log(`data mess ${data.msg}`);
       chatList.push(rcv);
     });
 
@@ -145,7 +137,7 @@ export default function ChatClient() {
     return () => {
       newSocket.disconnect();
     };
-  }, []);
+  }, [recvMess]);
 
   const sendMessage = () => {
     if (!inputRef.current || !inputRef.current.value || inputRef.current.value === '') {
@@ -168,7 +160,6 @@ export default function ChatClient() {
   }
 
   function doCmd(cmd: string, msg: string) {
-    console.log(`${cmd}`);
     const channel = takeActiveCanal();
     if (cmd === "/info")
       socketRef.current.emit('info', {channel});
@@ -176,7 +167,6 @@ export default function ChatClient() {
       socketRef.current.emit('cmd', {channel});
     } else {
       const send = {username: username, channel: channel, msg: msg}
-      console.log(send);
       socketRef.current.emit('send :', send);
       msg = takeMess(msg);
       const rcv: ChatInterface = { event: "Emt", username: username, channel: channel, message: msg };
@@ -249,6 +239,13 @@ export default function ChatClient() {
     setRoomChange(newString);
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      sendMessage();
+    }
+  };
+
   return (
       <div className='chat'>
         <h1>Chat</h1>
@@ -265,11 +262,11 @@ export default function ChatClient() {
             <ChannelList channelList={channelList} onStringChange={handleStringChange} />
           <h3 id='canal'>{defaultChannelGen}</h3>
           <div className="rcv-mess-container">
-            <ChatMap />
+            <ChatMap/>
           </div>
           <div className='send-mess-container'>
-            <input id="focus-principal-chat" ref={inputRef} type="text" />
-            <button onClick={sendMessage}>Send</button>
+            <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
+            <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
           </div>
         </div>
       </div>

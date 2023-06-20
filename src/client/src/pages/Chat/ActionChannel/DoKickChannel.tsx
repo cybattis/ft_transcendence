@@ -1,26 +1,19 @@
 import { useForm } from "react-hook-form";
 import "./FormAction.css";
 import kick from "../../../resource/kick.svg";
+import React  from 'react';
 
 export default function DoKickChannel({ onSubmit } : any) {
-    const { register, handleSubmit} = useForm();
+    const { register, handleSubmit, reset} = useForm();
+    let channelElement = document.getElementById("container-create-channel");
+    let operatorElement = document.getElementById("container-operator-channel");
+    let privateElement = document.getElementById("container-private-message");
+    let banElement = document.getElementById("container-ban-channel");
+    let kickElement = document.getElementById("container-kick-channel");
+    let blockedElement = document.getElementById("container-blocked-users");
     function blocKickMessage() {
-        let channelElement = document.getElementById("container-create-channel");
-        let operatorElement = document.getElementById("container-operator-channel");
-        let privateElement = document.getElementById("container-private-message");
-        let banElement = document.getElementById("container-ban-channel");
-        let kickElement = document.getElementById("container-kick-channel");
-        let blockedElement = document.getElementById("container-blocked-users");
-
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
         let focus = document.getElementById("focus-kick");
-        if (kickElement && channel && operator && prv && ban && kick && blocked && quit && focus) {
+        if (kickElement && focus) {
             if (kickElement.style.display === 'block')
                 close();
             else {
@@ -33,38 +26,22 @@ export default function DoKickChannel({ onSubmit } : any) {
                 }
                 kickElement.style.display = 'block';
                 focus.focus();
-                channel.style.order = '0';
-                prv.style.order = '1';
-                operator.style.order = '2';
-                kick.style.order = '3';
-                ban.style.order = '4';
-                blocked.style.order = '5';
-                quit.style.order = '6';
             }
         }
     }
 
     function close(){
-        let kickElement = document.getElementById("container-kick-channel");
-        let channel = document.getElementById("container-all-join");
-        let operator = document.getElementById("container-all-operator");
-        let prv = document.getElementById("container-all-private");
-        let ban = document.getElementById("container-all-ban");
-        let kick = document.getElementById("container-all-kick");
-        let blocked = document.getElementById("container-all-blocked");
-        let quit = document.getElementById("container-quit-channel");
-
-        if (kickElement && channel && operator && prv && ban && kick && blocked && quit) {
+        if (kickElement)
             kickElement.style.display = 'none';
-            channel.style.order = '0';
-            prv.style.order = '1';
-            operator.style.order = '2';
-            kick.style.order = '3';
-            ban.style.order = '4';
-            blocked.style.order = '5';
-            quit.style.order = '6';
-        }
+        reset();
     }
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        console.log(`Key pressed: ${event.key}`);
+        if (event.key === "Enter")
+            close();
+    };
+
     return (
         <div id="container-all-kick">
             <div onClick={blocKickMessage} className="button-action-form">
@@ -75,7 +52,7 @@ export default function DoKickChannel({ onSubmit } : any) {
                 <h4 className={"cmd-container-channel"}>Kick</h4>
                 <form
                     className="form-action"
-                    onSubmit={handleSubmit((data) => onSubmit(data.target))}
+                    onSubmit={handleSubmit((data) => {onSubmit(data.target); close(); })}
                 >
                     <input id="focus-kick" className='input-form-command' {...register("target")} placeholder={"Target"}/>
                     <input className='submit-button-form' type="submit" value="Submit" />
