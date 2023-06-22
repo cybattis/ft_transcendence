@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import "./Friends.css"
 import { Avatar } from '../Avatar';
+import { Link } from "react-router-dom";
 
 //Mettre un useState refresh automatique
 function Online(data: any) {
@@ -21,6 +22,7 @@ function FriendsList() {
             avatarUrl: "",
             online: false,
             inGame: false,
+            id: 0,
         }]);
 
         const [dataOffline, setDataOffline] = useState([{
@@ -28,6 +30,7 @@ function FriendsList() {
           avatarUrl: "",
           online: false,
           inGame: false,
+          id: 0,
       }]);
 
     const token = localStorage.getItem("token");
@@ -63,20 +66,24 @@ function FriendsList() {
     <ul>
       {dataOnline.map(dataOnline => {
         return <div className="friends" key={dataOnline.nickname}>
-          <div>
-            <p  className="friendsImg"><Avatar size="50px" img={dataOnline.avatarUrl} /></p>
-            {<Online inGame={dataOnline.inGame}/>}
-          </div>
-            <p className="nickname">{dataOnline.nickname}</p>
+            <Link to={`/profile/${dataOnline.id}`} className="friendLink">
+              <div>
+                <p  className="friendsImg"><Avatar size="50px" img={dataOnline.avatarUrl} /></p>
+                {<Online inGame={dataOnline.inGame}/>}
+              </div>
+                <p className="nickname">{dataOnline.nickname}</p>
+            </Link>
           </div>;
       })}
       {dataOffline.map(dataOffline => {
         return <div className="friends" key={dataOffline.nickname}>
-          <div>
-            <p  className="friendsImg"><Avatar size="50px" img={dataOffline.avatarUrl} /></p>
-            {<Offline />}
-          </div>
-            <p className="nickname">{dataOffline.nickname}</p>
+            <Link to={`/profile/${dataOffline.id}`} className="friendLink">
+              <div>
+                <p  className="friendsImg"><Avatar size="50px" img={dataOffline.avatarUrl} /></p>
+                {<Offline />}
+              </div>
+                <p className="nickname">{dataOffline.nickname}</p>
+              </Link>
           </div>;
       })}
     </ul>
@@ -87,7 +94,7 @@ function FriendsList() {
 }
         
 export function Friends() {
-    return <div>
+    return <div className="friendList">
         <FriendsList />
     </div>;
 }

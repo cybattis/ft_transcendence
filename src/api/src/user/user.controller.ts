@@ -25,6 +25,14 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @Get('notifs')
+  async getNotifs(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getNotifs(payload.id);
+  }
+
   @Get('friends/online')
   async getOnlineFriendsList(@Req() req: any) {
     const payload: any = this.jwtService.decode(
@@ -65,12 +73,55 @@ export class UserController {
   }
 
   @Put('request/:id')
-  async requestFriend(@Param('id') id: number, @Body() body: number) {
-    return await this.userService.requestFriend(id, body);
+  async requestFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.requestFriend(id, payload.id);
+  }
+
+  @Put('remove/:id')
+  async removeFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.removeFriend(id, payload.id);
+  }
+
+  @Put('block/:id')
+  async blockFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.blockFriend(id, payload.id);
+  }
+
+  @Put('accept/:id')
+  async acceptFriendRequest(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.acceptFriendRequest(id, payload.id);
+  }
+
+  @Put('decline/:id')
+  async declineFriendRequest(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.declineFriendRequest(id, payload.id);
+  }
+
+  @Get('requested')
+  async requests(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.requests(payload.id);
   }
 
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
-    return this.userService.leaderboard();
+    return await this.userService.leaderboard();
   }
 }

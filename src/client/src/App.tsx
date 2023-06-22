@@ -9,6 +9,10 @@ import {
   FormContext,
   AuthContext,
   defaultAuthState,
+  defaultNotifState,
+  NotifContext,
+  SocketContext,
+  defaultSocketState,
 } from "./components/Auth/dto";
 import { AuthForms } from "./components/Auth/Forms";
 
@@ -17,20 +21,30 @@ function App() {
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
   const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
+  const [notif, setNotif] = useState(defaultNotifState.notif);
+  const [socketId, setSocketId] = useState(defaultSocketState.socketId);
 
   return (
     <div className="app">
-      <AuthContext.Provider
-        value={{ authed: authToken, setAuthToken: setAuthToken }}
+      <SocketContext.Provider 
+        value={{ socketId: socketId, setSocketId: setSocketId}}
       >
-        <FormContext.Provider
-          value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
+        <NotifContext.Provider
+          value={{ notif: notif, setNotif: setNotif}}
         >
-          <NavBar />
-          <AuthForms />
-          </FormContext.Provider>
-        <Outlet />
-      </AuthContext.Provider>
+          <AuthContext.Provider
+            value={{ authed: authToken, setAuthToken: setAuthToken }}
+          >
+            <FormContext.Provider
+              value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
+            >
+              <NavBar />
+              <AuthForms />
+              </FormContext.Provider>
+            <Outlet />
+          </AuthContext.Provider>
+        </NotifContext.Provider>
+      </SocketContext.Provider>
       <Footer />
     </div>
   );

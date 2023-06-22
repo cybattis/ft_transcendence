@@ -18,5 +18,6 @@ import { secret } from '../utils/constant';
   ],
   controllers: [UserController],
   providers: [UserService, GameService],
+  exports: [UserService, TypeOrmModule.forFeature([User])],
 })
 export class UserModule {}

@@ -343,4 +343,10 @@ export class ChannelService {
         }
 
     }
+
+    sendFriendRequest(server: Server, friend: any, from: string) {
+        this.verifyUserSocket(friend.websocket, friend.nickname);
+        const dest: any = this.takeSocketByUsername(friend.nickname);
+        server.to(dest).emit('friendRequest', {from});
+    }
 }

@@ -7,17 +7,18 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
-import { ChatGateway } from './chat/chat.gateway';
 import {ChannelModule} from "./channel/channel.module";
-import {ChannelService} from "./channel/channel.service";
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
 import { ScheduleModule } from "@nestjs/schedule";
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    ChatModule,
+    GameModule,
     ChannelModule,
     CacheModule.register({ isGlobal: true}),
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,9 +33,9 @@ import { ScheduleModule } from "@nestjs/schedule";
       entities: [User, Game],
       synchronize: true,
     }),
-    GameModule,
+    TypeOrmModule.forFeature([User]),
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway, ChannelService],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -53,6 +53,9 @@ export default function Signup() {
     if (!inputs.nickname) {
       setErrorInput("Please enter a Nickname.");
       isValid = false;
+    } else if (!validator.isAlpha(inputs.nickname)) {
+      setErrorInput("Can't have any special chracters in your Nickname.");
+      isValid = false;
     } else if (inputs.nickname.length > 20) {
       setErrorInput("Nickname is too long. (max 20 characters)");
       isValid = false;
@@ -131,6 +134,8 @@ export default function Signup() {
         setErrorMessage("Server error... try again");
       });
   };
+
+  //remettre alert email
 
   return (
     <div className="background">

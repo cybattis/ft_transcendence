@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useContext} from 'react';
 import {io} from 'socket.io-client';
 import "./Chat.css";
 import {ChatInterface} from "./chat.interface";
@@ -6,7 +6,8 @@ import MyChannelList from "./MyChannelList";
 import {Decoded} from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import DoActionChannel from "./DoActionChannel";
-
+import { SocketContext } from '../../components/Auth/dto';
+import { NotifContext } from '../../components/Auth/dto';
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -33,7 +34,9 @@ export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
+  const { socketId, setSocketId } = useContext(SocketContext);
   const socketRef = useRef<any>(null);
+  const { setNotif } = useContext(NotifContext);
 
   let decoded: Decoded | null = null;
   if (username === '') {
@@ -48,21 +51,24 @@ export default function ChatClient() {
     }
   }
   useEffect(() => {
-    const newSocket = io('http://localhost:5400');
-    socketRef.current = newSocket;
+    if (socketId === null)
+      setSocketId(io('http://localhost:5400').id);
+    socketRef.current = io('http://localhost:5400');
 
-    newSocket.on('connect', () => {
+    console.log(socketId);
+
+    socketRef.current.on('connect', () => {
       if (!channelList.includes(defaultChannelGen)) {
         const send = {username: username, channel: defaultChannelGen};
-        newSocket.emit('join', send);
+        socketRef.current.emit('join', send);
       }
     });
 
-    newSocket.on('disconnect', (reason: string) => {
+    socketRef.current.on('disconnect', (reason: string) => {
       // console.log(`Disconnected from server: ${reason}`);
     });
 
-    newSocket.on('join', (room: string) => {
+    socketRef.current.on('join', (room: string) => {
       console.log(`JOIN ${room}`);
       if (!channelList.includes(room)) {
         channelList.push(room);
@@ -73,7 +79,7 @@ export default function ChatClient() {
       }
     });
 
-    newSocket.on('quit', (room: string) => {
+    socketRef.current.on('quit', (room: string) => {
       console.log(`quit ${room}`);
       //do quit channel and change room
       for (let index = 0; index < channelList.length; index++){
@@ -92,7 +98,7 @@ export default function ChatClient() {
 
     });
 
-    newSocket.on('inv', (data: {username: string, target: string}) =>{
+    socketRef.current.on('inv', (data: {username: string, target: string}) =>{
       console.log("Invite to private message");
       if (data.target === username) {
         if (!channelList.includes(data.username)) {
@@ -114,7 +120,12 @@ export default function ChatClient() {
       }
     });
 
-    newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
+    socketRef.current.on('friendRequest', (data: {friend: any, from: string}) =>{
+      console.log("KNJCBHJYGSFVIKVOB");
+      setNotif(true);
+    });
+
+    socketRef.current.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
       console.log(`RCV: ${data.msg}, socket ${data.channel}`);
       setRecvMess(data.msg);
       if (!inMyChannel(data.channel)){
@@ -125,10 +136,10 @@ export default function ChatClient() {
       chatList.push(rcv);
     });
 
-    newSocket.connect();
+    socketRef.current.connect();
 
     return () => {
-      newSocket.disconnect();
+      socketRef.current.disconnect();
     };
   }, []);
 

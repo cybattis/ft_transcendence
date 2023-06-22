@@ -1,9 +1,86 @@
-export default function Notifications() {
-  // TODO: check token validity
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "./Notifications.css"
+import { Avatar } from "../../components/Avatar";
 
-  return (
-    <div>
-      Notifications
+export default function Notifications() {
+  const [invits, setInvits] = useState([{
+    nickname: "",
+    avatarUrl: "",
+    id: 0,
+  }]);
+
+  async function handleAccept(id: number) {
+    await axios.put("http://localhost:5400/user/accept/" + id, null, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        })
+        .then((res) => {
+            console.log("Accepted");
+            removeNotif(id);
+        });
+  }
+
+  async function handleDecline(id: number) {
+    await axios.put("http://localhost:5400/user/decline/" + id, null, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        })
+        .then((res) => {
+            console.log("Decline");
+            removeNotif(id);
+        });
+  }
+
+  async function removeNotif(id: number) {
+    const newInvits: any = invits.filter((invits) => invits.id !== id);
+    setInvits(newInvits);
+  }
+
+  const token: any = localStorage.getItem("token");
+  // TODO: check token validity
+  useEffect(() => {
+    async function fetchFriends() {
+        await axios.get("http://localhost:5400/user/requested", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        })
+        .then((res) => {
+          console.log(res.data);
+          setInvits(res.data);
+          console.log("VALUE: ", invits);
+        });
+    }
+    fetchFriends();
+}, []);
+
+  //Faire une map pour afficher toutes invites a la suite
+  if (invits && invits[0] && invits[0].id > 0) {
+    return <div className="notifPage">
+    <h1 className="notifTitle">Notifications</h1>
+    <ul className="list">
+      {invits.map(invits => {
+        return <div key={invits.id}>
+            <div className="notifsElements">
+              <div className="invits">
+              <Avatar size="50px" img={invits.avatarUrl} />
+              <p className="notifText">{invits.nickname} wants to be your Friend!</p>
+              <div className="buttons">
+                <button className="refuse" onClick={() => handleDecline(invits.id)}><div className="cross"></div>Decline</button>
+                <button className="accept" onClick={() => handleAccept(invits.id)}><div className="tick-mark"></div>Accept</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      })}
+    </ul>
+</div>
+   }
+   else
+    return <div className="noNotifTitle">
+      <h1>No Notifications</h1>
     </div>
-  );
 }

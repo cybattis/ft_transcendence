@@ -14,7 +14,6 @@ import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
-import ChatClient from "./pages/Chat/Chat";
 
 const router = createBrowserRouter([
   {
@@ -36,10 +35,6 @@ const router = createBrowserRouter([
             element: <Team />,
           },
           {
-            path: "chat",
-            element: <ChatClient />,
-          },
-          {
             path: "profile/:id",
             element: <Profile />,
             loader: async ({ request, params }) => {
@@ -51,11 +46,6 @@ const router = createBrowserRouter([
           {
             path: "notifications/:id",
             element: <Notifications />,
-            /*loader: async ({ request, params }) => {
-              return fetch(`http://localhost:5400/user/profile/${params.id}`, {
-                signal: request.signal,
-              });
-            },*/
           },
           {
             path: "leaderboard",

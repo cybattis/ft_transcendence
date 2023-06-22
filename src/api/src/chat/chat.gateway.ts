@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { ConnectedSocket, MessageBody, WsResponse ,WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import {ChannelService} from "../channel/channel.service";
+import { UserService } from '../user/user.service';
 
 const gChannel = 'general'
 @WebSocketGateway({
@@ -15,9 +16,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly channelService : ChannelService) {}
+
+  constructor(
+    private readonly channelService : ChannelService,
+    private readonly userService: UserService) {}
   handleConnection(socket: Socket) {
-     //console.log(`Client connected: ${socket.id}`);
+    //console.log(`Client connected: ${socket.id}`);
   }
 
   handleDisconnect(socket: Socket) {
@@ -29,8 +33,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let channel = data.channel;
     const msg = data.msg;
     const sender = data.username;
-    const send = {sender, msg, channel}
-    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`)
+    const send = {sender, msg, channel};
+    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
     if (data.channel[0] === "#")
       socket.broadcast.emit('rcv', send);
     else
@@ -47,12 +51,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const channel = data.channel;
     const username = data.username;
+    this.userService.addWebSocket(username, socket.id);
     let pass: string = '';
     if (data.password !== '')
       pass = data.password;
     if (this.channelService.verifyUserSocket(socket.id, username))
       this.channelService.joinOldChannel(socket, username);
-    console.log(data);
+    //console.log(data);
     this.channelService.joinChannel(socket, username, channel, pass);
   }
 
@@ -123,5 +128,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handlePing(socket: Socket) {
     console.log(`Received ping`);
     this.server.emit('pong');
+  }
+
+  @SubscribeMessage('friendRequest')
+  notifyFriendRequest(@ConnectedSocket() socket: Socket, @MessageBody() mess: {friend: any, from: string}) {
+    const target = mess.friend.data;
+    console.log(`Friend request Send`);
+    this.channelService.sendFriendRequest(this.server, target, mess.from);
+    this.server.to(target.websocket).emit('friendRequest', {target});
   }
 }

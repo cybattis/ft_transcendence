@@ -94,6 +94,7 @@
 }
 
 .notifs {
+    position: relative;
     display: flex;
     flex-direction: row;
 
@@ -113,6 +114,10 @@
     font-weight: bold;
 
     margin-right: 10px;
+}
+
+.img {
+    display: flex;
 }
 
 .notifs:hover{

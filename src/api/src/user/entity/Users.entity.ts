@@ -84,4 +84,9 @@ export class User {
   @Column('int', { array: true, default: [] })
   requestedId: number[];
 
+  @Column('int', { array: true, default: [] })
+  blockedId: number[];
+
+  @Column({type: 'varchar', default: '' })
+  websocket: string;
 }

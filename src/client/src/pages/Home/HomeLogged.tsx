@@ -2,7 +2,7 @@ import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
 import ChatClient from "../Chat/Chat";
 import jwt_decode from "jwt-decode";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link, Navigate } from "react-router-dom";
@@ -11,6 +11,9 @@ import { Decoded } from "../../type/client.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
+import { Friends } from "../../components/Friends/Friends";
+import { SocketContext } from "../../components/Auth/dto";
+import {io} from 'socket.io-client';
 
 let usernameChange = '';
 function GameMode(props: { name: string; gameType: GameType }) {
@@ -108,6 +111,8 @@ function UserProfile() {
     xp: 0,
     ranking: 0,
     games: [],
+    friendsId: [],
+    requestedId: [],
   });
   
   try {
@@ -126,7 +131,7 @@ function UserProfile() {
           },
         })
         .then((response) => {
-      setData(response.data);
+          setData(response.data);
         });
     }
 
@@ -162,13 +167,21 @@ function UserProfile() {
 }
 
 export function HomeLogged() {
+  const { socketId, setSocketId } = useContext(SocketContext);
+  
+  setSocketId(io('http://localhost:5400').id);
+  console.log(socketId);
+
   return (
     <div className={"home"}>
       <div className={"leftside"}>
         <GameLauncher />
         <UserProfile />
       </div>
-      <ChatClient/>
+      <div className="rightside">
+        <ChatClient/>
+        <Friends />
+      </div>
     </div>
   );
 }

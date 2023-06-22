@@ -31,3 +31,27 @@ export const defaultAuthState: AuthContextType = {
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultAuthState);
+
+export interface NotifContextType {
+  notif: boolean;
+  setNotif: (value: boolean) => void;
+};
+
+export const defaultNotifState: NotifContextType = {
+  notif: false,
+  setNotif: () => {},
+};
+
+export const NotifContext = createContext<NotifContextType>(defaultNotifState);
+
+export interface SocketContextType {
+  socketId: string | null; //pas definir avec socket.io sinon fou la merde
+  setSocketId: (value: string | null) => void;
+};
+
+export const defaultSocketState: SocketContextType = {
+  socketId: null,
+  setSocketId: () => {},
+};
+
+export const SocketContext = createContext<SocketContextType>(defaultSocketState);
