@@ -25,9 +25,8 @@ export class ChannelStructure {
     public operator: string[];
     public pswd: string;
     public ban: banStructure[];
-    public isPrivate: boolean;
 
-    constructor(channelName: string, username: string, pass: string) {
+    constructor (channelName: string, username: string, pass: string) {
         this.name = channelName;
         this.users = [];
         this.users.push(username);
@@ -35,12 +34,7 @@ export class ChannelStructure {
         this.operator = [];
         this.operator.push(username);
         this.ban = [];
-        if (!pass)
-            this.isPrivate = false;
-        else {
-            this.isPrivate = true;
-            this.pswd = pass;
-        }
+        this.pswd = "";
     }
 
     public isUser(username: string) :boolean{
