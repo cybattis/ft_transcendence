@@ -1,0 +1,158 @@
+.notifPage {
+    height: var(--vp-size);
+}
+
+.notifsElements{ 
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: auto;
+    margin: 20px;
+    align-items: center;
+}
+
+.list {
+    overflow-y: scroll;
+}
+
+.notifTitle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.noNotifTitle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--vp-size);
+}
+
+.invits {
+    box-sizing: border-box;
+    display: flex;
+    
+    width: 70%;
+    height: 15%;
+    flex-direction: row;
+    padding: 5px 0px 5px 20px;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+    border: 2px solid var(--dark-grey);
+    background-color: var(--black);
+}
+
+.notifText {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: medium;
+    width: 100%;
+}
+
+.buttons {
+    display: flex;
+    
+    flex-direction: row;
+    gap: 10%;
+}
+
+.refuse {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    
+    color: white;
+    font-weight: bold;
+
+    width: 120px;
+    height: 35px;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+    background-color: rgb(164, 41, 41);
+    cursor: pointer;
+}
+
+.accept {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+
+    color: white;
+    font-weight: bold;
+
+    width: 120px;
+    height: 35px;
+    gap: 10px;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+    background-color: rgb(11, 97, 11);
+    cursor: pointer;
+}
+
+.tick-mark {
+    position: relative;
+    display: flex;
+    width: 20px;
+    height: 20px;
+}
+
+.tick-mark::before {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 50%;
+    width: 4px;
+    background-color: white;
+    content: "";
+    transform: translateX(10px) rotate(-45deg);
+    transform-origin: left bottom;
+}
+
+.tick-mark::after {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    width: 100%;
+    background-color: white;
+    content: "";
+    transform: translateX(10px) rotate(-45deg);
+    transform-origin: left bottom;
+}
+
+.cross {
+    position: relative;
+    display: flex;
+    width: 25px;
+    height: 25px;
+}
+
+.cross:before {
+    position: absolute;
+    content: '';
+    height: 25px;
+    width: 4px;
+    background-color: white;
+    transform: rotate(45deg);
+}
+
+.cross:after {
+    position: absolute;
+    content: '';
+    height: 25px;
+    width: 4px;
+    background-color: white;
+    transform: rotate(-45deg);
+}
+  
