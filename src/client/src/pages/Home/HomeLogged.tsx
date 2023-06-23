@@ -113,6 +113,8 @@ function UserProfile() {
     games: [],
     friendsId: [],
     requestedId: [],
+    blockedId: [],
+    blockedById: [],
   });
   
   try {

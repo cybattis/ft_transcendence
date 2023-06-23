@@ -57,6 +57,8 @@ export class UserService implements OnModuleInit {
       totalGameWon: user.totalGameWon,
       friendsId: user.friendsId,
       requestedId: user.requestedId,
+      blockedId: user.blockedId,
+      blockedById: user.blockedById,
       websocket: user.websocket,
 
       // Channel list ?
@@ -166,7 +168,6 @@ export class UserService implements OnModuleInit {
   }
 
   async removeFriend(friendId: number, myId: number) {
-    console.log("HERE");
     const me: any = await this.usersRepository.findOne({where : {id: myId}});
     const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
     if (me.friendsId)
@@ -196,20 +197,44 @@ export class UserService implements OnModuleInit {
     return null;
   }
 
-  //Faire liste de bloques
   async blockFriend(friendId: number, myId: number) {
-    const friend: any = await this.usersRepository.findOne({where : {id: myId}});
-    const user: any = await this.usersRepository.findOne({where : {id: friendId}});
-    if (user.requestedId)
+    await this.removeFriend(friendId, myId);
+    const me: any = await this.usersRepository.findOne({where : {id: myId}});
+    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
+    me.blockedId.push(friend.id);
+    friend.blockedById.push(me.id);
+    await this.usersRepository.save(friend);
+    return await this.usersRepository.save(me);
+  }
+
+  async unblockFriend(friendId: number, myId: number) {
+    const me: any = await this.usersRepository.findOne({where : {id: myId}});
+    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
+    if (me.blockedId)
     {
-      for (let i = 0; user.requestedId[i]; i ++)
+      for (let i = 0; me.blockedId[i]; i ++)
       {
-        if ((user.requestedId[i] === friend.id) === true)
-          return ;
+        if (me.blockedId[i] === friend.id)
+        {
+          const newBlocked: number[] = me.blockedId.splice(i, 1);
+          await this.usersRepository.update(me.id, {blockedId: newBlocked});
+          await this.usersRepository.save(me);
+          if (friend.blockedById)
+          {
+            for (let i = 0; friend.blockedById[i]; i ++)
+            {
+              if (friend.blockedById[i] === me.id)
+              {
+                const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
+                await this.usersRepository.update(friend.id, {blockedById: newBlockedBy});
+                return await this.usersRepository.save(friend);
+              }
+            }
+          }
+        }
       }
     }
-    user.requestedId.push(friend.id);
-    await this.usersRepository.save(user);
+    return null;
   }
 
   async requests(id: number) {

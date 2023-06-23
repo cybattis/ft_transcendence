@@ -96,6 +96,14 @@ export class UserController {
     return await this.userService.blockFriend(id, payload.id);
   }
 
+  @Put('unblock/:id')
+  async unblockFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.unblockFriend(id, payload.id);
+  }
+
   @Put('accept/:id')
   async acceptFriendRequest(@Param('id') id: number, @Req() req: any) {
     const payload: any = this.jwtService.decode(

@@ -10,5 +10,7 @@ export interface UserInfo {
   games?: GameStatsDto[];
   friendsId: number[];
   requestedId: number[];
+  blockedId: number[];
+  blockedById: number[];
   totalGameWon?: number;
 }

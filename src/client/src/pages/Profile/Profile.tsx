@@ -15,10 +15,7 @@ import { GameStatsDto } from "../../type/game.type";
 import jwt from "jwt-decode";
 import jwt_decode from "jwt-decode";
 
-//Faire en sorte que si le mec ets en ligne -> websocket sinon mettre dans la base de donnee et faire au chargement
-
 function RemoveFriend(data: any) {
-  const socketRef = useRef<any>(null);
   const [isMe, setIsMe] = useState(false);
 
   const token: any = localStorage.getItem("token");
@@ -54,14 +51,23 @@ function RemoveFriend(data: any) {
   }
 
   //Si jamais la target refresh sa page et pas nous notifs pas envoye
-  if (isMe === false)
+  if (isMe === false && !data.data.blockedId.includes(parseInt(payload.id)))
   {
     return <>
         <button className="friendButton" type="button" onClick={handleRemoveButton}>Remove Friend</button>
         <button className="friendButton" type="button" onClick={handleBlockButton}>Block Friend</button>
     </>
-  };
+  }
   return <></>;
+}
+
+function isBlocked(blockList: any, id: number) {
+  for (let i = 0; blockList[i]; i ++)
+  {
+    if (blockList[i] == id)
+      return (true);
+  }
+  return (false);
 }
 
 function AddFriend(data: any) {
@@ -95,14 +101,30 @@ function AddFriend(data: any) {
     })
   }
 
-  console.log("HERE");
-  //Si jamais la target refresh sa page et pas nous notifs pas envoye
-  if (isMe === false && !data.data.requestedId.includes(parseInt(payload.id)))
+  const handleUnblockButton = async () => {
+    await axios.put(`http://localhost:5400/user/unblock/${data.data.id}`, null,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+    }
+    })
+    .catch(error => {
+      console.log(error);
+    })
+  }
+
+  if (isMe === false && !data.data.requestedId.includes(parseInt(payload.id)) && !data.data.blockedById.includes(parseInt(payload.id)))
   {
     return <>
         <button className="friendButton" type="button" onClick={handleButton}>Add Friend</button>
     </>
-  };
+  }
+  else if (data.data.blockedById.includes(parseInt(payload.id)))
+  {
+    return <>
+        <button className="friendButton" type="button" onClick={handleUnblockButton}>Unblock</button>
+    </>
+  }
   return <></>;
 }
 
@@ -119,12 +141,19 @@ export function Profile() {
   });
 
   let data = useLoaderData() as UserInfo;
+  console.log(data);
 
   if (token === null) {
     return <Navigate to="/" />;
   }
   const winrate: number = calculateWinrate(data);
 
+  if (data.blockedId.includes(parseInt(payload.id)))
+  {
+    return <div  className="blocked">
+      <h3>This User Blocked you. You canno't visit his profilePage anymore.</h3>
+    </div>
+  }
   return (
     <div className={"profilePage"}>
       <div id={"infobox"}>

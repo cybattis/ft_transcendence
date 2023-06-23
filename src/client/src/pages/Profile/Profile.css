@@ -108,3 +108,13 @@
     font-weight: 1000;
     cursor: pointer;
 }
+
+.blocked {
+    height: var(--vp-size);
+    width: 80%;
+    margin: auto;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
