@@ -3,7 +3,8 @@ import { ChannelStructure } from "./channel.structure";
 import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
 import { Socket, Server } from 'socket.io';
-import * as bcrypt from 'bcrypt';
+
+
 
 @Injectable()
 export class ChannelService {
@@ -28,7 +29,6 @@ export class ChannelService {
     }
 
     infoChannel(channel: string) {
-        console.log(`Info channel`);
         let res = `Users list ${channel}:`;
         for (let index = 0; index < this.channelStruct.length; index++) {
             if (channel === this.channelStruct[index].name) {
@@ -42,7 +42,6 @@ export class ChannelService {
                     }
 
                 }
-                console.log(`Info channel 1`);
                 res += "Operators list:";
                 for (let indexOpe = 0;  indexOpe < this.channelStruct[index].operator.length; indexOpe++) {
                     res += this.channelStruct[index].operator[indexOpe];
@@ -53,9 +52,8 @@ export class ChannelService {
                         res += " ";
                     }
                 }
-                console.log(`Info channel 2`);
                 res += "Ban list:";
-                for (let indexBan = 0;  indexBan < this.channelStruct[index].ban.length; indexBan++) {
+                for (let indexBan = 0;  indexBan < this.channelStruct[index].operator.length; indexBan++) {
                     res += this.channelStruct[index].ban[indexBan].name;
                     res += this.channelStruct[index].ban[indexBan].date;
                     if (indexBan === this.channelStruct[index].ban.length - 1) {
@@ -247,6 +245,13 @@ export class ChannelService {
         return false;
     }
 
+    debugListUsersSocket(){
+        for (let index = 0; index < this.usersSocketStructures.length; index++){
+            console.log(`Id socket : ${this.usersSocketStructures[index].socket}`);
+            console.log(`Username : ${this.usersSocketStructures[index].username}`);
+        }
+    }
+
     valideTime(time : string): number{
             let res = 0;
             let i = 0;
@@ -270,42 +275,41 @@ export class ChannelService {
         return null;
     }
 
-    async joinChannel(socket: Socket, username: string, channel: string, pass: string){
-        const salt = await bcrypt.genSalt();
-        let hash = await bcrypt.hash('', salt);
-        if (pass !== undefined)
-            hash = await bcrypt.hash(pass, salt);
+    joinChannel(socket: Socket, username: string, channel: string, pass: string){
         if (this.channelStruct.length === 0) {
-            console.log(`indisde new ${channel}`);
-            this.channelStruct.push(new ChannelStructure(channel, username, hash));
+            this.channelStruct.push(new ChannelStructure(channel, username, pass));
             socket.join(channel);
             socket.emit('join', channel);
+            return;
         }
         for (let index = 0; index < this.channelStruct.length; ++index) {
             if (channel === this.channelStruct[index].name) {
                 if (this.channelStruct[index].isBan(username))
                     return ;
-                if (this.channelStruct[index].isOwner(username)) {
-                    this.channelStruct[index].pswd = hash;
-                    return;
-                }
                 if (!this.channelStruct[index].isUser(username)) {
-                    console.log('Test mdp');
-                    if(!pass)
-                        pass = '';
-                    if(await bcrypt.compare(pass, this.channelStruct[index].pswd))
-                    {
+                    if (!this.channelStruct[index].isPrivate) {
                         this.channelStruct[index].newUser(username);
                         socket.join(channel);
                         socket.emit('join', channel);
+                    } else {
+                        if (pass == this.channelStruct[index].pswd) {
+                            this.channelStruct[index].newUser(username);
+                            socket.join(channel);
+                            socket.emit('join', channel);
+                        }
                     }
+                }
+                else {
+                    if (this.channelStruct[index].isOwner(username))
+                        this.channelStruct[index].pswd = pass;
                 }
                 return;
             }
         }
-        this.channelStruct.push(new ChannelStructure(channel, username, hash));
+        this.channelStruct.push(new ChannelStructure(channel, username, pass));
         socket.join(channel);
         socket.emit('join', channel);
+        //this.findAllChannels();
     }
 
     joinOldChannel(socket: Socket, username: string){
@@ -317,9 +321,11 @@ export class ChannelService {
     }
 
     sendPrvMess(server: Server, socket: Socket, username: string, target: string){
+        console.log(`u ${username} t ${target}`);
         const socketTarget = this.takeSocketByUsername(target);
         if (socketTarget)
         {
+            console.log("inside")
             socket.to(socketTarget).emit('inv', {username, target});
             server.to(socket.id).emit('inv', {username, target});
         }

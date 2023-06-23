@@ -15,8 +15,12 @@ import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
-let username = '';
 const chatList: ChatInterface[] = [];
+
+let username = '';
+function inMyChannel(channel: string) {
+  return channelList.includes(channel);
+}
 
 function ChatMap() {
   const activeChannel = document.getElementById('canal')?.innerHTML || '';
@@ -40,7 +44,6 @@ export default function ChatClient() {
   const socketRef = useRef<any>(null);
   const blocedList :string[] = [];
 
-
   let decoded: Decoded | null = null;
   if (username === '') {
     try {
@@ -53,17 +56,6 @@ export default function ChatClient() {
       console.log(`Decode error ${e}`);
     }
   }
-  const sendMessage = () => {
-    if (!inputRef.current || !inputRef.current.value || inputRef.current.value === '') {
-      return;
-    }
-    if (socketRef.current) {
-      const cmd = choiceCmd(inputRef.current.value);
-      doCmd(cmd, inputRef.current.value);
-      inputRef.current.value = '';
-    }
-  };
-
   useEffect(() => {
     const newSocket = io('http://localhost:5400');
     socketRef.current = newSocket;
@@ -145,9 +137,18 @@ export default function ChatClient() {
     return () => {
       newSocket.disconnect();
     };
-  }, [sendMessage ,recvMess]);
+  }, [recvMess]);
 
-
+  const sendMessage = () => {
+    if (!inputRef.current || !inputRef.current.value || inputRef.current.value === '') {
+      return;
+    }
+    if (socketRef.current) {
+      const cmd = choiceCmd(inputRef.current.value);
+      doCmd(cmd, inputRef.current.value);
+      inputRef.current.value = '';
+    }
+  };
 
   function choiceCmd(input: string): string {
     if (input.indexOf("/") === 0) {
@@ -261,7 +262,7 @@ export default function ChatClient() {
             <ChannelList channelList={channelList} onStringChange={handleStringChange} />
           <h3 id='canal'>{defaultChannelGen}</h3>
           <div className="rcv-mess-container">
-            <ChatMap />
+            <ChatMap/>
           </div>
           <div className='send-mess-container'>
             <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />

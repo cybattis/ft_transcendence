@@ -32,7 +32,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const send = {sender, msg, channel}
     console.log(`send : s->${send.sender} m->${send.msg} c->${send.channel}`)
     if (data.channel[0] === "#") {
+      console.log("erf");
       socket.broadcast.emit('rcv', send);
+      console.log("next");
     } else {
       const target = this.channelService.takeSocketByUsername(channel);
       channel = sender;
@@ -43,7 +45,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join')
-  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    console.log(`data ${data}`);
     const channel = data.channel;
     const username = data.username;
     let pass: string = '';
@@ -51,11 +54,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       pass = data.password;
     if (this.channelService.verifyUserSocket(socket.id, username))
       this.channelService.joinOldChannel(socket, username);
-    await this.channelService.joinChannel(socket, username, channel, pass);
+    console.log(data);
+    this.channelService.joinChannel(socket, username, channel, pass);
   }
 
   @SubscribeMessage('prv')
   handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
+    console.log(` d ${data}`);
     this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
