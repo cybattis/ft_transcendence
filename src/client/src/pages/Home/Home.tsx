@@ -1,25 +1,16 @@
 import React, { useContext } from "react";
 import { HomeLogged } from "./HomeLogged";
 import { AuthContext } from "../../components/Auth/dto";
-import axios from "axios";
 import { PracticePong } from "../../game/components/PracticePong";
-
-async function CheckToken(token: string | null) {
-  if (token === null || token.length === 0) return;
-  const { data } = await axios.get(
-    "http://localhost:5400/auth/validation/" + token
-  );
-  if (data.status === parseInt("401")) {
-    localStorage.removeItem("token");
-  }
-}
 
 export default function Home() {
   const { authed } = useContext(AuthContext);
-  CheckToken(localStorage.getItem("token"));
+  const token = localStorage.getItem("token");
 
   return (
-    <div className="full">{!authed ? <HomeUnlogged /> : <HomeLogged />}</div>
+    <div className="full">
+      {!authed || !token ? <HomeUnlogged /> : <HomeLogged />}
+    </div>
   );
 }
 

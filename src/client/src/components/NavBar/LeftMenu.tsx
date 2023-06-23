@@ -60,14 +60,14 @@ export default function LeftMenu() {
     alignItems: "center",
   };
 
-  const { authed } = useContext(AuthContext);
+  const token = localStorage.getItem("token");
 
   return (
     <div style={leftMenu}>
       <Link to="/">
         <Logo />
       </Link>
-      <div style={links}>{!authed ? <Unlogged /> : <Logged />}</div>
+      <div style={links}>{!token ? <Unlogged /> : <Logged />}</div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Headers,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -21,6 +22,7 @@ import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
 import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
+import { TokenGuard } from '../guard/token.guard';
 
 @Controller('user')
 export class UserController {
@@ -41,9 +43,13 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  @UseGuards(TokenGuard)
   @Get('profile/:id')
-  async userInfo(@Param('id') id: number): Promise<UserInfo | any> {
-    return this.userService.userInfo(id);
+  async userInfo(
+    @Param('id') id: number,
+    @Headers('token') header: Headers,
+  ): Promise<UserInfo | any> {
+    return this.userService.userInfo(header.toString(), id);
   }
 
   @Get('check/login/:input')
@@ -57,25 +63,24 @@ export class UserController {
   }
 
   @Put('disconnect')
-  async disconnectUser(@Req() req: any, @Body() body: boolean) {
-    const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
-    );
-    return await this.userService.changeOnlineStatus(payload.id, body);
+  async disconnectUser(@Body() body: number) {
+    return await this.userService.changeOnlineStatus(body, false);
   }
 
+  @UseGuards(TokenGuard)
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
     return this.userService.leaderboard();
   }
 
-  @Get('settings/:token')
-  async userSettings(@Param('token') token: string): Promise<User | null> {
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    return this.userService.userSettings(decoded.id);
+  @UseGuards(TokenGuard)
+  @Get('settings')
+  async userSettings(@Headers('token') header: Headers): Promise<User | null> {
+    return this.userService.userSettings(header.toString());
   }
 
-  @Post('upload/:token')
+  @UseGuards(TokenGuard)
+  @Post('upload/avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
       limits: { fileSize: 2097152 },
@@ -87,9 +92,7 @@ export class UserController {
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: TokenData = jwt_decode(
-            req.url.split('/user/upload/')[1],
-          );
+          const userId: TokenData = jwt_decode(req.headers.token as string);
           const path = `./avatar/${userId.id}`;
 
           fs.mkdirSync(path, { recursive: true });
@@ -112,30 +115,29 @@ export class UserController {
   uploadFile(
     @UploadedFile()
     file: Express.Multer.File,
-    @Param('token') token: string,
+    @Headers('token') header: Headers,
     @Req() req: any,
   ) {
     if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
-    return this.userService.updateAvatar(file.path, token);
+    return this.userService.updateAvatar(file.path, header.toString());
   }
 
+  @UseGuards(TokenGuard)
   @Put('update')
   async updateSettings(
     @Body() body: UserSettings,
     @Headers('token') header: Headers,
   ) {
-    const decoded: TokenData = this.jwtService.decode(
-      header.toString(),
-    ) as TokenData;
     try {
-      return await this.userService.updateUserSettings(body, decoded);
+      return await this.userService.updateUserSettings(body, header.toString());
     } catch (e) {
       throw new BadRequestException(e.message);
     }
   }
 
+  @UseGuards(TokenGuard)
   @Put('update/2fa')
   async update2FA(@Headers('token') header: Headers) {
     try {

@@ -24,11 +24,18 @@ function App() {
         value={{ authed: authToken, setAuthToken: setAuthToken }}
       >
         <FormContext.Provider
-          value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
+          value={{
+            loginForm,
+            setLoginForm,
+            signupForm,
+            setSignupForm,
+            codeForm,
+            setCodeForm,
+          }}
         >
           <NavBar />
           <AuthForms />
-          </FormContext.Provider>
+        </FormContext.Provider>
         <Outlet />
       </AuthContext.Provider>
       <Footer />

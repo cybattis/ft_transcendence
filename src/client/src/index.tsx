@@ -37,17 +37,58 @@ const router = createBrowserRouter([
           {
             path: "profile/:id",
             element: <Profile />,
+            errorElement: <Error404 />,
             loader: async ({ request, params }) => {
-              return fetch(`http://localhost:5400/user/profile/${params.id}`, {
-                signal: request.signal,
-              });
+              const res = await fetch(
+                `http://localhost:5400/user/profile/${params.id}`,
+                {
+                  headers: {
+                    token: localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 400)
+                throw new Response("User not found", { status: 400 });
+              else if (res.status === 403) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("id");
+              }
+              return res.json();
             },
           },
           {
             path: "leaderboard",
             element: <Leaderboard />,
-            loader: async () => {
-              return fetch(`http://localhost:5400/user/leaderboard`);
+            loader: async ({ request, params }) => {
+              const res = await fetch(
+                `http://localhost:5400/user/leaderboard`,
+                {
+                  headers: {
+                    token: localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 403) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("id");
+              }
+              return res.json();
+            },
+          },
+          {
+            path: "settings",
+            element: <Settings />,
+            loader: async ({ request, params }) => {
+              const res = await fetch(`http://localhost:5400/user/settings/`, {
+                headers: {
+                  token: localStorage.getItem("token") || "",
+                },
+              });
+              if (res.status === 403) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("id");
+              }
+              return res.json();
             },
           },
           {
@@ -65,10 +106,6 @@ const router = createBrowserRouter([
           {
             path: "code",
             element: <CodeConfirmation />,
-          },
-          {
-            path: "settings",
-            element: <Settings />,
           },
         ],
       },

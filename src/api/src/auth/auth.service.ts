@@ -1,10 +1,4 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-  Inject,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
@@ -17,6 +11,7 @@ import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { JwtPayload } from 'jwt-decode';
 
 @Injectable()
 export class AuthService {
@@ -51,17 +46,6 @@ export class AuthService {
     });
 
     return await response.json();
-  }
-
-  async checkToken(token: string) {
-    const user = this.jwtService.decode(token);
-    if (user) {
-      if (user as { [key: string]: any }) {
-        const dic = user as { [key: string]: any };
-        if (dic['exp'] > new Date().getTime() / 1000) return HttpStatus.OK;
-        else return new UnauthorizedException('Token invalid');
-      }
-    } else return new UnauthorizedException('Token invalid');
   }
 
   async infoUser(token: IntraTokenDto): Promise<IntraSignupDto> {
@@ -203,5 +187,41 @@ export class AuthService {
       }
     }
     throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
+  }
+
+  static invalidToken: string[] = [];
+
+  validateToken(token: string): boolean {
+    if (AuthService.invalidToken.includes(token)) {
+      console.log('LIST: invalid token: ', token);
+      return false;
+    }
+
+    try {
+      const payload: JwtPayload = this.jwtService.verify<JwtPayload>(token, {});
+      if (!payload) {
+        const index = AuthService.invalidToken.indexOf(token, 0);
+        if (index > -1) {
+          AuthService.invalidToken.splice(index, 1);
+        }
+        return false;
+      }
+    } catch (e) {
+      console.log('Error :', e);
+      return false;
+    }
+    return true;
+  }
+
+  // go through list
+  // if token is invalid, remove it from list
+  async checkTokenInvalidationList() {
+    for (let i = 0; i < AuthService.invalidToken[i].length; i++) {
+      if (
+        !this.jwtService.verify<JwtPayload>(AuthService.invalidToken[i], {})
+      ) {
+        AuthService.invalidToken.splice(i, 1);
+      }
+    }
   }
 }

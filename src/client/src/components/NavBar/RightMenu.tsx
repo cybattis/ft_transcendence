@@ -4,8 +4,6 @@ import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
 import { Link } from "react-router-dom";
 import { AuthContext, FormContext } from "../Auth/dto";
-import jwt_decode from "jwt-decode";
-import { Decoded } from "../../type/client.type";
 
 function Unlogged() {
   const logoSignup = {
@@ -37,26 +35,30 @@ function Unlogged() {
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
-  let decoded: Decoded | null = null;
-
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    console.log(e);
-  }
+  const id = localStorage.getItem("id");
 
   const handleDisconnect = async () => {
-    let JWTToken = localStorage.getItem("token");
-    localStorage.removeItem("token");
+    localStorage.removeItem("id");
     setAuthToken(null);
-    await axios.put("http://localhost:5400/user/disconnect", false, {
-      headers: { Authorization: `Bearer ${JWTToken}` },
+
+    const token: string | null = localStorage.getItem("token");
+    if (!token) {
+      await axios.put("http://localhost:5400/user/disconnect", id, {});
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("id");
+
+    await axios.put("http://localhost:5400/auth/disconnect", id, {
+      headers: {
+        token: token,
+      },
     });
   };
 
   return (
     <>
-      <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
+      <Link to={`/profile/${id}`} className={"navLink"}>
         Profile
       </Link>
       <Link to={`/settings`} className={"navLink"}>

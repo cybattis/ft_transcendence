@@ -31,9 +31,11 @@ export class SignupDto {
   nickname: string;
 
   @IsString()
+  @MaxLength(30)
   firstname: string;
 
   @IsString()
+  @MaxLength(30)
   lastname: string;
 
   @IsEmail()

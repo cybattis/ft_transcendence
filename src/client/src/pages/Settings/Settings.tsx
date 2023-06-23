@@ -1,46 +1,31 @@
 import "./Settings.css";
 import { Avatar } from "../../components/Avatar";
 import axios from "axios";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
 import { ErrorModal } from "../../components/Error/ErrorModal";
+import { Navigate, useLoaderData } from "react-router-dom";
+import { AuthContext } from "../../components/Auth/dto";
+import { HandleTokenError } from "../../utils/handleFetchError";
 
 export function Settings() {
-  // TODO: check token validity
+  const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
+  const { setAuthToken } = useContext(AuthContext);
 
-  let [nickname, setNickname] = useState("");
-  let [firstName, setFirstName] = useState("");
-  let [lastName, setLastName] = useState("");
-  let [email, setEmail] = useState("");
-  let [avatarUrl, setAvatarUrl] = useState("");
-  let [tfa, setTfa] = useState(false);
+  let [nickname, setNickname] = useState(data.nickname);
+  let [firstName, setFirstName] = useState(data.firstname);
+  let [lastName, setLastName] = useState(data.lastname);
+  let [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
+  let [tfa, setTfa] = useState(data.authActivated);
 
   let [error, setError] = useState("");
 
-  useEffect(() => {
-    async function fetchData(token: string) {
-      if (token === null) return;
-      await axios
-        .get(`http://localhost:5400/user/settings/${token}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-        .then((response) => {
-          setNickname(response.data.nickname);
-          setFirstName(response.data.firstname);
-          setLastName(response.data.lastname);
-          setEmail(response.data.email);
-          setAvatarUrl(response.data.avatarUrl);
-          setTfa(response.data.authActivated);
-        });
-    }
-
-    fetchData(token!).then(() => {});
-  }, []);
+  if (token === null) {
+    setAuthToken(null);
+    return <Navigate to={"/"} />;
+  }
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files === null) return;
@@ -53,9 +38,10 @@ export function Settings() {
     formData.append("avatar", event.target.files[0]);
 
     axios
-      .post(`http://localhost:5400/user/upload/${token}`, formData, {
+      .post(`http://localhost:5400/user/upload/avatar`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          token: token,
         },
       })
       .then((res) => {
@@ -63,8 +49,12 @@ export function Settings() {
         setAvatarUrl(res.data);
       })
       .catch((error) => {
-        console.log(error.response.data.message);
-        setError(error.response.data.message + "!");
+        if (error.response.status === 403) {
+          return <HandleTokenError />;
+        } else {
+          console.log(error.response.data.message);
+          setError(error.response.data.message + "!");
+        }
       });
   }
 
@@ -75,7 +65,6 @@ export function Settings() {
       nickname: nickname,
       firstname: firstName,
       lastname: lastName,
-      email: email,
     };
 
     await axios
@@ -88,8 +77,12 @@ export function Settings() {
       })
       .then(() => {})
       .catch((error) => {
-        console.log("Error: ", error.response.data);
-        setError(error.response.data.message + "!");
+        if (error.response.status === 403) {
+          return <HandleTokenError />;
+        } else {
+          console.log(error.response.data.message);
+          setError(error.response.data.message + "!");
+        }
       });
   };
 
@@ -111,8 +104,12 @@ export function Settings() {
         setTfa(!tfa);
       })
       .catch((error) => {
-        console.log("Error: ", error);
-        setError("Server error... try again");
+        if (error.response.status === 403) {
+          return <HandleTokenError />;
+        } else {
+          console.log("Error: ", error);
+          setError("Server error... try again");
+        }
       });
   };
 

@@ -17,10 +17,11 @@ import { CacheModule } from '@nestjs/cache-manager';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret,
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '5s' },
     }),
   ],
   controllers: [AuthController, UserController],
   providers: [AuthService, UserService],
+  exports: [AuthService, AuthModule],
 })
 export class AuthModule {}

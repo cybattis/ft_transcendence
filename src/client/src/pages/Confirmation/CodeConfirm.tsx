@@ -4,6 +4,8 @@ import InputForm from "../../components/InputForm";
 import { AuthContext } from "../../components/Auth/dto";
 import { useLocation } from "react-router-dom";
 import "../../components/Auth/Auth.css";
+import jwt_decode from "jwt-decode";
+import { TokenData } from "../../type/user.type";
 
 export default function FaCode() {
   const [errorInput, setErrorInput] = React.useState("");
@@ -65,6 +67,10 @@ export default function FaCode() {
           const data = res.data;
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
+
+          const decoded: TokenData = jwt_decode(data.token);
+          localStorage.setItem("id", decoded.id.toString());
+
           return window.location.replace("http://localhost:3000");
         }
       })

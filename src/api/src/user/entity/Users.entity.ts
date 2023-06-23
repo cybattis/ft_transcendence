@@ -17,10 +17,10 @@ export class User {
   @Column({ type: 'varchar', length: 30, unique: true })
   nickname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   firstname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   lastname: string;
 
   @Column({ type: 'varchar', length: 100, unique: true, select: false })

@@ -15,7 +15,9 @@ export interface UserSettings {
   nickname: string;
   firstname: string;
   lastname: string;
-  email: string;
+  email?: string;
+  avatarUrl?: string;
+  authActivated?: boolean;
 }
 
 export interface TokenData {

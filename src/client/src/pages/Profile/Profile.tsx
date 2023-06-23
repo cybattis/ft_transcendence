@@ -9,14 +9,20 @@ import {
 } from "../../components/Game/GameStats/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
+import { useContext } from "react";
+import { AuthContext } from "../../components/Auth/dto";
+import Home from "../Home/Home";
 
 export function Profile() {
-  // TODO: check token validity
-
   let data = useLoaderData() as UserInfo;
-  if (localStorage.getItem("token") === null) {
-    return <Navigate to="/" />;
+  const token = localStorage.getItem("token");
+  const { setAuthToken } = useContext(AuthContext);
+
+  if (token === null) {
+    setAuthToken(null);
+    return <Home />;
   }
+
   const winrate: number = calculateWinrate(data);
 
   return (
@@ -51,7 +57,7 @@ export function Profile() {
         <div className={"matchesTable"}>
           {data.games?.map((game: GameStatsDto, index) => (
             <div key={index}>
-              <GameStatsItem game={game} id={data.id} />
+              <GameStatsItem game={game} id={data!.id} />
             </div>
           ))}
         </div>

@@ -48,9 +48,10 @@ export class UserService implements OnModuleInit {
     return this.usersRepository.find();
   }
 
-  async userSettings(id: number): Promise<User | null> {
+  async userSettings(token: string): Promise<User | null> {
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
     return this.usersRepository.findOne({
-      where: { id: id },
+      where: { id: decoded.id },
       select: [
         'id',
         'nickname',
@@ -63,7 +64,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(id: number): Promise<UserInfo | any> {
+  async userInfo(token: string, id: number): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -79,7 +80,7 @@ export class UserService implements OnModuleInit {
       },
     });
 
-    if (!user) return 'User not found';
+    if (!user) throw new BadRequestException('User does not exist');
     user.games = await this.gameService.fetchUserGames(user);
     return user;
   }
@@ -123,13 +124,10 @@ export class UserService implements OnModuleInit {
   }
 
   async update2FA(token: string) {
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    const user = await this.usersRepository.findOne({
-      where: { id: decoded.id },
-    });
+    const user = await this.decodeToken(token);
     if (!user) return null;
 
-    return await this.usersRepository.update(decoded.id, {
+    return await this.usersRepository.update(user.id, {
       authActivated: !user.authActivated,
     });
   }
@@ -139,23 +137,17 @@ export class UserService implements OnModuleInit {
   }
 
   async updateAvatar(path: string, token: string) {
-    if (!token) return null;
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    const user = await this.usersRepository.findOne({
-      where: { id: decoded.id },
-      relations: ['games'],
-    });
+    const user = await this.decodeToken(token);
     if (!user) return null;
+
     user.avatarUrl = 'http://localhost:5400/' + path;
     await this.usersRepository.save(user);
 
     return user.avatarUrl;
   }
 
-  async updateUserSettings(body: UserSettings, token: TokenData) {
-    const user = await this.usersRepository.findOne({
-      where: { id: token.id },
-    });
+  async updateUserSettings(body: UserSettings, token: string) {
+    const user = await this.decodeToken(token);
     if (!user) return null;
 
     if (user.nickname !== body.nickname) {
@@ -169,6 +161,16 @@ export class UserService implements OnModuleInit {
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
+    return user;
+  }
+
+  async decodeToken(token: string): Promise<User | null> {
+    if (!token) return null;
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    const user = await this.usersRepository.findOne({
+      where: { id: decoded.id },
+    });
+    if (!user) return null;
     return user;
   }
 }
