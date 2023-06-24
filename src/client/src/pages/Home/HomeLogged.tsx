@@ -7,8 +7,8 @@ import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link, Navigate } from "react-router-dom";
 import { GameStatsDto, GameType } from "../../type/game.type";
-import { Decoded } from "../../type/client.type";
 import { XPBar } from "../../components/XPBar/XPBar";
+import { TokenData } from "../../type/user.type";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 
@@ -98,7 +98,6 @@ function Winrate(props: { data: UserInfo }) {
 }
 
 function UserProfile() {
-  let decoded: Decoded | null = null;
   const [data, setData] = useState<UserInfo>({
     id: 0,
     nickname: "",
@@ -109,14 +108,12 @@ function UserProfile() {
     games: [],
   });
 
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    console.log(e);
-  }
+  const decoded: TokenData | null = jwt_decode(
+    localStorage.getItem("token")!
+  ) as TokenData;
 
   useEffect(() => {
-    async function fetchData(id: string) {
+    async function fetchData(id: number) {
       await axios
         .get(`http://localhost:5400/user/profile/${id}`, {
           method: "GET",
@@ -129,7 +126,7 @@ function UserProfile() {
         });
     }
 
-    if (decoded !== null) fetchData(decoded.id);
+    fetchData(decoded.id).then(() => {});
   }, []);
 
   if (decoded === null) {

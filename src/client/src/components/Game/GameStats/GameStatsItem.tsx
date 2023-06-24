@@ -20,18 +20,22 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
   function OpponentName() {
     let name: string;
     let opponentId: number;
+    let opponentAvatar: string | undefined;
 
     if (props.game.players[0].id === props.id) {
       name = props.game.players[1].nickname;
       opponentId = props.game.players[1].id;
+      opponentAvatar = props.game.players[1].avatarUrl;
     } else {
       name = props.game.players[0].nickname;
       opponentId = props.game.players[0].id;
+      opponentAvatar = props.game.players[0].avatarUrl;
     }
+
     return (
       <Link to={`/profile/${opponentId}`} className={"opponentProfile"}>
         <div id={"opponent"}>
-          <Avatar size={"30px"} />
+          <Avatar size={"30px"} img={opponentAvatar} />
           {name}
         </div>
       </Link>
