@@ -96,7 +96,8 @@ function Winrate(props: { data: UserInfo }) {
   );
 }
 
-function UserProfile(data: any) {
+function UserProfile(props: { data: UserInfo }) {
+  const data = props.data;
   return (
     <div className="user">
       <div className="infobox">
@@ -169,7 +170,7 @@ export function HomeLogged() {
     <div className={"home"}>
       <div className={"leftside"}>
         <GameLauncher />
-        <UserProfile props={data} />
+        <UserProfile data={data} />
       </div>
       <Chat />
     </div>
