@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
+import { Chat } from './chat/entity/Chat.entity';
 import {ChannelModule} from "./channel/channel.module";
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
@@ -30,10 +31,10 @@ import { ChatModule } from './chat/chat.module';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [User, Game],
+      entities: [User, Game, Chat],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Chat]),
   ],
   controllers: [AppController],
   providers: [AppService],

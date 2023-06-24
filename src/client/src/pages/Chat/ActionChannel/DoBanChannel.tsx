@@ -13,6 +13,7 @@ export default function DoBanChannel({ onSubmit } : any) {
     let kickElement = document.getElementById("container-kick-channel");
     let blockedElement = document.getElementById("container-blocked-users");
     let focus = document.getElementById("target-ban");
+    
     function blocDoOperator() {
 
         if (banElement && focus) {

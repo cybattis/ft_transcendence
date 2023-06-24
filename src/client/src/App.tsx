@@ -20,6 +20,7 @@ function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
   const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
+  const [chatForm, setChatForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
   const [notif, setNotif] = useState(defaultNotifState.notif);
   const [socketId, setSocketId] = useState(defaultSocketState.socketId);
@@ -36,12 +37,12 @@ function App() {
             value={{ authed: authToken, setAuthToken: setAuthToken }}
           >
             <FormContext.Provider
-              value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
+              value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm, chatForm, setChatForm }}
             >
               <NavBar />
+              <Outlet />
               <AuthForms />
-              </FormContext.Provider>
-            <Outlet />
+            </FormContext.Provider>
           </AuthContext.Provider>
         </NotifContext.Provider>
       </SocketContext.Provider>

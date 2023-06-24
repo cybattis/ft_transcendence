@@ -7,6 +7,8 @@ export interface FormContextType {
   setSignupForm: (value: boolean) => void;
   codeForm: boolean;
   setCodeForm: (value: boolean) => void;
+  chatForm: boolean;
+  setChatForm: (value: boolean) => void;
 }
 
 export const defaultFormState: FormContextType = {
@@ -16,6 +18,8 @@ export const defaultFormState: FormContextType = {
   setSignupForm: () => {},
   codeForm: false,
   setCodeForm: () => {},
+  chatForm: false,
+  setChatForm: () => {},
 };
 
 export const FormContext = createContext<FormContextType>(defaultFormState);

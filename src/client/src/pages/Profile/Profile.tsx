@@ -78,7 +78,7 @@ function AddFriend(data: any) {
   const payload: any = jwt_decode(token);
   
   useEffect(() => {
-    if (payload.id === data.data.id.toString())
+    if (payload.id === data.data.id || payload.id === data.data.id.toString())
       setIsMe(true);
     const newSocket = io('http://localhost:5400');
     socketRef.current = newSocket;

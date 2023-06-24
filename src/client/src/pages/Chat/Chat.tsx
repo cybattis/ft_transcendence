@@ -14,6 +14,7 @@ import DoQuitChannel from "./ActionChannel/DoQuitChannel"
 import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 import { NotifContext } from '../../components/Auth/dto';
 import { SocketContext } from '../../components/Auth/dto';
+import { FormContext } from '../../components/Auth/dto';
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -22,11 +23,13 @@ let username = '';
 
 function ChatMap() {
   const activeChannel = document.getElementById('canal')?.innerHTML || '';
+  const { setChatForm } = useContext(FormContext);
+
   const filteredElements = chatList
       .filter((rcv) => rcv.channel === activeChannel)
       .map((rcv, key) => (
           <li className={rcv.event} key={key}>
-            <div className="contain-emt">{rcv.username}</div>
+            <div className="contain-emt" onClick={() => {setChatForm(true)}}>{rcv.username}</div>
             <div className="contain-msg">{rcv.message}</div>
           </li>
       ));
