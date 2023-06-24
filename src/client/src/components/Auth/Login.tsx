@@ -107,6 +107,8 @@ export default function Login() {
               Remember me
             </label>
             <a className="forgetPassLink" href="blank" target="_blank">
+              {" "}
+              {/*TODO: Send mail to reset password ? */}
               Forgot your password?
             </a>
           </div>

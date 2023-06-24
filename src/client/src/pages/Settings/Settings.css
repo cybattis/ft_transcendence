@@ -1,0 +1,40 @@
+.settingPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: var(--vp-size);
+}
+
+.settingPage_title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.settingPage_container {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+.settingPage_avatar {
+    flex: auto;
+}
+
+.settingPage_sendImage {
+    display: none;
+}
+
+
+
+.settingPage_form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.settingPage #hr1 {
+    width: 100%;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}

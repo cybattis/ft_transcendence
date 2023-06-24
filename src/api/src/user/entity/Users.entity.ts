@@ -33,24 +33,24 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   password: string;
 
-  @Column({ default: false, nullable: true }) //TODO: if true change to false, this is for testing.
+  @Column({ default: false, nullable: true })
   isVerified: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   authActivated: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   online: boolean;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   inGame: boolean;
 
   // User data ans stats
   // ============================================================
-  @CreateDateColumn({ select: false })
+  @CreateDateColumn({ select: true })
   creationDate: Date;
 
-  @UpdateDateColumn({ select: false })
+  @UpdateDateColumn({ select: true })
   updateDate: Date;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -68,7 +68,9 @@ export class User {
   // Player games
   // ============================================================
   @ManyToMany(() => Game, (game: Game) => game.players, {
-    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinTable()
   games: Game[];

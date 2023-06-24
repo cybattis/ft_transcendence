@@ -1,10 +1,26 @@
-import { Body, Controller, Get, Param, Put, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  UploadedFile,
+  UseInterceptors,
+  Headers,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
+import { TokenData, UserInfo, UserSettings } from '../type/user.type';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
-import { UserInfo } from '../type/user.type';
+import { diskStorage } from 'multer';
+import jwt_decode from 'jwt-decode';
+import * as fs from 'fs';
 
 @Controller('user')
 export class UserController {
@@ -17,7 +33,7 @@ export class UserController {
   ) {}
 
   onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, {strict: false});
+    this.gameService = this.moduleRef.get(GameService, { strict: false });
   }
 
   @Get()
@@ -50,7 +66,7 @@ export class UserController {
   }
 
   @Get('profile/:id')
-  async userInfo(@Param('id') id: number): Promise<any> {
+  async userInfo(@Param('id') id: number): Promise<UserInfo | any> {
     return this.userService.userInfo(id);
   }
 
@@ -131,5 +147,81 @@ export class UserController {
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
     return await this.userService.leaderboard();
+  }
+
+  @Get('settings/:token')
+  async userSettings(@Param('token') token: string): Promise<User | null> {
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    return this.userService.userSettings(decoded.id);
+  }
+
+  @Post('upload/:token')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: { fileSize: 2097152 },
+      fileFilter: (req, file, callback) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+          req.fileValidationError = 'UNSUPPORTED_FILE_TYPE';
+          callback(null, false);
+        } else callback(null, true);
+      },
+      storage: diskStorage({
+        destination: (req, file, callback) => {
+          const userId: TokenData = jwt_decode(
+            req.url.split('/user/upload/')[1],
+          );
+          const path = `./avatar/${userId.id}`;
+
+          fs.mkdirSync(path, { recursive: true });
+
+          fs.readdir(path, (err, files) => {
+            if (err) throw err;
+            if (files.length === 0) {
+              return;
+            }
+
+            fs.unlink(path + '/' + files[0], (err) => {
+              if (err) throw err;
+            });
+          });
+          callback(null, path);
+        },
+      }),
+    }),
+  )
+  uploadFile(
+    @UploadedFile()
+    file: Express.Multer.File,
+    @Param('token') token: string,
+    @Req() req: any,
+  ) {
+    if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
+      throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
+    }
+    return this.userService.updateAvatar(file.path, token);
+  }
+
+  @Put('update')
+  async updateSettings(
+    @Body() body: UserSettings,
+    @Headers('token') header: Headers,
+  ) {
+    const decoded: TokenData = this.jwtService.decode(
+      header.toString(),
+    ) as TokenData;
+    try {
+      return await this.userService.updateUserSettings(body, decoded);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+  }
+
+  @Put('update/2fa')
+  async update2FA(@Headers('token') header: Headers) {
+    try {
+      return await this.userService.update2FA(header.toString());
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
   }
 }

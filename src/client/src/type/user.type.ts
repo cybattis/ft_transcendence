@@ -14,3 +14,17 @@ export interface UserInfo {
   blockedById: number[];
   totalGameWon?: number;
 }
+
+export interface UserSettings {
+  nickname: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+
+export interface TokenData {
+  email: string;
+  id: number;
+  iat: number;
+  exp: number;
+}

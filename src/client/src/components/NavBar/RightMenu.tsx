@@ -4,8 +4,8 @@ import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
 import notifsLogo from "../../resource/logo-notifications.png"
 import notifsLogoOn from "../../resource/logo-notifications-on.png"
-import { Link, Navigate } from "react-router-dom";
 import { AuthContext, FormContext, NotifContext } from "../Auth/dto";
+import { Link } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { Decoded } from "../../type/client.type";
 
@@ -99,6 +99,9 @@ function Logged() {
       </Link>
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
         Profile
+      </Link>
+      <Link to={`/settings`} className={"navLink"}>
+        Settings
       </Link>
       <Link to="/" className="disconnect" onClick={handleDisconnect}>
         Disconnect
