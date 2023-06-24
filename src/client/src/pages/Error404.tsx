@@ -1,26 +1,12 @@
-export default function Error404() {
-  const style = {
-    display: "flex",
-    flex: "auto",
-    flexDirection: "column" as "column",
-    alignItems: "center",
-  };
+import "./Error404.css";
 
-  const text = {
-    display: "flex",
-    flexDirection: "column" as "column",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: "200px",
-  };
+export default function Error404() {
 
   return (
-    <div style={style}>
-      <div style={text}>
+    <div className="style">
         <h1>404</h1>
-        <p>Page not found</p>
-        <p>Something went wrong, so this page is broken.</p>
-      </div>
+        <h3>Page Not found</h3>
+        <h3>Something went wrong, so this page is broken.</h3>
     </div>
   );
 }
