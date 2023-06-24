@@ -5,12 +5,17 @@
     overflow-x: auto;
 }
 
-.channel-waiting{
+.channel-waiting {
     padding: 10px;
     margin: 10px;
     border-radius: 5px;
     background-color: #3E3C73;
     font-weight: bold;
-    color:white;
+    color: white;
     font-size: 15px;
+    cursor: pointer;
+}
+
+.channel-waiting:hover{
+    background-color: #4E458C;
 }

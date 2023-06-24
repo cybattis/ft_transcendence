@@ -67,6 +67,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
+  @SubscribeMessage('blocked')
+  handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
+    this.channelService.blockedUser(this.server ,socket, data.target);
+  }
+
   @SubscribeMessage('op')
   handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
@@ -80,6 +85,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const channel = data.channel;
     this.server.to(socket.id).emit("quit", channel);
   }
+
   @SubscribeMessage('ban')
   handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
@@ -93,6 +99,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     }
   }
+
   @SubscribeMessage('info')
   handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     const channel = data.channel;
@@ -113,7 +120,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     {
       console.log(`inside`) ;
       this.server.to(targetSocket).emit("quit", channel);
-
     }
   }
 
