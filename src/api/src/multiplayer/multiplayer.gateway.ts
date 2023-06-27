@@ -53,7 +53,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('ready')
   async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
-    this.multiplayerService.setClientReady(client.userId);
+    this.multiplayerService.setClientReady(client);
   }
 
 }

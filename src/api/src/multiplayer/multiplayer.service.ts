@@ -3,6 +3,7 @@ import { GameRoom } from "./types/multiplayer.types";
 import { GameService } from "../game/game.service";
 import { UserService } from "../user/user.service";
 import { Game } from "../game/entity/Game.entity";
+import { AuthedSocket } from "../auth/types/auth.types";
 
 @Injectable()
 export class MultiplayerService {
@@ -43,16 +44,17 @@ export class MultiplayerService {
   /*
     * Set the player ready so that the game can begin
     *
-    * @param playerId The id of the player
+    * @param client The client that sent the ready event
    */
-  public setClientReady(playerId: number): void {
-    const room = this.getRoomByPlayerId(playerId);
+  public setClientReady(client: AuthedSocket): void {
+    const room = this.getRoomByPlayerId(client.userId);
     if (room) {
-      if (room.player1Id === playerId) {
+      if (room.player1Id === client.userId)
         room.player1Ready = true;
-      } else {
+      else
         room.player2Ready = true;
-      }
+
+      client.join("game-" + room.id.toString());
     }
   }
 
