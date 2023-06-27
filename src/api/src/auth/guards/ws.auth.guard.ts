@@ -2,6 +2,8 @@ import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/commo
 import { AuthedSocket } from "../types/auth.types";
 import { JwtService } from "@nestjs/jwt";
 import { JwtPayload } from "../../type/jwt.type";
+import { PUBLIC_DECORATOR_KEY } from "./PublicDecorator";
+import { Reflector } from "@nestjs/core";
 
 /*
  * This guard is used to authenticate websocket communications using the Jwt.
@@ -12,15 +14,25 @@ import { JwtPayload } from "../../type/jwt.type";
 export class WsAuthGuard implements CanActivate {
   private readonly logger = new Logger(WsAuthGuard.name);
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService,
+              private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     if (context.getType() !== 'ws') return true;
+
+    // Check if the handler or the class is decorated with the Public decorator
+    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_DECORATOR_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic)
+      return true;
 
     const client: AuthedSocket = context.switchToWs().getClient();
 
     if (!WsAuthGuard.validateSocketToken(client, this.jwtService)) {
       this.logger.log(`Unauthorized connection from ${client.handshake?.address}`);
+      client.emit('unauthorized');
       return false;
     }
     return true;
