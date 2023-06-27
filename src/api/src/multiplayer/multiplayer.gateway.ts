@@ -24,6 +24,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   afterInit(server: Server) {
     this.server = server;
+    this.multiplayerService.setServer(server);
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.jwtService)) {
