@@ -84,9 +84,9 @@ export default function Signup() {
     } else if (!inputs.password) {
       setErrorInput("Please enter a Password.");
       isValid = false;
-    } else if (!validator.isStrongPassword(inputs.password)) {
-      setErrorInput("Password is not strong enough.");
-      isValid = false;
+    //} else if (!validator.isStrongPassword(inputs.password)) {
+    //  setErrorInput("Password is not strong enough.");
+    //  isValid = false;
     } else if (
       inputs.confirmPassword &&
       inputs.password !== inputs.confirmPassword
