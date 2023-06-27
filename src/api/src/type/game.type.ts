@@ -12,6 +12,7 @@ export enum GameMode {
 export enum GameStatus {
   IN_PROGRESS = 'In progress',
   FINISHED = 'Finished',
+  WAITING_FOR_PLAYERS = 'Waiting for players',
 }
 
 export interface GameBodyDto {

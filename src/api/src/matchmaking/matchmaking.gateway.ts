@@ -76,4 +76,8 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
     await this.matchmakingService.leaveMatchmakingRanked(client.userId);
   }
 
+  @SubscribeMessage('accept-found-game')
+  async handleAcceptFoundGame(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    await this.matchmakingService.acceptFoundGame(client.userId);
+  }
 }
