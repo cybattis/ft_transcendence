@@ -15,6 +15,7 @@ import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { UseGuards } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { AuthedSocket } from "../auth/types/auth.types";
+import { Public } from "../auth/guards/PublicDecorator";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: '/matchmaking'})
@@ -35,6 +36,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         next();
       } else {
         console.log("An unauthorized user tried to connect to the matchmaking server");
+        socket.emit('unauthorized');
         next(new WsException("Unauthorized"));
       }
     });
@@ -80,4 +82,11 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
   async handleAcceptFoundGame(@ConnectedSocket() client: AuthedSocket): Promise<void> {
     await this.matchmakingService.acceptFoundGame(client.userId);
   }
+
+  @Public()
+  @SubscribeMessage('authorization')
+  async handleAuthorization(@ConnectedSocket() client: AuthedSocket, @MessageBody() token: string): Promise<void> {
+    client.handshake.auth.token = token;
+  }
+
 }
