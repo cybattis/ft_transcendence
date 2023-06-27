@@ -34,7 +34,7 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
         console.log("An authorized user connected to the matchmaking server");
         next();
       } else {
-        console.log("Am unauthorized user tried to connect to the matchmaking server");
+        console.log("An unauthorized user tried to connect to the matchmaking server");
         next(new WsException("Unauthorized"));
       }
     });
