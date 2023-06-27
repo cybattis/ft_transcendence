@@ -33,8 +33,35 @@ export class MultiplayerService {
       status: gameInfos.status,
       player1Score: gameInfos.scoreP1,
       player2Score: gameInfos.scoreP2,
+      player1Ready: false,
+      player2Ready: false
     };
 
     this.rooms.push(gameRoom);
+  }
+
+  /*
+    * Set the player ready so that the game can begin
+    *
+    * @param playerId The id of the player
+   */
+  public setClientReady(playerId: number): void {
+    const room = this.getRoomByPlayerId(playerId);
+    if (room) {
+      if (room.player1Id === playerId) {
+        room.player1Ready = true;
+      } else {
+        room.player2Ready = true;
+      }
+    }
+  }
+
+  /*
+    * Get the room of a player
+    *
+    * @param playerId The id of the player
+   */
+  public getRoomByPlayerId(playerId: number): GameRoom | undefined {
+    return this.rooms.find(room => room.player1Id === playerId || room.player2Id === playerId);
   }
 }
