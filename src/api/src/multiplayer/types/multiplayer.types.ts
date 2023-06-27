@@ -9,4 +9,6 @@ export type GameRoom = {
   status: GameStatus;
   player1Score: number;
   player2Score: number;
+  player1Ready: boolean;
+  player2Ready: boolean;
 }

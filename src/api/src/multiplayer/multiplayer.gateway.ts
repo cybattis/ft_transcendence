@@ -11,6 +11,7 @@ import { AuthedSocket } from "../auth/types/auth.types";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { JwtService } from "@nestjs/jwt";
 import { Public } from "../auth/guards/PublicDecorator";
+import { MultiplayerService } from "./multiplayer.service";
 
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: "/multiplayer"})
 export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -18,7 +19,8 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService,
+              private readonly multiplayerService: MultiplayerService) {}
 
   afterInit(server: Server) {
     this.server = server;
@@ -47,6 +49,11 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   @SubscribeMessage('authorization')
   async handleAuthorization(@ConnectedSocket() client: AuthedSocket, @MessageBody() token: string): Promise<void> {
     client.handshake.auth.token = token;
+  }
+
+  @SubscribeMessage('ready')
+  async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    this.multiplayerService.setClientReady(client.userId);
   }
 
 }
