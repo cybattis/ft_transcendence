@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Inject } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Inject,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IntraTokenDto } from './dto/token.dto';
@@ -11,7 +17,8 @@ import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { JwtPayload } from 'jwt-decode';
+import jwt_decode, { JwtPayload } from 'jwt-decode';
+import { TokenData } from '../type/user.type';
 
 @Injectable()
 export class AuthService {
@@ -101,6 +108,7 @@ export class AuthService {
           const payload = { email: user.email, id: foundUser.id };
           return {
             token: await this.jwtService.signAsync(payload),
+            id: foundUser.id,
           };
         }
         throw new HttpException(
@@ -163,7 +171,27 @@ export class AuthService {
       const payload = { email: user.email, id: id };
       return {
         token: await this.jwtService.signAsync(payload),
+        id: id,
       };
+    }
+  }
+
+  async update2fa(id: number) {
+    const user = await this.usersService.getUserEmail(id);
+    if (!user) return;
+
+    await this.mailService.sendCodeConfirmation(user.email);
+  }
+
+  async update2faStatus(code: string, token: string) {
+    const payload: TokenData = jwt_decode(token.toString());
+    const email = payload.email;
+    const user = await this.usersService.findByID(payload.id);
+
+    if (await this.checkCode(code, email)) {
+      await this.userRepository.update(payload.id, {
+        authActivated: !user?.authActivated,
+      });
     }
   }
 
@@ -175,18 +203,24 @@ export class AuthService {
             GlobalService.emails[i] === (await this.cacheManager.get(code)))) &&
         GlobalService.codes[i] === code
       ) {
-        const user = await this.usersService.findByEmail(email);
-        if (user) {
-          await this.usersService.changeOnlineStatus(user.id, true);
-          const payload = { email: email, id: user.id };
-          await this.cacheManager.del(code);
-          return {
-            token: await this.jwtService.signAsync(payload),
-          };
-        }
+        await this.cacheManager.del(code);
+        return true;
       }
     }
     throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
+  }
+
+  async loggingInUser(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      await this.usersService.changeOnlineStatus(user.id, true);
+      const payload = { email: email, id: user.id };
+      return {
+        token: await this.jwtService.signAsync(payload),
+        id: user.id,
+      };
+    }
+    throw new NotFoundException('User not found');
   }
 
   static invalidToken: string[] = [];

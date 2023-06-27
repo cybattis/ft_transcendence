@@ -10,6 +10,7 @@ import {
   Res,
   Put,
   Headers,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -20,6 +21,7 @@ import { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { TokenData } from '../type/user.type';
 import jwt_decode from 'jwt-decode';
+import { TokenGuard } from '../guard/token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -84,8 +86,25 @@ export class AuthController {
   }
 
   @Post('2fa')
-  async checkCode(@Body() body: any) {
-    return await this.authService.checkCode(body.code, body.email);
+  async twoFactorAuth(@Body() body: any, @Headers('token') header: Headers) {
+    if (header) {
+      const token = header.toString();
+      if (token)
+        return await this.authService.update2faStatus(body.code, token);
+    }
+
+    const email = body.email;
+    await this.authService.checkCode(body.code, email);
+    return this.authService.loggingInUser(email);
+  }
+
+  @UseGuards(TokenGuard)
+  @Put('2fa/update')
+  async enable2fa(@Headers('token') header: Headers) {
+    const token = header.toString();
+    const payload: TokenData = jwt_decode(token.toString());
+
+    return await this.authService.update2fa(payload.id);
   }
 
   @Put('disconnect')
@@ -100,7 +119,7 @@ export class AuthController {
 
     if (payload && token) {
       AuthService.invalidToken.push(token);
-      await this.userService.changeOnlineStatus(payload.id, false);
+      return await this.userService.changeOnlineStatus(payload.id, false);
     }
   }
 
