@@ -22,27 +22,11 @@ export class MailService {
     });
   }
 
-  // TODO: send email to confirm new email
-  async sendNewEmailConfirmation(user: User, newEmail: string) {
-    const url = `http://localhost:3000/confirmation?` + user.id;
-
-    await this.mailerService.sendMail({
-      to: newEmail,
-      from: process.env.EMAIL_USR,
-      subject: 'ThePong Game! Confirm your Email',
-      template: 'confirmation',
-      context: {
-        name: user.nickname,
-        url,
-      },
-    });
-  }
-
   async sendCodeConfirmation(email: string) {
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     const emails = GlobalService.emails;
     let find = false;
-    let i: number = 1;
+    let i = 1;
     while (emails && emails[i] != null) {
       if (emails[i] === email) {
         find = true;
@@ -51,7 +35,7 @@ export class MailService {
       }
       i++;
     }
-    if (find === false) {
+    if (!find) {
       GlobalService.emails[i] = email;
       GlobalService.codes[i] = code;
     }

@@ -30,7 +30,9 @@ export class UserService implements OnModuleInit {
   }
 
   async findByID(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id: id } });
+    return this.usersRepository.findOne({
+      where: { id: id },
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -46,6 +48,15 @@ export class UserService implements OnModuleInit {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
+  }
+
+  async getUserEmail(id: number) {
+    const user: User | null = await this.usersRepository.findOne({
+      where: { id: id },
+      select: ['id', 'email'],
+    });
+    if (!user) throw new BadRequestException('User does not exist');
+    return user;
   }
 
   async userSettings(token: string): Promise<User | null> {
