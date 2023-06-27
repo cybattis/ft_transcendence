@@ -1,7 +1,8 @@
 import {
+  ConnectedSocket, MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit,
+  OnGatewayInit, SubscribeMessage,
   WebSocketGateway,
   WebSocketServer, WsException
 } from "@nestjs/websockets";
@@ -9,6 +10,7 @@ import { Server, Socket } from "socket.io";
 import { AuthedSocket } from "../auth/types/auth.types";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { JwtService } from "@nestjs/jwt";
+import { Public } from "../auth/guards/PublicDecorator";
 
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: "/multiplayer"})
 export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -27,6 +29,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
         next();
       } else {
         console.log("An unauthorized user tried to connect to the multiplayer server");
+        socket.emit('unauthorized');
         next(new WsException("Unauthorized"));
       }
     });
@@ -38,6 +41,12 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   handleDisconnect(socket: Socket) {
     console.log("A user disconnected from the multiplayer server");
+  }
+
+  @Public()
+  @SubscribeMessage('authorization')
+  async handleAuthorization(@ConnectedSocket() client: AuthedSocket, @MessageBody() token: string): Promise<void> {
+    client.handshake.auth.token = token;
   }
 
 }
