@@ -34,7 +34,6 @@ export function Settings() {
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files === null) return;
-    console.log("File: ", event.target.files[0]);
     if (event.target.files[0].size > 2097152) {
       setError("File has to be less than 2MB");
       return;

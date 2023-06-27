@@ -57,10 +57,12 @@ export default function ConfirmEmail() {
         }
       })
       .catch((error) => {
-        console.log(error);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
-        } else setErrorMessage("Server busy... try again");
+        } else {
+          setErrorMessage("Server busy... try again");
+          console.log(error);
+        }
       });
   };
 
