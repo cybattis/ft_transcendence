@@ -45,7 +45,7 @@ $(eval api:;@:)
 $(eval db:;@:)
 $(eval admin:;@:)
 
-BUILD	=	$(COMPOSE) build --no-cache
+BUILD	=	$(COMPOSE) build --no-cache --parallel
 .PHONY: _build
 _build:
 ifeq (client, $(filter client,$(MAKECMDGOALS)))
