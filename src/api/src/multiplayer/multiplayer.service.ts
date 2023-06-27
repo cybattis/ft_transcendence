@@ -4,10 +4,13 @@ import { GameService } from "../game/game.service";
 import { UserService } from "../user/user.service";
 import { Game } from "../game/entity/Game.entity";
 import { AuthedSocket } from "../auth/types/auth.types";
+import { GameStatus } from "../type/game.type";
+import { Server } from "socket.io";
 
 @Injectable()
 export class MultiplayerService {
   private readonly rooms: GameRoom[] = [];
+  private server: Server;
 
   constructor(private readonly gameService: GameService,
               private readonly userService: UserService) {}
@@ -15,6 +18,15 @@ export class MultiplayerService {
   /*
     * == API ==
    */
+
+  /*
+    * Set the server
+    *
+    * @param server The server
+   */
+  public setServer(server: Server): void {
+    this.server = server;
+  }
 
   /*
     * Create a new game room
@@ -55,7 +67,21 @@ export class MultiplayerService {
         room.player2Ready = true;
 
       client.join("game-" + room.id.toString());
+
+      if (room.player1Ready && room.player2Ready) {
+        this.startGame(room);
+      }
     }
+  }
+
+  /*
+    * Start a game
+    *
+    * @param game The game to start
+   */
+  public startGame(game: GameRoom): void {
+    game.status = GameStatus.IN_PROGRESS;
+    this.server.to("game-" + game.id.toString()).emit("game-start", game);
   }
 
   /*
