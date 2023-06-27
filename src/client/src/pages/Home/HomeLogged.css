@@ -24,15 +24,27 @@
     align-items: center;
     justify-content: center;
 
-    padding: 15px 30px 25px;
+    padding: 15px;
+    gap: 15px;
 
     border-radius: 8px;
     border: 2px solid #8449BF;
 }
 
+.game-mode-title {
+    display: flex;
+    width: 100%;
+    height: 20%;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
 .buttons {
     display: flex;
     width: 100%;
+    height: 80%;
     flex-direction: row;
     box-sizing: border-box;
 
@@ -69,46 +81,83 @@
     flex-direction: column;
 }
 
-.gamemode {
-    width: 80%;
-    height: 0;
-    padding-bottom: 80%;
+.game-mode-button {
+    width: 100%;
+    height: 100%;
     background-color: #858584;
     border-radius: 8px;
+    margin: 10px;
+    padding: 0;
+
+    font-size: 100%;
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
 }
 
-.gamemode-searching {
-    width: 80%;
-    height: 0;
-    padding-bottom: 80%;
+.matchmaking-button {
+    width: 100%;
+    height: 100%;
     background-color: #ff0000;
     border-radius: 8px;
     animation: pulse 1s infinite;
+
+    font-size: 200%;
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
+}
+
+.matchmaking-button-found {
+    width: 100%;
+    height: 100%;
+    background-color: #00ff00;
+    border-radius: 8px;
+    animation: pulse 1s infinite;
+
+    font-size: 200%;
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
+}
+
+.matchmaking-button-waiting {
+    width: 100%;
+    height: 100%;
+    background-color: #ffff00;
+    border-radius: 8px;
+    animation: pulse 1s infinite;
+
+    font-size: 200%;
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
 }
 
 @keyframes pulse {
     0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+        box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0.7);
     }
 
     70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+        box-shadow: inset 0 0 0 2em rgba(0, 0, 0, 0);
     }
 
     100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        box-shadow: inset 0 0 0 0 rgba(0, 0, 0, 0);
     }
 }
 
-.gamemode:hover {
-    background-color: var(--cyan);
+.game-mode-button:hover {
+    background-color: #676767;
 }
 
-.gamemode-searching:hover {
-    background-color: #700000;
+.matchmaking-button:hover {
+    background-color: #770000;
+}
+
+.matchmaking-button-found:hover {
+    background-color: #007700;
 }
 
 progress[value] {
