@@ -27,7 +27,7 @@ export class AuthService {
     const clientId =
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
-      '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';
+      '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';
     const redirectUri = 'http://127.0.0.1:5400/auth/42';
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
