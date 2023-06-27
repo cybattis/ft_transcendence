@@ -35,10 +35,10 @@ function App() {
         >
           <NavBar />
           <AuthForms />
+          <Outlet />
+          <Footer />
         </FormContext.Provider>
-        <Outlet />
       </AuthContext.Provider>
-      <Footer />
     </div>
   );
 }

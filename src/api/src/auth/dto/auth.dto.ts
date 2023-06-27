@@ -53,7 +53,4 @@ export class SigninDto {
 
   @IsString()
   password: string;
-
-  @IsBoolean()
-  remember: boolean;
 }

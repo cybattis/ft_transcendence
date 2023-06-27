@@ -10,7 +10,6 @@ import { Navigate } from "react-router-dom";
 interface SigninDto {
   email: string;
   password: string;
-  remember: boolean;
 }
 
 export default function Login() {
@@ -21,7 +20,6 @@ export default function Login() {
   const inputs = {
     email: "",
     password: "",
-    remember: false,
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,7 +27,6 @@ export default function Login() {
 
     inputs.email = e.currentTarget.email.value;
     inputs.password = e.currentTarget.password.value;
-    inputs.remember = e.currentTarget.rememberMe.checked;
   };
 
   const validateInput = async () => {
@@ -56,19 +53,18 @@ export default function Login() {
     const user: SigninDto = {
       email: inputs.email,
       password: inputs.password,
-      remember: inputs.remember,
     };
 
     await axios
       .post("http://localhost:5400/auth/signin", user)
       .then((res) => {
-        console.log(res);
         if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
         } else {
           setLoginForm(false);
           if (res.data) {
             localStorage.setItem("token", res.data.token);
+            localStorage.setItem("id", res.data.id);
             setAuthToken(res.data.token);
           } else if (!res.data) {
             localStorage.setItem("email", user.email);
@@ -96,22 +92,6 @@ export default function Login() {
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
-          <div className="formOption">
-            <label>
-              <input
-                type="checkbox"
-                name="rememberMe"
-                value="false"
-                defaultChecked={false}
-              />
-              Remember me
-            </label>
-            <a className="forgetPassLink" href="blank" target="_blank">
-              {" "}
-              {/*TODO: Send mail to reset password ? */}
-              Forgot your password?
-            </a>
-          </div>
           <button type="submit" className="submitButton">
             Login
           </button>

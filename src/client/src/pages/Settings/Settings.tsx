@@ -6,19 +6,22 @@ import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
 import { ErrorModal } from "../../components/Error/ErrorModal";
 import { Navigate, useLoaderData } from "react-router-dom";
-import { AuthContext } from "../../components/Auth/dto";
+import { AuthContext, FormContext } from "../../components/Auth/dto";
 import { HandleTokenError } from "../../utils/handleFetchError";
+import FaCode from "../../components/Auth/2fa";
 
 export function Settings() {
+  const { setAuthToken } = useContext(AuthContext);
+  const { codeForm, setCodeForm } = useContext(FormContext);
+
   const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
-  const { setAuthToken } = useContext(AuthContext);
 
   let [nickname, setNickname] = useState(data.nickname);
   let [firstName, setFirstName] = useState(data.firstname);
   let [lastName, setLastName] = useState(data.lastname);
   let [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
-  let [tfa, setTfa] = useState(data.authActivated);
+  let [tfaState, setTfaState] = useState(data.authActivated);
 
   let [error, setError] = useState("");
 
@@ -45,16 +48,12 @@ export function Settings() {
         },
       })
       .then((res) => {
-        console.log("image uploaded: ", res.data);
+        console.log("image uploaded: ", res.data); // TODO replace with modal
         setAvatarUrl(res.data);
       })
       .catch((error) => {
-        if (error.response.status === 403) {
-          return <HandleTokenError />;
-        } else {
-          console.log(error.response.data.message);
-          setError(error.response.data.message + "!");
-        }
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   }
 
@@ -77,44 +76,37 @@ export function Settings() {
       })
       .then(() => {})
       .catch((error) => {
-        if (error.response.status === 403) {
-          return <HandleTokenError />;
-        } else {
-          console.log(error.response.data.message);
-          setError(error.response.data.message + "!");
-        }
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   };
 
   const handle2fa = async () => {
     await axios
       .put(
-        "http://localhost:5400/user/update/2fa",
+        "http://localhost:5400/auth/2fa/update",
         {},
         {
           headers: {
-            "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             token: token,
           },
         }
       )
       .then((res) => {
-        console.log(res);
-        setTfa(!tfa);
+        setCodeForm(true);
       })
       .catch((error) => {
-        if (error.response.status === 403) {
-          return <HandleTokenError />;
-        } else {
-          console.log("Error: ", error);
-          setError("Server error... try again");
-        }
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   };
 
   return (
     <div className={"settingPage"}>
+      {codeForm ? (
+        <FaCode callback={setTfaState} callbackValue={!tfaState} />
+      ) : null}
       <ErrorModal error={error} onClose={() => setError("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
@@ -165,7 +157,7 @@ export function Settings() {
           </form>
           <hr id={"hr1"} />
           <button type="submit" className="submitButton" onClick={handle2fa}>
-            {!tfa ? "Activate 2FA" : "Deactivate 2FA"}
+            {!tfaState ? "Activate 2FA" : "Deactivate 2FA"}
           </button>
         </div>
       </div>

@@ -150,11 +150,10 @@ export function HomeLogged() {
         })
         .catch((error) => {
           if (error.response && error.response.status === 403) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("id");
+            localStorage.clear();
             setAuthToken(null);
             return <Navigate to={"/"} />;
-          } else console.log(error);
+          } else console.log(error.message);
         });
     }
 

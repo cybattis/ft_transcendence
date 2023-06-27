@@ -46,8 +46,7 @@ function Logged() {
       await axios.put("http://localhost:5400/user/disconnect", id, {});
     }
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("id");
+    localStorage.clear();
 
     await axios.put("http://localhost:5400/auth/disconnect", id, {
       headers: {

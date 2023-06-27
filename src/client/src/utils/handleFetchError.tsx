@@ -4,8 +4,7 @@ import { useContext } from "react";
 
 export function HandleTokenError() {
   const { setAuthToken } = useContext(AuthContext);
-  localStorage.removeItem("token");
-  localStorage.removeItem("id");
+  localStorage.clear();
   setAuthToken(null);
   return <Navigate to={"/"} />;
 }

@@ -12,10 +12,9 @@ export default function RedirectionPage() {
   if (token !== undefined && token !== null)
     localStorage.setItem("token", token);
 
-  setAuthToken(localStorage.getItem("token"));
-
   const decoded: TokenData = jwt_decode(token);
   localStorage.setItem("id", decoded.id.toString());
 
+  setAuthToken(localStorage.getItem("token"));
   return <Navigate to="/" />;
 }

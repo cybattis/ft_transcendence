@@ -8,7 +8,7 @@ import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
-import CodeConfirmation from "./pages/Confirmation/CodeConfirm";
+import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
@@ -49,10 +49,7 @@ const router = createBrowserRouter([
               );
               if (res.status === 400)
                 throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("id");
-              }
+              else if (res.status === 403) localStorage.clear();
               return res.json();
             },
           },
@@ -68,10 +65,7 @@ const router = createBrowserRouter([
                   },
                 }
               );
-              if (res.status === 403) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("id");
-              }
+              if (res.status === 403) localStorage.clear();
               return res.json();
             },
           },
@@ -84,10 +78,7 @@ const router = createBrowserRouter([
                   token: localStorage.getItem("token") || "",
                 },
               });
-              if (res.status === 403) {
-                localStorage.removeItem("token");
-                localStorage.removeItem("id");
-              }
+              if (res.status === 403) localStorage.clear();
               return res.json();
             },
           },
@@ -105,7 +96,7 @@ const router = createBrowserRouter([
           },
           {
             path: "code",
-            element: <CodeConfirmation />,
+            element: <TFARedirection />,
           },
         ],
       },

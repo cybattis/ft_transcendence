@@ -7,27 +7,23 @@ import { Navigate } from "react-router-dom";
 import { FormContext } from "./dto";
 import "./Auth.css";
 
-export default function FaCode() {
+export default function FaCode(props: { callback?: any; callbackValue?: any }) {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { setAuthToken } = useContext(AuthContext);
+  const { authed, setAuthToken } = useContext(AuthContext);
   const { setCodeForm } = useContext(FormContext);
+
   const inputs = {
     code: "",
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     inputs.code = e.currentTarget.code.value;
   };
 
   const isOnlyDigits = async (code: string) => {
-    let isValid = true;
-    for (let i: number = 0; code[i]; i++) {
-      if (code[i] < "0" || code[i] > "9") isValid = false;
-    }
-    return isValid;
+    return code.match(/^[0-9]+$/) != null;
   };
 
   const validateInput = async () => {
@@ -57,20 +53,30 @@ export default function FaCode() {
     };
 
     await axios
-      .post("http://localhost:5400/auth/2fa", loggin)
+      .post("http://localhost:5400/auth/2fa", loggin, {
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token"),
+        },
+      })
       .then((res) => {
+        setCodeForm(false);
         if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
-        } else {
+        } else if (!authed) {
           const data = res.data;
+          localStorage.setItem("id", data.id);
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
-          setCodeForm(false);
           localStorage.removeItem("email");
           return <Navigate to="/" />;
+        } else {
+          props.callback(props.callbackValue);
+          return;
         }
       })
       .catch((error) => {
+        setCodeForm(false);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
