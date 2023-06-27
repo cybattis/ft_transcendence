@@ -4,11 +4,12 @@ import axios from "axios";
 import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
-import { ErrorModal } from "../../components/Error/ErrorModal";
+import { ErrorModal } from "../../components/Modal/ErrorModal";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { AuthContext, FormContext } from "../../components/Auth/dto";
 import { HandleTokenError } from "../../utils/handleFetchError";
 import FaCode from "../../components/Auth/2fa";
+import { MessageModal } from "../../components/Modal/MessageModal";
 
 export function Settings() {
   const { setAuthToken } = useContext(AuthContext);
@@ -24,6 +25,7 @@ export function Settings() {
   let [tfaState, setTfaState] = useState(data.authActivated);
 
   let [error, setError] = useState("");
+  let [message, setMessage] = useState("");
 
   if (token === null) {
     setAuthToken(null);
@@ -48,7 +50,7 @@ export function Settings() {
         },
       })
       .then((res) => {
-        console.log("image uploaded: ", res.data); // TODO replace with modal
+        setMessage("Avatar updated!");
         setAvatarUrl(res.data);
       })
       .catch((error) => {
@@ -74,7 +76,9 @@ export function Settings() {
           token: token,
         },
       })
-      .then(() => {})
+      .then(() => {
+        setMessage("Update successful!");
+      })
       .catch((error) => {
         if (error.response.status === 403) return <HandleTokenError />;
         else setError(error.response.data.message + "!");
@@ -108,6 +112,7 @@ export function Settings() {
         <FaCode callback={setTfaState} callbackValue={!tfaState} />
       ) : null}
       <ErrorModal error={error} onClose={() => setError("")} />
+      <MessageModal error={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
