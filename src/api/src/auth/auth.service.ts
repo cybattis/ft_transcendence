@@ -2,6 +2,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  UnauthorizedException,
   Inject,
   NotFoundException,
 } from '@nestjs/common';
@@ -72,7 +73,12 @@ export class AuthService {
       (await this.usersService.isVerified(user?.email)) != null
     ) {
       if (user) {
-        const payload = { email: user.email, id: user.id };
+        await this.usersService.changeOnlineStatus(user.id, true);
+        const payload = {
+          email: user.email,
+          id: user.id,
+          username: user.nickname,
+        };
         return {
           token: await this.jwtService.signAsync(payload),
         };
@@ -105,7 +111,11 @@ export class AuthService {
           );
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
           await this.usersService.changeOnlineStatus(foundUser.id, true);
-          const payload = { email: user.email, id: foundUser.id };
+          const payload = {
+            email: user.email,
+            id: foundUser.id,
+            username: foundUser.nickname,
+          };
           return {
             token: await this.jwtService.signAsync(payload),
             id: foundUser.id,
@@ -168,7 +178,7 @@ export class AuthService {
     await this.usersService.updateValidation(id);
     const user = await this.usersService.findByID(id);
     if (user) {
-      const payload = { email: user.email, id: id };
+      const payload = { email: user.email, id: id, username: user.nickname };
       return {
         token: await this.jwtService.signAsync(payload),
         id: id,
@@ -214,7 +224,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (user) {
       await this.usersService.changeOnlineStatus(user.id, true);
-      const payload = { email: email, id: user.id };
+      const payload = { email: email, id: user.id, username: user.nickname };
       return {
         token: await this.jwtService.signAsync(payload),
         id: user.id,

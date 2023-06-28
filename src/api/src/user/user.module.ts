@@ -18,5 +18,6 @@ import { AuthModule } from '../auth/auth.module';
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService, JwtService],
+  exports: [UserService, TypeOrmModule.forFeature([User])],
 })
 export class UserModule {}

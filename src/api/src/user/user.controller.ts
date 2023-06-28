@@ -54,12 +54,12 @@ export class UserController {
 
   @Get('check/login/:input')
   async checkNicknameInUse(@Param('input') input: string) {
-    return this.userService.findByLogin(input);
+    return await this.userService.findByLogin(input);
   }
 
   @Get('check/email/:input')
   async checkEmailInUse(@Param('input') input: string) {
-    return this.userService.findByEmail(input);
+    return await this.userService.findByEmail(input);
   }
 
   @Put('disconnect')
@@ -70,13 +70,13 @@ export class UserController {
   @UseGuards(TokenGuard)
   @Get('leaderboard')
   async leaderboard(): Promise<UserInfo[]> {
-    return this.userService.leaderboard();
+    return await this.userService.leaderboard();
   }
 
   @UseGuards(TokenGuard)
   @Get('settings')
   async userSettings(@Headers('token') header: Headers): Promise<User | null> {
-    return this.userService.userSettings(header.toString());
+    return await this.userService.userSettings(header.toString());
   }
 
   @UseGuards(TokenGuard)
@@ -145,5 +145,85 @@ export class UserController {
     } catch (e) {
       throw new BadRequestException(e.message);
     }
+  }
+
+  @Get('notifs')
+  async getNotifs(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getNotifs(payload.id);
+  }
+
+  @Get('friends/online')
+  async getOnlineFriendsList(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getOnlineFriendsList(payload.id);
+  }
+
+  @Get('friends/offline')
+  async getOfflineFriendsList(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.getOfflineFriendsList(payload.id);
+  }
+
+  @Put('request/:id')
+  async requestFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.requestFriend(id, payload.id);
+  }
+
+  @Put('remove/:id')
+  async removeFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.removeFriend(id, payload.id);
+  }
+
+  @Put('block/:id')
+  async blockFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.blockFriend(id, payload.id);
+  }
+
+  @Put('unblock/:id')
+  async unblockFriend(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.unblockFriend(id, payload.id);
+  }
+
+  @Put('accept/:id')
+  async acceptFriendRequest(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.acceptFriendRequest(id, payload.id);
+  }
+
+  @Put('decline/:id')
+  async declineFriendRequest(@Param('id') id: number, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.declineFriendRequest(id, payload.id);
+  }
+
+  @Get('requested')
+  async requests(@Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.requests(payload.id);
   }
 }

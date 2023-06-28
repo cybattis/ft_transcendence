@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
+  OneToMany
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -26,7 +27,7 @@ export class User {
   @Column({ type: 'varchar', length: 100, unique: true, select: false })
   email: string;
 
-  @Column({ type: 'boolean', select: false })
+  @Column({ type: 'boolean', select: true })
   IsIntra: boolean;
 
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
@@ -65,6 +66,7 @@ export class User {
   ranking: number;
 
   // Player games
+  // ============================================================
   @ManyToMany(() => Game, (game: Game) => game.players, {
     eager: true,
     onDelete: 'CASCADE',
@@ -75,4 +77,21 @@ export class User {
 
   @Column({ type: 'integer', default: 0 })
   totalGameWon: number;
+
+  // Friends
+  // ============================================================
+  @Column('int', { array: true, default: [] })
+  friendsId: number[];
+
+  @Column('int', { array: true, default: [] })
+  requestedId: number[];
+
+  @Column('int', { array: true, default: [] })
+  blockedId: number[];
+
+  @Column('int', { array: true, default: [] })
+  blockedById: number[];
+
+  @Column({type: 'varchar', default: '' })
+  websocket: string;
 }

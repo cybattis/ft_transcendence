@@ -57,6 +57,10 @@ export class AuthController {
           return res.redirect('http://localhost:3000/loading?' + token.token);
         }
         return res.redirect('http://localhost:3000/code?' + dataUser.email);
+      } else if (user && !user.isVerified) {
+        return new BadRequestException(
+          'You already have an account. Go verify your mailbox.',
+        );
       }
 
       throw new BadRequestException('Email already in use');

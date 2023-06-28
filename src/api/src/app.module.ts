@@ -7,16 +7,23 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
-import { ChatGateway } from './chat/chat.gateway';
+import { Chat } from './chat/entity/Chat.entity';
+import {ChannelModule} from "./channel/channel.module";
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
+import { ScheduleModule } from "@nestjs/schedule";
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    ChatModule,
+    GameModule,
+    ChannelModule,
     CacheModule.register({ isGlobal: true}),
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'postgres',
@@ -24,12 +31,12 @@ import { Game } from './game/entity/Game.entity';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [User, Game],
+      entities: [User, Game, Chat],
       synchronize: true,
     }),
-    GameModule,
+    TypeOrmModule.forFeature([User, Chat]),
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  providers: [AppService],
 })
 export class AppModule {}

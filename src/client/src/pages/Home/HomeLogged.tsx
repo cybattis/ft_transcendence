@@ -1,7 +1,7 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
-import { Chat } from "../../components/Chat/Chat";
-import { useContext, useEffect, useState } from "react";
+import ChatClient from "../Chat/Chat";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Link, Navigate } from "react-router-dom";
@@ -10,6 +10,9 @@ import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { AuthContext } from "../../components/Auth/dto";
+import { Friends } from "../../components/Friends/Friends";
+import { SocketContext } from "../../components/Auth/dto";
+import { io } from "socket.io-client";
 
 function GameMode(props: { name: string; gameType: GameType }) {
   const content = {
@@ -123,6 +126,10 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
+  const { socketId, setSocketId } = useContext(SocketContext);
+  setSocketId(io("http://localhost:5400").id);
+  console.log(socketId);
+
   const { setAuthToken } = useContext(AuthContext);
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
@@ -133,6 +140,10 @@ export function HomeLogged() {
     xp: 0,
     ranking: 0,
     games: [],
+    friendsId: [],
+    requestedId: [],
+    blockedId: [],
+    blockedById: [],
   });
 
   useEffect(() => {
@@ -171,7 +182,10 @@ export function HomeLogged() {
         <GameLauncher />
         <UserProfile data={data} />
       </div>
-      <Chat />
+      <div className="rightside">
+        <ChatClient />
+        <Friends />
+      </div>
     </div>
   );
 }

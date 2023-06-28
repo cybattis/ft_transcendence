@@ -92,3 +92,34 @@
 .disconnect:hover {
     background-color: var(--purple-dark);
 }
+
+.notifs {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+
+    width: 110px;
+    height: 30px;
+    border-radius: 8px;
+
+    color: white;
+    justify-content: center;
+    align-items: center;
+
+    border: none;
+    background-color: transparent;
+
+    font-family: "Space Mono", monospace;
+    font-size: 15px;
+    font-weight: bold;
+
+    margin-right: 10px;
+}
+
+.img {
+    display: flex;
+}
+
+.notifs:hover{
+    background: var(--cyan);;
+}
