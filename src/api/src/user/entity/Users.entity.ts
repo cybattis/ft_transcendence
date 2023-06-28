@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
-  OneToMany
+  OneToMany,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -18,13 +18,13 @@ export class User {
   @Column({ type: 'varchar', length: 30, unique: true })
   nickname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   firstname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   lastname: string;
 
-  @Column({ type: 'varchar', length: 100, unique: true, select: false })
+  @Column({ type: 'varchar', length: 100, unique: true })
   email: string;
 
   @Column({ type: 'boolean', select: true })
@@ -92,6 +92,6 @@ export class User {
   @Column('int', { array: true, default: [] })
   blockedById: number[];
 
-  @Column({type: 'varchar', default: '' })
+  @Column({ type: 'varchar', default: '' })
   websocket: string;
 }

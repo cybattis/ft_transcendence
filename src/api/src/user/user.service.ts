@@ -30,7 +30,9 @@ export class UserService implements OnModuleInit {
   }
 
   async findByID(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id: id } });
+    return this.usersRepository.findOne({
+      where: { id: id },
+    });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -48,9 +50,19 @@ export class UserService implements OnModuleInit {
     return this.usersRepository.find();
   }
 
-  async userSettings(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({
+  async getUserEmail(id: number) {
+    const user: User | null = await this.usersRepository.findOne({
       where: { id: id },
+      select: ['id', 'email'],
+    });
+    if (!user) throw new BadRequestException('User does not exist');
+    return user;
+  }
+
+  async userSettings(token: string): Promise<User | null> {
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    return this.usersRepository.findOne({
+      where: { id: decoded.id },
       select: [
         'id',
         'nickname',
@@ -63,7 +75,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(id: number): Promise<UserInfo | any> {
+  async userInfo(token: string, id: number): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -75,17 +87,17 @@ export class UserService implements OnModuleInit {
         xp: true,
         games: true,
         friendsId: true,
-        requestedId:true,
+        requestedId: true,
         blockedId: true,
         blockedById: true,
-        websocket: true
+        websocket: true,
       },
       where: {
         id: id,
       },
     });
 
-    if (!user) return 'User not found';
+    if (!user) throw new BadRequestException('User does not exist');
     user.games = await this.gameService.fetchUserGames(user);
     return user;
   }
@@ -131,13 +143,10 @@ export class UserService implements OnModuleInit {
   }
 
   async update2FA(token: string) {
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    const user = await this.usersRepository.findOne({
-      where: { id: decoded.id },
-    });
+    const user = await this.decodeToken(token);
     if (!user) return null;
 
-    return await this.usersRepository.update(decoded.id, {
+    return await this.usersRepository.update(user.id, {
       authActivated: !user.authActivated,
     });
   }
@@ -147,14 +156,19 @@ export class UserService implements OnModuleInit {
   }
 
   async requestFriend(friendId: number, myId: number) {
-    const friend: any = await this.usersRepository.findOne({where : {id: myId}});
-    const user: any = await this.usersRepository.findOne({where : {id: friendId}});
-    if (user.requestedId)
-    {
-      for (let i = 0; user.requestedId[i]; i ++)
-      {
-        if (((user.requestedId[i] === friend.id) === true) || ((user.friendsId[i] === friend.id) === true))
-          return ;
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: myId },
+    });
+    const user: any = await this.usersRepository.findOne({
+      where: { id: friendId },
+    });
+    if (user.requestedId) {
+      for (let i = 0; user.requestedId[i]; i++) {
+        if (
+          user.requestedId[i] === friend.id ||
+          user.friendsId[i] === friend.id
+        )
+          return;
       }
     }
     user.requestedId.push(friend.id);
@@ -162,61 +176,55 @@ export class UserService implements OnModuleInit {
   }
 
   async getOnlineFriendsList(id: number) {
-    const user: any = await this.usersRepository.findOne({where : {id: id}});
-    if (user && user.friendsId)
-    {
-      let friends: User[] = [];
-      for (let i = 0; user.friendsId[i]; i ++)
-      {
-          let friend: any = await this.usersRepository.findOne({
-            select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
-            where : {id: user.friendsId[i]}});
-          if (friend.online === true)
-            friends.push(friend);
+    const user: any = await this.usersRepository.findOne({ where: { id: id } });
+    if (user && user.friendsId) {
+      const friends: User[] = [];
+      for (let i = 0; user.friendsId[i]; i++) {
+        const friend: any = await this.usersRepository.findOne({
+          select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
+          where: { id: user.friendsId[i] },
+        });
+        if (friend.online === true) friends.push(friend);
       }
-      return (friends);
+      return friends;
     }
     return null;
   }
 
   async getOfflineFriendsList(id: number) {
-    const user: any = await this.usersRepository.findOne({where : {id: id}});
-    if (user && user.friendsId)
-    {
-      let friends: User[] = [];
-      for (let i = 0; user.friendsId[i]; i ++)
-      {
-        let friend: any = await this.usersRepository.findOne({
+    const user: any = await this.usersRepository.findOne({ where: { id: id } });
+    if (user && user.friendsId) {
+      const friends: User[] = [];
+      for (let i = 0; user.friendsId[i]; i++) {
+        const friend: any = await this.usersRepository.findOne({
           select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
-          where : {id: user.friendsId[i]}});
-        if (friend.online === false)
-          friends.push(friend);
+          where: { id: user.friendsId[i] },
+        });
+        if (friend.online === false) friends.push(friend);
       }
-      return (friends);
+      return friends;
     }
     return null;
   }
 
   async removeFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({where : {id: myId}});
-    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
-    if (me.friendsId)
-    {
-      for (let i = 0; me.friendsId[i]; i ++)
-      {
-        if (me.friendsId[i] === friend.id)
-        {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: friendId },
+    });
+    if (me.friendsId) {
+      for (let i = 0; me.friendsId[i]; i++) {
+        if (me.friendsId[i] === friend.id) {
           const newFriends: number[] = me.friendsId.splice(i, 1);
-          await this.usersRepository.update(me.id, {friendsId: newFriends});
+          await this.usersRepository.update(me.id, { friendsId: newFriends });
           await this.usersRepository.save(me);
-          if (friend.friendsId)
-          {
-            for (let i = 0; friend.friendsId[i]; i ++)
-            {
-              if (friend.friendsId[i] === me.id)
-              {
+          if (friend.friendsId) {
+            for (let i = 0; friend.friendsId[i]; i++) {
+              if (friend.friendsId[i] === me.id) {
                 const newFriends: number[] = friend.friendsId.splice(i, 1);
-                await this.usersRepository.update(friend.id, {friendsId: newFriends});
+                await this.usersRepository.update(friend.id, {
+                  friendsId: newFriends,
+                });
                 return await this.usersRepository.save(friend);
               }
             }
@@ -229,8 +237,10 @@ export class UserService implements OnModuleInit {
 
   async blockFriend(friendId: number, myId: number) {
     await this.removeFriend(friendId, myId);
-    const me: any = await this.usersRepository.findOne({where : {id: myId}});
-    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: friendId },
+    });
     me.blockedId.push(friend.id);
     friend.blockedById.push(me.id);
     await this.usersRepository.save(friend);
@@ -238,25 +248,23 @@ export class UserService implements OnModuleInit {
   }
 
   async unblockFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({where : {id: myId}});
-    const friend: any = await this.usersRepository.findOne({where : {id: friendId}});
-    if (me.blockedId)
-    {
-      for (let i = 0; me.blockedId[i]; i ++)
-      {
-        if (me.blockedId[i] === friend.id)
-        {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: friendId },
+    });
+    if (me.blockedId) {
+      for (let i = 0; me.blockedId[i]; i++) {
+        if (me.blockedId[i] === friend.id) {
           const newBlocked: number[] = me.blockedId.splice(i, 1);
-          await this.usersRepository.update(me.id, {blockedId: newBlocked});
+          await this.usersRepository.update(me.id, { blockedId: newBlocked });
           await this.usersRepository.save(me);
-          if (friend.blockedById)
-          {
-            for (let i = 0; friend.blockedById[i]; i ++)
-            {
-              if (friend.blockedById[i] === me.id)
-              {
+          if (friend.blockedById) {
+            for (let i = 0; friend.blockedById[i]; i++) {
+              if (friend.blockedById[i] === me.id) {
                 const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
-                await this.usersRepository.update(friend.id, {blockedById: newBlockedBy});
+                await this.usersRepository.update(friend.id, {
+                  blockedById: newBlockedBy,
+                });
                 return await this.usersRepository.save(friend);
               }
             }
@@ -268,34 +276,34 @@ export class UserService implements OnModuleInit {
   }
 
   async requests(id: number) {
-    const user: any = await this.usersRepository.findOne({where : {id: id}});
-    if (user && user.friendsId)
-    {
-      let friends: User[] = [];
-      for (let i = 0; user.requestedId[i]; i ++)
-      {
-        let friend: any = await this.usersRepository.findOne({
+    const user: any = await this.usersRepository.findOne({ where: { id: id } });
+    if (user && user.friendsId) {
+      const friends: User[] = [];
+      for (let i = 0; user.requestedId[i]; i++) {
+        const friend: any = await this.usersRepository.findOne({
           select: ['nickname', 'avatarUrl', 'id'],
-          where : {id: user.requestedId[i]}});
-          friends.push(friend);
+          where: { id: user.requestedId[i] },
+        });
+        friends.push(friend);
       }
       console.log(friends);
-      return (friends);
+      return friends;
     }
     return null;
   }
 
   async acceptFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({where : {id: myId}});
-    const friend: any = await this.usersRepository.findOne({where : {id: idFriend}});
-    if (me.requestedId)
-    {
-      for (let i = 0; me.requestedId[i]; i ++)
-      {
-        if (me.requestedId[i] === friend.id)
-        {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: idFriend },
+    });
+    if (me.requestedId) {
+      for (let i = 0; me.requestedId[i]; i++) {
+        if (me.requestedId[i] === friend.id) {
           const newRequested: number[] = me.requestedId.splice(i, 1);
-          await this.usersRepository.update(me.id, {requestedId: newRequested});
+          await this.usersRepository.update(me.id, {
+            requestedId: newRequested,
+          });
           me.friendsId.push(friend.id);
           friend.friendsId.push(me.id);
           await this.usersRepository.save(friend);
@@ -307,16 +315,17 @@ export class UserService implements OnModuleInit {
   }
 
   async declineFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({where : {id: myId}});
-    const friend: any = await this.usersRepository.findOne({where : {id: idFriend}});
-    if (me.requestedId)
-    {
-      for (let i = 0; me.requestedId[i]; i ++)
-      {
-        if (me.requestedId[i] === friend.id)
-        {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { id: idFriend },
+    });
+    if (me.requestedId) {
+      for (let i = 0; me.requestedId[i]; i++) {
+        if (me.requestedId[i] === friend.id) {
           const newRequested: number[] = me.requestedId.splice(i, 1);
-          await this.usersRepository.update(me.id, {requestedId: newRequested});
+          await this.usersRepository.update(me.id, {
+            requestedId: newRequested,
+          });
           return await this.usersRepository.save(me);
         }
       }
@@ -325,36 +334,32 @@ export class UserService implements OnModuleInit {
   }
 
   async addWebSocket(nickname: string, socket: string) {
-    const user: any = await this.usersRepository.findOne({where : {nickname: nickname}});
-    if (user)
-      await this.usersRepository.update(user.id, {websocket: socket});
+    const user: any = await this.usersRepository.findOne({
+      where: { nickname: nickname },
+    });
+    if (user) await this.usersRepository.update(user.id, { websocket: socket });
   }
 
   async getNotifs(myId: number) {
-    const user: any = await this.usersRepository.findOne({where: {id: myId}});
-    if (user.requestedId && user.requestedId[0])
-      return true;
+    const user: any = await this.usersRepository.findOne({
+      where: { id: myId },
+    });
+    if (user.requestedId && user.requestedId[0]) return true;
     return null;
   }
 
   async updateAvatar(path: string, token: string) {
-    if (!token) return null;
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    const user = await this.usersRepository.findOne({
-      where: { id: decoded.id },
-      relations: ['games'],
-    });
+    const user = await this.decodeToken(token);
     if (!user) return null;
+
     user.avatarUrl = 'http://localhost:5400/' + path;
     await this.usersRepository.save(user);
 
     return user.avatarUrl;
   }
 
-  async updateUserSettings(body: UserSettings, token: TokenData) {
-    const user = await this.usersRepository.findOne({
-      where: { id: token.id },
-    });
+  async updateUserSettings(body: UserSettings, token: string) {
+    const user = await this.decodeToken(token);
     if (!user) return null;
 
     if (user.nickname !== body.nickname) {
@@ -368,6 +373,16 @@ export class UserService implements OnModuleInit {
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
+    return user;
+  }
+
+  async decodeToken(token: string): Promise<User | null> {
+    if (!token) return null;
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    const user = await this.usersRepository.findOne({
+      where: { id: decoded.id },
+    });
+    if (!user) return null;
     return user;
   }
 }

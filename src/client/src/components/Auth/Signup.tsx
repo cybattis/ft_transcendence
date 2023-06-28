@@ -135,7 +135,7 @@ export default function Signup() {
       });
   };
 
-  //remettre alert email
+  //TODO: remettre alert email
 
   return (
     <div className="background">

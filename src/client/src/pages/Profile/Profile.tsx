@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from "react";
 import "./Profile.css";
 import axios from "axios";
-import {io} from 'socket.io-client';
-import { Navigate, useLoaderData } from "react-router-dom";
+import { io } from "socket.io-client";
+import { useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import { XPBar } from "../../components/XPBar/XPBar";
@@ -12,7 +12,8 @@ import {
 } from "../../components/Game/GameStats/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
-import jwt from "jwt-decode";
+import { AuthContext } from "../../components/Auth/dto";
+import Home from "../Home/Home";
 import jwt_decode from "jwt-decode";
 
 function RemoveFriend(data: any) {
@@ -22,52 +23,63 @@ function RemoveFriend(data: any) {
   const payload: any = jwt_decode(token);
 
   useEffect(() => {
-    if (payload.id === data.data.id.toString())
-      setIsMe(true);
-  });
+    if (payload.id === data.data.id.toString()) setIsMe(true);
+  }, [data.data.id, payload.id]);
 
   const handleRemoveButton = async () => {
-    await axios.put(`http://localhost:5400/user/remove/${data.data.id}`, null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-    }
-    })
-    .catch(error => {
-      console.log(error);
-    })
-  }
+    await axios
+      .put(`http://localhost:5400/user/remove/${data.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   const handleBlockButton = async () => {
-    await axios.put(`http://localhost:5400/user/block/${data.data.id}`, null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-    }
-    })
-    .catch(error => {
-      console.log(error);
-    })
-  }
+    await axios
+      .put(`http://localhost:5400/user/block/${data.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   //Si jamais la target refresh sa page et pas nous notifs pas envoye
-  if (isMe === false && !data.data.blockedId.includes(parseInt(payload.id)))
-  {
-    return <>
-        <button className="friendButton" type="button" onClick={handleRemoveButton}>Remove Friend</button>
-        <button className="friendButton" type="button" onClick={handleBlockButton}>Block Friend</button>
-    </>
+  if (!isMe && !data.data.blockedId.includes(parseInt(payload.id))) {
+    return (
+      <>
+        <button
+          className="friendButton"
+          type="button"
+          onClick={handleRemoveButton}
+        >
+          Remove Friend
+        </button>
+        <button
+          className="friendButton"
+          type="button"
+          onClick={handleBlockButton}
+        >
+          Block Friend
+        </button>
+      </>
+    );
   }
   return <></>;
 }
 
+// TODO: ?
 function isBlocked(blockList: any, id: number) {
-  for (let i = 0; blockList[i]; i ++)
-  {
-    if (blockList[i] == id)
-      return (true);
+  for (let i = 0; blockList[i]; i++) {
+    if (blockList[i] == id) return true;
   }
-  return (false);
+  return false;
 }
 
 function AddFriend(data: any) {
@@ -76,84 +88,99 @@ function AddFriend(data: any) {
 
   const token: any = localStorage.getItem("token");
   const payload: any = jwt_decode(token);
-  
+
   useEffect(() => {
     if (payload.id === data.data.id || payload.id === data.data.id.toString())
       setIsMe(true);
-    const newSocket = io('http://localhost:5400');
-    socketRef.current = newSocket;
-  });
+    socketRef.current = io("http://localhost:5400");
+  }, [payload.id, data.data.id]);
 
   const handleButton = async () => {
-    await axios.put(`http://localhost:5400/user/request/${data.data.id}`, null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-    }
-    })
-    .then((res) => {
-      const name: string = payload.username;
-      const mess = {friend: data, from: name};
-      socketRef.current.emit('friendRequest', mess);
-    })
-    .catch(error => {
-      console.log(error);
-    })
-  }
+    await axios
+      .put(`http://localhost:5400/user/request/${data.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        const name: string = payload.username;
+        const mess = { friend: data, from: name };
+        socketRef.current.emit("friendRequest", mess);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   const handleUnblockButton = async () => {
-    await axios.put(`http://localhost:5400/user/unblock/${data.data.id}`, null,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-    }
-    })
-    .catch(error => {
-      console.log(error);
-    })
-  }
+    await axios
+      .put(`http://localhost:5400/user/unblock/${data.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
-  if (isMe === false && !data.data.requestedId.includes(parseInt(payload.id)) && !data.data.blockedById.includes(parseInt(payload.id)))
-  {
-    return <>
-        <button className="friendButton" type="button" onClick={handleButton}>Add Friend</button>
-    </>
-  }
-  else if (data.data.blockedById.includes(parseInt(payload.id)))
-  {
-    return <>
-        <button className="friendButton" type="button" onClick={handleUnblockButton}>Unblock</button>
-    </>
+  if (
+    !isMe &&
+    !data.data.requestedId.includes(parseInt(payload.id)) &&
+    !data.data.blockedById.includes(parseInt(payload.id))
+  ) {
+    return (
+      <>
+        <button className="friendButton" type="button" onClick={handleButton}>
+          Add Friend
+        </button>
+      </>
+    );
+  } else if (data.data.blockedById.includes(parseInt(payload.id))) {
+    return (
+      <>
+        <button
+          className="friendButton"
+          type="button"
+          onClick={handleUnblockButton}
+        >
+          Unblock
+        </button>
+      </>
+    );
   }
   return <></>;
 }
 
 export function Profile() {
+  let data = useLoaderData() as UserInfo;
+  const { setAuthToken } = useContext(AuthContext);
   const [isFriend, setIsFriend] = useState(false);
-  // TODO: check token validity
 
   const token: any = localStorage.getItem("token");
-  const payload: any = jwt(token);
+  const payload: any = jwt_decode(token);
 
   useEffect(() => {
-    if (data.friendsId.includes(parseInt(payload.id)))
-      setIsFriend(true);
-  });
-
-  let data = useLoaderData() as UserInfo;
-  console.log(data);
+    if (data.friendsId.includes(parseInt(payload.id))) setIsFriend(true);
+  }, [data.friendsId, payload.id]);
 
   if (token === null) {
-    return <Navigate to="/" />;
+    setAuthToken(null);
+    return <Home />;
   }
+
   const winrate: number = calculateWinrate(data);
 
-  if (data.blockedId.includes(parseInt(payload.id)))
-  {
-    return <div  className="blocked">
-      <h3>This User Blocked you. You canno't visit his profilePage anymore.</h3>
-    </div>
+  if (data.blockedId.includes(parseInt(payload.id))) {
+    return (
+      <div className="blocked">
+        <h3>
+          This User Blocked you. You canno't visit his profilePage anymore.
+        </h3>
+      </div>
+    );
   }
+
   return (
     <div className={"profilePage"}>
       <div id={"infobox"}>
@@ -161,7 +188,11 @@ export function Profile() {
         <div id="info">
           <div id="header">
             <h1 id={"nickname"}>{data.nickname}</h1>
-            {(isFriend === false) ? <AddFriend data={data}/> : <RemoveFriend data={data}/>}
+            {!isFriend ? (
+              <AddFriend data={data} />
+            ) : (
+              <RemoveFriend data={data} />
+            )}
           </div>
           <div>LVL {data.level}</div>
           <p>{data.xp} xp</p>
@@ -189,7 +220,7 @@ export function Profile() {
         <div className={"matchesTable"}>
           {data.games?.map((game: GameStatsDto, index) => (
             <div key={index}>
-              <GameStatsItem game={game} id={data.id} />
+              <GameStatsItem game={game} id={data!.id} />
             </div>
           ))}
         </div>

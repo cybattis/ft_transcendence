@@ -2,8 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
-import notifsLogo from "../../resource/logo-notifications.png"
-import notifsLogoOn from "../../resource/logo-notifications-on.png"
+import notifsLogo from "../../resource/logo-notifications.png";
+import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { AuthContext, FormContext, NotifContext } from "../Auth/dto";
 import { Link } from "react-router-dom";
 import jwt_decode from "jwt-decode";
@@ -30,7 +30,7 @@ function Unlogged() {
         Login
       </button>
       <button className="signup-button" onClick={toggleSignupForm}>
-      <img style={logoSignup} src={logo} alt="logo" />
+        <img style={logoSignup} src={logo} alt="logo" />
         SignUp
       </button>
     </>
@@ -43,35 +43,35 @@ function Img() {
   const logoNotifs = {
     width: "45px",
     height: "45px",
-  }
+  };
 
-    const fetchNotifs = async () => {
-      let JWTToken = localStorage.getItem("token");
-      await axios.get("http://localhost:5400/user/notifs", {
+  const fetchNotifs = async () => {
+    let JWTToken = localStorage.getItem("token");
+    await axios
+      .get("http://localhost:5400/user/notifs", {
         headers: { Authorization: `Bearer ${JWTToken}` },
       })
-      .then(res => {
-        if (res.data)
-          setNotif(true);
+      .then((res) => {
+        if (res.data) setNotif(true);
       });
-    };
+  };
 
-  fetchNotifs();
+  fetchNotifs().then(() => {});
 
-  if (notif === false)
-    return <img style={logoNotifs} src={notifsLogo}></img>;
-  return <img style={logoNotifs} src={notifsLogoOn}></img>
+  if (!notif)
+    return <img style={logoNotifs} src={notifsLogo} alt={"logo notif"}></img>;
+  return <img style={logoNotifs} src={notifsLogoOn} alt={"logo notif"}></img>;
 }
 
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
   const { notif } = useContext(NotifContext);
   const [notifs, setNotifs] = useState(false);
+  const id = localStorage.getItem("id");
 
   useEffect(() => {
     console.log(notif);
-    if (notif === true)
-      setNotifs(true);
+    if (notif) setNotifs(true);
   }, [notif]);
 
   let decoded: Decoded | null = null;
@@ -83,18 +83,29 @@ function Logged() {
   }
 
   const handleDisconnect = async () => {
-    let JWTToken = localStorage.getItem("token");
-    localStorage.removeItem("token");
+    localStorage.removeItem("id");
     setAuthToken(null);
-    await axios.put("http://localhost:5400/user/disconnect", false, {
-      headers: { Authorization: `Bearer ${JWTToken}` },
+
+    const token: string | null = localStorage.getItem("token");
+    if (!token) {
+      await axios.put("http://localhost:5400/user/disconnect", id, {});
+    }
+
+    localStorage.clear();
+
+    await axios.put("http://localhost:5400/auth/disconnect", id, {
+      headers: {
+        token: token,
+      },
     });
   };
 
   return (
     <>
       <Link to={`/notifications/${decoded?.id}`} className="notifs">
-        <div className="img"><Img /></div>
+        <div className="img">
+          <Img />
+        </div>
         Notifs
       </Link>
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>

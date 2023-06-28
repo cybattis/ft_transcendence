@@ -27,26 +27,33 @@ function App() {
 
   return (
     <div className="app">
-      <SocketContext.Provider 
-        value={{ socketId: socketId, setSocketId: setSocketId}}
+      <SocketContext.Provider
+        value={{ socketId: socketId, setSocketId: setSocketId }}
       >
-        <NotifContext.Provider
-          value={{ notif: notif, setNotif: setNotif}}
-        >
+        <NotifContext.Provider value={{ notif: notif, setNotif: setNotif }}>
           <AuthContext.Provider
             value={{ authed: authToken, setAuthToken: setAuthToken }}
           >
             <FormContext.Provider
-              value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm, chatForm, setChatForm }}
+              value={{
+                loginForm,
+                setLoginForm,
+                signupForm,
+                setSignupForm,
+                codeForm,
+                setCodeForm,
+                chatForm,
+                setChatForm,
+              }}
             >
               <NavBar />
               <Outlet />
               <AuthForms />
+              <Footer />
             </FormContext.Provider>
           </AuthContext.Provider>
         </NotifContext.Provider>
       </SocketContext.Provider>
-      <Footer />
     </div>
   );
 }

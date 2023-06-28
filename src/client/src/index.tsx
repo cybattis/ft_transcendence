@@ -8,7 +8,7 @@ import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
-import CodeConfirmation from "./pages/Confirmation/CodeConfirm";
+import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
@@ -38,10 +38,20 @@ const router = createBrowserRouter([
           {
             path: "profile/:id",
             element: <Profile />,
+            errorElement: <Error404 />,
             loader: async ({ request, params }) => {
-              return fetch(`http://localhost:5400/user/profile/${params.id}`, {
-                signal: request.signal,
-              });
+              const res = await fetch(
+                `http://localhost:5400/user/profile/${params.id}`,
+                {
+                  headers: {
+                    token: localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 400)
+                throw new Response("User not found", { status: 400 });
+              else if (res.status === 403) localStorage.clear();
+              return res.json();
             },
           },
           {
@@ -51,8 +61,30 @@ const router = createBrowserRouter([
           {
             path: "leaderboard",
             element: <Leaderboard />,
-            loader: async () => {
-              return fetch(`http://localhost:5400/user/leaderboard`);
+            loader: async ({ request, params }) => {
+              const res = await fetch(
+                `http://localhost:5400/user/leaderboard`,
+                {
+                  headers: {
+                    token: localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 403) localStorage.clear();
+              return res.json();
+            },
+          },
+          {
+            path: "settings",
+            element: <Settings />,
+            loader: async ({ request, params }) => {
+              const res = await fetch(`http://localhost:5400/user/settings/`, {
+                headers: {
+                  token: localStorage.getItem("token") || "",
+                },
+              });
+              if (res.status === 403) localStorage.clear();
+              return res.json();
             },
           },
           {
@@ -69,11 +101,7 @@ const router = createBrowserRouter([
           },
           {
             path: "code",
-            element: <CodeConfirmation />,
-          },
-          {
-            path: "settings",
-            element: <Settings />,
+            element: <TFARedirection />,
           },
         ],
       },

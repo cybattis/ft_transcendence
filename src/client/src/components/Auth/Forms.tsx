@@ -15,7 +15,6 @@ export function AuthForms() {
       if (signupForm) setSignupForm(false);
       if (codeForm) setCodeForm(false);
       if (chatForm) setChatForm(false);
-      console.log("closing forms");
     }
   };
 
@@ -24,5 +23,16 @@ export function AuthForms() {
     return () => document.removeEventListener("keydown", keyPress);
   });
 
-  return <>{loginForm ? <Login /> : signupForm ? <Signup /> : codeForm ? <FaCode /> : chatForm ? <ChatAction /> : null}</>;
+  return (
+    <>
+      {loginForm ? (
+        <Login />
+      ) : signupForm ? (
+        <Signup />
+      ) : codeForm ? (
+        <FaCode showCallback={setCodeForm}/>
+      ) : chatForm ?
+        <ChatAction /> : null}
+    </>
+  );
 }

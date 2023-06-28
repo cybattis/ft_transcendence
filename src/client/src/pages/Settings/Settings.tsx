@@ -1,50 +1,39 @@
 import "./Settings.css";
 import { Avatar } from "../../components/Avatar";
 import axios from "axios";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
-import { ErrorModal } from "../../components/Error/ErrorModal";
+import { ErrorModal } from "../../components/Modal/ErrorModal";
+import { Navigate, useLoaderData } from "react-router-dom";
+import { AuthContext } from "../../components/Auth/dto";
+import { HandleTokenError } from "../../utils/handleFetchError";
+import FaCode from "../../components/Auth/2fa";
+import { MessageModal } from "../../components/Modal/MessageModal";
 
 export function Settings() {
-  // TODO: check token validity
+  const { setAuthToken } = useContext(AuthContext);
+  const [ codeForm, setCodeForm ] = useState(false);
+
+  const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
 
-  let [nickname, setNickname] = useState("");
-  let [firstName, setFirstName] = useState("");
-  let [lastName, setLastName] = useState("");
-  let [email, setEmail] = useState("");
-  let [avatarUrl, setAvatarUrl] = useState("");
-  let [tfa, setTfa] = useState(false);
+  let [nickname, setNickname] = useState(data.nickname);
+  let [firstName, setFirstName] = useState(data.firstname);
+  let [lastName, setLastName] = useState(data.lastname);
+  let [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
+  let [tfaState, setTfaState] = useState(data.authActivated);
 
   let [error, setError] = useState("");
+  let [message, setMessage] = useState("");
 
-  useEffect(() => {
-    async function fetchData(token: string) {
-      if (token === null) return;
-      await axios
-        .get(`http://localhost:5400/user/settings/${token}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-        .then((response) => {
-          setNickname(response.data.nickname);
-          setFirstName(response.data.firstname);
-          setLastName(response.data.lastname);
-          setEmail(response.data.email);
-          setAvatarUrl(response.data.avatarUrl);
-          setTfa(response.data.authActivated);
-        });
-    }
-
-    fetchData(token!).then(() => {});
-  }, []);
+  if (token === null) {
+    setAuthToken(null);
+    return <Navigate to={"/"} />;
+  }
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files === null) return;
-    console.log("File: ", event.target.files[0]);
     if (event.target.files[0].size > 2097152) {
       setError("File has to be less than 2MB");
       return;
@@ -53,18 +42,19 @@ export function Settings() {
     formData.append("avatar", event.target.files[0]);
 
     axios
-      .post(`http://localhost:5400/user/upload/${token}`, formData, {
+      .post(`http://localhost:5400/user/upload/avatar`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          token: token,
         },
       })
       .then((res) => {
-        console.log("image uploaded: ", res.data);
+        setMessage("Avatar updated!");
         setAvatarUrl(res.data);
       })
       .catch((error) => {
-        console.log(error.response.data.message);
-        setError(error.response.data.message + "!");
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   }
 
@@ -75,7 +65,6 @@ export function Settings() {
       nickname: nickname,
       firstname: firstName,
       lastname: lastName,
-      email: email,
     };
 
     if (!user.nickname[0])
@@ -92,39 +81,43 @@ export function Settings() {
           token: token,
         },
       })
-      .then(() => {})
+      .then(() => {
+        setMessage("Update successful!");
+      })
       .catch((error) => {
-        console.log("Error: ", error.response.data);
-        setError(error.response.data.message + "!");
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   };
 
   const handle2fa = async () => {
     await axios
       .put(
-        "http://localhost:5400/user/update/2fa",
+        "http://localhost:5400/auth/2fa/update",
         {},
         {
           headers: {
-            "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             token: token,
           },
         }
       )
       .then((res) => {
-        console.log(res);
-        setTfa(!tfa);
+        setCodeForm(true);
       })
       .catch((error) => {
-        console.log("Error: ", error);
-        setError("Server error... try again");
+        if (error.response.status === 403) return <HandleTokenError />;
+        else setError(error.response.data.message + "!");
       });
   };
 
   return (
     <div className={"settingPage"}>
+      {codeForm ? (
+        <FaCode showCallback={setCodeForm} callback={setTfaState} callbackValue={!tfaState} />
+      ) : null}
       <ErrorModal error={error} onClose={() => setError("")} />
+      <MessageModal error={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
@@ -174,7 +167,7 @@ export function Settings() {
           </form>
           <hr id={"hr1"} />
           <button type="submit" className="submitButton" onClick={handle2fa}>
-            {!tfa ? "Activate 2FA" : "Deactivate 2FA"}
+            {!tfaState ? "Activate 2FA" : "Deactivate 2FA"}
           </button>
         </div>
       </div>

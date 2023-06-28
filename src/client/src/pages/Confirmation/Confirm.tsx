@@ -1,7 +1,9 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import jwt_decode from "jwt-decode";
 import { AuthContext } from "../../components/Auth/dto";
+import { TokenData } from "../../type/user.type";
 
 async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
@@ -14,6 +16,9 @@ async function ValidateEmail() {
     const data = res.data;
     localStorage.setItem("token", data.token);
     setAuthToken(data.token);
+
+    const decoded: TokenData = jwt_decode(data.token);
+    localStorage.setItem("id", decoded.id.toString());
   });
 }
 
@@ -32,7 +37,7 @@ export default function Confirmation() {
     textAlign: "center" as "center",
   };
 
-  ValidateEmail();
+  ValidateEmail().then();
 
   return (
     <div style={home}>

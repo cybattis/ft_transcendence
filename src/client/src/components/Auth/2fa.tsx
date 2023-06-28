@@ -4,30 +4,30 @@ import InputForm from "../InputForm";
 import Logo from "../Logo/Logo";
 import { AuthContext } from "./dto";
 import { Navigate } from "react-router-dom";
-import { FormContext } from "./dto";
 import "./Auth.css";
 
-export default function FaCode() {
+type FaProps = {
+  showCallback: (value: boolean) => void;
+  callback?: (value: boolean) => void;
+  callbackValue?: boolean;
+}
+
+export default function FaCode(props: FaProps) {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { setAuthToken } = useContext(AuthContext);
-  const { setCodeForm } = useContext(FormContext);
+  const { authed, setAuthToken } = useContext(AuthContext);
+
   const inputs = {
     code: "",
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     inputs.code = e.currentTarget.code.value;
   };
 
   const isOnlyDigits = async (code: string) => {
-    let isValid = true;
-    for (let i: number = 0; code[i]; i++) {
-      if (code[i] < "0" || code[i] > "9") isValid = false;
-    }
-    return isValid;
+    return code.match(/^[0-9]+$/) != null;
   };
 
   const validateInput = async () => {
@@ -57,21 +57,32 @@ export default function FaCode() {
     };
 
     await axios
-      .post("http://localhost:5400/auth/2fa", loggin)
+      .post("http://localhost:5400/auth/2fa", loggin, {
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token"),
+        },
+      })
       .then((res) => {
+        props.showCallback(false);
         if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
-        } else {
+        } else if (!authed) {
           const data = res.data;
+          localStorage.setItem("id", data.id);
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
-          setCodeForm(false);
           localStorage.removeItem("email");
           return <Navigate to="/" />;
+        } else {
+          if (props.callback && props.callbackValue !== undefined)
+            props.callback(props.callbackValue);
+          return;
         }
       })
       .catch((error) => {
-        if (error.response.status === 401) {
+        props.showCallback(false);
+        if (error.response && error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
       });

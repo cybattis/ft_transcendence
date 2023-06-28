@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
   Inject,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,6 +18,8 @@ import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import jwt_decode, { JwtPayload } from 'jwt-decode';
+import { TokenData } from '../type/user.type';
 
 @Injectable()
 export class AuthService {
@@ -53,17 +56,6 @@ export class AuthService {
     return await response.json();
   }
 
-  async checkToken(token: string) {
-    const user = this.jwtService.decode(token);
-    if (user) {
-      if (user as { [key: string]: any }) {
-        const dic = user as { [key: string]: any };
-        if (dic['exp'] > new Date().getTime() / 1000) return HttpStatus.OK;
-        else return new UnauthorizedException('Token invalid');
-      }
-    } else return new UnauthorizedException('Token invalid');
-  }
-
   async infoUser(token: IntraTokenDto): Promise<IntraSignupDto> {
     const meUrl = 'https://api.intra.42.fr/v2/me';
     const response = await fetch(meUrl, {
@@ -82,7 +74,11 @@ export class AuthService {
     ) {
       if (user) {
         await this.usersService.changeOnlineStatus(user.id, true);
-        const payload = { email: user.email, id: user.id, username: user.nickname };
+        const payload = {
+          email: user.email,
+          id: user.id,
+          username: user.nickname,
+        };
         return {
           token: await this.jwtService.signAsync(payload),
         };
@@ -115,9 +111,14 @@ export class AuthService {
           );
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
           await this.usersService.changeOnlineStatus(foundUser.id, true);
-          const payload = { email: user.email, id: foundUser.id, username: foundUser.nickname };
+          const payload = {
+            email: user.email,
+            id: foundUser.id,
+            username: foundUser.nickname,
+          };
           return {
             token: await this.jwtService.signAsync(payload),
+            id: foundUser.id,
           };
         }
         throw new HttpException(
@@ -180,7 +181,27 @@ export class AuthService {
       const payload = { email: user.email, id: id, username: user.nickname };
       return {
         token: await this.jwtService.signAsync(payload),
+        id: id,
       };
+    }
+  }
+
+  async update2fa(id: number) {
+    const user = await this.usersService.getUserEmail(id);
+    if (!user) return;
+
+    await this.mailService.sendCodeConfirmation(user.email);
+  }
+
+  async update2faStatus(code: string, token: string) {
+    const payload: TokenData = jwt_decode(token.toString());
+    const email = payload.email;
+    const user = await this.usersService.findByID(payload.id);
+
+    if (await this.checkCode(code, email)) {
+      await this.userRepository.update(payload.id, {
+        authActivated: !user?.authActivated,
+      });
     }
   }
 
@@ -192,17 +213,59 @@ export class AuthService {
             GlobalService.emails[i] === (await this.cacheManager.get(code)))) &&
         GlobalService.codes[i] === code
       ) {
-        const user = await this.usersService.findByEmail(email);
-        if (user) {
-          await this.usersService.changeOnlineStatus(user.id, true);
-          const payload = { email: email, id: user.id, username: user.nickname };
-          await this.cacheManager.del(code);
-          return {
-            token: await this.jwtService.signAsync(payload),
-          };
-        }
+        await this.cacheManager.del(code);
+        return true;
       }
     }
     throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
+  }
+
+  async loggingInUser(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (user) {
+      await this.usersService.changeOnlineStatus(user.id, true);
+      const payload = { email: email, id: user.id, username: user.nickname };
+      return {
+        token: await this.jwtService.signAsync(payload),
+        id: user.id,
+      };
+    }
+    throw new NotFoundException('User not found');
+  }
+
+  static invalidToken: string[] = [];
+
+  validateToken(token: string): boolean {
+    if (AuthService.invalidToken.includes(token)) {
+      console.log('LIST: invalid token: ', token);
+      return false;
+    }
+
+    try {
+      const payload: JwtPayload = this.jwtService.verify<JwtPayload>(token, {});
+      if (!payload) {
+        const index = AuthService.invalidToken.indexOf(token, 0);
+        if (index > -1) {
+          AuthService.invalidToken.splice(index, 1);
+        }
+        return false;
+      }
+    } catch (e) {
+      console.log('Error :', e);
+      return false;
+    }
+    return true;
+  }
+
+  // go through list
+  // if token is invalid, remove it from list
+  async checkTokenInvalidationList() {
+    for (let i = 0; i < AuthService.invalidToken[i].length; i++) {
+      if (
+        !this.jwtService.verify<JwtPayload>(AuthService.invalidToken[i], {})
+      ) {
+        AuthService.invalidToken.splice(i, 1);
+      }
+    }
   }
 }

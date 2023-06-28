@@ -31,9 +31,11 @@ export class SignupDto {
   nickname: string;
 
   @IsString()
+  @MaxLength(30)
   firstname: string;
 
   @IsString()
+  @MaxLength(30)
   lastname: string;
 
   @IsEmail()
@@ -51,7 +53,4 @@ export class SigninDto {
 
   @IsString()
   password: string;
-
-  @IsBoolean()
-  remember: boolean;
 }

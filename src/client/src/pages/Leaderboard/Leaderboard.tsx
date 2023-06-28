@@ -2,6 +2,8 @@ import "./Leaderboard.css";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
+import { useContext } from "react";
+import { AuthContext } from "../../components/Auth/dto";
 
 function TableHeader() {
   return (
@@ -19,10 +21,13 @@ function TableHeader() {
 }
 
 export function Leaderboard() {
-  let data = useLoaderData() as UserInfo[];
+  const data = useLoaderData() as UserInfo[];
+  const token = localStorage.getItem("token");
+  const { setAuthToken } = useContext(AuthContext);
 
-  if (localStorage.getItem("token") === null) {
-    return <Navigate to="/" />;
+  if (token === null) {
+    setAuthToken(null);
+    return <Navigate to={"/"} />;
   }
 
   return (
