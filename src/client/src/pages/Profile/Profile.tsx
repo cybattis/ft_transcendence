@@ -28,7 +28,7 @@ function RemoveFriend(data: any) {
 
   const handleRemoveButton = async () => {
     await axios
-      .put(`http://localhost:5400/user/remove/${data.data.id}`, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/remove/${data.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -40,7 +40,7 @@ function RemoveFriend(data: any) {
 
   const handleBlockButton = async () => {
     await axios
-      .put(`http://localhost:5400/user/block/${data.data.id}`, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/block/${data.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -92,12 +92,12 @@ function AddFriend(data: any) {
   useEffect(() => {
     if (payload.id === data.data.id || payload.id === data.data.id.toString())
       setIsMe(true);
-    socketRef.current = io("http://localhost:5400");
+    socketRef.current = io("http://" + process.env["REACT_APP_API_IP"] + ":5400");
   }, [payload.id, data.data.id]);
 
   const handleButton = async () => {
     await axios
-      .put(`http://localhost:5400/user/request/${data.data.id}`, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/request/${data.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -114,7 +114,7 @@ function AddFriend(data: any) {
 
   const handleUnblockButton = async () => {
     await axios
-      .put(`http://localhost:5400/user/unblock/${data.data.id}`, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/unblock/${data.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

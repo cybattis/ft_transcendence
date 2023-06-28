@@ -48,7 +48,7 @@ function Img() {
   const fetchNotifs = async () => {
     let JWTToken = localStorage.getItem("token");
     await axios
-      .get("http://localhost:5400/user/notifs", {
+      .get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/notifs", {
         headers: { Authorization: `Bearer ${JWTToken}` },
       })
       .then((res) => {
@@ -88,12 +88,12 @@ function Logged() {
 
     const token: string | null = localStorage.getItem("token");
     if (!token) {
-      await axios.put("http://localhost:5400/user/disconnect", id, {});
+      await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/disconnect", id, {});
     }
 
     localStorage.clear();
 
-    await axios.put("http://localhost:5400/auth/disconnect", id, {
+    await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/disconnect", id, {
       headers: {
         token: token,
       },

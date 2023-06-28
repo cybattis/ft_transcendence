@@ -57,7 +57,7 @@ export default function FaCode(props: FaProps) {
     };
 
     await axios
-      .post("http://localhost:5400/auth/2fa", loggin, {
+      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/2fa", loggin, {
         headers: {
           "Content-Type": "application/json",
           token: localStorage.getItem("token"),

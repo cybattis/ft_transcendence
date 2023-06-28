@@ -72,7 +72,7 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5400');
+    const newSocket = io("http://" + process.env["REACT_APP_API_IP"] + ":5400");
     if (socketId === null)
       setSocketId(newSocket.id);
     socketRef.current = newSocket;

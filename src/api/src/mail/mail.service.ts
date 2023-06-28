@@ -8,7 +8,8 @@ export class MailService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: User) {
-    const url = `http://localhost:3000/confirmation?` + user.id;
+    const url =
+      'http://' + process.env['API_IP'] + ':3000/confirmation?' + user.id;
 
     await this.mailerService.sendMail({
       to: user.email,

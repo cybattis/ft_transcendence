@@ -41,7 +41,7 @@ export default function ConfirmEmail() {
     const code = inputs.code;
 
     await axios
-      .post("http://localhost:5400/auth/signin", code)
+      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/signin", code)
       .then((res) => {
         if (res.data.status === parseInt("401")) {
           setErrorMessage(res.data.response);

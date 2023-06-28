@@ -260,7 +260,7 @@ function UserProfile(props: { data: UserInfo }) {
 
 export function HomeLogged() {
   const { socketId, setSocketId } = useContext(SocketContext);
-  setSocketId(io("http://localhost:5400").id);
+  setSocketId(io("http://" + process.env["REACT_APP_API_IP"] + ":5400").id);
   console.log(socketId);
 
   const { setAuthToken } = useContext(AuthContext);
@@ -283,7 +283,7 @@ export function HomeLogged() {
     async function fetchData() {
       const id = localStorage.getItem("id");
       await axios
-        .get(`http://localhost:5400/user/profile/${id}`, {
+        .get("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/profile/${id}`, {
           headers: {
             "Content-Type": "application/json",
             token: token,

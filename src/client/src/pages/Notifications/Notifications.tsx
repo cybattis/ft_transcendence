@@ -14,7 +14,7 @@ export default function Notifications() {
 
   async function handleAccept(id: number) {
     await axios
-      .put("http://localhost:5400/user/accept/" + id, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/accept/" + id, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -27,7 +27,7 @@ export default function Notifications() {
 
   async function handleDecline(id: number) {
     await axios
-      .put("http://localhost:5400/user/decline/" + id, null, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/decline/" + id, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -48,7 +48,7 @@ export default function Notifications() {
   useEffect(() => {
     async function fetchFriends() {
       await axios
-        .get("http://localhost:5400/user/requested", {
+        .get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/requested", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
