@@ -42,7 +42,7 @@ export function Settings() {
     formData.append("avatar", event.target.files[0]);
 
     axios
-      .post(`http://localhost:5400/user/upload/avatar`, formData, {
+      .post("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/upload/avatar`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           token: token,
@@ -74,7 +74,7 @@ export function Settings() {
     }
 
     await axios
-      .put("http://localhost:5400/user/update", user, {
+      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/update", user, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
@@ -93,7 +93,7 @@ export function Settings() {
   const handle2fa = async () => {
     await axios
       .put(
-        "http://localhost:5400/auth/2fa/update",
+        "http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/2fa/update",
         {},
         {
           headers: {

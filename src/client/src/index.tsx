@@ -41,7 +41,7 @@ const router = createBrowserRouter([
             errorElement: <Error404 />,
             loader: async ({ request, params }) => {
               const res = await fetch(
-                `http://localhost:5400/user/profile/${params.id}`,
+                "http://" + process.env["REACT_APP_API_IP"] + `:5400/user/profile/${params.id}`,
                 {
                   headers: {
                     token: localStorage.getItem("token") || "",
@@ -63,7 +63,7 @@ const router = createBrowserRouter([
             element: <Leaderboard />,
             loader: async ({ request, params }) => {
               const res = await fetch(
-                `http://localhost:5400/user/leaderboard`,
+                "http://" + process.env["REACT_APP_API_IP"] + ":5400/user/leaderboard",
                 {
                   headers: {
                     token: localStorage.getItem("token") || "",
@@ -78,7 +78,7 @@ const router = createBrowserRouter([
             path: "settings",
             element: <Settings />,
             loader: async ({ request, params }) => {
-              const res = await fetch(`http://localhost:5400/user/settings/`, {
+              const res = await fetch("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/settings/", {
                 headers: {
                   token: localStorage.getItem("token") || "",
                 },

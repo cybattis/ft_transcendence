@@ -13,9 +13,11 @@ import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
 import { ScheduleModule } from "@nestjs/schedule";
 import { ChatModule } from './chat/chat.module';
+import { MatchmakingModule } from "./matchmaking/matchmaking.module";
 
 @Module({
   imports: [
+    MatchmakingModule,
     UserModule,
     AuthModule,
     ChatModule,

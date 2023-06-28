@@ -3,7 +3,7 @@ import {io} from 'socket.io-client';
 import "./Chat.css";
 import {ChatInterface} from "./Interface/chat.interface";
 import ChannelList from "./List/ChannelList";
-import {Decoded} from "../../type/client.type";
+import {JwtPayload} from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import DoJoinChannel from "./ActionChannel/DoJoinChannel";
 import DoPrivateMessage from "./ActionChannel/DoPrivateMessage";
@@ -47,14 +47,14 @@ export default function ChatClient() {
   const { setNotif } = useContext(NotifContext);
   const { socketId, setSocketId } = useContext(SocketContext);
 
-  let decoded: Decoded | null = null;
+  let decoded: JwtPayload | null = null;
   if (username === '') {
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
       console.log(`Decode ${decoded?.id}`);
-      console.log(`Decode ${decoded?.username}`);
-      if (decoded?.username)
-        username = decoded.username;
+      console.log(`Decode ${decoded?.nickname}`);
+      if (decoded?.nickname)
+        username = decoded.nickname;
     } catch (e) {
       console.log(`Decode error ${e}`);
     }
@@ -72,7 +72,7 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5400');
+    const newSocket = io("http://" + process.env["REACT_APP_API_IP"] + ":5400");
     if (socketId === null)
       setSocketId(newSocket.id);
     socketRef.current = newSocket;

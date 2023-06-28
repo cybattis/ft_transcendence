@@ -11,7 +11,7 @@ async function ValidateEmail() {
   const location = useLocation();
   const id = location.search.substring(1);
 
-  await axios.put("http://localhost:5400/auth/" + id, true).then((res) => {
+  await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/" + id, true).then((res) => {
     console.log(res);
     const data = res.data;
     localStorage.setItem("token", data.token);

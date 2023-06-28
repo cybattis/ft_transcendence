@@ -14,11 +14,12 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
+import { JwtPayload } from "../type/jwt.type";
 import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import jwt_decode, { JwtPayload } from 'jwt-decode';
+import jwt_decode from 'jwt-decode';
 import { TokenData } from '../type/user.type';
 
 @Injectable()
@@ -38,7 +39,8 @@ export class AuthService {
       'u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4';
     const clientSecret =
       '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';
-    const redirectUri = 'http://127.0.0.1:5400/auth/42';
+    const redirectUri = 'http://' + process.env['API_IP'] + ':5400/auth/42';
+
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
     const body = new URLSearchParams();
@@ -74,10 +76,10 @@ export class AuthService {
     ) {
       if (user) {
         await this.usersService.changeOnlineStatus(user.id, true);
-        const payload = {
+        const payload: JwtPayload = {
           email: user.email,
           id: user.id,
-          username: user.nickname,
+          nickname: user.nickname,
         };
         return {
           token: await this.jwtService.signAsync(payload),
@@ -111,10 +113,10 @@ export class AuthService {
           );
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
           await this.usersService.changeOnlineStatus(foundUser.id, true);
-          const payload = {
+          const payload: JwtPayload = {
             email: user.email,
             id: foundUser.id,
-            username: foundUser.nickname,
+            nickname: foundUser.nickname,
           };
           return {
             token: await this.jwtService.signAsync(payload),

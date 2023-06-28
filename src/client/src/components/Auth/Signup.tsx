@@ -43,7 +43,7 @@ export default function Signup() {
 
   const inUse = async (input: string, value: string): Promise<boolean> => {
     const { data } = await axios.get(
-      "http://localhost:5400/user/check/" + input + "/" + value
+      "http://" + process.env["REACT_APP_API_IP"] + ":5400/user/check/" + input + "/" + value
     );
     return !!data; // if data existe return true sinon false
   };
@@ -83,9 +83,9 @@ export default function Signup() {
     } else if (!inputs.password) {
       setErrorInput("Please enter a Password.");
       isValid = false;
-    } else if (!validator.isStrongPassword(inputs.password)) {
-      setErrorInput("Password is not strong enough.");
-      isValid = false;
+    //} else if (!validator.isStrongPassword(inputs.password)) {
+    //  setErrorInput("Password is not strong enough.");
+    //  isValid = false;
     } else if (
       inputs.confirmPassword &&
       inputs.password !== inputs.confirmPassword
@@ -117,7 +117,7 @@ export default function Signup() {
     };
 
     await axios
-      .post("http://localhost:5400/auth/signup", user, {
+      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/signup", user, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
@@ -134,6 +134,11 @@ export default function Signup() {
         setErrorMessage("Server error... try again");
       });
   };
+
+  const intraLink =
+    "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F"
+    + process.env["REACT_APP_API_IP"]
+    + "%3A5400%2Fauth%2F42&response_type=code";
 
   //TODO: remettre alert email
 
@@ -177,7 +182,7 @@ export default function Signup() {
         </form>
         <a
           className="link42"
-          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
+          href={intraLink}
           rel="noopener noreferrer"
         >
           Signup with 42

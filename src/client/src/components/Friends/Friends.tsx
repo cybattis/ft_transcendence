@@ -37,7 +37,7 @@ function FriendsList() {
     
     useEffect(() => {
         async function fetchDataOnline() {
-            await axios.get("http://localhost:5400/user/friends/online", {
+            await axios.get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/friends/online", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
@@ -47,7 +47,7 @@ function FriendsList() {
             });
         }
         async function fetchDataOffline() {
-          await axios.get("http://localhost:5400/user/friends/offline", {
+          await axios.get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/friends/offline", {
               headers: {
                   Authorization: `Bearer ${token}`,
               }

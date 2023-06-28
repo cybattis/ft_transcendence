@@ -50,13 +50,13 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
-        return res.redirect('http://localhost:3000/');
+        return res.redirect("http://" + process.env["API_IP"] + ":3000/");
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
         if (token) {
-          return res.redirect('http://localhost:3000/loading?' + token.token);
+          return res.redirect("http://" + process.env["API_IP"] + ":3000/loading?" + token.token);
         }
-        return res.redirect('http://localhost:3000/code?' + dataUser.email);
+        return res.redirect("http://" + process.env["API_IP"] + ":3000/code?" + dataUser.email);
       } else if (user && !user.isVerified) {
         return new BadRequestException(
           'You already have an account. Go verify your mailbox.',
@@ -67,7 +67,7 @@ export class AuthController {
     } catch (err) {
       console.error(err);
       // TODO: send error to display popup error in client after redirection
-      res.redirect('http://localhost:3000/');
+      res.redirect("http://" + process.env["API_IP"] + ":3000/");
     }
   }
 

@@ -1,4 +1,5 @@
-export interface Decoded {
+export interface JwtPayload {
   id: string;
-  username: string;
+  email: string;
+  nickname: string;
 }

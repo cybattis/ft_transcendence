@@ -56,7 +56,7 @@ export default function Login() {
     };
 
     await axios
-      .post("http://localhost:5400/auth/signin", user)
+      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/signin", user)
       .then((res) => {
         if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
@@ -81,6 +81,11 @@ export default function Login() {
       });
   };
 
+  const intraLink =
+    "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F" +
+    process.env["REACT_APP_API_IP"] +
+    "%3A5400%2Fauth%2F42&response_type=code";
+
   return (
     <div className="background">
       <div className="authForm">
@@ -98,7 +103,7 @@ export default function Login() {
         </form>
         <a
           className="link42"
-          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
+          href={intraLink}
           rel="noopener noreferrer"
         >
           Login with 42

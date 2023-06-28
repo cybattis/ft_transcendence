@@ -352,7 +352,7 @@ export class UserService implements OnModuleInit {
     const user = await this.decodeToken(token);
     if (!user) return null;
 
-    user.avatarUrl = 'http://localhost:5400/' + path;
+    user.avatarUrl = "http://" + process.env["API_IP"] + ":5400/" + path;
     await this.usersRepository.save(user);
 
     return user.avatarUrl;

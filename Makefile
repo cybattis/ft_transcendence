@@ -8,6 +8,8 @@ CLIENT		=	client
 POSTGRES	=	postgres
 PGADMIN		=	pgadmin
 
+LOCAL_IP	=	$(shell ifconfig | awk '/inet /&&!/127.0.0.1/{print $$2;exit}')
+
 # Recipe
 ################################
 start: _start
@@ -36,6 +38,9 @@ create_dir:
 list: help
 help: _help
 
+ip:
+	@echo $(LOCAL_IP)
+
 .PHONY: start stop build clean fclean restart show log create_dir list help
 
 # ===============================================
@@ -46,7 +51,7 @@ $(eval api:;@:)
 $(eval db:;@:)
 $(eval admin:;@:)
 
-BUILD	=	$(COMPOSE) build --no-cache
+BUILD	=	$(COMPOSE) build --no-cache --parallel
 .PHONY: _build
 _build:
 ifeq (client, $(filter client,$(MAKECMDGOALS)))
