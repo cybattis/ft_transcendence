@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { GameRoom } from "./types/multiplayer.types";
+import { GameRoom, MovementUpdate, PlayerSocket } from "./types/multiplayer.types";
 import { GameService } from "../game/game.service";
 import { UserService } from "../user/user.service";
 import { Game } from "../game/entity/Game.entity";
@@ -58,7 +58,7 @@ export class MultiplayerService {
     *
     * @param client The client that sent the ready event
    */
-  public setClientReady(client: AuthedSocket): void {
+  public setClientReady(client: PlayerSocket): void {
     const room = this.getRoomByPlayerId(client.userId);
     if (room) {
       if (room.player1Id === client.userId)
@@ -66,6 +66,7 @@ export class MultiplayerService {
       else
         room.player2Ready = true;
 
+      client.game = room;
       client.join("game-" + room.id.toString());
 
       if (room.player1Ready && room.player2Ready) {
@@ -91,5 +92,15 @@ export class MultiplayerService {
    */
   public getRoomByPlayerId(playerId: number): GameRoom | undefined {
     return this.rooms.find(room => room.player1Id === playerId || room.player2Id === playerId);
+  }
+
+  /*
+    * Process a movement update
+    *
+    * @param client The client that sent the update
+    * @param update The update
+   */
+  public processMovementUpdate(client: PlayerSocket, update: MovementUpdate): void {
+    this.gameManager.processMovementUpdate(client.game, client.userId, update);
   }
 }
