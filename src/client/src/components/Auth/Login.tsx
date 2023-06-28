@@ -1,27 +1,25 @@
 import React, { useContext } from "react";
+import "./Auth.css";
 import axios from "axios";
 import InputForm from "../InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
-import "./Auth.css";
 
 interface SigninDto {
   email: string;
   password: string;
-  remember: boolean;
 }
 
 export default function Login() {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
+  const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
   const { setAuthToken } = useContext(AuthContext);
-  const { setLoginForm, setSignupForm } = useContext(FormContext);
   const inputs = {
     email: "",
     password: "",
-    remember: false,
   };
 
   const changeInputs = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -29,7 +27,6 @@ export default function Login() {
 
     inputs.email = e.currentTarget.email.value;
     inputs.password = e.currentTarget.password.value;
-    inputs.remember = e.currentTarget.rememberMe.checked;
   };
 
   const validateInput = async () => {
@@ -56,20 +53,28 @@ export default function Login() {
     const user: SigninDto = {
       email: inputs.email,
       password: inputs.password,
-      remember: inputs.remember,
     };
 
     await axios
       .post("http://localhost:5400/auth/signin", user)
-      .then((response) => {
-        const data = response.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
-        setLoginForm(false);
-        return <Navigate to="/" />;
+      .then((res) => {
+        if (res.status === parseInt("401")) {
+          setErrorMessage(res.data.response);
+        } else {
+          setLoginForm(false);
+          if (res.data) {
+            localStorage.setItem("token", res.data.token);
+            localStorage.setItem("id", res.data.id);
+            setAuthToken(res.data.token);
+          } else if (!res.data) {
+            localStorage.setItem("email", user.email);
+            setCodeForm(true);
+            return;
+          }
+          return <Navigate to="/" />;
+        }
       })
       .catch((error) => {
-        console.log(error);
         if (error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
@@ -87,20 +92,6 @@ export default function Login() {
           <InputForm type="text" name="email" />
           <br />
           <InputForm type="password" name="password" />
-          <div className="formOption">
-            <label>
-              <input
-                type="checkbox"
-                name="rememberMe"
-                value="false"
-                defaultChecked={false}
-              />
-              Remember me
-            </label>
-            <a className="forgetPassLink" href="blank" target="_blank">
-              Forgot your password?
-            </a>
-          </div>
           <button type="submit" className="submitButton">
             Login
           </button>
@@ -119,6 +110,7 @@ export default function Login() {
             onClick={() => {
               setSignupForm(true);
               setLoginForm(false);
+              setCodeForm(false);
             }}
           >
             Sign up!
