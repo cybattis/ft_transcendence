@@ -77,7 +77,7 @@ export default function FaCode(props: { callback?: any; callbackValue?: any }) {
       })
       .catch((error) => {
         setCodeForm(false);
-        if (error.response.status === 401) {
+        if (error.response && error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");
       });
