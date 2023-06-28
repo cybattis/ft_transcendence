@@ -13,6 +13,7 @@ import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 
 const router = createBrowserRouter([
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
                 signal: request.signal,
               });
             },
+          },
+          {
+            path: "notifications/:id",
+            element: <Notifications />,
           },
           {
             path: "leaderboard",

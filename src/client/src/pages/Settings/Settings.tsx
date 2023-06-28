@@ -78,6 +78,12 @@ export function Settings() {
       email: email,
     };
 
+    if (!user.nickname[0])
+    {
+      setError("Your Nickname can't be empty!");
+      return ;
+    }
+
     await axios
       .put("http://localhost:5400/user/update", user, {
         headers: {
@@ -123,7 +129,7 @@ export function Settings() {
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
           <Avatar size="200px" img={avatarUrl} />
-          <button onClick={() => document?.getElementById("avatar")?.click()}>
+          <button className="avatarButton" onClick={() => document?.getElementById("avatar")?.click()}>
             Change avatar
           </button>
           <input

@@ -1,0 +1,14 @@
+.style {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: var(--vp-size);
+};
+
+.text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center
+};

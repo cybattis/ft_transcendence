@@ -12,9 +12,10 @@ import {
 import { AuthForms } from "./Auth/Forms";
 
 function Redirections() {
-  const [loginForm, setLoginForm] = useState(defaultFormState.signupForm);
+  const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
-  const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
+  const [codeForm, setCodeForm] = useState(defaultFormState.codeForm);
+  const [chatForm, setChatForm] = useState(defaultFormState.chatForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
 
   return (
@@ -23,7 +24,7 @@ function Redirections() {
         value={{ authed: authToken, setAuthToken: setAuthToken }}
       >
         <FormContext.Provider
-          value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm }}
+          value={{ loginForm, setLoginForm, signupForm, setSignupForm, codeForm, setCodeForm, chatForm, setChatForm }}
         >
           <AuthForms />
         </FormContext.Provider>

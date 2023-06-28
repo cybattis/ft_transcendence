@@ -21,5 +21,6 @@ import { MailService } from '../mail/mail.service';
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService],
+  exports: [UserService, TypeOrmModule.forFeature([User])],
 })
 export class UserModule {}

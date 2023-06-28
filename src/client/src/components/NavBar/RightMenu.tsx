@@ -1,9 +1,11 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import "./NavBar.css";
 import logo from "../../resource/signin-logo.svg";
+import notifsLogo from "../../resource/logo-notifications.png"
+import notifsLogoOn from "../../resource/logo-notifications-on.png"
+import { AuthContext, FormContext, NotifContext } from "../Auth/dto";
 import { Link } from "react-router-dom";
-import { AuthContext, FormContext } from "../Auth/dto";
 import jwt_decode from "jwt-decode";
 import { Decoded } from "../../type/client.type";
 
@@ -28,15 +30,50 @@ function Unlogged() {
         Login
       </button>
       <button className="signup-button" onClick={toggleSignupForm}>
-        <img style={logoSignup} src={logo} alt="logo" />
+      <img style={logoSignup} src={logo} alt="logo" />
         SignUp
       </button>
     </>
   );
 }
 
+function Img() {
+  //Marche que quan user est dans menu(websocket que la ou y chat change ca)
+  const { notif, setNotif } = useContext(NotifContext);
+  const logoNotifs = {
+    width: "45px",
+    height: "45px",
+  }
+
+    const fetchNotifs = async () => {
+      let JWTToken = localStorage.getItem("token");
+      await axios.get("http://localhost:5400/user/notifs", {
+        headers: { Authorization: `Bearer ${JWTToken}` },
+      })
+      .then(res => {
+        if (res.data)
+          setNotif(true);
+      });
+    };
+
+  fetchNotifs();
+
+  if (notif === false)
+    return <img style={logoNotifs} src={notifsLogo}></img>;
+  return <img style={logoNotifs} src={notifsLogoOn}></img>
+}
+
 function Logged() {
   const { setAuthToken } = useContext(AuthContext);
+  const { notif } = useContext(NotifContext);
+  const [notifs, setNotifs] = useState(false);
+
+  useEffect(() => {
+    console.log(notif);
+    if (notif === true)
+      setNotifs(true);
+  }, [notif]);
+
   let decoded: Decoded | null = null;
 
   try {
@@ -56,6 +93,10 @@ function Logged() {
 
   return (
     <>
+      <Link to={`/notifications/${decoded?.id}`} className="notifs">
+        <div className="img"><Img /></div>
+        Notifs
+      </Link>
       <Link to={`/profile/${decoded?.id}`} className={"navLink"}>
         Profile
       </Link>
