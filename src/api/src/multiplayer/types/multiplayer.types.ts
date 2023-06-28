@@ -15,3 +15,11 @@ export type GameRoom = {
   player1Ready: boolean;
   player2Ready: boolean;
 }
+
+export type MovementUpdate = {
+  finalY: number;
+}
+
+export type PlayerSocket = AuthedSocket & {
+  game: GameRoom;
+}

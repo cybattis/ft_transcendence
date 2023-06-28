@@ -12,6 +12,7 @@ import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { JwtService } from "@nestjs/jwt";
 import { Public } from "../auth/guards/PublicDecorator";
 import { MultiplayerService } from "./multiplayer.service";
+import { MovementUpdate, PlayerSocket } from "./types/multiplayer.types";
 
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: "/multiplayer"})
 export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
@@ -53,8 +54,13 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   }
 
   @SubscribeMessage('ready')
-  async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+  async handleReady(@ConnectedSocket() client: PlayerSocket): Promise<void> {
     this.multiplayerService.setClientReady(client);
+  }
+
+  @SubscribeMessage('update-movement')
+  async handleUpdateMovement(@ConnectedSocket() client: PlayerSocket, @MessageBody() data: MovementUpdate): Promise<void> {
+    this.multiplayerService.processMovementUpdate(client, data);
   }
 
 }
