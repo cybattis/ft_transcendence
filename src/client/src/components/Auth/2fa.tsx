@@ -4,14 +4,18 @@ import InputForm from "../InputForm";
 import Logo from "../Logo/Logo";
 import { AuthContext } from "./dto";
 import { Navigate } from "react-router-dom";
-import { FormContext } from "./dto";
 import "./Auth.css";
 
-export default function FaCode(props: { callback?: any; callbackValue?: any }) {
+type FaProps = {
+  showCallback: (value: boolean) => void;
+  callback?: (value: boolean) => void;
+  callbackValue?: boolean;
+}
+
+export default function FaCode(props: FaProps) {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const { authed, setAuthToken } = useContext(AuthContext);
-  const { setCodeForm } = useContext(FormContext);
 
   const inputs = {
     code: "",
@@ -60,7 +64,7 @@ export default function FaCode(props: { callback?: any; callbackValue?: any }) {
         },
       })
       .then((res) => {
-        setCodeForm(false);
+        props.showCallback(false);
         if (res.status === parseInt("401")) {
           setErrorMessage(res.data.response);
         } else if (!authed) {
@@ -71,12 +75,13 @@ export default function FaCode(props: { callback?: any; callbackValue?: any }) {
           localStorage.removeItem("email");
           return <Navigate to="/" />;
         } else {
-          props.callback(props.callbackValue);
+          if (props.callback && props.callbackValue !== undefined)
+            props.callback(props.callbackValue);
           return;
         }
       })
       .catch((error) => {
-        setCodeForm(false);
+        props.showCallback(false);
         if (error.response && error.response.status === 401) {
           setErrorMessage(error.response.data.message);
         } else setErrorMessage("Server busy... try again");

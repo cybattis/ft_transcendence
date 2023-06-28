@@ -30,7 +30,7 @@ export function AuthForms() {
       ) : signupForm ? (
         <Signup />
       ) : codeForm ? (
-        <FaCode />
+        <FaCode showCallback={setCodeForm}/>
       ) : chatForm ?
         <ChatAction /> : null}
     </>

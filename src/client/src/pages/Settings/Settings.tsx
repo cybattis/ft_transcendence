@@ -6,14 +6,14 @@ import InputForm from "../../components/InputForm";
 import { UserSettings } from "../../type/user.type";
 import { ErrorModal } from "../../components/Modal/ErrorModal";
 import { Navigate, useLoaderData } from "react-router-dom";
-import { AuthContext, FormContext } from "../../components/Auth/dto";
+import { AuthContext } from "../../components/Auth/dto";
 import { HandleTokenError } from "../../utils/handleFetchError";
 import FaCode from "../../components/Auth/2fa";
 import { MessageModal } from "../../components/Modal/MessageModal";
 
 export function Settings() {
   const { setAuthToken } = useContext(AuthContext);
-  const { codeForm, setCodeForm } = useContext(FormContext);
+  const [ codeForm, setCodeForm ] = useState(false);
 
   const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
@@ -114,7 +114,7 @@ export function Settings() {
   return (
     <div className={"settingPage"}>
       {codeForm ? (
-        <FaCode callback={setTfaState} callbackValue={!tfaState} />
+        <FaCode showCallback={setCodeForm} callback={setTfaState} callbackValue={!tfaState} />
       ) : null}
       <ErrorModal error={error} onClose={() => setError("")} />
       <MessageModal error={message} onClose={() => setMessage("")} />
