@@ -11,6 +11,8 @@ export class TokenGuard implements CanActivate {
   public constructor(private authService: AuthService) {}
 
   public canActivate(context: ExecutionContext): boolean {
+    if (context.getType() !== 'http') return true;
+
     const request = context.switchToHttp().getRequest();
     const token = request.headers.token;
 
