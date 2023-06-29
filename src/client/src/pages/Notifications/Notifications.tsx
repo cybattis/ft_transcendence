@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
+import { apiBaseURL } from "../../utils/constant";
 
 export default function Notifications() {
   const [invits, setInvits] = useState([
@@ -14,11 +15,18 @@ export default function Notifications() {
 
   async function handleAccept(id: number) {
     await axios
-      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/accept/" + id, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .put(
+        "http://" +
+          process.env["REACT_APP_HOST_IP"] +
+          ":5400/user/accept/" +
+          id,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         console.log("Accepted");
         removeNotif(id);
@@ -27,11 +35,18 @@ export default function Notifications() {
 
   async function handleDecline(id: number) {
     await axios
-      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/decline/" + id, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      .put(
+        "http://" +
+          process.env["REACT_APP_HOST_IP"] +
+          ":5400/user/decline/" +
+          id,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       .then((res) => {
         console.log("Decline");
         removeNotif(id);
@@ -48,7 +63,7 @@ export default function Notifications() {
   useEffect(() => {
     async function fetchFriends() {
       await axios
-        .get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/requested", {
+        .get(apiBaseURL + "user/requested", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

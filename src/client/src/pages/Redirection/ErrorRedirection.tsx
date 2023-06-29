@@ -1,4 +1,6 @@
+import { clientBaseURL } from "../../utils/constant";
+
 export function ErrorRedirection() {
-  window.location.href = "http://" + process.env["REACT_APP_API_IP"] + ":3000/";
+  window.location.href = clientBaseURL;
   return <></>;
 }

@@ -16,15 +16,19 @@ import { io } from "socket.io-client";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
+import { apiBaseURL } from "../../utils/constant";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
   MATCH_FOUND,
   WAITING_FOR_OPPONENT,
-  GAME_STARTED
+  GAME_STARTED,
 }
 
-function MatchmakingButton(props: { gameType: GameType, setSearching: (value: boolean) => void }) {
+function MatchmakingButton(props: {
+  gameType: GameType;
+  setSearching: (value: boolean) => void;
+}) {
   const [state, setState] = useState(MatchmakingAcceptButtonState.SEARCHING);
   const [timeLeft, setTimeLeft] = useState(0);
   const countdownOffset: number = 10;
@@ -36,7 +40,7 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
       return setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
-    }
+    };
 
     const matchFoundCallback = (acceptTimeout: number) => {
       setState(MatchmakingAcceptButtonState.MATCH_FOUND);
@@ -54,7 +58,10 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
 
     if (timeLeft > 0) {
       // If the player doesn't accept the game in time, stop matchmaking
-      if (timeLeft <= countdownOffset && state === MatchmakingAcceptButtonState.MATCH_FOUND) {
+      if (
+        timeLeft <= countdownOffset &&
+        state === MatchmakingAcceptButtonState.MATCH_FOUND
+      ) {
         props.setSearching(false);
       } else {
         // Else, continue the countdown to wait for the server to start the game
@@ -79,17 +86,15 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
       MatchmakingClient.offMatchFound(matchFoundCallback);
       MatchmakingClient.offgameStarted(handleGameStarted);
 
-      if (countdownTimeout)
-        clearTimeout(countdownTimeout);
-    }
-  });
+      if (countdownTimeout) clearTimeout(countdownTimeout);
+    };
+  }, []);
 
   const handleClick = () => {
     let decoded: JwtPayload | null = null;
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
-    } catch (e) {
-    }
+    } catch (e) {}
 
     if (decoded) {
       if (state === MatchmakingAcceptButtonState.SEARCHING) {
@@ -108,29 +113,38 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
         setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
       }
     }
-  }
+  };
 
   let cssClass: string = "matchmaking-button";
-  if (state === MatchmakingAcceptButtonState.MATCH_FOUND)
-    cssClass += "-found";
+  if (state === MatchmakingAcceptButtonState.MATCH_FOUND) cssClass += "-found";
   else if (state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT)
     cssClass += "-waiting";
 
   return (
-      <>
-      {state === MatchmakingAcceptButtonState.GAME_STARTED ? <Navigate to="game"/> :
-    <button onClick={handleClick} className={cssClass}>
-      <div>{state === MatchmakingAcceptButtonState.MATCH_FOUND && (timeLeft >= countdownOffset ? "Accept " + (timeLeft - countdownOffset).toString() + "..." : "Accept...")}
-        {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT && ("Waiting for opponent...")}
-        {state === MatchmakingAcceptButtonState.SEARCHING && ("Searching...")}
-        </div>
-    </button>}
-          </>
+    <>
+      {state === MatchmakingAcceptButtonState.GAME_STARTED ? (
+        <Navigate to="game" />
+      ) : (
+        <button onClick={handleClick} className={cssClass}>
+          <div>
+            {state === MatchmakingAcceptButtonState.MATCH_FOUND &&
+              (timeLeft >= countdownOffset
+                ? "Accept " + (timeLeft - countdownOffset).toString() + "..."
+                : "Accept...")}
+            {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT &&
+              "Waiting for opponent..."}
+            {state === MatchmakingAcceptButtonState.SEARCHING && "Searching..."}
+          </div>
+        </button>
+      )}
+    </>
   );
 }
 
-function MultiplayerGameMode(props: { gameType: GameType, setSearching: (value: boolean) => void }) {
-
+function MultiplayerGameMode(props: {
+  gameType: GameType;
+  setSearching: (value: boolean) => void;
+}) {
   const handleClick = () => {
     if (props.gameType === GameType.CASUAL)
       MatchmakingClient.joinMatchmakingCasual();
@@ -138,7 +152,7 @@ function MultiplayerGameMode(props: { gameType: GameType, setSearching: (value: 
       MatchmakingClient.joinMatchmakingRanked();
 
     props.setSearching(true);
-  }
+  };
 
   return (
     <button onClick={handleClick} className="game-mode-button">
@@ -161,21 +175,33 @@ function GameLauncher() {
 
   return (
     <div className="launcher">
-      {(!searchingCasual && !searchingRanked) && (
+      {!searchingCasual && !searchingRanked && (
         <>
           <h4 className="game-mode-title">Game mode</h4>
           <div className="buttons">
             <PracticeGameMode />
-            <MultiplayerGameMode gameType={GameType.CASUAL} setSearching={setSearchingCasual}/>
-            <MultiplayerGameMode gameType={GameType.RANKED} setSearching={setSearchingRanked}/>
+            <MultiplayerGameMode
+              gameType={GameType.CASUAL}
+              setSearching={setSearchingCasual}
+            />
+            <MultiplayerGameMode
+              gameType={GameType.RANKED}
+              setSearching={setSearchingRanked}
+            />
           </div>
         </>
       )}
       {searchingCasual && (
-        <MatchmakingButton gameType={GameType.CASUAL} setSearching={setSearchingCasual}/>
+        <MatchmakingButton
+          gameType={GameType.CASUAL}
+          setSearching={setSearchingCasual}
+        />
       )}
       {searchingRanked && (
-        <MatchmakingButton gameType={GameType.RANKED} setSearching={setSearchingRanked}/>
+        <MatchmakingButton
+          gameType={GameType.RANKED}
+          setSearching={setSearchingRanked}
+        />
       )}
     </div>
   );
@@ -260,7 +286,7 @@ function UserProfile(props: { data: UserInfo }) {
 
 export function HomeLogged() {
   const { socketId, setSocketId } = useContext(SocketContext);
-  setSocketId(io("http://" + process.env["REACT_APP_API_IP"] + ":5400").id);
+  setSocketId(io(apiBaseURL).id);
   console.log(socketId);
 
   const { setAuthToken } = useContext(AuthContext);
@@ -281,9 +307,8 @@ export function HomeLogged() {
 
   useEffect(() => {
     async function fetchData() {
-      const id = localStorage.getItem("id");
       await axios
-        .get("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/profile/${id}`, {
+        .get(apiBaseURL + "user/profile/me", {
           headers: {
             "Content-Type": "application/json",
             token: token,
@@ -305,7 +330,7 @@ export function HomeLogged() {
 
     return () => {
       MatchmakingClient.leaveMatchmaking();
-    }
+    };
   }, []);
 
   if (token === null) {

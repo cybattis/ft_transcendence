@@ -10,10 +10,11 @@ import { AuthContext } from "../../components/Auth/dto";
 import { HandleTokenError } from "../../utils/handleFetchError";
 import FaCode from "../../components/Auth/2fa";
 import { MessageModal } from "../../components/Modal/MessageModal";
+import { apiBaseURL } from "../../utils/constant";
 
 export function Settings() {
   const { setAuthToken } = useContext(AuthContext);
-  const [ codeForm, setCodeForm ] = useState(false);
+  const [codeForm, setCodeForm] = useState(false);
 
   const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
@@ -42,12 +43,18 @@ export function Settings() {
     formData.append("avatar", event.target.files[0]);
 
     axios
-      .post("http://" + process.env["REACT_APP_API_IP"] + `:5400/user/upload/avatar`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          token: token,
-        },
-      })
+      .post(
+        "http://" +
+          process.env["REACT_APP_HOST_IP"] +
+          `:5400/user/upload/avatar`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            token: token,
+          },
+        }
+      )
       .then((res) => {
         setMessage("Avatar updated!");
         setAvatarUrl(res.data);
@@ -67,14 +74,13 @@ export function Settings() {
       lastname: lastName,
     };
 
-    if (!user.nickname[0])
-    {
+    if (!user.nickname[0]) {
       setError("Your Nickname can't be empty!");
-      return ;
+      return;
     }
 
     await axios
-      .put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/update", user, {
+      .put(apiBaseURL + "user/update", user, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
@@ -93,7 +99,7 @@ export function Settings() {
   const handle2fa = async () => {
     await axios
       .put(
-        "http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/2fa/update",
+        apiBaseURL + "auth/2fa/update",
         {},
         {
           headers: {
@@ -114,7 +120,11 @@ export function Settings() {
   return (
     <div className={"settingPage"}>
       {codeForm ? (
-        <FaCode showCallback={setCodeForm} callback={setTfaState} callbackValue={!tfaState} />
+        <FaCode
+          showCallback={setCodeForm}
+          callback={setTfaState}
+          callbackValue={!tfaState}
+        />
       ) : null}
       <ErrorModal error={error} onClose={() => setError("")} />
       <MessageModal error={message} onClose={() => setMessage("")} />
@@ -122,7 +132,10 @@ export function Settings() {
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
           <Avatar size="200px" img={avatarUrl} />
-          <button className="avatarButton" onClick={() => document?.getElementById("avatar")?.click()}>
+          <button
+            className="avatarButton"
+            onClick={() => document?.getElementById("avatar")?.click()}
+          >
             Change avatar
           </button>
           <input
