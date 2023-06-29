@@ -7,6 +7,7 @@ import { ModuleRef } from '@nestjs/core';
 import { TokenData, UserInfo, UserSettings } from '../type/user.type';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
+import { apiBaseURL } from '../utils/constant';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -352,7 +353,7 @@ export class UserService implements OnModuleInit {
     const user = await this.decodeToken(token);
     if (!user) return null;
 
-    user.avatarUrl = "http://" + process.env["API_IP"] + ":5400/" + path;
+    user.avatarUrl = apiBaseURL + path;
     await this.usersRepository.save(user);
 
     return user.avatarUrl;

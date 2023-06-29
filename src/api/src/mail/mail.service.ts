@@ -2,14 +2,14 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entity/Users.entity';
 import { GlobalService } from 'src/auth/global.service';
+import { clientBaseURL } from '../utils/constant';
 
 @Injectable()
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: User) {
-    const url =
-      'http://' + process.env['API_IP'] + ':3000/confirmation?' + user.id;
+    const url = clientBaseURL + 'confirmation?' + user.id;
 
     await this.mailerService.sendMail({
       to: user.email,

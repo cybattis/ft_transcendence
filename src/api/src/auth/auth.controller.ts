@@ -22,6 +22,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TokenData } from '../type/user.type';
 import jwt_decode from 'jwt-decode';
 import { TokenGuard } from '../guard/token.guard';
+import { clientBaseURL } from '../utils/constant';
 
 @Controller('auth')
 export class AuthController {
@@ -50,24 +51,22 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         await this.authService.sendEmail(user);
-        return res.redirect("http://" + process.env["API_IP"] + ":3000/");
+        return res.redirect(clientBaseURL);
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
-        if (token) {
-          return res.redirect("http://" + process.env["API_IP"] + ":3000/loading?" + token.token);
-        }
-        return res.redirect("http://" + process.env["API_IP"] + ":3000/code?" + dataUser.email);
+        if (token)
+          return res.redirect(clientBaseURL + 'loading?' + token.token);
+        return res.redirect(clientBaseURL + 'code?' + dataUser.email);
       } else if (user && !user.isVerified) {
         return new BadRequestException(
           'You already have an account. Go verify your mailbox.',
         );
       }
-
       throw new BadRequestException('Email already in use');
     } catch (err) {
       console.error(err);
       // TODO: send error to display popup error in client after redirection
-      res.redirect("http://" + process.env["API_IP"] + ":3000/");
+      res.redirect(clientBaseURL);
     }
   }
 

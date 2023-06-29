@@ -4,6 +4,7 @@ import axios from "axios";
 import jwt_decode from "jwt-decode";
 import { AuthContext } from "../../components/Auth/dto";
 import { TokenData } from "../../type/user.type";
+import { apiBaseURL } from "../../utils/constant";
 
 async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
@@ -11,7 +12,7 @@ async function ValidateEmail() {
   const location = useLocation();
   const id = location.search.substring(1);
 
-  await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/" + id, true).then((res) => {
+  await axios.put(apiBaseURL + "auth/" + id, true).then((res) => {
     console.log(res);
     const data = res.data;
     localStorage.setItem("token", data.token);

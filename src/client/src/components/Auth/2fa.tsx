@@ -5,12 +5,13 @@ import Logo from "../Logo/Logo";
 import { AuthContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import "./Auth.css";
+import { apiBaseURL } from "../../utils/constant";
 
 type FaProps = {
   showCallback: (value: boolean) => void;
   callback?: (value: boolean) => void;
   callbackValue?: boolean;
-}
+};
 
 export default function FaCode(props: FaProps) {
   const [errorInput, setErrorInput] = React.useState("");
@@ -57,7 +58,7 @@ export default function FaCode(props: FaProps) {
     };
 
     await axios
-      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/2fa", loggin, {
+      .post(apiBaseURL + "auth/2fa", loggin, {
         headers: {
           "Content-Type": "application/json",
           token: localStorage.getItem("token"),

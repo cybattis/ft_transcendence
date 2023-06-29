@@ -8,13 +8,14 @@ import { AuthContext, FormContext, NotifContext } from "../Auth/dto";
 import { Link } from "react-router-dom";
 import jwt_decode from "jwt-decode";
 import { JwtPayload } from "../../type/client.type";
+import { apiBaseURL } from "../../utils/constant";
 
 function Unlogged() {
   const logoSignup = {
     marginRight: "4px",
   };
 
-  const { loginForm, setLoginForm, setSignupForm } = useContext(FormContext);
+  const { setLoginForm, setSignupForm } = useContext(FormContext);
 
   function toggleLoginForm() {
     setLoginForm(true);
@@ -48,7 +49,7 @@ function Img() {
   const fetchNotifs = async () => {
     let JWTToken = localStorage.getItem("token");
     await axios
-      .get("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/notifs", {
+      .get(apiBaseURL + "user/notifs", {
         headers: { Authorization: `Bearer ${JWTToken}` },
       })
       .then((res) => {
@@ -88,24 +89,16 @@ function Logged() {
 
     const token: string | null = localStorage.getItem("token");
     if (!token) {
-      await axios.put(
-        "http://" + process.env["REACT_APP_API_IP"] + ":5400/user/disconnect",
-        id,
-        {}
-      );
+      await axios.put(apiBaseURL + "user/disconnect", id, {});
     }
 
     localStorage.clear();
 
-    await axios.put(
-      "http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/disconnect",
-      id,
-      {
-        headers: {
-          token: token,
-        },
-      }
-    );
+    await axios.put(apiBaseURL + "auth/disconnect", id, {
+      headers: {
+        token: token,
+      },
+    });
   };
 
   return (
