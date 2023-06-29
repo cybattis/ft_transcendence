@@ -10,7 +10,7 @@ PGADMIN		=	pgadmin
 
 # Recipe
 ################################
-start: _start get_ip
+start: get_ip _start
 
 stop: _stop
 
