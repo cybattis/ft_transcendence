@@ -14,7 +14,7 @@ function Unlogged() {
     marginRight: "4px",
   };
 
-  const { setLoginForm, setSignupForm } = useContext(FormContext);
+  const { loginForm, setLoginForm, setSignupForm } = useContext(FormContext);
 
   function toggleLoginForm() {
     setLoginForm(true);
@@ -88,16 +88,24 @@ function Logged() {
 
     const token: string | null = localStorage.getItem("token");
     if (!token) {
-      await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/disconnect", id, {});
+      await axios.put(
+        "http://" + process.env["REACT_APP_API_IP"] + ":5400/user/disconnect",
+        id,
+        {}
+      );
     }
 
     localStorage.clear();
 
-    await axios.put("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/disconnect", id, {
-      headers: {
-        token: token,
-      },
-    });
+    await axios.put(
+      "http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/disconnect",
+      id,
+      {
+        headers: {
+          token: token,
+        },
+      }
+    );
   };
 
   return (

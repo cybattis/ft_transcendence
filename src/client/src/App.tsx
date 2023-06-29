@@ -26,7 +26,7 @@ function App() {
   const [socketId, setSocketId] = useState(defaultSocketState.socketId);
 
   return (
-    <div className="app">
+    <div className="app" id={"background"}>
       <SocketContext.Provider
         value={{ socketId: socketId, setSocketId: setSocketId }}
       >

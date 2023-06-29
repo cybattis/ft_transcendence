@@ -1,15 +1,10 @@
 import { Link } from "react-router-dom";
 import Logo from "../Logo/Logo";
 import "./NavBar.css";
-import { AuthContext } from "../Auth/dto";
-import { useContext } from "react";
 
 function Unlogged() {
   return (
     <>
-      <Link to="/" className="navLink">
-        Home
-      </Link>
       <Link to="about" className="navLink">
         About
       </Link>
