@@ -8,11 +8,9 @@ CLIENT		=	client
 POSTGRES	=	postgres
 PGADMIN		=	pgadmin
 
-LOCAL_IP	=	$(shell ifconfig | awk '/inet /&&!/127.0.0.1/{print $$2;exit}')
-
 # Recipe
 ################################
-start: _start
+start: _start get_ip
 
 stop: _stop
 
@@ -38,10 +36,10 @@ create_dir:
 list: help
 help: _help
 
-ip:
-	@echo $(LOCAL_IP)
+get_ip:
+	@./src/script/get_ip.sh
 
-.PHONY: start stop build clean fclean restart show log create_dir list help
+.PHONY: start stop build clean fclean restart show log create_dir list help get_ip
 
 # ===============================================
 
