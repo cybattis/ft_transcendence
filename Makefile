@@ -6,7 +6,6 @@ COMPOSE 	=	docker compose -f ./src/Docker-compose.yml
 API			=	api
 CLIENT		=	client
 POSTGRES	=	postgres
-PGADMIN		=	pgadmin
 
 # Recipe
 ################################
@@ -31,7 +30,6 @@ log: _log
 
 create_dir:
 	mkdir -p $(VOLUME_PATH)/postgres
-	mkdir -p $(VOLUME_PATH)/pgadmin
 
 list: help
 help: _help
@@ -47,7 +45,6 @@ get_ip:
 $(eval client:;@:)
 $(eval api:;@:)
 $(eval db:;@:)
-$(eval admin:;@:)
 
 BUILD	=	$(COMPOSE) build --no-cache --parallel
 .PHONY: _build
@@ -78,9 +75,6 @@ else ifeq (api, $(filter api, $(MAKECMDGOALS)))
 else ifeq (db, $(filter db, $(MAKECMDGOALS)))
 	@echo 'starting postgres'
 	$(START) $(POSTGRES)
-else ifeq (admin, $(filter admin, $(MAKECMDGOALS)))
-	@echo 'start pgadmin'
-	$(START) $(PGADMIN)
 else
 	@echo 'starting all'
 	$(START)
@@ -98,9 +92,6 @@ else ifeq (api, $(filter api, $(MAKECMDGOALS)))
 else ifeq (db, $(filter db, $(MAKECMDGOALS)))
 	@echo 'stop postgres'
 	$(STOP) $(POSTGRES)
-else ifeq (admin, $(filter admin, $(MAKECMDGOALS)))
-	@echo 'stop pgadmin'
-	$(STOP) $(PGADMIN)
 else
 	@echo 'stop all'
 	$(STOP)

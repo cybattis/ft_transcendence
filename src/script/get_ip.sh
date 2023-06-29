@@ -7,9 +7,9 @@ else
     LOCAL_IP=$(hostname -I | awk '{print $1}')
 fi
 
-LOCAL_IP=127.0.0.1
+#LOCAL_IP=127.0.0.1
 
 echo "IP address: $LOCAL_IP"
 
-awk '{ if (NR == 7) print "'API_IP=${LOCAL_IP}'"; else print $0}' src/api/.env > src/.env.tmp
-mv src/.env.tmp src/.env && rm -f src/.env.tmp && cp src/.env src/api/.env
+awk '{ if (NR == 13) print "'HOST_IP=${LOCAL_IP}'"; else print $0}' src/.env > src/.env.tmp
+mv src/.env.tmp src/.env && rm -f src/.env.tmp
