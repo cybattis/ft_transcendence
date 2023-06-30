@@ -174,11 +174,11 @@ function GameLauncher() {
   const [searchingRanked, setSearchingRanked] = useState(false);
 
   return (
-    <div className="launcher">
+    <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
           <h4 className="game-mode-title">Game mode</h4>
-          <div className="buttons">
+          <div className="game-mode">
             <PracticeGameMode />
             <MultiplayerGameMode
               gameType={GameType.CASUAL}
@@ -233,9 +233,9 @@ function Result(props: { game: GameStatsDto; userId: number }) {
 
 function LastMatch(props: { data: UserInfo }) {
   return (
-    <div className={"statsBox"}>
+    <div className={"lastmatch"}>
       <h5>Last matches</h5>
-      <div className={"lastmatch"}>
+      <div className={"statsBox"}>
         {props.data.games?.slice(-5).map((game, index) => (
           <div key={index}>
             <Result game={game} userId={props.data.id} />
@@ -261,7 +261,7 @@ function Winrate(props: { data: UserInfo }) {
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
   return (
-    <div className="user">
+    <div className="userProfile_container">
       <div className="infobox">
         <Avatar size="200px" img={data.avatarUrl} />
         <div className="info">
