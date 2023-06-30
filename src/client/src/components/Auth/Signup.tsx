@@ -6,6 +6,7 @@ import "./Auth.css";
 import validator from "validator";
 import { FormContext } from "./dto";
 import { apiBaseURL } from "../../utils/constant";
+import logo42 from "../../resource/logo-42.png";
 
 interface UserCredential {
   nickname: string;
@@ -179,12 +180,13 @@ export default function Signup() {
           </button>
         </form>
         <a className="link42" href={intraLink}>
-          Signup with 42
+          <div>Signup with</div>
+          <img src={logo42} alt="42 logo" width={32} height={32} />
         </a>
         <div className="authFooter">
           <div>Already have an account?</div>
           <button
-            className="link"
+            className="bottomLink"
             onClick={() => {
               setSignupForm(false);
               setLoginForm(true);

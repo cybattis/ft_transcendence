@@ -7,6 +7,7 @@ import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
 import { Navigate } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
+import logo42 from "../../resource/logo-42.png";
 
 interface SigninDto {
   email: string;
@@ -100,12 +101,13 @@ export default function Login() {
           </button>
         </form>
         <a className="link42" href={intraLink}>
-          Login with 42
+          <div>Login with</div>
+          <img src={logo42} alt="42 logo" width={32} height={32} />
         </a>
         <div className="authFooter">
           <div>New to PongFever?</div>
           <button
-            className="link"
+            className="bottomLink"
             onClick={() => {
               setSignupForm(true);
               setLoginForm(false);
