@@ -162,6 +162,8 @@
     border-radius: 8px;
     border: 2px solid #8449BF;
     padding: 15px 50px;
+
+    gap: 20px;
 }
 
 .infobox {
@@ -179,12 +181,31 @@
     flex-direction: column;
 }
 
+.home-stats-container {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+
+    justify-content: left;
+}
+
+.home-stat-box {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 20%;
+}
 
 .lastmatch {
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+
+    min-width: 60%;
+
+    justify-content: left;
+
     gap: 10px;
+
 }
 
 .gameResult {
@@ -193,22 +214,17 @@
     text-align: center;
 }
 
+.last-match-stats {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: left;
+}
+
 .win {
     color: green;
 }
 
 .loose {
     color: red;
-}
-
-.statsBox {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.stats {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
 }

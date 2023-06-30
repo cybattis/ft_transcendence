@@ -235,12 +235,16 @@ function LastMatch(props: { data: UserInfo }) {
   return (
     <div className={"lastmatch"}>
       <h5>Last matches</h5>
-      <div className={"statsBox"}>
-        {props.data.games?.slice(-5).map((game, index) => (
-          <div key={index}>
-            <Result game={game} userId={props.data.id} />
-          </div>
-        ))}
+      <div className={"last-match-stats"}>
+        {props.data.games && props.data.games.length > 0 ? (
+          props.data.games.slice(-5).map((game, index) => (
+            <div key={index}>
+              <Result game={game} userId={props.data.id} />
+            </div>
+          ))
+        ) : (
+          <div>No games played yet</div>
+        )}
       </div>
     </div>
   );
@@ -250,9 +254,9 @@ function Winrate(props: { data: UserInfo }) {
   const winrate: number = calculateWinrate(props.data);
 
   return (
-    <div className={"statsBox"}>
+    <div className={"home-stat-box"}>
       <h5>Winrate</h5>
-      <br />
+      <hr />
       <div>{winrate.toFixed(0)}%</div>
     </div>
   );
@@ -271,12 +275,12 @@ function UserProfile(props: { data: UserInfo }) {
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div className="stats">
+      <div className="home-stats-container">
         <LastMatch data={data} />
         <Winrate data={data} />
-        <div className={"statsBox"}>
+        <div className={"home-stat-box"}>
           <h5>ELO</h5>
-          <br />
+          <hr />
           <div>{data.ranking}</div>
         </div>
       </div>
