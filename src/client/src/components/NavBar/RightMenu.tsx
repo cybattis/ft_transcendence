@@ -75,7 +75,7 @@ function Logged() {
   useEffect(() => {
     console.log(notif);
     if (notif) setNotifs(true);
-  }, [notif]);
+  }, []);
 
   let decoded: JwtPayload | null = null;
 

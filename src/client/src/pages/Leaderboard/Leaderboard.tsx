@@ -4,6 +4,7 @@ import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
 import { useContext } from "react";
 import { AuthContext } from "../../components/Auth/dto";
+import { ErrorContext } from "../../components/Modal/modalContext";
 
 function TableHeader() {
   return (
@@ -24,9 +25,11 @@ export function Leaderboard() {
   const data = useLoaderData() as UserInfo[];
   const token = localStorage.getItem("token");
   const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
 
   if (token === null) {
     setAuthToken(null);
+    setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
 
