@@ -243,7 +243,10 @@ function LastMatch(props: { data: UserInfo }) {
             </div>
           ))
         ) : (
-          <div>No games played yet</div>
+          <div className={"no-game"}>
+            <hr className={"user-profile-hr"} />
+            <div>No games played yet</div>
+          </div>
         )}
       </div>
     </div>
@@ -256,7 +259,7 @@ function Winrate(props: { data: UserInfo }) {
   return (
     <div className={"home-stat-box"}>
       <h5>Winrate</h5>
-      <hr />
+      <hr className={"user-profile-hr"} />
       <div>{winrate.toFixed(0)}%</div>
     </div>
   );
@@ -264,10 +267,11 @@ function Winrate(props: { data: UserInfo }) {
 
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
+
   return (
-    <div className="userProfile_container">
+    <div id={"HomeUserInfo"} className="userProfile_container">
       <div className="infobox">
-        <Avatar size="200px" img={data.avatarUrl} />
+        <Avatar size={200} img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
@@ -280,7 +284,7 @@ function UserProfile(props: { data: UserInfo }) {
         <Winrate data={data} />
         <div className={"home-stat-box"}>
           <h5>ELO</h5>
-          <hr />
+          <hr className={"user-profile-hr"} />
           <div>{data.ranking}</div>
         </div>
       </div>

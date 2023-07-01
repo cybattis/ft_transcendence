@@ -86,3 +86,20 @@
     border-radius: 50%;
     background: var(--purple-wave);
 }
+
+#LeaderboardProfileLink {
+    display: flex;
+    flex-direction: row;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 20px;
+
+    text-decoration: none;
+    color: var(--white);
+}
+
+#LeaderboardProfileLink:hover {
+    color: var(--cyan);
+}

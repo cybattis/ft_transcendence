@@ -3,6 +3,7 @@
     flex-direction: row;
     height: var(--vp-size);
     gap: 10px;
+    min-height: 500px;
 }
 
 .leftside {
@@ -12,20 +13,18 @@
     gap: 10px;
 
     box-sizing: border-box;
+    min-width: 500px;
 }
 
 .rightside {
     display: flex;
-    flex: 1;
     flex-direction: row;
-    height: 100%;
+    flex: 1;
+
     box-sizing: border-box;
-    justify-content: center;
 
-    border: 2px solid #8449BF;
-
-    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
     border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgba(78, 191, 217, 0.3) 100%);
 }
 
@@ -34,18 +33,20 @@
 .game-launcher {
     box-sizing: border-box;
     display: flex;
+    flex-direction: column;
+
     width: 100%;
     height: 50%;
-    flex-direction: column;
+    min-height: 200px;
+    padding: 15px;
+    gap: 15px;
 
     align-items: center;
     justify-content: center;
 
-    padding: 15px;
-    gap: 15px;
-
     border-radius: 8px;
-    border: 2px solid #8449BF;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgb(27, 30, 36) 100%);
 }
 
 .game-mode-title {
@@ -152,18 +153,22 @@
 /* User Info */
 /* ====================== */
 .userProfile_container {
-    display: flex;
-    width: 100%;
-    height: 50%;
-    flex-direction: column;
-
     box-sizing: border-box;
 
-    border-radius: 8px;
-    border: 2px solid #8449BF;
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: 50%;
+    min-height: 350px;
+
     padding: 15px 50px;
 
     gap: 20px;
+
+    border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.32) 0%, rgb(27, 30, 36) 100%);
 }
 
 .infobox {
@@ -203,9 +208,6 @@
     min-width: 60%;
 
     justify-content: left;
-
-    gap: 10px;
-
 }
 
 .gameResult {
@@ -219,6 +221,18 @@
     flex-direction: row;
     gap: 20px;
     justify-content: left;
+}
+
+.no-game {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-profile-hr {
+    border: 0;
+    clear:both;
+    display:block;
+    margin: 0;
 }
 
 .win {
