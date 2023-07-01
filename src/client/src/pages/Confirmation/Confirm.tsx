@@ -13,7 +13,7 @@ async function ValidateEmail() {
   const id = location.search.substring(1);
 
   await axios.put(apiBaseURL + "auth/" + id, true).then((res) => {
-    console.log(res);
+    console.log("ValidateEmail: ", res);
     const data = res.data;
     localStorage.setItem("token", data.token);
     setAuthToken(data.token);
