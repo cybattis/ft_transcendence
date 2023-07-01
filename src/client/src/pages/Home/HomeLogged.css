@@ -191,23 +191,20 @@
     flex-direction: row;
     gap: 20px;
 
-    justify-content: left;
+    justify-content: center;
 }
 
 .home-stat-box {
     display: flex;
     flex-direction: column;
 
-    min-width: 20%;
+    width: 100%;
+    align-items: center;
 }
 
 .lastmatch {
     display: flex;
     flex-direction: column;
-
-    min-width: 60%;
-
-    justify-content: left;
 }
 
 .gameResult {
