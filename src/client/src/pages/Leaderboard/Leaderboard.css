@@ -1,9 +1,13 @@
 .leaderboard {
     display: flex;
     flex-direction: column;
+
     height: var(--vp-size);
-    align-items: center;
     width: 100%;
+
+    align-items: center;
+
+    overflow-y: auto;
 }
 
 #title {
@@ -17,12 +21,15 @@
 .tableHeader {
     display: flex;
     flex-direction: row;
+
+    width: 50vw;
+    height: 45px;
+
     align-items: center;
     justify-content: center;
+
     gap: 300px;
 
-    width: 100%;
-    height: 45px;
 }
 
 #tableLeft {
@@ -34,15 +41,17 @@
     padding: 0;
     gap: 35px;
 
-    width: 126px;
+    width: fit-content;
     height: 24px;
 }
 
 #tableRight {
     display: flex;
     flex-direction: row;
+
     justify-content: center;
     align-items: center;
+
     padding: 0;
     gap: 80px;
 

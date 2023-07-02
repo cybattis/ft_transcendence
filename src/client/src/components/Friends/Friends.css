@@ -1,8 +1,9 @@
 .friendList {
   box-sizing: border-box;
+
   display: flex;
   flex-direction: column;
-  flex: 2;
+  flex: 1 2;
 
   min-width: 120px;
   text-align: center;

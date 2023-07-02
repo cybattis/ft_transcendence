@@ -1,5 +1,7 @@
 .notifPage {
     height: var(--vp-size);
+
+    overflow-y: auto;
 }
 
 .notifsElements{ 

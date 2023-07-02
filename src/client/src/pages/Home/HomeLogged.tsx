@@ -11,12 +11,11 @@ import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { AuthContext } from "../../components/Auth/dto";
 import { Friends } from "../../components/Friends/Friends";
-import { SocketContext } from "../../components/Auth/dto";
-import { io } from "socket.io-client";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
+import { ErrorContext } from "../../components/Modal/modalContext";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -237,7 +236,7 @@ function LastMatch(props: { data: UserInfo }) {
       <h5>Last matches</h5>
       <div className={"last-match-stats"}>
         {props.data.games && props.data.games.length > 0 ? (
-          props.data.games.slice(-5).map((game, index) => (
+          props.data.games.slice(-3).map((game, index) => (
             <div key={index}>
               <Result game={game} userId={props.data.id} />
             </div>
@@ -245,7 +244,7 @@ function LastMatch(props: { data: UserInfo }) {
         ) : (
           <div className={"no-game"}>
             <hr className={"user-profile-hr"} />
-            <div>No games played yet</div>
+            <div>No match</div>
           </div>
         )}
       </div>
@@ -281,6 +280,11 @@ function UserProfile(props: { data: UserInfo }) {
       </div>
       <div className="home-stats-container">
         <LastMatch data={data} />
+        <div className={"home-stat-box"}>
+          <h5>Game played</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{data.games?.length}</div>
+        </div>
         <Winrate data={data} />
         <div className={"home-stat-box"}>
           <h5>ELO</h5>
@@ -293,11 +297,9 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
-  const { socketId, setSocketId } = useContext(SocketContext);
-  setSocketId(io(apiBaseURL).id);
-  console.log(socketId);
-
   const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
     id: 0,
@@ -329,8 +331,9 @@ export function HomeLogged() {
           if (error.response && error.response.status === 403) {
             localStorage.clear();
             setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
             return <Navigate to={"/"} />;
-          } else console.log(error.message);
+          } else setErrorMessage(error.message);
         });
     }
 
@@ -343,6 +346,7 @@ export function HomeLogged() {
 
   if (token === null) {
     setAuthToken(null);
+    setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
 
