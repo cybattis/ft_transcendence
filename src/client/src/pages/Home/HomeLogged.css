@@ -113,6 +113,8 @@
     font-weight: bold;
     font-family: "Space Mono", monospace;
     white-space: nowrap;
+
+    cursor: pointer;
 }
 
 .matchmaking-button {

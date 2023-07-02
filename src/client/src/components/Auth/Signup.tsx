@@ -7,6 +7,9 @@ import validator from "validator";
 import { FormContext } from "./dto";
 import { apiBaseURL } from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
+import { MessageModal } from "../Modal/MessageModal";
+import { ErrorContext } from "../Modal/modalContext";
+import { ErrorResponse } from "../../type/client.type";
 
 interface UserCredential {
   nickname: string;
@@ -17,9 +20,11 @@ interface UserCredential {
 }
 
 export default function Signup() {
-  const [errorInput, setErrorInput] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
+  const [errorInput, setErrorInput] = useState("");
+  const [message, setMessage] = useState("");
 
   const inputs = {
     nickname: "",
@@ -104,6 +109,17 @@ export default function Signup() {
     return isValid;
   };
 
+  function handleError(error: ErrorResponse) {
+    if (error.response === undefined) {
+      setErrorMessage("Error unknown...");
+      return;
+    }
+    if (error.response.status === 403) {
+      localStorage.clear();
+      setErrorMessage("Session expired, please login again!");
+    } else setErrorMessage(error.response.data.message + "!");
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -126,31 +142,21 @@ export default function Signup() {
         },
       })
       .then(() => {
-        setSignupForm(false);
-        alert(
-          "An email has been sent to verify your email address. Please check this out before continuing."
-        );
+        setMessage("Please check your email to confirm your account");
       })
       .catch((error) => {
-        console.log("Error: ", error.response.status);
-        setErrorMessage("Server error... try again");
+        handleError(error);
       });
   };
 
   const intraLink = process.env["REACT_APP_REDIR_URL"];
-
-  //TODO: remettre alert email
 
   return (
     <div className="background">
       <div className="authForm">
         <Logo />
         <div className="desc">Join the Fever</div>
-        {errorInput ? (
-          <p className="error"> {errorInput} </p>
-        ) : errorMessage ? (
-          <p className="error"> {errorMessage} </p>
-        ) : null}
+        {errorInput ? <p className="error"> {errorInput} </p> : null}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="nickname" />
           <div className="halfInput">
@@ -197,6 +203,13 @@ export default function Signup() {
           </button>
         </div>
       </div>
+      <MessageModal
+        msg={message}
+        onClose={() => {
+          setMessage("");
+          setSignupForm(false);
+        }}
+      />
     </div>
   );
 }

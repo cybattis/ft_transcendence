@@ -26,7 +26,7 @@ export function Settings() {
   const [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
   const [tfaState, setTfaState] = useState(data.authActivated);
 
-  let [message, setMessage] = useState("");
+  const [message, setMessage] = useState("");
 
   if (token === null) {
     setAuthToken(null);
@@ -130,7 +130,7 @@ export function Settings() {
           callbackValue={!tfaState}
         />
       ) : null}
-      <MessageModal error={message} onClose={() => setMessage("")} />
+      <MessageModal msg={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>
