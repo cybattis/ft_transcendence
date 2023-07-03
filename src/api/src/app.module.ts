@@ -8,12 +8,12 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entity/Users.entity';
 import { Chat } from './chat/entity/Chat.entity';
-import {ChannelModule} from "./channel/channel.module";
+import { ChannelModule } from './channel/channel.module';
 import { GameModule } from './game/game.module';
 import { Game } from './game/entity/Game.entity';
-import { ScheduleModule } from "@nestjs/schedule";
+import { ScheduleModule } from '@nestjs/schedule';
 import { ChatModule } from './chat/chat.module';
-import { MatchmakingModule } from "./matchmaking/matchmaking.module";
+import { MatchmakingModule } from './matchmaking/matchmaking.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { MatchmakingModule } from "./matchmaking/matchmaking.module";
     ChatModule,
     GameModule,
     ChannelModule,
-    CacheModule.register({ isGlobal: true}),
+    CacheModule.register({ isGlobal: true }),
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({

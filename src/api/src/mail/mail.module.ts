@@ -7,7 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Global()
 @Module({
-  imports: [ConfigModule, 
+  imports: [
+    ConfigModule,
     MailerModule.forRootAsync({
       useFactory: async () => ({
         transport: {
@@ -35,5 +36,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   providers: [MailService],
   exports: [MailService],
 })
-
 export class MailModule {}

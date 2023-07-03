@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -43,6 +44,24 @@ export class UserController {
     return this.userService.findAll();
   }
 
+  /*
+   * GET /user/profile/me
+   * @desc Get user info from token for homepage
+   */
+  @UseGuards(TokenGuard)
+  @Get('profile/me')
+  async meInfo(@Headers('token') header: Headers): Promise<UserInfo | any> {
+    const payload: any = this.jwtService.decode(header.toString());
+    if (payload) {
+      return this.userService.userInfo(header.toString(), payload.id);
+    }
+    throw new ForbiddenException('Invalid token');
+  }
+
+  /*
+   * GET /user/profile/:id
+   * @desc Get user public info from id for profile page
+   */
   @UseGuards(TokenGuard)
   @Get('profile/:id')
   async userInfo(

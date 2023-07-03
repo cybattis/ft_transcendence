@@ -8,6 +8,7 @@ import { AuthContext } from "./dto";
 import "./Auth.css";
 import { TokenData } from "../../type/user.type";
 import jwt_decode from "jwt-decode";
+import { apiBaseURL } from "../../utils/constant";
 
 export default function ConfirmEmail() {
   const [errorInput, setErrorInput] = React.useState("");
@@ -41,7 +42,7 @@ export default function ConfirmEmail() {
     const code = inputs.code;
 
     await axios
-      .post("http://" + process.env["REACT_APP_API_IP"] + ":5400/auth/signin", code)
+      .post(apiBaseURL + "auth/signin", code)
       .then((res) => {
         if (res.data.status === parseInt("401")) {
           setErrorMessage(res.data.response);

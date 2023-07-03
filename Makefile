@@ -6,13 +6,10 @@ COMPOSE 	=	docker compose -f ./src/Docker-compose.yml
 API			=	api
 CLIENT		=	client
 POSTGRES	=	postgres
-PGADMIN		=	pgadmin
-
-LOCAL_IP	=	$(shell ifconfig | awk '/inet /&&!/127.0.0.1/{print $$2;exit}')
 
 # Recipe
 ################################
-start: _start
+start: get_ip _start
 
 stop: _stop
 
@@ -33,15 +30,14 @@ log: _log
 
 create_dir:
 	mkdir -p $(VOLUME_PATH)/postgres
-	mkdir -p $(VOLUME_PATH)/pgadmin
 
 list: help
 help: _help
 
-ip:
-	@echo $(LOCAL_IP)
+get_ip:
+	@./src/script/get_ip.sh
 
-.PHONY: start stop build clean fclean restart show log create_dir list help
+.PHONY: start stop build clean fclean restart show log create_dir list help get_ip
 
 # ===============================================
 
@@ -49,7 +45,6 @@ ip:
 $(eval client:;@:)
 $(eval api:;@:)
 $(eval db:;@:)
-$(eval admin:;@:)
 
 BUILD	=	$(COMPOSE) build --no-cache --parallel
 .PHONY: _build
@@ -80,9 +75,6 @@ else ifeq (api, $(filter api, $(MAKECMDGOALS)))
 else ifeq (db, $(filter db, $(MAKECMDGOALS)))
 	@echo 'starting postgres'
 	$(START) $(POSTGRES)
-else ifeq (admin, $(filter admin, $(MAKECMDGOALS)))
-	@echo 'start pgadmin'
-	$(START) $(PGADMIN)
 else
 	@echo 'starting all'
 	$(START)
@@ -100,9 +92,6 @@ else ifeq (api, $(filter api, $(MAKECMDGOALS)))
 else ifeq (db, $(filter db, $(MAKECMDGOALS)))
 	@echo 'stop postgres'
 	$(STOP) $(POSTGRES)
-else ifeq (admin, $(filter admin, $(MAKECMDGOALS)))
-	@echo 'stop pgadmin'
-	$(STOP) $(PGADMIN)
 else
 	@echo 'stop all'
 	$(STOP)

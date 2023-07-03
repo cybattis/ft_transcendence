@@ -15,6 +15,8 @@ import { Game } from "./pages/Game/Game";
 import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
+import { apiBaseURL } from "./utils/constant";
+import { ErrorRedirection } from "./pages/Redirection/ErrorRedirection";
 
 const router = createBrowserRouter([
   {
@@ -41,7 +43,7 @@ const router = createBrowserRouter([
             errorElement: <Error404 />,
             loader: async ({ request, params }) => {
               const res = await fetch(
-                "http://" + process.env["REACT_APP_API_IP"] + `:5400/user/profile/${params.id}`,
+                apiBaseURL + `user/profile/${params.id}`,
                 {
                   headers: {
                     token: localStorage.getItem("token") || "",
@@ -62,14 +64,11 @@ const router = createBrowserRouter([
             path: "leaderboard",
             element: <Leaderboard />,
             loader: async ({ request, params }) => {
-              const res = await fetch(
-                "http://" + process.env["REACT_APP_API_IP"] + ":5400/user/leaderboard",
-                {
-                  headers: {
-                    token: localStorage.getItem("token") || "",
-                  },
-                }
-              );
+              const res = await fetch(apiBaseURL + "user/leaderboard", {
+                headers: {
+                  token: localStorage.getItem("token") || "",
+                },
+              });
               if (res.status === 403) localStorage.clear();
               return res.json();
             },
@@ -78,7 +77,7 @@ const router = createBrowserRouter([
             path: "settings",
             element: <Settings />,
             loader: async ({ request, params }) => {
-              const res = await fetch("http://" + process.env["REACT_APP_API_IP"] + ":5400/user/settings/", {
+              const res = await fetch(apiBaseURL + "user/settings/", {
                 headers: {
                   token: localStorage.getItem("token") || "",
                 },
