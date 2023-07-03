@@ -1,8 +1,8 @@
-import { GameStatsDto, GameType } from "../../../type/game.type";
+import { GameStatsDto, GameType } from "../../type/game.type";
 import "./GameStatsItem.css";
 import { Link } from "react-router-dom";
-import { Avatar } from "../../Avatar";
-import { MatcheScore } from "../MatcheScore";
+import { Avatar } from "../Avatar";
+import { MatcheScore } from "./MatcheScore";
 
 export function GameStatsHeader() {
   return (
@@ -56,20 +56,7 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
       <div id={"type"}>
         {props.game.type === GameType.RANKED ? "Ranked" : "Casual"}
       </div>
-      <div id={"score"}>
-        {(props.game.ids[0] == props.id &&
-          props.game.scoreP1 > props.game.scoreP2) ||
-        (props.game.ids[1] == props.id &&
-          props.game.scoreP1 < props.game.scoreP2) ? (
-          <div id={"win"}>
-            <MatcheScore game={props.game} userId={props.id} />
-          </div>
-        ) : (
-          <div id={"loose"}>
-            <MatcheScore game={props.game} userId={props.id} />
-          </div>
-        )}
-      </div>
+      <MatcheScore game={props.game} userId={props.id} />
       <OpponentName />
     </div>
   );

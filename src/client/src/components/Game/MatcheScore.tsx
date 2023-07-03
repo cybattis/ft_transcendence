@@ -1,16 +1,35 @@
-import { GameStatsDto } from "../../type/game.type";
+import { GameStatsDto, GameStatus } from "../../type/game.type";
+import "./GameStatsItem.css";
 
 export function MatcheScore(props: { game: GameStatsDto; userId: number }) {
-  if (props.game.players[0].id === props.userId) {
-    return (
-      <div>
-        {props.game.scoreP1}-{props.game.scoreP2}
-      </div>
-    );
-  }
-  return (
-    <div>
-      {props.game.scoreP2}-{props.game.scoreP1}
-    </div>
-  );
+  const score = () => {
+    if (props.game.players[0].id === props.userId) {
+      return (
+        <div>
+          {props.game.scoreP1}-{props.game.scoreP2}
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          {props.game.scoreP2}-{props.game.scoreP1}
+        </div>
+      );
+    }
+  };
+
+  const state = () => {
+    if (props.game.status === GameStatus.IN_PROGRESS)
+      return <div id={"inProgress"}>In progress</div>;
+    else if (
+      (props.game.ids[0] == props.userId &&
+        props.game.scoreP1 > props.game.scoreP2) ||
+      (props.game.ids[1] == props.userId &&
+        props.game.scoreP1 < props.game.scoreP2)
+    ) {
+      return <div id={"win"}>{score()}</div>;
+    } else return <div id={"loose"}>{score()}</div>;
+  };
+
+  return <div id={"score"}>{state()}</div>;
 }

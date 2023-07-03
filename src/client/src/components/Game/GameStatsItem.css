@@ -1,0 +1,91 @@
+.gameStat {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+
+    align-items: center;
+    justify-content: left;
+
+    height: 50px;
+
+    margin-bottom: 10px;
+
+    border-radius: 8px;
+
+    background-color: var(--purple-dark);
+}
+
+.gameStat:hover {
+    background-color: var(--purple-darker);
+}
+
+.gameStat #date {
+    margin-left: 50px;
+    margin-right: 80px;
+    min-width: max-content;
+}
+
+
+.gameStat #win {
+    color: green;
+}
+
+.gameStat #loose {
+    color: red;
+}
+
+.gameStat #inProgress {
+    color: yellow;
+}
+
+.gameStat #score {
+    max-width: 100px;
+
+}
+
+#opponent {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 15px;
+
+    margin-left: -10px;
+}
+
+.opponentProfile {
+    text-decoration: none;
+    color: var(--white);
+}
+
+.opponentProfile:hover {
+    color: var(--cyan);
+}
+
+/* ===================================================================== */
+
+.gameStatHeader {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+
+    grid-gap: 100px;
+    align-items: center;
+    justify-content: left;
+
+    height: 40px;
+
+    border-radius: 8px;
+    border: 2px solid var(--purple-wave);
+}
+
+.gameStatHeader #date {
+    margin-left: 50px;
+    min-width: max-content;
+}
+
+.gameStatHeader #type {
+}
+
+.gameStatHeader #score {
+}

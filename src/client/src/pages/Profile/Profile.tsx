@@ -9,7 +9,7 @@ import { XPBar } from "../../components/XPBar/XPBar";
 import {
   GameStatsHeader,
   GameStatsItem,
-} from "../../components/Game/GameStats/GameStatsItem";
+} from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
 import { AuthContext } from "../../components/Auth/dto";
