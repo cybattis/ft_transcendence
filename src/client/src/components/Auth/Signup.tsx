@@ -153,63 +153,66 @@ export default function Signup() {
 
   return (
     <div className="background">
-      <div className="authForm">
-        <Logo />
-        <div className="desc">Join the Fever</div>
-        {errorInput ? <p className="error"> {errorInput} </p> : null}
-        <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="nickname" />
-          <div className="halfInput">
+      {message ? (
+        <MessageModal
+          msg={message}
+          onClose={() => {
+            setMessage("");
+            setSignupForm(false);
+          }}
+        />
+      ) : (
+        <div className="authForm">
+          <Logo />
+          <div className="desc">Join the Fever</div>
+          {errorInput ? <p className="error"> {errorInput} </p> : null}
+          <form method="post" onSubmit={handleSubmit}>
+            <InputForm type="text" name="nickname" />
+            <div className="halfInput">
+              <InputForm
+                type="text"
+                name="firstname"
+                label="First name"
+                half={true}
+              />
+              <InputForm
+                type="text"
+                name="lastname"
+                label="Last name"
+                half={true}
+              />
+            </div>
+            <InputForm type="text" name="email" />
+            <InputForm type="text" name="confirmEmail" label="Confirm Email" />
+            <InputForm type="password" name="password" />
             <InputForm
-              type="text"
-              name="firstname"
-              label="First name"
-              half={true}
+              type="password"
+              name="confirmPassword"
+              label="Confirm Password"
             />
-            <InputForm
-              type="text"
-              name="lastname"
-              label="Last name"
-              half={true}
-            />
+            <button type="submit" className="submitButton">
+              Signup
+            </button>
+          </form>
+          <a className="link42" href={intraLink}>
+            <div>Signup with</div>
+            <img src={logo42} alt="42 logo" width={32} height={32} />
+          </a>
+          <div className="authFooter">
+            <div>Already have an account?</div>
+            <button
+              className="bottomLink"
+              onClick={() => {
+                setSignupForm(false);
+                setLoginForm(true);
+                setCodeForm(false);
+              }}
+            >
+              Sign in!
+            </button>
           </div>
-          <InputForm type="text" name="email" />
-          <InputForm type="text" name="confirmEmail" label="Confirm Email" />
-          <InputForm type="password" name="password" />
-          <InputForm
-            type="password"
-            name="confirmPassword"
-            label="Confirm Password"
-          />
-          <button type="submit" className="submitButton">
-            Signup
-          </button>
-        </form>
-        <a className="link42" href={intraLink}>
-          <div>Signup with</div>
-          <img src={logo42} alt="42 logo" width={32} height={32} />
-        </a>
-        <div className="authFooter">
-          <div>Already have an account?</div>
-          <button
-            className="bottomLink"
-            onClick={() => {
-              setSignupForm(false);
-              setLoginForm(true);
-              setCodeForm(false);
-            }}
-          >
-            Sign in!
-          </button>
         </div>
-      </div>
-      <MessageModal
-        msg={message}
-        onClose={() => {
-          setMessage("");
-          setSignupForm(false);
-        }}
-      />
+      )}
     </div>
   );
 }
