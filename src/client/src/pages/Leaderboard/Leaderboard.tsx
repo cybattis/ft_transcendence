@@ -10,12 +10,13 @@ function TableHeader() {
   return (
     <div className={"tableHeader"}>
       <div id={"tableLeft"}>
-        <div>Player</div>
+        <div id={"ld-rank"}>#</div>
+        <div id={"ld-player"}>Player</div>
       </div>
       <div id={"tableRight"}>
-        <div>Winrate</div>
-        <div>Game played</div>
-        <div>ELO</div>
+        <div id={"ld-winrate"}>Winrate</div>
+        <div id={"ld-game-played"}>Game played</div>
+        <div id={"ld-elo"}>ELO</div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-.container {
+.ldi-container {
     width: 50vw;
     min-width: max-content;
 }
@@ -14,7 +14,6 @@
     height: 60px;
 
     margin-bottom: 10px;
-    gap: 100px;
 
     background: var(--black);
     border-radius: 25px;
@@ -33,43 +32,50 @@
     background-color: var(--cyan);
 }
 
-#leftSide {
+#ldi-leftSide {
     display: flex;
     flex-direction: row;
+    flex: 1 2 0;
+
     justify-content: left;
     align-items: center;
 
-    gap: 40px;
+    height: 60px;
+    min-width: 250px;
+
     margin-left: 40px;
-
-    width: 100%;
-    height: 60px;
+    gap: 40px;
 }
 
-#rightSide {
+#ldi-rightSide {
+    box-sizing: border-box;
     display: flex;
     flex-direction: row;
+    flex: 1.5 2;
+
     justify-content: left;
     align-items: center;
 
-    margin-right: 40px;
-
-    gap: 70px;
-
-    width: 100%;
-    height: 60px;
+    height: fit-content;
+    margin-right: 100px;
 }
 
-#winrate {
-    min-width: 80px;
+#ldi-winrate, #ldi-game-played, #ldi-elo {
+    box-sizing: border-box;
+    flex: 1.5 1 0;
+
+    min-width: 100px;
+
+    text-align: center;
+    justify-content: left;
 }
 
-#gamePlayed {
-    min-width: 80px;
+#ldi-winrate {
+    flex: 2 1.5;
 }
 
-#elo {
-    min-width: 80px;
+#ldi-game-played {
+    flex: 2 1;
 }
 
 #pastille {

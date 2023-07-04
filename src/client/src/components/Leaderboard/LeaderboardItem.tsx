@@ -10,19 +10,19 @@ export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
       : 0;
 
   return (
-    <div className={"container"}>
+    <div className={"ldi-container"}>
       <div className={"leaderboardItem"}>
-        <div id={"leftSide"}>
+        <div id={"ldi-leftSide"}>
           <div id={"pastille"}>{props.rank + 1}</div>
           <Link to={`/profile/${props.data.id}`} id={"LeaderboardProfileLink"}>
             <Avatar size={"40px"} img={props.data.avatarUrl} />
             <div>{props.data.nickname}</div>
           </Link>
         </div>
-        <div id={"rightSide"}>
-          <div id={"winrate"}>{winrate.toFixed(0)}%</div>
-          <div id={"gamePlayed"}>{props.data.games?.length}</div>
-          <div id={"elo"}>{props.data.ranking}</div>
+        <div id={"ldi-rightSide"}>
+          <div id={"ldi-winrate"}>{winrate.toFixed(0)}%</div>
+          <div id={"ldi-game-played"}>{props.data.games?.length}</div>
+          <div id={"ldi-elo"}>{props.data.ranking}</div>
         </div>
       </div>
     </div>

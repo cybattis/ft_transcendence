@@ -27,33 +27,40 @@
 
     align-items: center;
     justify-content: center;
-
-    gap: 300px;
-
 }
 
 #tableLeft {
-    /* Auto layout */
     display: flex;
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    gap: 35px;
+    flex: 1 2 0;
 
-    width: fit-content;
-    height: 24px;
+    align-items: center;
+
+    min-width: 250px;
+
+    margin-left: 50px;
+    gap: 60px;
 }
 
 #tableRight {
+    box-sizing: border-box;
     display: flex;
     flex-direction: row;
+    flex: 1.5 2 0;
 
     justify-content: center;
     align-items: center;
 
-    padding: 0;
-    gap: 80px;
-
     height: fit-content;
+    margin-right: 100px;
+}
+
+#ld-winrate, #ld-game-played, #ld-elo {
+    box-sizing: border-box;
+    flex: 1 auto;
+
+    width: max-content;
+    min-width: 100px;
+
+    text-align: center;
 }
