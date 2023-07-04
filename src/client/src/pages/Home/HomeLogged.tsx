@@ -5,7 +5,7 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Navigate } from "react-router-dom";
-import { GameStatsDto, GameType } from "../../type/game.type";
+import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
@@ -231,12 +231,23 @@ function Result(props: { game: GameStatsDto; userId: number }) {
 }
 
 function LastMatch(props: { data: UserInfo }) {
+  let slice: number = -3;
+
+  if (props.data.games?.at(-1)?.status === GameStatus.IN_PROGRESS) {
+    slice = -4;
+  }
+
+  const lastGames = props.data.games?.slice(slice).filter((game) => {
+    console.log(game);
+    return game.status === GameStatus.FINISHED;
+  });
+
   return (
     <div className={"lastmatch"}>
       <h5>Last matches</h5>
       <div className={"last-match-stats"}>
         {props.data.games && props.data.games.length > 0 ? (
-          props.data.games.slice(-3).map((game, index) => (
+          lastGames?.map((game, index) => (
             <div key={index}>
               <Result game={game} userId={props.data.id} />
             </div>
