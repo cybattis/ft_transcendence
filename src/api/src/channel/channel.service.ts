@@ -4,13 +4,22 @@ import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
 import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
+import { Chat } from './entity/Chat.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ChannelController } from './channel.controller';
 
 @Injectable()
 export class ChannelService {
     private channelStruct: ChannelStructure[];
-    private usersSocketStructures: UsersSocketStructure[]
-
-    constructor() {
+    private usersSocketStructures: UsersSocketStructure[];
+    private channelController: ChannelController;
+    
+    
+    constructor(
+        @InjectRepository(Chat)
+        private chatRepository: Repository<Chat>
+        ) {
         this.channelStruct = [];
         this.usersSocketStructures = [];
     }
@@ -51,7 +60,7 @@ export class ChannelService {
                     }
                 }
                 res += "Ban list:";
-                for (let indexBan = 0;  indexBan < this.channelStruct[index].operator.length; indexBan++) {
+                for (let indexBan = 0;  indexBan < this.channelStruct[index].ban.length; indexBan++) {
                     res += this.channelStruct[index].ban[indexBan].name;
                     res += this.channelStruct[index].ban[indexBan].date;
                     if (indexBan === this.channelStruct[index].ban.length - 1) {
@@ -276,13 +285,18 @@ export class ChannelService {
     }
 
     async joinChannel(socket: Socket, username: string, channel: string, pass: string){
+        console.log(`Channel  ${channel} pass ${pass}`);
         const salt = await bcrypt.genSalt();
-        let hash = await bcrypt.hash('', salt);
+        let hash;
         if (pass !== undefined)
             hash = await bcrypt.hash(pass, salt);
+        else{
+            pass = 'pass';
+            hash = await bcrypt.hash(pass, salt);
+        }
         if (this.channelStruct.length === 0) {
-            console.log(`indisde new ${channel}`);
-            this.channelStruct.push(new ChannelStructure(channel, username, hash));
+            //this.channelStruct.push(new ChannelStructure(channel, username, hash));
+            this.channelStruct.push(new ChannelStructure(channel, username, pass));
             socket.join(channel);
             socket.emit('join', channel);
         }
@@ -295,10 +309,7 @@ export class ChannelService {
                     return;
                 }
                 if (!this.channelStruct[index].isUser(username)) {
-                    console.log('Test mdp');
-                    if(!pass)
-                        pass = '';
-                    if(await bcrypt.compare(pass, this.channelStruct[index].pswd))
+                    if(pass === this.channelStruct[index].pswd)
                     {
                         this.channelStruct[index].newUser(username);
                         socket.join(channel);
@@ -308,7 +319,8 @@ export class ChannelService {
                 return;
             }
         }
-        this.channelStruct.push(new ChannelStructure(channel, username, hash));
+        this.channelStruct.push(new ChannelStructure(channel, username, pass));
+        //this.channelStruct.push(new ChannelStructure(channel, username, hash));
         socket.join(channel);
         socket.emit('join', channel);
     }
@@ -352,12 +364,35 @@ export class ChannelService {
         if (posActualChannel === 0)
             return ;
         if (this.channelStruct[posActualChannel].nbUsersInChannel() === 0)
+        {
+            console.log(`Inside delete channel ${posActualChannel}`);
             this.channelStruct.splice(posActualChannel, 1);
+            console.log(`Inside delete 2 ${posActualChannel}`);
+            this.channelController.deleteChannel(channel);
+            console.log(`Inside delete 3 ${posActualChannel}`);
+        }
     }
 
     blockedUser(server: Server, socket: Socket, target: string){
         const targetUser = this.takeSocketByUsername(target);
         if (targetUser != null)
             server.to(socket.id).emit("blocked", target);
+    }
+
+    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, ){
+        const send = {sender, msg, channel};
+        console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
+        if (channel[0] === "#"){
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender});
+            socket.broadcast.emit('rcv', send);
+        }
+        else
+        {
+          const target = this.takeSocketByUsername(channel);
+          channel = sender;
+          const prv = {sender, msg, channel};
+          if (target)
+            socket.to(target).emit('rcv', prv);
+        }
     }
 }

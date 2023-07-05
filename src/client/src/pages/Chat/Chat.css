@@ -10,8 +10,6 @@
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    width: 400px;
-    height: 700px;
     border-radius: 10px;
     background: rgba(254, 254, 254, 0.1) ;
     text-align: center;
@@ -20,6 +18,7 @@
 .rcv-mess-container{
     flex-grow: 2;
     width: 100%;
+    max-height: 200px;
     overflow-y: scroll;
 }
 

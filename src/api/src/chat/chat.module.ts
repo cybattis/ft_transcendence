@@ -4,7 +4,7 @@ import { ChatGateway } from './chat.gateway';
 import { ChannelService } from 'src/channel/channel.service';
 import { UserService } from 'src/user/user.service';
 import { UserModule } from 'src/user/user.module';
-import { Chat } from './entity/Chat.entity';
+import { Chat } from '../channel/entity/Chat.entity';
 
 @Module({
   imports: [UserModule,
