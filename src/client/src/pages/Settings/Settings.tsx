@@ -11,6 +11,7 @@ import { MessageModal } from "../../components/Modal/MessageModal";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { ErrorResponse } from "../../type/client.type";
+import { HandleError } from "../../components/HandleError";
 
 export function Settings() {
   const data = useLoaderData() as UserSettings;
@@ -34,19 +35,13 @@ export function Settings() {
     return <Navigate to={"/"} />;
   }
 
-  function handleError(error: ErrorResponse) {
-    if (error.response === undefined) {
-      setErrorMessage("Error unknown...");
-      return;
-    }
-    if (error.response.status === 403) {
-      localStorage.clear();
+  function submitImage(event: ChangeEvent<HTMLInputElement>) {
+    if (!token) {
       setAuthToken(null);
       setErrorMessage("Session expired, please login again!");
-    } else setErrorMessage(error.response.data.message + "!");
-  }
+      return <Navigate to={"/"} />;
+    }
 
-  function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.files === null) return;
     if (event.target.files[0].size > 2097152) {
       setErrorMessage("File has to be less than 2MB");
@@ -67,7 +62,7 @@ export function Settings() {
         setAvatarUrl(res.data);
       })
       .catch((error: ErrorResponse) => {
-        handleError(error);
+        return <HandleError error={error} />;
       });
   }
 
@@ -79,6 +74,12 @@ export function Settings() {
       firstname: firstName,
       lastname: lastName,
     };
+
+    if (!token) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return <Navigate to={"/"} />;
+    }
 
     if (!user.nickname[0]) {
       setErrorMessage("Your Nickname can't be empty!");
@@ -97,11 +98,17 @@ export function Settings() {
         setMessage("Update successful!");
       })
       .catch((error) => {
-        handleError(error);
+        return <HandleError error={error} />;
       });
   };
 
   const handle2fa = async () => {
+    if (!token) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return <Navigate to={"/"} />;
+    }
+
     await axios
       .put(
         apiBaseURL + "auth/2fa/update",
@@ -117,7 +124,7 @@ export function Settings() {
         setCodeForm(true);
       })
       .catch((error) => {
-        handleError(error);
+        return <HandleError error={error} />;
       });
   };
 

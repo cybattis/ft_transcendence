@@ -6,12 +6,12 @@ import { apiBaseURL } from "../../utils/constant";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { AuthContext } from "../../components/Auth/dto";
+import { HandleError } from "../../components/HandleError";
 
 export default function Notifications() {
-  const token: any = localStorage.getItem("token");
-
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
+  const token: string | null = localStorage.getItem("token");
 
   const [invits, setInvits] = useState([
     {
@@ -22,6 +22,12 @@ export default function Notifications() {
   ]);
 
   async function handleAccept(id: number) {
+    if (!id) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return;
+    }
+
     await axios
       .put(apiBaseURL + "/user/accept/" + id, null, {
         headers: {
@@ -35,6 +41,12 @@ export default function Notifications() {
   }
 
   async function handleDecline(id: number) {
+    if (!id) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return;
+    }
+
     await axios
       .put(apiBaseURL + "user/decline/" + id, null, {
         headers: {
@@ -65,6 +77,9 @@ export default function Notifications() {
           console.log(res.data);
           setInvits(res.data);
           console.log("VALUE: ", invits);
+        })
+        .catch((err) => {
+          return <HandleError error={err} />;
         });
     }
     fetchFriends().then(() => {});

@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-import Logo from "../Logo/Logo";
 import "./NavBar.css";
 import { NavButton, PlayButton } from "./NavButton";
 
@@ -22,9 +20,6 @@ export default function LeftMenu() {
 
   return (
     <div className={"leftMenu"}>
-      <Link to="/">
-        <Logo />
-      </Link>
       <div className={"leftButtons"}>{!token ? <Unlogged /> : <Logged />}</div>
     </div>
   );

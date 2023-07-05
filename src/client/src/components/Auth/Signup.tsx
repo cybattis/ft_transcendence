@@ -10,6 +10,7 @@ import logo42 from "../../resource/logo-42.png";
 import { MessageModal } from "../Modal/MessageModal";
 import { ErrorContext } from "../Modal/modalContext";
 import { ErrorResponse } from "../../type/client.type";
+import { HandleError } from "../HandleError";
 
 interface UserCredential {
   nickname: string;
@@ -109,17 +110,6 @@ export default function Signup() {
     return isValid;
   };
 
-  function handleError(error: ErrorResponse) {
-    if (error.response === undefined) {
-      setErrorMessage("Error unknown...");
-      return;
-    }
-    if (error.response.status === 403) {
-      localStorage.clear();
-      setErrorMessage("Session expired, please login again!");
-    } else setErrorMessage(error.response.data.message + "!");
-  }
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -145,7 +135,7 @@ export default function Signup() {
         setMessage("Please check your email to confirm your account");
       })
       .catch((error) => {
-        handleError(error);
+        return <HandleError error={error} />;
       });
   };
 
