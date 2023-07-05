@@ -1,56 +1,106 @@
-.profilePage {
+.profile-page {
     display: flex;
     flex-direction: column;
+
     align-items: center;
-    height: var(--vp-size);
 
     overflow-y: auto;
+    margin-bottom: 40px;
 }
 
-.profilePage #header {
+.profile-infobox {
+    box-sizing: border-box;
+
+    display: flex;
+
+    width: 100%;
+    min-width: max-content;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgb(27, 30, 36, 0.75) 100%);
+}
+
+.profile-infobox #info {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+}
+
+@media screen and (width > 630px) {
+    .profile-infobox {
+        flex-direction: row;
+
+        max-width: 50%;
+
+        margin-top: 30px;
+        padding: 15px 30px;
+
+        gap: 25px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .profile-infobox {
+        flex-direction: column;
+
+        width: 100%;
+
+        margin-top: 15px;
+        padding-right: 15px;
+        padding-left: 15px;
+        padding-bottom: 10px;
+    }
+}
+
+.profile-infobox #header {
     display: flex;
     flex-direction: row;
+
     align-items: center;
 }
 
-.profilePage #nickname {
+.profile-infobox #nickname {
     margin-bottom: 30px;
     align-content: baseline;
 }
 
-.profilePage #infobox {
+.profile-stats {
     display: flex;
     flex-direction: row;
-    align-items: center;
-
-    width: 1000px;
-    margin-top: 30px;
-    gap: 50px;
-}
-
-.profilePage #info {
-    display: flex;
-    flex: auto;
-    flex-direction: column;
-
-    margin: 10px;
-}
-
-.profilePage #stats {
-    display: flex;
-    flex-direction: row;
-
     justify-content: center;
 
-    width: 1000px;
-    gap: 50px;
-    margin-top: 25px;
+    width: 100%;
 
-    /*border: #8449BF 2px solid;*/
-    /*border-radius: 25px;*/
+    margin-top: 5px;
+    margin-bottom: 25px;
+    padding: 10px 0;
+
+    gap: 50px;
+
+    border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: rgb(27, 30, 36, 0.75);
 }
 
-.dataBox {
+@media screen and (width > 630px) {
+    .profile-stats {
+        max-width: 50%;
+        min-width: 613px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .profile-stats {
+
+    }
+}
+
+#elo, #game-played, #win-rate {
     display: flex;
     flex-direction: column;
 
@@ -60,23 +110,47 @@
     gap: 10px;
 }
 
-.gamesStatsBox {
+.games-stats-box {
+    box-sizing: border-box;
+
     display: flex;
     flex-direction: column;
 
+    width: 100%;
     justify-content: left;
 
-    width: 1000px;
-    margin-top: 10px;
+    padding: 10px;
     gap: 10px;
+
+    border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: rgb(27, 30, 36, 0.75);
 }
 
-#gamesStatsBoxTitle {
-    margin: 0 0 0 50px;
-    padding: 0;
+@media screen and (width > 630px) {
+    .games-stats-box {
+        max-width: 50%;
+        min-width: 613px;
+    }
+
+    #games-stats-title {
+        margin: 0 0 0 50px;
+        padding: 0;
+    }
 }
 
-.gamesStatsBox #hrbar {
+@media screen and (width < 630px) {
+    .games-stats-box {
+
+    }
+
+    #games-stats-title {
+        margin: 0 0 0 10px;
+        padding: 0;
+    }
+}
+
+#games-stats-hrbar {
     width: 100%;
     border: 0;
     height: 2px;
@@ -92,8 +166,8 @@
     background: var(--dark-grey);
 }
 
-.matchesTable {
-    height: 350px;
+.matches-table {
+    margin-bottom: 10px;
 }
 
 .friendButton {

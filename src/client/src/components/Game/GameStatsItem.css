@@ -1,91 +1,157 @@
-.gameStat {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+.match-data {
+    box-sizing: border-box;
 
-    align-items: center;
-    justify-content: left;
-
-    height: 50px;
-
-    margin-bottom: 10px;
-
-    border-radius: 8px;
-
-    background-color: var(--purple-dark);
-}
-
-.gameStat:hover {
-    background-color: var(--purple-darker);
-}
-
-.gameStat #date {
-    margin-left: 50px;
-    margin-right: 80px;
-    min-width: max-content;
-}
-
-
-.gameStat #win {
-    color: green;
-}
-
-.gameStat #loose {
-    color: red;
-}
-
-.gameStat #inProgress {
-    color: yellow;
-}
-
-.gameStat #score {
-    max-width: 100px;
-
-}
-
-#opponent {
     display: flex;
     flex-direction: row;
 
     align-items: center;
-    justify-content: center;
-
-    gap: 15px;
-
-    margin-left: -10px;
-}
-
-.opponentProfile {
-    text-decoration: none;
-    color: var(--white);
-}
-
-.opponentProfile:hover {
-    color: var(--cyan);
-}
-
-/* ===================================================================== */
-
-.gameStatHeader {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-
-    grid-gap: 100px;
-    align-items: center;
-    justify-content: left;
 
     height: 40px;
 
     border-radius: 8px;
-    border: 2px solid var(--purple-wave);
+
+    background-color: var(--purple-darker);
 }
 
-.gameStatHeader #date {
-    margin-left: 50px;
-    min-width: max-content;
+.match-data:hover {
+    background-color: var(--black);
+    border: var(--cyan) 2px solid;
 }
 
-.gameStatHeader #type {
+@media screen and (width > 630px) {
+    .match-data {
+        padding-left: 50px;
+        padding-right: 50px;
+
+        margin-bottom: 10px;
+    }
+
+    #md-date {
+        min-width: 200px;
+    }
 }
 
-.gameStatHeader #score {
+@media screen and (width < 630px) {
+    .match-data {
+        padding-left: 10px;
+        padding-right: 20px;
+
+        margin-bottom: 5px;
+    }
+
+    #md-date {
+        min-width: max-content;
+    }
+}
+
+#md-date {
+    flex: 1 1 0;
+
+    max-width: 250px;
+    margin-right: 10px;
+}
+
+#md-type{
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 100px;
+}
+
+#md-score {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 60px;
+}
+
+.opponent-profile {
+    text-decoration: none;
+    color: var(--white);
+}
+
+.opponent-profile:hover {
+    color: var(--cyan);
+}
+
+.opponent-profile #opponent-name {
+    flex: 2;
+
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: left;
+
+    gap: 10px;
+}
+
+#md-win {
+    color: green;
+}
+
+#md-loose {
+    color: red;
+}
+
+#md-in-progress {
+    color: yellow;
+}
+
+/* ===================================================================== */
+
+.match-data-header {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: left;
+
+    border-radius: 8px;
+}
+
+#md-header-date {
+    flex: 1 1 0;
+
+    max-width: 250px;
+    margin-right: 10px;
+}
+
+#md-header-type {
+    flex: 1;
+    max-width: 150px;
+    min-width: 100px;
+}
+
+#md-header-score {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 60px;
+}
+
+@media screen and (width > 630px) {
+    .match-data-header {
+        padding-left: 50px;
+        padding-right: 50px;
+
+        margin-bottom: 10px;
+    }
+
+    #md-header-date {
+        min-width: 200px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .match-data-header {
+        padding-left: 10px;
+        padding-right: 20px;
+
+        margin-bottom: 5px;
+    }
+
+    #md-header-date {
+        min-width: 157px;
+    }
 }

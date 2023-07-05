@@ -214,15 +214,15 @@ function Result(props: { game: GameStatsDto; userId: number }) {
       props.game.scoreP1 < props.game.scoreP2);
 
   return (
-    <div className={"gameResult"}>
+    <div className={"home-game-result"}>
       {isWin ? (
         <div>
-          <div className={"win"}>Win</div>
+          <div className={"home-result-win"}>Win</div>
           <MatcheScore game={props.game} userId={props.userId} />
         </div>
       ) : (
         <div>
-          <div className={"loose"}>Loose</div>
+          <div className={"home-result-loose"}>Loose</div>
           <MatcheScore game={props.game} userId={props.userId} />
         </div>
       )}
@@ -238,7 +238,6 @@ function LastMatch(props: { data: UserInfo }) {
   }
 
   const lastGames = props.data.games?.slice(slice).filter((game) => {
-    console.log(game);
     return game.status === GameStatus.FINISHED;
   });
 

@@ -20,16 +20,16 @@ export function MatcheScore(props: { game: GameStatsDto; userId: number }) {
 
   const state = () => {
     if (props.game.status === GameStatus.IN_PROGRESS)
-      return <div id={"inProgress"}>In progress</div>;
+      return <div id={"md-in-progress"}>In progress</div>;
     else if (
       (props.game.ids[0] == props.userId &&
         props.game.scoreP1 > props.game.scoreP2) ||
       (props.game.ids[1] == props.userId &&
         props.game.scoreP1 < props.game.scoreP2)
     ) {
-      return <div id={"win"}>{score()}</div>;
-    } else return <div id={"loose"}>{score()}</div>;
+      return <div id={"md-win"}>{score()}</div>;
+    } else return <div id={"md-loose"}>{score()}</div>;
   };
 
-  return <div id={"score"}>{state()}</div>;
+  return <div id={"md-score"}>{state()}</div>;
 }

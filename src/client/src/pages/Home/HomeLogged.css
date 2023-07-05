@@ -1,4 +1,4 @@
-@media screen and (min-width: 900px){
+@media screen and (min-width: 900px) {
     .home {
         display: flex;
         flex-direction: column;
@@ -17,7 +17,7 @@
     }
 }
 
-@media screen and (width > 900px){
+@media screen and (width > 900px) {
     .home {
         display: flex;
         flex-direction: row;
@@ -241,7 +241,7 @@
     width: 100%;
 }
 
-.gameResult {
+.home-game-result {
     min-width: 60px;
     height: 50px;
     text-align: center;
@@ -266,10 +266,10 @@
     margin: 0;
 }
 
-.win {
-    color: green;
+.home-result-win {
+
 }
 
-.loose {
-    color: red;
+.home-result-loss {
+
 }

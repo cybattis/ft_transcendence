@@ -203,8 +203,8 @@ export function Profile() {
   }
 
   return (
-    <div className={"profilePage"}>
-      <div id={"infobox"}>
+    <div className={"profile-page"}>
+      <div className={"profile-infobox"}>
         <Avatar size="200px" img={data.avatarUrl} />
         <div id="info">
           <div id="header">
@@ -220,25 +220,25 @@ export function Profile() {
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div id={"stats"}>
-        <div id={"elo"} className={"dataBox"}>
+      <div className={"profile-stats"}>
+        <div id={"elo"}>
           <div>ELO</div>
           <div>{data.ranking}</div>
         </div>
-        <div id={"gamePlayed"} className={"dataBox"}>
+        <div id={"game-played"}>
           <div>Game played</div>
           <div>{data.games?.length}</div>
         </div>
-        <div id={"winrate"} className={"dataBox"}>
+        <div id={"winrate"}>
           <div>Winrate</div>
           <div>{winrate}%</div>
         </div>
       </div>
-      <div className={"gamesStatsBox"}>
-        <h5 id={"gamesStatsBoxTitle"}>Matche history</h5>
-        <hr id={"hrbar"} />
+      <div className={"games-stats-box"}>
+        <h5 id={"games-stats-title"}>Match history</h5>
+        <hr id={"games-stats-hrbar"} />
         <GameStatsHeader />
-        <div className={"matchesTable"}>
+        <div className={"matches-table"}>
           {data.games?.map((game: GameStatsDto, index) => (
             <div key={index}>
               <GameStatsItem game={game} id={data!.id} />
