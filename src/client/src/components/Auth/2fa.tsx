@@ -70,7 +70,6 @@ export default function FaCode(props: FaProps) {
           setErrorMessage(res.data.response);
         } else if (!authed) {
           const data = res.data;
-          localStorage.setItem("id", data.id);
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
           localStorage.removeItem("email");

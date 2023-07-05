@@ -70,7 +70,6 @@ function Logged() {
   const { setAuthToken } = useContext(AuthContext);
   const { notif } = useContext(NotifContext);
   const [notifs, setNotifs] = useState(false);
-  const id = localStorage.getItem("id");
 
   useEffect(() => {
     console.log(notif);
@@ -86,17 +85,15 @@ function Logged() {
   }
 
   const handleDisconnect = async () => {
-    localStorage.removeItem("id");
-    setAuthToken(null);
-
     const token: string | null = localStorage.getItem("token");
     if (!token) {
-      await axios.put(apiBaseURL + "user/disconnect", id, {});
+      await axios.put(apiBaseURL + "user/disconnect");
     }
 
+    setAuthToken(null);
     localStorage.clear();
 
-    await axios.put(apiBaseURL + "auth/disconnect", id, {
+    await axios.put(apiBaseURL + "auth/disconnect", null, {
       headers: {
         token: token,
       },

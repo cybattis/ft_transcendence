@@ -5,10 +5,8 @@ import { AuthContext } from "../../components/Auth/dto";
 import { PracticePong } from "../../game/components/PracticePong";
 
 export default function Home() {
-  const { authed, setAuthToken } = useContext(AuthContext);
+  const { authed } = useContext(AuthContext);
   const token = localStorage.getItem("token");
-
-  if (token !== undefined && token !== null) setAuthToken(token);
 
   return (
     <div className="full">

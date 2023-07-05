@@ -66,7 +66,6 @@ export default function Login() {
           setLoginForm(false);
           if (res.data) {
             localStorage.setItem("token", res.data.token);
-            localStorage.setItem("id", res.data.id);
             setAuthToken(res.data.token);
           } else if (!res.data) {
             localStorage.setItem("email", user.email);

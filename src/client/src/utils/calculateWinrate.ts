@@ -6,8 +6,6 @@ export function calculateWinrate(props: UserInfo) {
     (game) => game.status === GameStatus.FINISHED
   ).length;
 
-  console.log(props.totalGameWon, actualGame);
-
   return props.totalGameWon && actualGame
     ? (props.totalGameWon * 100) / actualGame
     : 0;
