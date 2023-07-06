@@ -38,8 +38,6 @@ function MobileNavBar() {
     setSidePanel(!sidePanel);
   }
 
-  console.log("authed", authed);
-
   return (
     <nav className={"nav-style-mobile"}>
       <Link to="/">
