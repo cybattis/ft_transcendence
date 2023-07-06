@@ -5,7 +5,6 @@ import {
   IsString,
   IsStrongPassword,
   MaxLength,
-  MinLength,
 } from 'class-validator';
 
 export class IntraSignupDto {
@@ -28,14 +27,15 @@ export class IntraSignupDto {
 export class SignupDto {
   @IsNotEmpty()
   @IsString()
-  @MinLength(3)
   @MaxLength(20)
   nickname: string;
 
   @IsString()
+  @MaxLength(30)
   firstname: string;
 
   @IsString()
+  @MaxLength(30)
   lastname: string;
 
   @IsEmail()
@@ -53,7 +53,4 @@ export class SigninDto {
 
   @IsString()
   password: string;
-
-  @IsBoolean()
-  remember: boolean;
 }

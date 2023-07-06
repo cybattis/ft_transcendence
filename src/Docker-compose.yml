@@ -4,10 +4,12 @@ services:
   postgres:
     image: postgres:latest
     restart: always
-    env_file:
-      - api/.env
     ports:
-      - 5432:5432
+      - $POSTGRES_PORT:$POSTGRES_PORT
+    environment:
+      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_DB=$POSTGRES_DB
     networks:
       - net0
     volumes:
@@ -23,16 +25,33 @@ services:
     volumes:
       - ./client:/usr/src/app
       - /usr/src/app/node_modules
+    environment:
+      - REACT_APP_API_PORT=$API_PORT
+      - REACT_APP_CLIENT_PORT=$CLIENT_PORT
+      - REACT_APP_PROTOCOL=$PROTOCOL
+      - REACT_APP_HOST_IP=$HOST_IP
+      - REACT_APP_REDIR_URL=$REDIR_URL
 
   api:
     build: ./api
     container_name: ft_transcendance-api
     environment:
       - API_PORT=$API_PORT
-      - API_DEBUG_PORT=$API_DEBUG_PORT
+      - CLIENT_PORT=$CLIENT_PORT
+      - PROTOCOL=$PROTOCOL
+      - HOST_IP=$HOST_IP
+      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_DB=$POSTGRES_DB
+      - API_UID=$API_UID
+      - JWT_SECRET=$JWT_SECRET
+      - API_URL=$API_URL
+      - EMAIL_HOST=$EMAIL_HOST
+      - EMAIL_USR=$EMAIL_USR
+      - EMAIL_PWD=$EMAIL_PWD
+      - EMAIL_FORM=$EMAIL_FORM
     ports:
       - $API_PORT:$API_PORT
-      - $API_DEBUG_PORT:$API_DEBUG_PORT
     depends_on:
       - postgres
     networks:
@@ -40,22 +59,6 @@ services:
     volumes:
       - ./api:/usr/src/app
       - /usr/src/app/node_modules
-
-  ### Postgrey admin ###
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: ft_transcendance-pgadmin
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=$PGADMIN_DEFAULT_EMAIL
-      - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_DEFAULT_PASSWORD
-    ports:
-      - 15432:80
-    volumes:
-      - pgadmin:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    networks:
-      - net0
 
 volumes:
   postgres:

@@ -110,4 +110,16 @@ export class GameService implements OnModuleInit {
         .execute();
     }
   }
+
+  async fetchUserGames(user: User) {
+    const games: Game[] = [];
+    for (let i = 0; i < user.games.length; i++) {
+      const game: Game | null = await this.gameRepository.findOne({
+        relations: { players: true },
+        where: { id: user.games[i].id },
+      });
+      games[i] = game as Game;
+    }
+    return games;
+  }
 }

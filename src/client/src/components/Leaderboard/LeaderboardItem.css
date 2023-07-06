@@ -1,0 +1,88 @@
+.container {
+    justify-content: center;
+    align-items: center;
+
+    width: 1000px;
+}
+
+.leaderboardItem {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 60px;
+
+    margin-bottom: 10px;
+    gap: 100px;
+
+    background: var(--black);
+    border-radius: 25px;
+}
+
+.leaderboardItem:hover {
+    box-sizing: border-box;
+
+    background: var(--purple-darker);
+    border-radius: 25px;
+
+    border: 4px solid var(--purple-wave);
+}
+
+.leaderboardItem:hover #pastille {
+    background-color: var(--cyan);
+}
+
+#leftSide {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+
+    gap: 40px;
+    margin-left: 40px;
+
+    width: 100%;
+    height: 60px;
+}
+
+#rightSide {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+
+    margin-right: 40px;
+
+    gap: 70px;
+
+    width: 100%;
+    height: 60px;
+}
+
+#winrate {
+    min-width: 80px;
+}
+
+#gamePlayed {
+    min-width: 80px;
+}
+
+#elo {
+    min-width: 80px;
+}
+
+#pastille {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    width: 35px;
+    height: 35px;
+
+    border-radius: 50%;
+    background: var(--purple-wave);
+}

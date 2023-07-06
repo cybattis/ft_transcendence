@@ -86,25 +86,6 @@
     cursor: pointer;
 }
 
-.inputForm {
-    box-sizing: border-box;
-
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 14px;
-    gap: 8px;
-
-    width: 358px;
-    height: 46px;
-
-    color: var(--black);
-    background: white;
-    border-radius: 8px;
-    border: none;
-    outline:0;
-}
-
 .formOption {
     display: flex;
     flex-direction: row;

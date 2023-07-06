@@ -1,23 +1,34 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
-import { Chat } from "../../components/Chat/Chat";
-import jwt_decode from "jwt-decode";
-import { useEffect, useState } from "react";
+import ChatClient from "../Chat/Chat";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
-import { GameBodyDto, GameType } from "../../type/game.type";
-import { Decoded } from "../../type/client.type";
-import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { Navigate } from "react-router-dom";
+import { GameStatsDto, GameType } from "../../type/game.type";
+import { XPBar } from "../../components/XPBar/XPBar";
+import { calculateWinrate } from "../../utils/calculateWinrate";
+import { MatcheScore } from "../../components/Game/MatcheScore";
+import { AuthContext } from "../../components/Auth/dto";
+import { Friends } from "../../components/Friends/Friends";
+import { SocketContext } from "../../components/Auth/dto";
+import { io } from "socket.io-client";
+import { JwtPayload } from "../../type/client.type";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
+import jwt_decode from "jwt-decode";
+import { apiBaseURL } from "../../utils/constant";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
   MATCH_FOUND,
   WAITING_FOR_OPPONENT,
-  GAME_STARTED
+  GAME_STARTED,
 }
 
-function MatchmakingButton(props: { gameType: GameType, setSearching: (value: boolean) => void }) {
+function MatchmakingButton(props: {
+  gameType: GameType;
+  setSearching: (value: boolean) => void;
+}) {
   const [state, setState] = useState(MatchmakingAcceptButtonState.SEARCHING);
   const [timeLeft, setTimeLeft] = useState(0);
   const countdownOffset: number = 10;
@@ -29,7 +40,7 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
       return setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
-    }
+    };
 
     const matchFoundCallback = (acceptTimeout: number) => {
       setState(MatchmakingAcceptButtonState.MATCH_FOUND);
@@ -47,7 +58,10 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
 
     if (timeLeft > 0) {
       // If the player doesn't accept the game in time, stop matchmaking
-      if (timeLeft <= countdownOffset && state === MatchmakingAcceptButtonState.MATCH_FOUND) {
+      if (
+        timeLeft <= countdownOffset &&
+        state === MatchmakingAcceptButtonState.MATCH_FOUND
+      ) {
         props.setSearching(false);
       } else {
         // Else, continue the countdown to wait for the server to start the game
@@ -72,17 +86,15 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
       MatchmakingClient.offMatchFound(matchFoundCallback);
       MatchmakingClient.offgameStarted(handleGameStarted);
 
-      if (countdownTimeout)
-        clearTimeout(countdownTimeout);
-    }
-  });
+      if (countdownTimeout) clearTimeout(countdownTimeout);
+    };
+  }, []);
 
   const handleClick = () => {
-    let decoded: Decoded | null = null;
+    let decoded: JwtPayload | null = null;
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
-    } catch (e) {
-    }
+    } catch (e) {}
 
     if (decoded) {
       if (state === MatchmakingAcceptButtonState.SEARCHING) {
@@ -101,29 +113,38 @@ function MatchmakingButton(props: { gameType: GameType, setSearching: (value: bo
         setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
       }
     }
-  }
+  };
 
   let cssClass: string = "matchmaking-button";
-  if (state === MatchmakingAcceptButtonState.MATCH_FOUND)
-    cssClass += "-found";
+  if (state === MatchmakingAcceptButtonState.MATCH_FOUND) cssClass += "-found";
   else if (state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT)
     cssClass += "-waiting";
 
   return (
-      <>
-      {state === MatchmakingAcceptButtonState.GAME_STARTED ? <Navigate to="game"/> :
-    <button onClick={handleClick} className={cssClass}>
-      <div>{state === MatchmakingAcceptButtonState.MATCH_FOUND && (timeLeft >= countdownOffset ? "Accept " + (timeLeft - countdownOffset).toString() + "..." : "Accept...")}
-        {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT && ("Waiting for opponent...")}
-        {state === MatchmakingAcceptButtonState.SEARCHING && ("Searching...")}
-        </div>
-    </button>}
-          </>
+    <>
+      {state === MatchmakingAcceptButtonState.GAME_STARTED ? (
+        <Navigate to="game" />
+      ) : (
+        <button onClick={handleClick} className={cssClass}>
+          <div>
+            {state === MatchmakingAcceptButtonState.MATCH_FOUND &&
+              (timeLeft >= countdownOffset
+                ? "Accept " + (timeLeft - countdownOffset).toString() + "..."
+                : "Accept...")}
+            {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT &&
+              "Waiting for opponent..."}
+            {state === MatchmakingAcceptButtonState.SEARCHING && "Searching..."}
+          </div>
+        </button>
+      )}
+    </>
   );
 }
 
-function MultiplayerGameMode(props: { gameType: GameType, setSearching: (value: boolean) => void }) {
-
+function MultiplayerGameMode(props: {
+  gameType: GameType;
+  setSearching: (value: boolean) => void;
+}) {
   const handleClick = () => {
     if (props.gameType === GameType.CASUAL)
       MatchmakingClient.joinMatchmakingCasual();
@@ -131,7 +152,7 @@ function MultiplayerGameMode(props: { gameType: GameType, setSearching: (value: 
       MatchmakingClient.joinMatchmakingRanked();
 
     props.setSearching(true);
-  }
+  };
 
   return (
     <button onClick={handleClick} className="game-mode-button">
@@ -154,42 +175,58 @@ function GameLauncher() {
 
   return (
     <div className="launcher">
-      {(!searchingCasual && !searchingRanked) && (
+      {!searchingCasual && !searchingRanked && (
         <>
           <h4 className="game-mode-title">Game mode</h4>
           <div className="buttons">
             <PracticeGameMode />
-            <MultiplayerGameMode gameType={GameType.CASUAL} setSearching={setSearchingCasual}/>
-            <MultiplayerGameMode gameType={GameType.RANKED} setSearching={setSearchingRanked}/>
+            <MultiplayerGameMode
+              gameType={GameType.CASUAL}
+              setSearching={setSearchingCasual}
+            />
+            <MultiplayerGameMode
+              gameType={GameType.RANKED}
+              setSearching={setSearchingRanked}
+            />
           </div>
         </>
       )}
       {searchingCasual && (
-        <MatchmakingButton gameType={GameType.CASUAL} setSearching={setSearchingCasual}/>
+        <MatchmakingButton
+          gameType={GameType.CASUAL}
+          setSearching={setSearchingCasual}
+        />
       )}
       {searchingRanked && (
-        <MatchmakingButton gameType={GameType.RANKED} setSearching={setSearchingRanked}/>
+        <MatchmakingButton
+          gameType={GameType.RANKED}
+          setSearching={setSearchingRanked}
+        />
       )}
     </div>
   );
 }
 
-function Result(props: { game: GameBodyDto; data: UserInfo }) {
+function Result(props: { game: GameStatsDto; userId: number }) {
+  const isWin =
+    (props.game.players[0].id == props.userId &&
+      props.game.scoreP1 > props.game.scoreP2) ||
+    (props.game.ids[1] == props.userId &&
+      props.game.scoreP1 < props.game.scoreP2);
+
   return (
     <div className={"gameResult"}>
-      <div>
-        {(props.game.ids[0] === props.data.id &&
-          props.game.scoreP1 > props.game.scoreP2) ||
-        (props.game.ids[1] === props.data.id &&
-          props.game.scoreP1 < props.game.scoreP2) ? (
+      {isWin ? (
+        <div>
           <div className={"win"}>Win</div>
-        ) : (
+          <MatcheScore game={props.game} userId={props.userId} />
+        </div>
+      ) : (
+        <div>
           <div className={"loose"}>Loose</div>
-        )}
-      </div>
-      <div>
-        {props.game.scoreP1}-{props.game.scoreP2}
-      </div>
+          <MatcheScore game={props.game} userId={props.userId} />
+        </div>
+      )}
     </div>
   );
 }
@@ -201,7 +238,7 @@ function LastMatch(props: { data: UserInfo }) {
       <div className={"lastmatch"}>
         {props.data.games?.slice(-5).map((game, index) => (
           <div key={index}>
-            <Result game={game} data={props.data} />
+            <Result game={game} userId={props.data.id} />
           </div>
         ))}
       </div>
@@ -210,10 +247,7 @@ function LastMatch(props: { data: UserInfo }) {
 }
 
 function Winrate(props: { data: UserInfo }) {
-  const winrate: number =
-    props.data.totalGameWon && props.data.games?.length
-      ? (props.data.totalGameWon * 100) / props.data.games?.length
-      : 0;
+  const winrate: number = calculateWinrate(props.data);
 
   return (
     <div className={"statsBox"}>
@@ -224,53 +258,17 @@ function Winrate(props: { data: UserInfo }) {
   );
 }
 
-function UserProfile() {
-  let decoded: Decoded | null = null;
-
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    //console.log(e);
-  }
-
-  const [data, setData] = useState<UserInfo>({
-    id: 0,
-    nickname: "",
-    level: 0,
-    xp: 0,
-    ranking: 0,
-    games: [],
-  });
-
-  useEffect(() => {
-    console.log(decoded);
-    async function fetchData(id: string) {
-      await axios
-        .get(`http://localhost:5400/user/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-        .then((response) => {
-          setData(response.data);
-
-          console.log(response.data);
-        });
-    }
-
-    if (decoded !== null) fetchData(decoded.id).then((r) => console.log(r));
-  }, []);
-
+function UserProfile(props: { data: UserInfo }) {
+  const data = props.data;
   return (
     <div className="user">
       <div className="infobox">
-        <Avatar size="20%" img={data.avatar} />
+        <Avatar size="200px" img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
           <p>{data.xp} xp</p>
-          <progress id="progressbar" max={1000} value={data.xp}></progress>
+          <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
       <div className="stats">
@@ -287,20 +285,69 @@ function UserProfile() {
 }
 
 export function HomeLogged() {
+  const { socketId, setSocketId } = useContext(SocketContext);
+  setSocketId(io(apiBaseURL).id);
+  console.log(socketId);
+
+  const { setAuthToken } = useContext(AuthContext);
+  const token = localStorage.getItem("token");
+  const [data, setData] = useState<UserInfo>({
+    id: 0,
+    nickname: "",
+    avatarUrl: "",
+    level: 0,
+    xp: 0,
+    ranking: 0,
+    games: [],
+    friendsId: [],
+    requestedId: [],
+    blockedId: [],
+    blockedById: [],
+  });
 
   useEffect(() => {
+    async function fetchData() {
+      await axios
+        .get(apiBaseURL + "user/profile/me", {
+          headers: {
+            "Content-Type": "application/json",
+            token: token,
+          },
+        })
+        .then((res) => {
+          setData(res.data);
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            return <Navigate to={"/"} />;
+          } else console.log(error.message);
+        });
+    }
+
+    fetchData().then(() => {});
+
     return () => {
       MatchmakingClient.leaveMatchmaking();
-    }
-  });
+    };
+  }, []);
+
+  if (token === null) {
+    setAuthToken(null);
+    return <Navigate to={"/"} />;
+  }
 
   return (
     <div className={"home"}>
       <div className={"leftside"}>
         <GameLauncher />
-        <UserProfile />
+        <UserProfile data={data} />
       </div>
-      <Chat />
+      <div className="rightside">
+        <ChatClient />
+        <Friends />
+      </div>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export namespace MatchmakingClient {
       path: '/matchmaking',
     };
 
-    const endpoint: string = "ws://localhost:5400";
+    const endpoint: string = "ws://" + process.env["REACT_APP_API_IP"] + ":5400";
 
     socket = io(endpoint, socketOptions);
 

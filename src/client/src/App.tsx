@@ -9,28 +9,51 @@ import {
   FormContext,
   AuthContext,
   defaultAuthState,
+  defaultNotifState,
+  NotifContext,
+  SocketContext,
+  defaultSocketState,
 } from "./components/Auth/dto";
 import { AuthForms } from "./components/Auth/Forms";
 
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
+  const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
+  const [chatForm, setChatForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
+  const [notif, setNotif] = useState(defaultNotifState.notif);
+  const [socketId, setSocketId] = useState(defaultSocketState.socketId);
 
   return (
     <div className="app">
-      <AuthContext.Provider
-        value={{ authed: authToken, setAuthToken: setAuthToken }}
+      <SocketContext.Provider
+        value={{ socketId: socketId, setSocketId: setSocketId }}
       >
-        <FormContext.Provider
-          value={{ loginForm, setLoginForm, signupForm, setSignupForm }}
-        >
-          <NavBar />
-          <AuthForms />
-        </FormContext.Provider>
-        <Outlet />
-      </AuthContext.Provider>
-      <Footer />
+        <NotifContext.Provider value={{ notif: notif, setNotif: setNotif }}>
+          <AuthContext.Provider
+            value={{ authed: authToken, setAuthToken: setAuthToken }}
+          >
+            <FormContext.Provider
+              value={{
+                loginForm,
+                setLoginForm,
+                signupForm,
+                setSignupForm,
+                codeForm,
+                setCodeForm,
+                chatForm,
+                setChatForm,
+              }}
+            >
+              <NavBar />
+              <Outlet />
+              <AuthForms />
+              <Footer />
+            </FormContext.Provider>
+          </AuthContext.Provider>
+        </NotifContext.Provider>
+      </SocketContext.Provider>
     </div>
   );
 }

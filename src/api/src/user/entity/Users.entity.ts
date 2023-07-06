@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
+  OneToMany,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -17,27 +18,39 @@ export class User {
   @Column({ type: 'varchar', length: 30, unique: true })
   nickname: string;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   firstname: string;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
   lastname: string;
 
   @Column({ type: 'varchar', length: 100, unique: true })
   email: string;
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', select: true })
   IsIntra: boolean;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   password: string;
+
+  @Column({ default: false, nullable: true })
+  isVerified: boolean;
+
+  @Column({ default: false, nullable: false })
+  authActivated: boolean;
+
+  @Column({ default: false, nullable: false })
+  online: boolean;
+
+  @Column({ default: false, nullable: false })
+  inGame: boolean;
 
   // User data ans stats
   // ============================================================
-  @CreateDateColumn()
+  @CreateDateColumn({ select: true })
   creationDate: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ select: true })
   updateDate: Date;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
@@ -53,12 +66,32 @@ export class User {
   ranking: number;
 
   // Player games
+  // ============================================================
   @ManyToMany(() => Game, (game: Game) => game.players, {
-    cascade: true,
+    eager: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
   @JoinTable()
   games: Game[];
 
   @Column({ type: 'integer', default: 0 })
   totalGameWon: number;
+
+  // Friends
+  // ============================================================
+  @Column('int', { array: true, default: [] })
+  friendsId: number[];
+
+  @Column('int', { array: true, default: [] })
+  requestedId: number[];
+
+  @Column('int', { array: true, default: [] })
+  blockedId: number[];
+
+  @Column('int', { array: true, default: [] })
+  blockedById: number[];
+
+  @Column({ type: 'varchar', default: '' })
+  websocket: string;
 }

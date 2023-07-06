@@ -4,7 +4,8 @@ import Logo from "../Logo/Logo";
 import InputForm from "../InputForm";
 import "./Auth.css";
 import validator from "validator";
-import { AuthContext, FormContext } from "./dto";
+import { FormContext } from "./dto";
+import { apiBaseURL } from "../../utils/constant";
 
 interface UserCredential {
   nickname: string;
@@ -17,8 +18,7 @@ interface UserCredential {
 export default function Signup() {
   const [errorInput, setErrorInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { setSignupForm, setLoginForm } = useContext(FormContext);
-  const { setAuthToken } = useContext(AuthContext);
+  const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
 
   const inputs = {
     nickname: "",
@@ -44,7 +44,7 @@ export default function Signup() {
 
   const inUse = async (input: string, value: string): Promise<boolean> => {
     const { data } = await axios.get(
-      "http://localhost:5400/user/check/" + input + "/" + value
+      apiBaseURL + "user/check/" + input + "/" + value
     );
     return !!data; // if data existe return true sinon false
   };
@@ -54,8 +54,8 @@ export default function Signup() {
     if (!inputs.nickname) {
       setErrorInput("Please enter a Nickname.");
       isValid = false;
-    } else if (inputs.nickname.length < 3) {
-      setErrorInput("Nickname is too short. (min 3 characters)");
+    } else if (!validator.isAlpha(inputs.nickname)) {
+      setErrorInput("Can't have any special chracters in your Nickname.");
       isValid = false;
     } else if (inputs.nickname.length > 20) {
       setErrorInput("Nickname is too long. (max 20 characters)");
@@ -84,9 +84,9 @@ export default function Signup() {
     } else if (!inputs.password) {
       setErrorInput("Please enter a Password.");
       isValid = false;
-    //} else if (!validator.isStrongPassword(inputs.password)) {
-    //  setErrorInput("Password is not strong enough.");
-    //  isValid = false;
+      //} else if (!validator.isStrongPassword(inputs.password)) {
+      //  setErrorInput("Password is not strong enough.");
+      //  isValid = false;
     } else if (
       inputs.confirmPassword &&
       inputs.password !== inputs.confirmPassword
@@ -118,23 +118,27 @@ export default function Signup() {
     };
 
     await axios
-      .post("http://localhost:5400/auth/signup", user, {
+      .post(apiBaseURL + "auth/signup", user, {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
       })
-      .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
+      .then(() => {
         setSignupForm(false);
+        alert(
+          "An email has been sent to verify your email address. Please check this out before continuing."
+        );
       })
       .catch((error) => {
         console.log("Error: ", error.response.status);
         setErrorMessage("Server error... try again");
       });
   };
+
+  const intraLink = process.env["REACT_APP_REDIR_URL"];
+
+  //TODO: remettre alert email
 
   return (
     <div className="background">
@@ -174,11 +178,7 @@ export default function Signup() {
             Signup
           </button>
         </form>
-        <a
-          className="link42"
-          href="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-3bcfa58a7f81b3ce7b31b9059adfe58737780f1c02a218eb26f5ff9f3a6d58f4&redirect_uri=http%3A%2F%2F127.0.0.1%3A5400%2Fauth%2F42&response_type=code"
-          rel="noopener noreferrer"
-        >
+        <a className="link42" href={intraLink}>
           Signup with 42
         </a>
         <div className="authFooter">
@@ -188,6 +188,7 @@ export default function Signup() {
             onClick={() => {
               setSignupForm(false);
               setLoginForm(true);
+              setCodeForm(false);
             }}
           >
             Sign in!
