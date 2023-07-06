@@ -10,7 +10,7 @@ import {
     id: number;
 
     @Column({ type: 'varchar'})
-    channelName: string;
+    channel: string;
   
     @Column({ type: 'varchar'})
     content: string;

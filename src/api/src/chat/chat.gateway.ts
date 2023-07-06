@@ -29,36 +29,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
-  handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    let channel = data.channel;
-    const msg = data.msg;
-    const sender = data.username;
-    const send = {sender, msg, channel};
-    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
-    if (data.channel[0] === "#")
-      socket.broadcast.emit('rcv', send);
-    else
-    {
-      const target = this.channelService.takeSocketByUsername(channel);
-      channel = sender;
-      const prv = {sender, msg, channel};
-      if (target)
-        socket.to(target).emit('rcv', prv);
-    }
+  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username);
   }
 
   @SubscribeMessage('join')
   handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    console.log(`Join data : ${data.pass} ${data.channel}`);
     const channel = data.channel;
     const username = data.username;
     this.userService.addWebSocket(username, socket.id);
-    let pass: string = '';
-    if (data.password !== '')
-      pass = data.password;
     if (this.channelService.verifyUserSocket(socket.id, username))
       this.channelService.joinOldChannel(socket, username);
-    //console.log(data);
-    this.channelService.joinChannel(socket, username, channel, pass);
+    this.channelService.joinChannel(socket, username, channel, data.password);
   }
 
   @SubscribeMessage('prv')
@@ -102,12 +85,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('info')
   handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log("fonction info");
     const channel = data.channel;
     const msg = this.channelService.infoChannel(channel);
-    if (msg != null) {
-      console.log(msg);
-      this.server.emit('rcv', {msg, channel});
-    }
+    console.log(msg);
+    this.server.emit('rcv', {msg, channel});
   }
 
   @SubscribeMessage('kick')

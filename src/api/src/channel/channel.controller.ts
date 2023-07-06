@@ -1,16 +1,28 @@
-import { Controller, Get, Param, Inject, Injectable } from '@nestjs/common';
-import { ChannelService } from './channel.service';
+import {Controller, Get, Param, Delete, Inject, Injectable} from '@nestjs/common';
+import { Chat } from './entity/Chat.entity';
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm';
 
-@Injectable()
-@Controller('channel')
+@Controller('chat')
 export class ChannelController {
-  constructor(
-    @Inject(ChannelService) private readonly channelService: ChannelService,
-  ) {}
+    constructor(
+        @InjectRepository(Chat)
+        private chatRepository: Repository<Chat>
+    ) {}
 
-  @Get(`/users`)
-  getUsers(@Param('name') name: string) {
-    /*console.log("Inside getUsers")*/
-    return this.channelService.listUsersChannel(name);
-  }
+    @Get()
+    findAll(): Promise<Chat[]>{
+        return (this.chatRepository.find());
+    }
+
+    @Get('/:name')
+    find(@Param('name') name : string): Promise<Chat[]>{
+        const decodedName = decodeURIComponent(name);
+        return (this.chatRepository.find({where: {channel : decodedName}}));
+    }
+
+    @Delete('/delete-channel/:channel')
+    async deleteChannel(@Param('channel') channel: string): Promise<void> {
+      await this.chatRepository.delete({channel: channel});
+    }
 }
