@@ -1,8 +1,9 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../../components/Auth/dto";
 import { apiBaseURL } from "../../utils/constant";
+import { HandleError } from "../../components/HandleError";
 
 async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
@@ -10,12 +11,16 @@ async function ValidateEmail() {
   const location = useLocation();
   const id = location.search.substring(1);
 
-  await axios.put(apiBaseURL + "auth/" + id, true).then((res) => {
-    console.log("ValidateEmail: ", res);
-    const data = res.data;
-    localStorage.setItem("token", data.token);
-    setAuthToken(data.token);
-  });
+  axios
+    .put(apiBaseURL + "auth/" + id, true)
+    .then((res) => {
+      const data = res.data;
+      localStorage.setItem("token", data.token);
+      setAuthToken(data.token);
+    })
+    .catch((err) => {
+      return <HandleError error={err} />;
+    });
 }
 
 export default function Confirmation() {
@@ -33,7 +38,10 @@ export default function Confirmation() {
     textAlign: "center" as "center",
   };
 
-  ValidateEmail().then();
+  ValidateEmail().catch((err) => {
+    console.log(err);
+    return <Navigate to={"/"} />;
+  });
 
   return (
     <div style={home}>

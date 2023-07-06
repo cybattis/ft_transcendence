@@ -61,7 +61,6 @@ export default function FaCode(props: FaProps) {
       .post(apiBaseURL + "auth/2fa", loggin, {
         headers: {
           "Content-Type": "application/json",
-          token: localStorage.getItem("token"),
         },
       })
       .then((res) => {
