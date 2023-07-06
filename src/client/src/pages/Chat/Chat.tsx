@@ -58,8 +58,8 @@ export default function ChatClient() {
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
       console.log(`Decode ${decoded?.id}`);
-      console.log(`Decode ${decoded?.nickname}`);
-      if (decoded?.nickname) username = decoded.nickname;
+      console.log(`Decode ${decoded?.username}`);
+      if (decoded?.username) username = decoded.username;
     } catch (e) {
       console.log(`Decode error ${e}`);
     }

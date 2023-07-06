@@ -83,7 +83,7 @@ export class AuthService {
         const payload: JwtPayload = {
           email: user.email,
           id: user.id,
-          nickname: user.nickname,
+          username: user.nickname,
         };
         return {
           token: await this.jwtService.signAsync(payload),
@@ -120,7 +120,7 @@ export class AuthService {
           const payload: JwtPayload = {
             email: user.email,
             id: foundUser.id,
-            nickname: foundUser.nickname,
+            username: foundUser.nickname,
           };
           return {
             token: await this.jwtService.signAsync(payload),
@@ -178,6 +178,16 @@ export class AuthService {
     user.avatarUrl = body.image.link;
 
     return await this.userRepository.save(user);
+  }
+
+  async sendIntraToken(dataUser: any) {
+    const user: any = await this.usersService.findByEmail(dataUser.email);
+    await this.usersService.updateValidation(user.id);
+    const payload = { email: user.email, id: user.id, username: user.nickname };
+      return {
+        token: await this.jwtService.signAsync(payload),
+        id:user.id,
+      };
   }
 
   async updateValidation(id: number) {

@@ -50,8 +50,8 @@ export class AuthController {
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
-        await this.authService.sendEmail(user);
-        return res.redirect(clientBaseURL);
+        const token = await this.authService.sendIntraToken(dataUser);
+        return res.redirect(clientBaseURL + 'loading?' + token.token);
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
         if (token)
@@ -59,7 +59,7 @@ export class AuthController {
         return res.redirect(clientBaseURL + 'code?' + dataUser.email);
       } else if (user && !user.isVerified) {
         return new BadRequestException(
-          'You already have an account. Go verify your mailbox.',
+          'You already have an account. Go check your mailbox.',
         );
       }
       throw new BadRequestException('Email already in use');
