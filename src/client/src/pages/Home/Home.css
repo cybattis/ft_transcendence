@@ -1,0 +1,36 @@
+.full {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.homeUnlogged {
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+
+    width: 100%;
+    height: var(--vp-size);
+}
+
+.homeTitle {
+    width: 715px;
+    height: 112px;
+
+    text-align: center;
+
+    margin-bottom: 50px;
+}
+
+.homeGame {
+    display: block;
+
+    max-width: 1000px;
+    max-height: 500px;
+
+    width: 1000px;
+    height: 500px;
+
+    box-shadow: inset 0 0 16px 22px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}

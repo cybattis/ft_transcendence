@@ -1,9 +1,7 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import jwt_decode from "jwt-decode";
 import { AuthContext } from "../../components/Auth/dto";
-import { TokenData } from "../../type/user.type";
 import { apiBaseURL } from "../../utils/constant";
 
 async function ValidateEmail() {
@@ -13,13 +11,10 @@ async function ValidateEmail() {
   const id = location.search.substring(1);
 
   await axios.put(apiBaseURL + "auth/" + id, true).then((res) => {
-    console.log(res);
+    console.log("ValidateEmail: ", res);
     const data = res.data;
     localStorage.setItem("token", data.token);
     setAuthToken(data.token);
-
-    const decoded: TokenData = jwt_decode(data.token);
-    localStorage.setItem("id", decoded.id.toString());
   });
 }
 

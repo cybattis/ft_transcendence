@@ -6,8 +6,6 @@ import Logo from "../Logo/Logo";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "./dto";
 import "./Auth.css";
-import { TokenData } from "../../type/user.type";
-import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 
 export default function ConfirmEmail() {
@@ -50,10 +48,6 @@ export default function ConfirmEmail() {
           const data = res.data;
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
-
-          const decoded: TokenData = jwt_decode(data.token);
-          localStorage.setItem("id", decoded.id.toString());
-
           return <Navigate to="/" />;
         }
       })

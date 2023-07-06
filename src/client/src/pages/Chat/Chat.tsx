@@ -293,7 +293,7 @@ export default function ChatClient() {
 
   return (
     <div className="chat">
-      <h1>Chat</h1>
+      <h4>Chat</h4>
       <div className="chat-container">
         <div className="container-action-chat">
           <DoJoinChannel onSubmit={JoinByForm} />

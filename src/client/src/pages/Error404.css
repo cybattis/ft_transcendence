@@ -4,6 +4,8 @@
   justify-content: center;
   flex-direction: column;
   height: var(--vp-size);
+
+  overflow-y: auto;
 }
 
 .text {

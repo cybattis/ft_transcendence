@@ -8,8 +8,8 @@
   --purple-darker: #3E3C73;
   --purple-dark: #4E458C;
   --purple-wave: #8449BF;
-  --cyan: #307585;
-  --vp-size: calc(100vh - 60px - 3.5em);
+  --cyan: #4EBFD9;
+  --vp-size: calc(100vh - 115px);
 
   color-scheme: light dark;
 

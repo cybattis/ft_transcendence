@@ -65,10 +65,12 @@ export class UserController {
   @UseGuards(TokenGuard)
   @Get('profile/:id')
   async userInfo(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Headers('token') header: Headers,
   ): Promise<UserInfo | any> {
-    return this.userService.userInfo(header.toString(), id);
+    const idNum = Number(id);
+    if (!idNum) throw new BadRequestException('Invalid id');
+    return this.userService.userInfo(header.toString(), idNum);
   }
 
   @Get('check/login/:input')

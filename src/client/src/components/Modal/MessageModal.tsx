@@ -1,7 +1,7 @@
 import "./MessageModal.css";
 import { useRef, MouseEvent } from "react";
 
-export function MessageModal(props: { error: string; onClose: () => void }) {
+export function MessageModal(props: { msg: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
   return (
@@ -13,9 +13,9 @@ export function MessageModal(props: { error: string; onClose: () => void }) {
         }
       }}
     >
-      {props.error ? (
+      {props.msg ? (
         <dialog id={"message-modal"} open>
-          <p>{props.error}</p>
+          <p>{props.msg}</p>
           <form method="dialog">
             <button id="close" onClick={props.onClose}>
               X
