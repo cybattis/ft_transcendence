@@ -1,4 +1,4 @@
-@media screen and (min-width: 900px) {
+@media screen and (width < 1000px) {
     .home {
         display: flex;
         flex-direction: column;
@@ -17,7 +17,7 @@
     }
 }
 
-@media screen and (width > 900px) {
+@media screen and (width > 1000px) {
     .home {
         display: flex;
         flex-direction: row;
@@ -118,6 +118,7 @@
 }
 
 .matchmaking-button {
+    flex: auto;
     width: 100%;
     height: 100%;
     background-color: #ff0000;
@@ -131,6 +132,7 @@
 }
 
 .matchmaking-button-found {
+    flex: auto;
     width: 100%;
     height: 100%;
     background-color: #00ff00;
@@ -144,6 +146,7 @@
 }
 
 .matchmaking-button-waiting {
+    flex: auto;
     width: 100%;
     height: 100%;
     background-color: #ffff00;
