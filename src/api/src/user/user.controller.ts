@@ -17,13 +17,14 @@ import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { TokenData, UserInfo, UserSettings } from '../type/user.type';
+import { UserInfo, UserSettings } from '../type/user.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
 import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
+import { TokenData } from '../type/jwt.type';
 
 @Controller('user')
 export class UserController {
@@ -50,7 +51,7 @@ export class UserController {
    */
   @UseGuards(TokenGuard)
   @Get('profile/me')
-  async meInfo(@Headers('token') header: Headers): Promise<UserInfo | any> {
+  async meInfo(@Headers('token') header: Headers): Promise<UserInfo> {
     const payload: any = this.jwtService.decode(header.toString());
     if (payload) {
       return this.userService.userInfo(header.toString(), payload.id);

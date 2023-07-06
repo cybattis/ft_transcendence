@@ -42,14 +42,10 @@ export default function ConfirmEmail() {
     await axios
       .post(apiBaseURL + "auth/signin", code)
       .then((res) => {
-        if (res.data.status === parseInt("401")) {
-          setErrorMessage(res.data.response);
-        } else {
-          const data = res.data;
-          localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
-          return <Navigate to="/" />;
-        }
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        setAuthToken(data.token);
+        return <Navigate to="/" />;
       })
       .catch((error) => {
         if (error.response.status === 401) {

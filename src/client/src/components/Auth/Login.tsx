@@ -15,11 +15,10 @@ interface SigninDto {
 }
 
 export default function Login() {
-  const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
   const { setAuthToken } = useContext(AuthContext);
-  const inputs = {
+  const inputs: SigninDto = {
     email: "",
     password: "",
   };
@@ -34,13 +33,13 @@ export default function Login() {
   const validateInput = async () => {
     let isValid = true;
     if (!inputs.email) {
-      setErrorInput("Please enter an Email.");
+      setErrorMessage("Please enter an Email.");
       isValid = false;
     } else if (!validator.isEmail(inputs.email)) {
-      setErrorInput("Please enter a valid Email.");
+      setErrorMessage("Please enter a valid Email.");
       isValid = false;
     } else if (!inputs.password) {
-      setErrorInput("Please enter a Password.");
+      setErrorMessage("Please enter a Password.");
       isValid = false;
     }
     return isValid;
@@ -60,20 +59,15 @@ export default function Login() {
     await axios
       .post(apiBaseURL + "auth/signin", user)
       .then((res) => {
-        if (res.status === parseInt("401")) {
-          setErrorMessage(res.data.response);
-        } else {
-          setLoginForm(false);
-          if (res.data) {
-            localStorage.setItem("token", res.data.token);
-            setAuthToken(res.data.token);
-          } else if (!res.data) {
-            localStorage.setItem("email", user.email);
-            setCodeForm(true);
-            return;
-          }
-          return <Navigate to="/" />;
+        setLoginForm(false);
+        if (res.data) {
+          localStorage.setItem("token", res.data.token);
+          setAuthToken(res.data.token);
+        } else if (!res.data) {
+          localStorage.setItem("email", user.email);
+          setCodeForm(true);
         }
+        return;
       })
       .catch((error) => {
         if (error.response.status === 401) {
@@ -89,7 +83,6 @@ export default function Login() {
       <div className="authForm">
         <Logo />
         <div className="desc">Sign in to your account</div>
-        {errorInput && <p className="error"> {errorInput} </p>}
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="email" />
