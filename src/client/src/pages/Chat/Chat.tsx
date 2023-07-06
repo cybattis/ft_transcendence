@@ -13,10 +13,9 @@ import DoKickChannel from "./ActionChannel/DoKickChannel";
 import DoQuitChannel from "./ActionChannel/DoQuitChannel";
 import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 import { NotifContext } from '../../components/Auth/dto';
-import { SocketContext } from '../../components/Auth/dto';
 import { FormContext } from '../../components/Auth/dto';
 import axios from "axios";
-
+import { ChatClientSocket } from "./Chat-client";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -55,7 +54,6 @@ export default function ChatClient() {
   const socketRef = useRef<any>(null);
   const blocedList: string[] = [];
   const { setNotif } = useContext(NotifContext);
-  const { socketId, setSocketId } = useContext(SocketContext);
 
   let decoded: JwtPayload | null = null;
   if (username === "") {
@@ -70,14 +68,14 @@ export default function ChatClient() {
   }
 
   const sendMessage = () => {
-    if (
+    /*if (
       !inputRef.current ||
       !inputRef.current.value ||
       inputRef.current.value === ""
     ) {
       return;
-    }
-    if (socketRef.current) {
+    }*/
+    if (inputRef.current) {
       const cmd = choiceCmd(inputRef.current.value);
       doCmd(cmd, inputRef.current.value);
       inputRef.current.value = "";
@@ -85,93 +83,38 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const newSocket = io(apiBaseURL);
-    if (socketId === null) setSocketId(newSocket.id);
-    socketRef.current = newSocket;
-
-    newSocket.on("connect", () => {
-      if (!channelList.includes(defaultChannelGen)) {
-        const send = { username: username, channel: defaultChannelGen };
-        newSocket.emit("join", send);
-      }
-    });
-
-    newSocket.on("disconnect", (reason: string) => {
-      // console.log(`Disconnected from server: ${reason}`);
-    });
-
-    newSocket.on("join", (room: string) => {
-      if (!channelList.includes(room)) {
-        channelList.push(room);
-        setRoomChange(room);
-        const canal = document.getElementById("canal");
-        if (canal) canal.innerHTML = room;
-      }
-    });
-
-    newSocket.on("blocked", (target: string) => {
-      blocedList.push(target);
-    });
-
-    newSocket.on("quit", (room: string) => {
-      for (let index = 0; index < channelList.length; index++) {
-        console.log(channelList[index]);
-        if (room === channelList[index]) {
-          channelList.splice(index, 1);
-          const canal = document.getElementById("canal");
-          if (canal) {
-            canal.innerHTML = defaultChannelGen;
-            setRoomChange(defaultChannelGen);
-          }
-          return;
-        }
-      }
-    });
-
-    socketRef.current.on(
-      "friendRequest",
-      (data: { friend: any; from: string }) => {
-        setNotif(true);
-      }
-    );
-
-    newSocket.on("inv", (data: { username: string; target: string }) => {
-      if (data.target === username) {
-        if (!channelList.includes(data.username)) {
-          channelList.push(data.username);
-          setRoomChange(data.username);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.username;
-        }
-      }
-      if (data.username === username) {
-        if (!channelList.includes(data.target)) {
-          channelList.push(data.target);
-          setRoomChange(data.target);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.target;
-        }
-      }
-    });
-
-    
-    newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
+    const messageCallBack = (data: {sender: string, msg: string, channel: string}) => {
+      console.log("DATA: ", data);
       if (senderIsBlocked(data.sender))
         return ;
+      console.log('HERE');
       let addressInfo = "http://127.0.0.1:5400/chat/" + data.channel;
       axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
         })
       setRecvMess(data.msg);
-    });
+    }
 
-    newSocket.connect();
+    ChatClientSocket.onMessageRecieve(messageCallBack);
 
-    return () => {
-      newSocket.disconnect();
-    };
-  }, [sendMessage, recvMess, handleStringChange]);
+    if (!channelList.includes(defaultChannelGen)) {
+      const send = { username: username, channel: defaultChannelGen };
+      ChatClientSocket.joinChatServer(send);
+    }
+
+    const joinCallBack = (room: string) => {
+    if (!channelList.includes(room)) {
+      channelList.push(room);
+      setRoomChange(room);
+      const canal = document.getElementById("canal");
+      if (canal) canal.innerHTML = room;
+    }
+  }
+
+  ChatClientSocket.onJoinChan(joinCallBack);
+
+  }, []);
 
   function choiceCmd(input: string): string {
     if (input.indexOf("/") === 0) {
@@ -184,12 +127,13 @@ export default function ChatClient() {
 
   function doCmd(cmd: string, msg: string) {
     const channel = takeActiveCanal();
-    if (cmd === "/info") socketRef.current.emit("info", { channel });
+    if (cmd === "/info")
+    ChatClientSocket.onInfo(channel);
     else if (cmd === "/cmd") {
-      socketRef.current.emit("cmd", { channel });
+      ChatClientSocket.onCmd(channel);
     } else {
       const send = {username: username, channel: channel, msg: msg}
-      socketRef.current.emit('send :', send);
+      ChatClientSocket.onSend(send);
       let addressInfo = "http://127.0.0.1:5400/chat/" + takeActiveCanal();
       axios.get(addressInfo)
         .then(response => {
@@ -309,6 +253,5 @@ export default function ChatClient() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

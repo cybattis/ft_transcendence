@@ -17,6 +17,7 @@ export class ChannelController {
 
     @Get('/:name')
     find(@Param('name') name : string): Promise<Chat[]>{
+        console.log("HERE");
         const decodedName = decodeURIComponent(name);
         return (this.chatRepository.find({where: {channel : decodedName}}));
     }

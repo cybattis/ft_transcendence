@@ -1,21 +1,26 @@
 import { io, Socket } from "socket.io-client";
-import { MatchmakingMatchFoundCallback, MatchmakingGameStartedCallback } from "./types";
+import { apiBaseURL } from "../../utils/constant";
 
-// Callback c est ce qu il y a dans ces sockets.on
-// Faire une sorte de CTRL c CTRL v avec celui de nathan et ca ira bien
+export type newMessagesCallBack = {
+  (data: { sender: string, msg: string, channel: string }): void;
+}
 
-export namespace MatchmakingClient {
+export type newChannelCallBack = {
+  (room :string): void;
+}
+
+export namespace ChatClientSocket {
 
   let socket: Socket;
-  let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
-  let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
+  let newMessageCallBack: newMessagesCallBack[] = [];
+  let newJoinChannel: newChannelCallBack[] = [];
 
-  function checkConnection(): boolean {
+  function checkChatConnection(): boolean {
 
     if (socket && socket.connected)
       return true;
 
-    console.log("connecting to matchmaking server");
+    console.log("connecting to server");
 
     const token = localStorage.getItem("token");
 
@@ -25,39 +30,24 @@ export namespace MatchmakingClient {
       reconnectionDelay: 3000,
       timeout: 10000,
       auth: token ? {token} : {},
-      path: '/matchmaking',
     };
 
-    const endpoint: string = "ws://" + process.env["REACT_APP_API_IP"] + ":5400";
-
-    socket = io(endpoint, socketOptions);
-
-    socket.on("connect_error", (err) => {
-      console.log('connexion error due to : ', err.message);
-    });
+    socket = io(apiBaseURL, socketOptions);
 
     socket.on("connect", () => {
-      console.log("connected to matchmaking server");
+      console.log("connected on chat server.")
     });
 
     socket.on("disconnect", () => {
-      console.log("disconnected from matchmaking server");
+      console.log("disconnected from chat server.");
     });
 
-    socket.on("match-found", (acceptTimeout: number) => {
-      console.log("match found");
-      matchFoundCallbacks.forEach(callback => callback(acceptTimeout));
+    socket.on("join", (room: string) => {
+      console.log(room, " joined.");
     });
 
-    socket.on("game-started", () => {
-      console.log("game started");
-      gameStartedCallbacks.forEach(callback => callback());
-    });
-
-    socket.on("unauthorized", () => {
-      console.log("unauthorized");
-      const token = localStorage.getItem("token");
-      socket.emit("authorization", token ? {token} : {});
+    socket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
+      newMessageCallBack.forEach(callback => callback(data));
     });
 
     return true;
@@ -68,50 +58,78 @@ export namespace MatchmakingClient {
       socket.disconnect();
   }
 
-  export function leaveMatchmaking() {
-    leaveMatchmakingRanked();
-    leaveMatchmakingCasual();
+  export function joinChatServer(res: any) {
+    if (!checkChatConnection()) return;
+    socket.emit("join", res);
   }
 
-  export function joinMatchmakingCasual() {
-    if (!checkConnection()) return;
-    socket.emit("join-matchmaking-casual");
+  export function onInfo(channel: string) {
+    if (!checkChatConnection()) return;
+    socket.emit("info", { channel });
   }
 
-  export function leaveMatchmakingCasual() {
-    if (!checkConnection()) return;
-    socket.emit("leave-matchmaking-casual");
+  export function onCmd(channel: string) {
+    if (!checkChatConnection()) return;
+    socket.emit("cmd", { channel });
   }
 
-  export function joinMatchmakingRanked() {
-    if (!checkConnection()) return;
-    socket.emit("join-matchmaking-ranked");
+  export function onSend(send: {username: string, channel: string, msg: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("send :", send);
   }
 
-  export function leaveMatchmakingRanked() {
-    if (!checkConnection()) return;
-    socket.emit("leave-matchmaking-ranked");
+  export function onMessageRecieve(callback: any) {
+    newMessageCallBack.push(callback);
   }
 
-  export function joinFoundMatch() {
-    if (!checkConnection()) return;
-    socket.emit("accept-found-game");
+  export function onJoinChan(callback: any) {
+    newJoinChannel.push(callback);
   }
-
-  export function onMatchFound(callback: MatchmakingMatchFoundCallback) {
-    matchFoundCallbacks.push(callback);
-  }
-
-  export function offMatchFound(callback: MatchmakingMatchFoundCallback) {
-    matchFoundCallbacks = matchFoundCallbacks.filter(cb => cb !== callback);
-  }
-
-  export function ongameStarted(callback: MatchmakingGameStartedCallback) {
-    gameStartedCallbacks.push(callback);
-  }
-
-  export function offgameStarted(callback: MatchmakingGameStartedCallback) {
-    gameStartedCallbacks = gameStartedCallbacks.filter(cb => cb !== callback);
-  }
-
 }
+
+/*
+
+    newSocket.on("blocked", (target: string) => {
+      blocedList.push(target);
+    });
+
+    newSocket.on("quit", (room: string) => {
+      for (let index = 0; index < channelList.length; index++) {
+        console.log(channelList[index]);
+        if (room === channelList[index]) {
+          channelList.splice(index, 1);
+          const canal = document.getElementById("canal");
+          if (canal) {
+            canal.innerHTML = defaultChannelGen;
+            setRoomChange(defaultChannelGen);
+          }
+          return;
+        }
+      }
+    });
+
+    socketRef.current.on(
+      "friendRequest",
+      (data: { friend: any; from: string }) => {
+        setNotif(true);
+      }
+    );
+
+    newSocket.on("inv", (data: { username: string; target: string }) => {
+      if (data.target === username) {
+        if (!channelList.includes(data.username)) {
+          channelList.push(data.username);
+          setRoomChange(data.username);
+          const canal = document.getElementById("canal");
+          if (canal) canal.innerHTML = data.username;
+        }
+      }
+      if (data.username === username) {
+        if (!channelList.includes(data.target)) {
+          channelList.push(data.target);
+          setRoomChange(data.target);
+          const canal = document.getElementById("canal");
+          if (canal) canal.innerHTML = data.target;
+        }
+      }
+    };*/

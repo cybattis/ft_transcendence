@@ -11,7 +11,6 @@ import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { AuthContext } from "../../components/Auth/dto";
 import { Friends } from "../../components/Friends/Friends";
-import { SocketContext } from "../../components/Auth/dto";
 import { io } from "socket.io-client";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
@@ -285,10 +284,6 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
-  const { socketId, setSocketId } = useContext(SocketContext);
-  setSocketId(io(apiBaseURL).id);
-  console.log(socketId);
-
   const { setAuthToken } = useContext(AuthContext);
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({

@@ -47,15 +47,3 @@ export const defaultNotifState: NotifContextType = {
 };
 
 export const NotifContext = createContext<NotifContextType>(defaultNotifState);
-
-export interface SocketContextType {
-  socketId: string | null; //pas definir avec socket.io sinon fou la merde
-  setSocketId: (value: string | null) => void;
-};
-
-export const defaultSocketState: SocketContextType = {
-  socketId: null,
-  setSocketId: () => {},
-};
-
-export const SocketContext = createContext<SocketContextType>(defaultSocketState);
