@@ -1,0 +1,35 @@
+ async joinChannel(socket: Socket, username: string, channel: string, pass: string){
+        console.log(`Channel  ${channel} pass ${pass}`);
+        const salt = await bcrypt.genSalt();
+        let hash;
+        if (pass !== undefined)
+            hash = await bcrypt.hash(pass, salt);
+        else{
+            pass = 'pass';
+            hash = await bcrypt.hash(pass, salt);
+        }
+        if (this.channelStruct.length === 0) {
+            //this.channelStruct.push(new ChannelStructure(channel, username, hash));
+            this.channelStruct.push(new ChannelStructure(channel, username, pass));
+            socket.join(channel);
+            socket.emit('join', channel);
+        }
+        for (let index = 0; index < this.channelStruct.length; ++index) {
+            if (channel === this.channelStruct[index].name) {
+                if (this.channelStruct[index].isBan(username))
+                    return ;
+                if (this.channelStruct[index].isOwner(username)) {
+                    this.channelStruct[index].pswd = hash;
+                    return;
+                }
+                if (!this.channelStruct[index].isUser(username)) {
+                    if(pass === this.channelStruct[index].pswd)
+                    {
+                        this.channelStruct[index].newUser(username);
+                        socket.join(channel);
+                        socket.emit('join', channel);
+                    }
+                }
+                return;
+            }
+        }s

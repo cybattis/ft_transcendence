@@ -41,7 +41,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       this.channelService.joinOldChannel(socket, username);
-    this.channelService.joinChannel(socket, username, channel, data.password);
+    this.channelService.joinChannel(socket, data.type, username, channel, data.password);
   }
 
   @SubscribeMessage('prv')

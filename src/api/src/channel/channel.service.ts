@@ -1,28 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit  } from '@nestjs/common';
 import { ChannelStructure } from "./channel.structure";
 import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
 import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
 import { Chat } from './entity/Chat.entity';
+import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelController } from './channel.controller';
 
 @Injectable()
-export class ChannelService {
+export class ChannelService implements OnModuleInit {
     private channelStruct: ChannelStructure[];
     private usersSocketStructures: UsersSocketStructure[];
-    private channelController: ChannelController;
     
     
     constructor(
         @InjectRepository(Chat)
-        private chatRepository: Repository<Chat>
+        private chatRepository: Repository<Chat>,
+        @InjectRepository(Channel)
+        private channelRepository: Repository<Channel>
         ) {
         this.channelStruct = [];
         this.usersSocketStructures = [];
     }
+
+    async onModuleInit(){
+        const rowCount = await this.channelRepository.count();
+        if (rowCount == 0)
+            await this.channelRepository.save({
+                channel: '#general',
+                status: 'public',
+                users : '',
+                owner : '',
+                operator: '',
+                ban: '',
+                password: '',
+            })
+    } 
 
     listUsersChannel(channel: string) {
         //console.log(`length ${this.channelStruct.length}`);
@@ -284,45 +300,81 @@ export class ChannelService {
         return null;
     }
 
-    async joinChannel(socket: Socket, username: string, channel: string, pass: string){
-        console.log(`Channel  ${channel} pass ${pass}`);
-        const salt = await bcrypt.genSalt();
-        let hash;
-        if (pass !== undefined)
-            hash = await bcrypt.hash(pass, salt);
-        else{
-            pass = 'pass';
-            hash = await bcrypt.hash(pass, salt);
+    checkUserIsHere(liste: string, username: string) : boolean{
+        if (!liste.includes(','))
+            return false;
+        const names: string[] = liste.split(',');
+        for (const cmp of names){
+            if (cmp === username)
+                return true;
         }
-        if (this.channelStruct.length === 0) {
-            //this.channelStruct.push(new ChannelStructure(channel, username, hash));
-            this.channelStruct.push(new ChannelStructure(channel, username, pass));
+        return false;
+    }
+
+    async tryJoin(socket: Socket,type: string, username: string, channel: string, pass: string){
+        const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
+        if (!channelToJoin)
+            return;
+        if (channelToJoin.status === "public"){
+            if (this.checkUserIsHere(channelToJoin.ban, username))
+                return ; // Send message pour deja liste banni
+            if (this.checkUserIsHere(channelToJoin.users, username))
+                return ; // deja present
+            channelToJoin.users += username + ',';
+            await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
         }
-        for (let index = 0; index < this.channelStruct.length; ++index) {
-            if (channel === this.channelStruct[index].name) {
-                if (this.channelStruct[index].isBan(username))
-                    return ;
-                if (this.channelStruct[index].isOwner(username)) {
-                    this.channelStruct[index].pswd = hash;
-                    return;
-                }
-                if (!this.channelStruct[index].isUser(username)) {
-                    if(pass === this.channelStruct[index].pswd)
-                    {
-                        this.channelStruct[index].newUser(username);
-                        socket.join(channel);
-                        socket.emit('join', channel);
-                    }
-                }
-                return;
-            }
+        else if (channelToJoin.status === "protected"){
+            console.log("pas encore fait");
         }
-        this.channelStruct.push(new ChannelStructure(channel, username, pass));
-        //this.channelStruct.push(new ChannelStructure(channel, username, hash));
-        socket.join(channel);
-        socket.emit('join', channel);
+        else if(channelToJoin.status === "private"){
+            if (this.checkUserIsHere(channelToJoin.ban, username))
+                return ; // Send message pour deja liste banni
+            if (this.checkUserIsHere(channelToJoin.users, username))
+                return ; // deja present
+            if (await bcrypt.compare(pass, channelToJoin.password))
+                return ; // bad mpd
+            channelToJoin.users += username + ',';
+            await this.channelRepository.save(channelToJoin);
+            socket.join(channel);
+            socket.emit('join', channel);
+        }
+        else
+            console.log("Aucune type de channel");
+    }
+
+    async joinChannel(socket: Socket,type: string, username: string, channel: string, pass: string){
+        if (channel === "#general"){
+            const channelToUpdate = await this.channelRepository.findOne({where :{channel: channel}});
+            if (!channelToUpdate)
+                return;
+            if (this.checkUserIsHere(channelToUpdate.users, username))
+                return ;
+            channelToUpdate.users += username + ",";
+            await this.channelRepository.save(channelToUpdate);
+            socket.join(channel);
+            socket.emit('join', channel);
+            return ;
+        }
+        const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
+        if (channelToJoin)
+            await this.tryJoin(socket, type, username, channel, pass);
+        else {
+            const salt = await bcrypt.genSalt();
+            const hash = await bcrypt.hash(pass, salt);
+            await this.channelRepository.save({
+                channel: channel,
+                status: type,
+                users : username + ',',
+                owner : username,
+                operator: username,
+                ban: '',
+                password: hash,
+            })
+            socket.join(channel);
+            socket.emit('join', channel);
+        }
     }
 
     joinOldChannel(socket: Socket, username: string){
@@ -365,11 +417,8 @@ export class ChannelService {
             return ;
         if (this.channelStruct[posActualChannel].nbUsersInChannel() === 0)
         {
-            console.log(`Inside delete channel ${posActualChannel}`);
             this.channelStruct.splice(posActualChannel, 1);
-            console.log(`Inside delete 2 ${posActualChannel}`);
-            this.channelController.deleteChannel(channel);
-            console.log(`Inside delete 3 ${posActualChannel}`);
+            this.chatRepository.delete({channel: channel});
         }
     }
 

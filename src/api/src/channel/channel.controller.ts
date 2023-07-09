@@ -23,6 +23,7 @@ export class ChannelController {
 
     @Delete('/delete-channel/:channel')
     async deleteChannel(@Param('channel') channel: string): Promise<void> {
-      await this.chatRepository.delete({channel: channel});
+        const decodedName = decodeURIComponent(channel);
+        await this.chatRepository.delete({channel: decodedName});
     }
 }

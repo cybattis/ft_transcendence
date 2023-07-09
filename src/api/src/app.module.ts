@@ -14,6 +14,7 @@ import { Game } from './game/entity/Game.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ChatModule } from './chat/chat.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
+import { Channel } from './channel/entity/Channel.entity';
 
 @Module({
   imports: [
@@ -33,10 +34,10 @@ import { MatchmakingModule } from './matchmaking/matchmaking.module';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [User, Game, Chat],
+      entities: [User, Game, Chat, Channel],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User, Chat]),
+    TypeOrmModule.forFeature([User, Chat, Channel]),
   ],
   controllers: [AppController],
   providers: [AppService],

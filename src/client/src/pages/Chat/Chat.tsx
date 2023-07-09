@@ -85,9 +85,11 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const newSocket = io(apiBaseURL);
-    if (socketId === null) setSocketId(newSocket.id);
+    
+    const newSocket = io("http://127.0.0.1:5400");
     socketRef.current = newSocket;
+    if (socketId === null)
+      setSocketId(newSocket.id);
 
     newSocket.on("connect", () => {
       if (!channelList.includes(defaultChannelGen)) {
@@ -214,7 +216,10 @@ export default function ChatClient() {
   const JoinByForm = (channel: string, password: string) => {
     if (channel.indexOf("#") === -1)
       channel = '#' + channel;
-    const sendJoin = {username: username, channel: channel, password: password};
+    let type = "public";
+    if (password)
+      type = "private"; 
+    const sendJoin = {username: username, type: type, channel: channel, password: password};
     socketRef.current.emit('join', sendJoin);
   }
   
@@ -309,6 +314,5 @@ export default function ChatClient() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
