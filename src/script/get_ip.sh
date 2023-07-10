@@ -8,4 +8,4 @@ echo "Getting IP address..."
 echo "IP address: $LOCAL_IP"
 
 awk '{ if (NR == 13) print "'HOST_IP=${LOCAL_IP}'"; else print $0}' src/.env > src/.env.tmp
-mv src/.env.tmp src/.300033env && rm -f src/.env.tmp
+mv src/.env.tmp src/.env && rm -f src/.env.tmp
