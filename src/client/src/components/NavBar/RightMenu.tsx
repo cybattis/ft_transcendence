@@ -39,7 +39,6 @@ function Unlogged() {
 }
 
 function Img() {
-  //Marche que quan user est dans menu(websocket que la ou y chat change ca)
   const { notif, setNotif } = useContext(NotifContext);
   const logoNotifs = {
     width: "45px",
@@ -57,7 +56,13 @@ function Img() {
       });
   };
 
-  fetchNotifs().then(() => {});
+  useEffect(() => {
+    fetchNotifs();
+    if (fetchNotifs.length) fetchNotifs();
+
+    console.log("reload");
+  }, [notif, fetchNotifs]);
+
 
   if (!notif)
     return <img style={logoNotifs} src={notifsLogo} alt={"logo notif"}></img>;

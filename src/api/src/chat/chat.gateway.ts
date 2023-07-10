@@ -123,6 +123,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const target = mess.friend.data;
     console.log(`Friend request Send`);
     this.channelService.sendFriendRequest(this.server, target, mess.from);
-    this.server.to(target.websocket).emit('friendRequest', {target});
+    this.server.to(target.websocket).emit('friendRequest');
   }
 }

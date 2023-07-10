@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
+import { NotifContext } from "../../components/Auth/dto";
 
 export default function Notifications() {
+  const { setNotif } = useContext(NotifContext);
   const [invits, setInvits] = useState([
     {
       nickname: "",
@@ -79,6 +81,7 @@ export default function Notifications() {
 
   //Faire une map pour afficher toutes invites a la suite
   if (invits && invits[0] && invits[0].id > 0) {
+    setNotif(true);
     return (
       <div className="notifPage">
         <h1 className="notifTitle">Notifications</h1>
@@ -115,6 +118,8 @@ export default function Notifications() {
       </div>
     );
   } else
+  setNotif(false);
+
     return (
       <div className="noNotifTitle">
         <h1>No Notifications</h1>

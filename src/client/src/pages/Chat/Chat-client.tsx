@@ -9,11 +9,26 @@ export type newChannelCallBack = {
   (room :string): void;
 }
 
+export type newQuitCallBack = {
+  (room :string): void;
+}
+
+export type newBlockedCallBack = {
+  (target: string): void;
+}
+
+export type newInvCallBack = {
+  (data: {username: string, target: string}): void;
+}
+
 export namespace ChatClientSocket {
 
   let socket: Socket;
   let newMessageCallBack: newMessagesCallBack[] = [];
   let newJoinChannel: newChannelCallBack[] = [];
+  let newBlockedCallBack: newBlockedCallBack[] = [];
+  let newQuitCallBack: newQuitCallBack[] = [];
+  let newInvCallBack: newInvCallBack[] = [];
 
   function checkChatConnection(): boolean {
 
@@ -44,10 +59,23 @@ export namespace ChatClientSocket {
 
     socket.on("join", (room: string) => {
       console.log(room, " joined.");
+      newJoinChannel.forEach(callback => callback(room));
     });
 
     socket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
       newMessageCallBack.forEach(callback => callback(data));
+    });
+
+    socket.on('blocked', (target: string) => {
+      newBlockedCallBack.forEach(callback => callback(target));
+    });
+
+    socket.on('quit', (room: string) => {
+      newQuitCallBack.forEach(callback => callback(room));
+    });
+
+    socket.on('inv', (data: { username: string; target: string }) => {
+      newInvCallBack.forEach(callback => callback(data));
     });
 
     return true;
@@ -56,6 +84,31 @@ export namespace ChatClientSocket {
   function disconnect() {
     if (socket && socket.connected)
       socket.disconnect();
+  }
+
+  export function onPm(sendPrv: {username: string, target: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("prv", sendPrv);
+  }
+
+  export function onOp(message: {op: string, channel: string, author: string, cmd: string, target: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("op", message);
+  }
+
+  export function onKick(sendKick: {cmd: string, username: string, target: string, channel: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("kick", sendKick);
+  }
+
+  export function onBan(sendBan: {cmd: string, username: string, target: string, channel: string, time: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("ban", sendBan);
+  }
+
+  export function onQuit(sendQuit: {cmd: string, username: string, channel: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("quit", sendQuit);
   }
 
   export function joinChatServer(res: any) {
@@ -68,6 +121,16 @@ export namespace ChatClientSocket {
     socket.emit("info", { channel });
   }
 
+  export function onJoin(sendJoin: {username: string, channel: string, password: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("join", sendJoin);
+  }
+
+  export function onBlocked(sendBlock: any) {
+    if (!checkChatConnection()) return;
+    socket.emit("blocked", sendBlock);
+  }
+
   export function onCmd(channel: string) {
     if (!checkChatConnection()) return;
     socket.emit("cmd", { channel });
@@ -75,61 +138,47 @@ export namespace ChatClientSocket {
 
   export function onSend(send: {username: string, channel: string, msg: string}) {
     if (!checkChatConnection()) return;
+    if (!send.msg || !send.msg[0]) return ;
     socket.emit("send :", send);
   }
 
-  export function onMessageRecieve(callback: any) {
+  export function onMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack.push(callback);
   }
 
-  export function onJoinChan(callback: any) {
+  export function onJoinChan(callback: newChannelCallBack) {
     newJoinChannel.push(callback);
   }
+
+  export function addBlockCb(callback: newBlockedCallBack) {
+    newBlockedCallBack.push(callback);
+  }
+
+  export function addQuitCb(callback: newQuitCallBack) {
+    newQuitCallBack.push(callback);
+  }
+
+  export function addInvCb(callback: newInvCallBack) {
+    newInvCallBack.push(callback);
+  }
+
+  export function offMessageRecieve(callback: newMessagesCallBack) {
+    newMessageCallBack = newMessageCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offJoinChan(callback: newChannelCallBack) {
+    newJoinChannel = newJoinChannel.filter((cb) => cb !== callback);
+  }
+
+  export function offBlock(callback: newBlockedCallBack) {
+    newBlockedCallBack = newBlockedCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offQuit(callback: newQuitCallBack) {
+    newQuitCallBack = newQuitCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offInv(callback: newInvCallBack) {
+    newInvCallBack = newInvCallBack.filter((cb) => cb !== callback);
+  }
 }
-
-/*
-
-    newSocket.on("blocked", (target: string) => {
-      blocedList.push(target);
-    });
-
-    newSocket.on("quit", (room: string) => {
-      for (let index = 0; index < channelList.length; index++) {
-        console.log(channelList[index]);
-        if (room === channelList[index]) {
-          channelList.splice(index, 1);
-          const canal = document.getElementById("canal");
-          if (canal) {
-            canal.innerHTML = defaultChannelGen;
-            setRoomChange(defaultChannelGen);
-          }
-          return;
-        }
-      }
-    });
-
-    socketRef.current.on(
-      "friendRequest",
-      (data: { friend: any; from: string }) => {
-        setNotif(true);
-      }
-    );
-
-    newSocket.on("inv", (data: { username: string; target: string }) => {
-      if (data.target === username) {
-        if (!channelList.includes(data.username)) {
-          channelList.push(data.username);
-          setRoomChange(data.username);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.username;
-        }
-      }
-      if (data.username === username) {
-        if (!channelList.includes(data.target)) {
-          channelList.push(data.target);
-          setRoomChange(data.target);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.target;
-        }
-      }
-    };*/

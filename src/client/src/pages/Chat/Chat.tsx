@@ -68,14 +68,7 @@ export default function ChatClient() {
   }
 
   const sendMessage = () => {
-    /*if (
-      !inputRef.current ||
-      !inputRef.current.value ||
-      inputRef.current.value === ""
-    ) {
-      return;
-    }*/
-    if (inputRef.current) {
+    if (inputRef.current && inputRef.current.value && inputRef.current.value[0]) {
       const cmd = choiceCmd(inputRef.current.value);
       doCmd(cmd, inputRef.current.value);
       inputRef.current.value = "";
@@ -84,10 +77,8 @@ export default function ChatClient() {
 
   useEffect(() => {
     const messageCallBack = (data: {sender: string, msg: string, channel: string}) => {
-      console.log("DATA: ", data);
       if (senderIsBlocked(data.sender))
         return ;
-      console.log('HERE');
       let addressInfo = "http://127.0.0.1:5400/chat/" + data.channel;
       axios.get(addressInfo)
         .then(response => {
@@ -109,11 +100,66 @@ export default function ChatClient() {
       setRoomChange(room);
       const canal = document.getElementById("canal");
       if (canal) canal.innerHTML = room;
+      console.log("Room: ", room);
     }
   }
 
   ChatClientSocket.onJoinChan(joinCallBack);
 
+    const blockedCallBack = (target: string) => {
+      if (!blocedList.includes(target))
+        blocedList.push(target);
+  }
+
+  ChatClientSocket.addBlockCb(blockedCallBack);
+
+  ChatClientSocket.joinChatServer(joinCallBack);
+
+    const quitCallBack = (room: string) => {
+      for (let index = 0; index < channelList.length; index++) {
+        console.log(channelList[index]);
+        if (room === channelList[index]) {
+          channelList.splice(index, 1);
+          const canal = document.getElementById("canal");
+          if (canal) {
+            canal.innerHTML = defaultChannelGen;
+            setRoomChange(defaultChannelGen);
+          }
+          return;
+        }
+      }
+  }
+
+  ChatClientSocket.addQuitCb(quitCallBack);
+
+    const inviteCallBack = (data: { username: string; target: string }) => {
+      if (data.target === username) {
+        if (!channelList.includes(data.username)) {
+          channelList.push(data.username);
+          setRoomChange(data.username);
+          const canal = document.getElementById("canal");
+          if (canal) canal.innerHTML = data.username;
+        }
+      }
+      if (data.username === username) {
+        if (!channelList.includes(data.target)) {
+          channelList.push(data.target);
+          setRoomChange(data.target);
+          const canal = document.getElementById("canal");
+          if (canal) canal.innerHTML = data.target;
+        }
+      }
+    }
+
+  ChatClientSocket.addInvCb(inviteCallBack);
+
+  return () => {
+    ChatClientSocket.offJoinChan(joinCallBack);
+    ChatClientSocket.offBlock(blockedCallBack);
+    ChatClientSocket.offQuit(quitCallBack);
+    ChatClientSocket.offInv(inviteCallBack);
+    ChatClientSocket.offMessageRecieve(messageCallBack);
+  }
   }, []);
 
   function choiceCmd(input: string): string {
@@ -151,7 +197,7 @@ export default function ChatClient() {
 
   const PrivateMessageForm = (target: string) => {
     const sendPrv = { username: username, target: target };
-    socketRef.current.emit("prv", sendPrv);
+    ChatClientSocket.onPm(sendPrv);
     return;
   };
 
@@ -159,7 +205,8 @@ export default function ChatClient() {
     if (channel.indexOf("#") === -1)
       channel = '#' + channel;
     const sendJoin = {username: username, channel: channel, password: password};
-    socketRef.current.emit('join', sendJoin);
+    console.log("HERE: ", sendJoin);
+    ChatClientSocket.onJoin(sendJoin);
   }
   
   const OperatorForm = (target: string, action: string) => {
@@ -172,7 +219,7 @@ export default function ChatClient() {
       cmd: action,
       target: target,
     };
-    socketRef.current.emit("op", message);
+    ChatClientSocket.onOp(message);
   };
 
   const BanForm = (target: string, action: string, time: string) => {
@@ -184,7 +231,7 @@ export default function ChatClient() {
       channel: channel,
       time: time,
     };
-    socketRef.current.emit("ban", sendBan);
+    ChatClientSocket.onBan(sendBan);
   };
 
   const KickForm = (target: string) => {
@@ -195,18 +242,18 @@ export default function ChatClient() {
       target: target,
       channel: channel,
     };
-    socketRef.current.emit("kick", sendKick);
+    ChatClientSocket.onKick(sendKick);
   };
 
   const QuitForm = () => {
     const channel = takeActiveCanal();
     const sendQuit = { cmd: "quit", username: username, channel: channel };
-    socketRef.current.emit("quit", sendQuit);
+    ChatClientSocket.onQuit(sendQuit);
   };
 
   const BlockedForm = (target: string, cmd: string) => {
     const sendBlock = { target: target };
-    socketRef.current.emit("blocked", sendBlock);
+    ChatClientSocket.onBlocked(sendBlock);
   };
 
   function takeMess(mess: string): string {
