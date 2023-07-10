@@ -15,17 +15,17 @@ channel: string;
 @Column({ type: 'varchar'})
 status: string;
 
-@Column({ type: 'varchar'})
-users: string;
+@Column('text', { array: true })
+users: string[];
 
 @Column({ type: 'varchar'})
 owner: string;
 
-@Column({ type: 'varchar'})
-operator: string;
+@Column('text', { array: true })
+operator: string[];
 
-@Column({ type: 'varchar'})
-ban: string;
+@Column('text', { array: true })
+ban: string[];
 
 @Column({ type: 'varchar'})
 password: string;

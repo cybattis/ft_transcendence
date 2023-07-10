@@ -32,10 +32,10 @@ export class ChannelService implements OnModuleInit {
             await this.channelRepository.save({
                 channel: '#general',
                 status: 'public',
-                users : '',
+                users : [],
                 owner : '',
-                operator: '',
-                ban: '',
+                operator: [],
+                ban: [],
                 password: '',
             })
     } 
@@ -102,103 +102,97 @@ export class ChannelService implements OnModuleInit {
         return cmd;
     }
 
-    quitChannel(cmd: string, username: string, channel: string){
-        if (this.isOpe(username, channel))
-            this.kickOp(channel, username);
-        if (this.isUsers(username, channel))
-            this.kickUser(username, channel);
-        this.deleteChannel(channel);
+    async quitChannel(cmd: string, username: string, channel: string){
+        const channelToUpdate: Channel | null = await this.channelRepository.findOneBy({channel: channel});
+        if (!channelToUpdate)
+            return;
+        if (this.checkUserIsHere(channelToUpdate.operator, username))
+            await this.kickOp(channelToUpdate, username);
+        if (this.checkUserIsHere(channelToUpdate.users, username))
+            await this.kickUser(channelToUpdate, channel);
+        this.deleteChannel(channelToUpdate);
     }
 
-    kickChannel(cmd: string, username: string, target: string, channel: string) {
-        if (!this.isOpe(username, channel))
+    async kickChannel(cmd: string, username: string, target: string, channel: string) {
+        const channelToUpdate: Channel | null = await this.channelRepository.findOneBy({channel: channel});
+        if (!channelToUpdate)
+            return;
+        if (!this.checkUserIsHere(channelToUpdate.operator, username))
         {
             console.log(`Ban : ${username} isn't operator`);
             return ;
         }
-        if (!this.isUsers(target, channel))
+        if (!this.checkUserIsHere(channelToUpdate.users, username))
         {
             console.log(`Ban : ${target} isn't users`);
             return ;
         }
         if (cmd === "kick") {
-            this.kickOp(channel, target);
-            this.kickUser(target, channel);
+            this.kickOp(channelToUpdate, target);
+            this.kickUser(channelToUpdate, channel);
         }
     }
 
-    banChannel(cmd: string, username: string, target: string, channel: string, time: string){
-        if (!this.isOpe(username, channel))
+    async banChannel(cmd: string, username: string, target: string, channel: string, time: string){
+        const channelToUpdate: Channel | null = await this.channelRepository.findOneBy({channel: channel});
+        if (!channelToUpdate)
+            return;
+        if (!this.checkUserIsHere(channelToUpdate.operator, username))
             return (`Ban : ${username} isn't operator`);
         const timeBan: number = this.valideTime(time);
         console.log(`time : ${timeBan}`);
-        if (cmd === "+b"){
-            this.actBan(target, channel, timeBan);
-        }
+        if (cmd === "+b")
+            await this.actBan(channelToUpdate, target, timeBan);
         else if (cmd === "-b")
-            this.actUnban(target, channel);
+            this.actUnban(channelToUpdate, target);
         else
             return (`Not cmd`);
-        this.deleteChannel(channel);
+        this.deleteChannel(channelToUpdate);
     }
 
-    actBan(target: string, channel: string, time: number){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                for (let indexUser = 0; indexUser < this.channelStruct[index].users.length; indexUser++){
-                    if (target === this.channelStruct[index].users[indexUser]) {
-                        this.channelStruct[index].users.splice(indexUser, 1);
-                        if (this.channelStruct[index].nbUsersInChannel() === 0){
-                            this.channelStruct.splice(index, 1);
-                            return ;
-                        }
-                        this.channelStruct[index].ban.push(new banStructure(target, time));
-                        return (this.kickOp(channel, target));
-                    }
-                }
-            }
+    async actBan(channelToUpdate: Channel, target: string, time: number){
+        for (let index = 0; channelToUpdate.users[index]; index++){
+            if (channelToUpdate.users[index] === target)
+                channelToUpdate.users[index].slice(index, 1);
         }
-    }
-
-    actUnban(target: string, channel: string){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                for (let indexBan = 0; indexBan < this.channelStruct[index].ban.length; indexBan++){
-                    if (target === this.channelStruct[index].ban[indexBan].name) {
-                        this.channelStruct[index].ban.splice(indexBan, 1);
-                    }
-                }
-            }
+        for (let index = 0; channelToUpdate.operator[index]; index++){
+            if (channelToUpdate.operator[index] === target)
+                channelToUpdate.operator[index].slice(index, 1);
         }
+        for (let index = 0; channelToUpdate.ban[index]; index++){
+            if (channelToUpdate.ban[index] === target)
+                return ;
+        }
+        channelToUpdate.ban.push(target);
+        await this.channelRepository.save(channelToUpdate);     
     }
 
-    opChannel(channel: string, cmd: string, author: string, target: string){
-        console.log(`Op ${channel}, ${cmd}, ${author}, ${target}`)
-        if (!this.isOpe(author, channel)){
+    async actUnban(channelToUpdate: Channel, target: string){
+        for (let index = 0; channelToUpdate.ban[index]; index++){
+            if (channelToUpdate.ban[index] === target)
+                channelToUpdate.ban.slice(index, 1);
+        }
+        await this.channelRepository.save(channelToUpdate);
+    }
+
+    async opChannel(channel: string, cmd: string, author: string, target: string){
+        const channelToUpdate: Channel | null = await this.channelRepository.findOneBy({channel: channel});
+        if (!channelToUpdate)
+            return;
+        if (!this.checkUserIsHere(channelToUpdate.operator, author)){
             //Send error message
             return ;
         }
         if (cmd === "+o")
-            this.addNewOp(channel, target);
+            await this.addNewOp(channelToUpdate, target);
         else if (cmd === "-o") {
-            this.kickOp(channel, target);
+            await this.kickOp(channelToUpdate, target);
         }
         else {
             console.log("error invalid cmd");
         }
     }
 
-    isOpe(author: string, channel: string){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                for (let indexOp = 0; indexOp < this.channelStruct[index].operator.length; indexOp++){
-                    if (this.channelStruct[index].operator[indexOp] === author)
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
 
     isUsers(username: string, channel: string){
         for (let index = 0; index < this.channelStruct.length; index++){
@@ -212,47 +206,37 @@ export class ChannelService implements OnModuleInit {
         return false;
     }
 
-    addNewOp(channel: string, target: string){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                for (let indexOp = 0; indexOp < this.channelStruct[index].operator.length; indexOp++){
-                    if (this.channelStruct[index].operator[indexOp] === target)
+    async addNewOp(channelToUpdate: Channel, target: string){
+        for (let index = 0; channelToUpdate.users[index]; index++){
+            if (channelToUpdate.users[index] === target)
+            {
+                for (let index = 0; channelToUpdate.operator[index]; index++){
+                    if (channelToUpdate.operator[index] === target)
                         return ;
                 }
-                for (let indexPlayer = 0; indexPlayer < this.channelStruct[index].users.length; indexPlayer++){
-                    if (target === this.channelStruct[index].users[indexPlayer])
-                        this.channelStruct[index].operator.push(target);
-                }
+                channelToUpdate.operator.push(target);
+                await this.channelRepository.save(channelToUpdate);
             }
         }
     }
 
-    kickOp(channel: string, target: string){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                if (target === this.channelStruct[index].owner)
-                    return ;
-                for (let indexOpe = 0; indexOpe < this.channelStruct[index].operator.length; indexOpe++) {
-                    if (target === this.channelStruct[index].operator[indexOpe])
-                    {
-                        this.channelStruct[index].operator.splice(indexOpe, 1);
-                        return ;
-                    }
-                }
+    async kickOp(channelToUpdate: Channel, target: string){
+        for (let index = 0; channelToUpdate.operator[index]; index++){
+            if (channelToUpdate.operator[index] === target){
+                console.log(`kick op`);
+                channelToUpdate.operator = channelToUpdate.operator.slice(index, 1);
             }
         }
+        console.log(channelToUpdate.operator);
+        await this.channelRepository.save(channelToUpdate);
     }
 
-    kickUser(target: string, channel: string){
-        for (let index = 0; index < this.channelStruct.length; index++){
-            if (this.channelStruct[index].name === channel) {
-                for (let indexUser = 0; indexUser < this.channelStruct[index].users.length; indexUser++){
-                    if (target === this.channelStruct[index].users[indexUser]) {
-                        this.channelStruct[index].users.splice(indexUser, 1);
-                    }
-                }
-            }
+    async kickUser(channelToUpdate: Channel, target: string){
+        for (let index = 0; channelToUpdate.users[index]; index++){
+            if (channelToUpdate.users[index] === target)
+            channelToUpdate.users = channelToUpdate.users.slice(index, 1);
         }
+        await this.channelRepository.save(channelToUpdate);
     }
 
     verifyUserSocket(idSocket: string, username: string) {
@@ -300,12 +284,9 @@ export class ChannelService implements OnModuleInit {
         return null;
     }
 
-    checkUserIsHere(liste: string, username: string) : boolean{
-        if (!liste.includes(','))
-            return false;
-        const names: string[] = liste.split(',');
-        for (const cmp of names){
-            if (cmp === username)
+    checkUserIsHere(liste: string[], username: string) : boolean{
+        for (let index: number = 0; index < liste.length; index ++){
+            if (username === liste[index])
                 return true;
         }
         return false;
@@ -320,7 +301,8 @@ export class ChannelService implements OnModuleInit {
                 return ; // Send message pour deja liste banni
             if (this.checkUserIsHere(channelToJoin.users, username))
                 return ; // deja present
-            channelToJoin.users += username + ',';
+            channelToJoin.users.push(username);
+
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
@@ -335,7 +317,7 @@ export class ChannelService implements OnModuleInit {
                 return ; // deja present
             if (await bcrypt.compare(pass, channelToJoin.password))
                 return ; // bad mpd
-            channelToJoin.users += username + ',';
+            channelToJoin.users.push(username);
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
@@ -351,7 +333,7 @@ export class ChannelService implements OnModuleInit {
                 return;
             if (this.checkUserIsHere(channelToUpdate.users, username))
                 return ;
-            channelToUpdate.users += username + ",";
+            channelToUpdate.users.push(username);
             await this.channelRepository.save(channelToUpdate);
             socket.join(channel);
             socket.emit('join', channel);
@@ -366,10 +348,10 @@ export class ChannelService implements OnModuleInit {
             await this.channelRepository.save({
                 channel: channel,
                 status: type,
-                users : username + ',',
+                users : [username],
                 owner : username,
-                operator: username,
-                ban: '',
+                operator: [username],
+                ban: [],
                 password: hash,
             })
             socket.join(channel);
@@ -377,12 +359,17 @@ export class ChannelService implements OnModuleInit {
         }
     }
 
-    joinOldChannel(socket: Socket, username: string){
-        for (let index = 0; index < this.channelStruct.length; index++) {
-            if(this.channelStruct[index].isUser(username)){
-                socket.emit('join', this.channelStruct[index].getName());
+    async joinOldChannel(socket: Socket, username: string){
+        const allChannel: any =  await this.channelRepository.find();
+        if (allChannel){
+            for (let index = 0; allChannel[index]; index++){
+                if(this.checkUserIsHere(allChannel[index].users, username)){
+                    socket.join(allChannel[index].channel);
+                    socket.emit('join', allChannel[index].channel);
+                }
             }
         }
+            
     }
 
     sendPrvMess(server: Server, socket: Socket, username: string, target: string){
@@ -411,15 +398,9 @@ export class ChannelService implements OnModuleInit {
         return 0;
     }
 
-    deleteChannel(channel: string){
-        const posActualChannel = this.channelPosition(channel);
-        if (posActualChannel === 0)
-            return ;
-        if (this.channelStruct[posActualChannel].nbUsersInChannel() === 0)
-        {
-            this.channelStruct.splice(posActualChannel, 1);
-            this.chatRepository.delete({channel: channel});
-        }
+    async deleteChannel(channelToUpdate: Channel){
+        if (channelToUpdate.users.length === 0)
+            await this.channelRepository.delete({channel: channelToUpdate.channel});
     }
 
     blockedUser(server: Server, socket: Socket, target: string){

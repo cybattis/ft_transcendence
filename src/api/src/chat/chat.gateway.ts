@@ -34,13 +34,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join')
-  handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    console.log(`Join data : ${data.pass} ${data.channel}`);
+  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const channel = data.channel;
     const username = data.username;
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
-      this.channelService.joinOldChannel(socket, username);
+      await this.channelService.joinOldChannel(socket, username);
     this.channelService.joinChannel(socket, data.type, username, channel, data.password);
   }
 
@@ -51,28 +50,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('blocked')
-  handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
-    this.channelService.blockedUser(this.server ,socket, data.target);
+  async handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
+    await this.channelService.blockedUser(this.server ,socket, data.target);
   }
 
   @SubscribeMessage('op')
-  handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
+    await this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
   }
 
   @SubscribeMessage('quit')
-  handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(`Quit : ${data.channel}`);
-    this.channelService.quitChannel(data.cmd, data.username, data.channel);
+    await this.channelService.quitChannel(data.cmd, data.username, data.channel);
     const channel = data.channel;
     this.server.to(socket.id).emit("quit", channel);
   }
 
   @SubscribeMessage('ban')
-  handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
+    await this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
     const targetSocket = this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
@@ -93,9 +92,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('kick')
-  handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
+    await this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
     const targetSocket = this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)

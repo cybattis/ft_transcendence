@@ -95,6 +95,7 @@ export default function ChatClient() {
       if (!channelList.includes(defaultChannelGen)) {
         const send = { username: username, channel: defaultChannelGen };
         newSocket.emit("join", send);
+        console.log("Connect");
       }
     });
 
@@ -160,7 +161,7 @@ export default function ChatClient() {
     newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
       if (senderIsBlocked(data.sender))
         return ;
-      let addressInfo = "http://127.0.0.1:5400/chat/" + data.channel;
+      let addressInfo = "http://127.0.0.1:5400/chat/message/" + data.channel;
       axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
@@ -192,7 +193,7 @@ export default function ChatClient() {
     } else {
       const send = {username: username, channel: channel, msg: msg}
       socketRef.current.emit('send :', send);
-      let addressInfo = "http://127.0.0.1:5400/chat/" + takeActiveCanal();
+      let addressInfo = "http://127.0.0.1:5400/chat/message/" + takeActiveCanal();
       axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
@@ -276,7 +277,7 @@ export default function ChatClient() {
 
   function handleStringChange(newString: string) {
     setRoomChange(newString);
-    let addressInfo = "http://127.0.0.1:5400/chat/" + newString;
+    let addressInfo = "http://127.0.0.1:5400/chat/message/" + newString;
     axios.get(addressInfo)
       .then(response => {
         setPost(response.data);
