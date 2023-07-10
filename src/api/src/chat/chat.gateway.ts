@@ -29,22 +29,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
-  handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     let channel = data.channel;
     const msg = data.msg;
     const sender = data.username;
-    const send = {sender, msg, channel};
-    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
-    if (data.channel[0] === "#")
-      socket.broadcast.emit('rcv', send);
-    else
-    {
-      const target = this.channelService.takeSocketByUsername(channel);
-      channel = sender;
-      const prv = {sender, msg, channel};
-      if (target)
-        socket.to(target).emit('rcv', prv);
-    }
+    await this.channelService.sendMessage(socket, sender, channel, msg);
   }
 
   @SubscribeMessage('join')

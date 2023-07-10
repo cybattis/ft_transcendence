@@ -4,3 +4,10 @@ export interface ChatInterface{
     channel: string;
     message: string;
 }
+
+export interface MessagesInterface{
+    id: number;
+    channelName: string;
+    content: string;
+    emitter: string
+}

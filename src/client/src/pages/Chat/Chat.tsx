@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState, useContext} from 'react';
 import {io} from 'socket.io-client';
 import "./Chat.css";
-import {ChatInterface} from "./Interface/chat.interface";
+import {ChatInterface, MessagesInterface} from "./Interface/chat.interface";
 import ChannelList from "./List/ChannelList";
 import {Decoded} from "../../type/client.type";
 import jwt_decode from "jwt-decode";
@@ -15,6 +15,8 @@ import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 import { NotifContext } from '../../components/Auth/dto';
 import { SocketContext } from '../../components/Auth/dto';
 import { FormContext } from '../../components/Auth/dto';
+import axios from "axios";
+
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -51,8 +53,6 @@ export default function ChatClient() {
   if (username === '') {
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
-      console.log(`Decode ${decoded?.id}`);
-      console.log(`Decode ${decoded?.username}`);
       if (decoded?.username)
         username = decoded.username;
     } catch (e) {
@@ -104,7 +104,6 @@ export default function ChatClient() {
 
     newSocket.on('quit', (room: string) => {
       for (let index = 0; index < channelList.length; index++){
-        console.log(channelList[index]);
         if (room === channelList[index])
         {
           channelList.splice(index, 1);
@@ -145,7 +144,7 @@ export default function ChatClient() {
     });
 
     newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
-      console.log(`rcv :${data.msg}`);
+      takeChannelMess();
       if (senderIsBlocked(data.sender))
         return ;
       setRecvMess(data.msg);
@@ -167,6 +166,19 @@ export default function ChatClient() {
       return input;
     }
     return "/msg";
+  }
+
+  async function takeChannelMess(){
+    console.log('async');
+    await axios
+      .get("http://localhost:5400/channel")
+      .then((res) => {
+        const data: MessagesInterface[] = res.data;
+        console.log(`Mess recu! ${data[0].content}`);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   function doCmd(cmd: string, msg: string) {

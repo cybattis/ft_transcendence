@@ -4,11 +4,16 @@ import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
 import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
+import { Chat } from './entity/Chat.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ChannelService {
     private channelStruct: ChannelStructure[];
-    private usersSocketStructures: UsersSocketStructure[]
+    private usersSocketStructures: UsersSocketStructure[];
+    @InjectRepository(Chat)
+    private chatRepository: Repository<Chat>;
 
     constructor() {
         this.channelStruct = [];
@@ -359,5 +364,24 @@ export class ChannelService {
         const targetUser = this.takeSocketByUsername(target);
         if (targetUser != null)
             server.to(socket.id).emit("blocked", target);
+    }
+
+    async sendMessage(socket :Socket, sender: string, channel: string, msg: string){
+        const send = {sender, msg, channel};
+        if (channel[0] === "#") {
+            const chat: any = {channelName: channel, content: msg, emitter: sender};
+            await this.chatRepository.save(chat);
+            const find: Chat | null = await this.chatRepository.findOne({ where: { id: 1 } });
+            if (find)
+                console.log(`find ${find.channelName} ${find.content} ${find.emitter}`);
+            socket.broadcast.emit('rcv', send);
+        }
+        else {
+            const target = this.takeSocketByUsername(channel);
+            channel = sender;
+            const prv = {sender, msg, channel};
+        if (target)
+            socket.to(target).emit('rcv', prv);
+        }
     }
 }
