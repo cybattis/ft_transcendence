@@ -1,0 +1,157 @@
+.match-data {
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+
+    height: 40px;
+
+    border-radius: 8px;
+
+    background-color: var(--purple-darker);
+}
+
+.match-data:hover {
+    background-color: var(--black);
+    border: var(--cyan) 2px solid;
+}
+
+@media screen and (width > 630px) {
+    .match-data {
+        padding-left: 50px;
+        padding-right: 50px;
+
+        margin-bottom: 10px;
+    }
+
+    #md-date {
+        min-width: 200px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .match-data {
+        padding-left: 10px;
+        padding-right: 20px;
+
+        margin-bottom: 5px;
+    }
+
+    #md-date {
+        min-width: max-content;
+    }
+}
+
+#md-date {
+    flex: 1 1 0;
+
+    max-width: 250px;
+    margin-right: 10px;
+}
+
+#md-type{
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 100px;
+}
+
+#md-score {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 60px;
+}
+
+.opponent-profile {
+    text-decoration: none;
+    color: var(--white);
+}
+
+.opponent-profile:hover {
+    color: var(--cyan);
+}
+
+.opponent-profile #opponent-name {
+    flex: 2;
+
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: left;
+
+    gap: 10px;
+}
+
+#md-win {
+    color: green;
+}
+
+#md-loose {
+    color: red;
+}
+
+#md-in-progress {
+    color: yellow;
+}
+
+/* ===================================================================== */
+
+.match-data-header {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: left;
+
+    border-radius: 8px;
+}
+
+#md-header-date {
+    flex: 1 1 0;
+
+    max-width: 250px;
+    margin-right: 10px;
+}
+
+#md-header-type {
+    flex: 1;
+    max-width: 150px;
+    min-width: 100px;
+}
+
+#md-header-score {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 60px;
+}
+
+@media screen and (width > 630px) {
+    .match-data-header {
+        padding-left: 50px;
+        padding-right: 50px;
+
+        margin-bottom: 10px;
+    }
+
+    #md-header-date {
+        min-width: 200px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .match-data-header {
+        padding-left: 10px;
+        padding-right: 20px;
+
+        margin-bottom: 5px;
+    }
+
+    #md-header-date {
+        min-width: 157px;
+    }
+}

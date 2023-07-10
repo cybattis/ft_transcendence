@@ -61,7 +61,6 @@ export default function FaCode(props: FaProps) {
       .post(apiBaseURL + "auth/2fa", loggin, {
         headers: {
           "Content-Type": "application/json",
-          token: localStorage.getItem("token"),
         },
       })
       .then((res) => {
@@ -70,7 +69,6 @@ export default function FaCode(props: FaProps) {
           setErrorMessage(res.data.response);
         } else if (!authed) {
           const data = res.data;
-          localStorage.setItem("id", data.id);
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
           localStorage.removeItem("email");

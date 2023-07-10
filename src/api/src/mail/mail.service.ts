@@ -11,7 +11,7 @@ export class MailService {
   async sendUserConfirmation(user: User) {
     const url = clientBaseURL + 'confirmation?' + user.id;
 
-    await this.mailerService.sendMail({
+    return await this.mailerService.sendMail({
       to: user.email,
       from: process.env.EMAIL_USR,
       subject: 'Welcome to ThePong! Confirm your Email',
@@ -41,7 +41,7 @@ export class MailService {
       GlobalService.codes[i] = code;
     }
 
-    await this.mailerService.sendMail({
+    return await this.mailerService.sendMail({
       to: email,
       from: process.env.EMAIL_USR,
       subject: 'Code confirmation for the login',
@@ -50,6 +50,5 @@ export class MailService {
         code,
       },
     });
-    return code;
   }
 }

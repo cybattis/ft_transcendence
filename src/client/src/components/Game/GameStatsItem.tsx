@@ -1,16 +1,16 @@
-import { GameStatsDto, GameType } from "../../../type/game.type";
+import { GameStatsDto, GameType } from "../../type/game.type";
 import "./GameStatsItem.css";
 import { Link } from "react-router-dom";
-import { Avatar } from "../../Avatar";
-import { MatcheScore } from "../MatcheScore";
+import { Avatar } from "../Avatar";
+import { MatcheScore } from "./MatcheScore";
 
 export function GameStatsHeader() {
   return (
-    <div className={"gameStatHeader"}>
-      <div id={"date"}>Date</div>
-      <div id={"type"}>Type</div>
-      <div id={"score"}>Score</div>
-      <div id={"opponent"}>Opponent</div>
+    <div className={"match-data-header"}>
+      <div id={"md-header-date"}>Date</div>
+      <div id={"md-header-type"}>Type</div>
+      <div id={"md-header-score"}>Score</div>
+      <div id={"md-header-opponent"}>Opponent</div>
     </div>
   );
 }
@@ -33,8 +33,8 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
     }
 
     return (
-      <Link to={`/profile/${opponentId}`} className={"opponentProfile"}>
-        <div id={"opponent"}>
+      <Link to={`/profile/${opponentId}`} className={"opponent-profile"}>
+        <div id={"opponent-name"}>
           <Avatar size={"30px"} img={opponentAvatar} />
           {name}
         </div>
@@ -51,25 +51,12 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
   });
 
   return (
-    <div className={"gameStat"}>
-      <div id={"date"}>{formattedDate}</div>
-      <div id={"type"}>
+    <div className={"match-data"}>
+      <div id={"md-date"}>{formattedDate}</div>
+      <div id={"md-type"}>
         {props.game.type === GameType.RANKED ? "Ranked" : "Casual"}
       </div>
-      <div id={"score"}>
-        {(props.game.ids[0] == props.id &&
-          props.game.scoreP1 > props.game.scoreP2) ||
-        (props.game.ids[1] == props.id &&
-          props.game.scoreP1 < props.game.scoreP2) ? (
-          <div id={"win"}>
-            <MatcheScore game={props.game} userId={props.id} />
-          </div>
-        ) : (
-          <div id={"loose"}>
-            <MatcheScore game={props.game} userId={props.id} />
-          </div>
-        )}
-      </div>
+      <MatcheScore game={props.game} userId={props.id} />
       <OpponentName />
     </div>
   );

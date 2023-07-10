@@ -2,26 +2,27 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import "./Profile.css";
 import axios from "axios";
 import { io } from "socket.io-client";
-import { useLoaderData } from "react-router-dom";
+import { Navigate, useLoaderData } from "react-router-dom";
 import { UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import { XPBar } from "../../components/XPBar/XPBar";
 import {
   GameStatsHeader,
   GameStatsItem,
-} from "../../components/Game/GameStats/GameStatsItem";
+} from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
 import { AuthContext } from "../../components/Auth/dto";
-import Home from "../Home/Home";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
+import { ErrorContext } from "../../components/Modal/modalContext";
+import { JwtPayload } from "../../type/client.type";
 
 function RemoveFriend(data: any) {
   const [isMe, setIsMe] = useState(false);
 
-  const token: any = localStorage.getItem("token");
-  const payload: any = jwt_decode(token);
+  const token = localStorage.getItem("token");
+  const payload: JwtPayload = jwt_decode(token as string);
 
   useEffect(() => {
     if (payload.id === data.data.id.toString()) setIsMe(true);
@@ -29,17 +30,11 @@ function RemoveFriend(data: any) {
 
   const handleRemoveButton = async () => {
     await axios
-      .put(
-        "http://" +
-          process.env["REACT_APP_HOST_IP"] +
-          `:5400/user/remove/${data.data.id}`,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      .put(apiBaseURL + `user/remove/${data.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .catch((error) => {
         console.log(error);
       });
@@ -93,14 +88,20 @@ function AddFriend(data: any) {
   const socketRef = useRef<any>(null);
   const [isMe, setIsMe] = useState(false);
 
-  const token: any = localStorage.getItem("token");
-  const payload: any = jwt_decode(token);
+  const token = localStorage.getItem("token");
+  const payload: JwtPayload = jwt_decode(token as string);
 
   useEffect(() => {
-    if (payload.id === data.data.id || payload.id === data.data.id.toString())
+    if (
+      data.data.id &&
+      (payload.id === data.data.id || payload.id === data.data.id.toString())
+    )
       setIsMe(true);
     socketRef.current = io(apiBaseURL);
-  }, [payload.id, data.data.id]);
+  }, []);
+
+  if (!data.data.requestedId || !data.data.blockedById || !data.data.id)
+    return <></>;
 
   const handleButton = async () => {
     await axios
@@ -110,7 +111,7 @@ function AddFriend(data: any) {
         },
       })
       .then((res) => {
-        const name: string = payload.username;
+        const name: string = payload.nickname;
         const mess = { friend: data, from: name };
         socketRef.current.emit("friendRequest", mess);
       })
@@ -133,6 +134,8 @@ function AddFriend(data: any) {
 
   if (
     !isMe &&
+    data.data.requestedId &&
+    data.data.blockedById &&
     !data.data.requestedId.includes(parseInt(payload.id)) &&
     !data.data.blockedById.includes(parseInt(payload.id))
   ) {
@@ -161,36 +164,47 @@ function AddFriend(data: any) {
 
 export function Profile() {
   let data = useLoaderData() as UserInfo;
+
+  const token = localStorage.getItem("token");
+  let payload: JwtPayload | null = null;
+  if (token) payload = jwt_decode(token as string);
+
   const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
   const [isFriend, setIsFriend] = useState(false);
 
-  const token: any = localStorage.getItem("token");
-  const payload: any = jwt_decode(token);
-
   useEffect(() => {
-    if (data.friendsId.includes(parseInt(payload.id))) setIsFriend(true);
-  }, [data.friendsId, payload.id]);
+    if (!payload) return;
+    if (data.friendsId && data.friendsId.includes(parseInt(payload.id)))
+      setIsFriend(true);
+  }, []);
 
   if (token === null) {
     setAuthToken(null);
-    return <Home />;
+    setErrorMessage("Session expired, please login again!");
+    return <Navigate to={"/"} />;
   }
 
   const winrate: number = calculateWinrate(data);
 
-  if (data.blockedId.includes(parseInt(payload.id))) {
+  if (
+    payload &&
+    data.blockedById &&
+    data.blockedId.includes(parseInt(payload.id))
+  ) {
     return (
       <div className="blocked">
         <h3>
-          This User Blocked you. You canno't visit his profilePage anymore.
+          This User Blocked you. You cannot visit his profilePage anymore.
         </h3>
       </div>
     );
   }
 
   return (
-    <div className={"profilePage"}>
-      <div id={"infobox"}>
+    <div className={"profile-page"}>
+      <div className={"profile-infobox"}>
         <Avatar size="200px" img={data.avatarUrl} />
         <div id="info">
           <div id="header">
@@ -206,25 +220,25 @@ export function Profile() {
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div id={"stats"}>
-        <div id={"elo"} className={"dataBox"}>
+      <div className={"profile-stats"}>
+        <div id={"elo"}>
           <div>ELO</div>
           <div>{data.ranking}</div>
         </div>
-        <div id={"gamePlayed"} className={"dataBox"}>
+        <div id={"game-played"}>
           <div>Game played</div>
           <div>{data.games?.length}</div>
         </div>
-        <div id={"winrate"} className={"dataBox"}>
+        <div id={"winrate"}>
           <div>Winrate</div>
           <div>{winrate}%</div>
         </div>
       </div>
-      <div className={"gamesStatsBox"}>
-        <h5 id={"gamesStatsBoxTitle"}>Matche history</h5>
-        <hr id={"hrbar"} />
+      <div className={"games-stats-box"}>
+        <h5 id={"games-stats-title"}>Match history</h5>
+        <hr id={"games-stats-hrbar"} />
         <GameStatsHeader />
-        <div className={"matchesTable"}>
+        <div className={"matches-table"}>
           {data.games?.map((game: GameStatsDto, index) => (
             <div key={index}>
               <GameStatsItem game={game} id={data!.id} />

@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
   Inject,
   NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,13 +15,12 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
-import { JwtPayload } from '../type/jwt.type';
+import { TokenData, TokenPayload } from '../type/jwt.type';
 import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import jwt_decode from 'jwt-decode';
-import { TokenData } from '../type/user.type';
 import * as process from 'process';
 
 @Injectable()
@@ -41,11 +41,9 @@ export class AuthService {
     const redirectUri = process.env['API_URL'];
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 
-    if (!clientId || !clientSecret || !redirectUri)
-      throw new HttpException(
-        'Missing environment variables',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new InternalServerErrorException('Missing environment variables');
+    }
 
     const body = new URLSearchParams();
     body.append('grant_type', 'authorization_code');
@@ -73,14 +71,14 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(user: User): Promise<any> {
+  async intraSignin(user: User): Promise<TokenPayload | null> {
     if (
       (await this.usersService.authActivated(user?.email)) === null &&
       (await this.usersService.isVerified(user?.email)) != null
     ) {
       if (user) {
         await this.usersService.changeOnlineStatus(user.id, true);
-        const payload: JwtPayload = {
+        const payload: TokenData = {
           email: user.email,
           id: user.id,
           username: user.nickname,
@@ -92,13 +90,14 @@ export class AuthService {
     }
 
     while ((await this.usersService.isVerified(user.email)) === null) {}
-    if ((await this.usersService.authActivated(user.email)) === null) return;
-    const code = await this.mailService.sendCodeConfirmation(user.email);
-    await this.cacheManager.set(code, user.email, 600000);
+    if (await this.usersService.authActivated(user.email)) {
+      const code = await this.mailService.sendCodeConfirmation(user.email);
+      await this.cacheManager.set(code, user.email, 600000);
+    }
     return null;
   }
 
-  async signin(user: SigninDto): Promise<any> {
+  async signin(user: SigninDto): Promise<string | TokenPayload> {
     const foundUser = await this.usersService.findUserAndGetCredential(
       user.email,
     );
@@ -108,39 +107,27 @@ export class AuthService {
       if (isVerified) {
         if ((await this.usersService.authActivated(user.email)) != null) {
           if (await bcrypt.compare(user.password, foundUser.password)) {
-            await this.mailService.sendCodeConfirmation(user.email);
-            return;
+            return await this.mailService.sendCodeConfirmation(user.email);
           }
-          throw new HttpException(
-            'Incorrect email or password',
-            HttpStatus.UNAUTHORIZED,
-          );
+          throw new UnauthorizedException('Incorrect email or password');
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
           await this.usersService.changeOnlineStatus(foundUser.id, true);
-          const payload: JwtPayload = {
+          const payload: TokenData = {
             email: user.email,
             id: foundUser.id,
             username: foundUser.nickname,
           };
           return {
             token: await this.jwtService.signAsync(payload),
-            id: foundUser.id,
           };
         }
-        throw new HttpException(
-          'Incorrect email or password',
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Incorrect email or password');
       }
-      throw new HttpException(
+      throw new UnauthorizedException(
         'You must verify your email before logging in.',
-        HttpStatus.UNAUTHORIZED,
       );
     }
-    throw new HttpException(
-      'Incorrect email or password',
-      HttpStatus.UNAUTHORIZED,
-    );
+    throw new UnauthorizedException('Incorrect email or password');
   }
 
   async sendEmail(user: User) {
@@ -161,6 +148,7 @@ export class AuthService {
 
     const newUser = await this.userRepository.save(user);
     await this.mailService.sendUserConfirmation(newUser);
+    return;
   }
 
   async createUserIntra(body: IntraSignupDto): Promise<User> {
@@ -193,32 +181,23 @@ export class AuthService {
   async updateValidation(id: number) {
     await this.usersService.updateValidation(id);
     const user = await this.usersService.findByID(id);
-    if (user) {
-      const payload = { email: user.email, id: id, username: user.nickname };
-      return {
-        token: await this.jwtService.signAsync(payload),
-        id: id,
-      };
-    }
+    if (!user) throw new NotFoundException('User not found');
+
+    const payload: TokenData = {
+      email: user.email,
+      id: id,
+      nickname: user.nickname,
+    };
+    return {
+      token: await this.jwtService.signAsync(payload),
+    };
   }
 
   async update2fa(id: number) {
     const user = await this.usersService.getUserEmail(id);
-    if (!user) return;
+    if (!user) throw new NotFoundException('User not found');
 
-    await this.mailService.sendCodeConfirmation(user.email);
-  }
-
-  async update2faStatus(code: string, token: string) {
-    const payload: TokenData = jwt_decode(token.toString());
-    const email = payload.email;
-    const user = await this.usersService.findByID(payload.id);
-
-    if (await this.checkCode(code, email)) {
-      await this.userRepository.update(payload.id, {
-        authActivated: !user?.authActivated,
-      });
-    }
+    return await this.mailService.sendCodeConfirmation(user.email);
   }
 
   async checkCode(code: string, email: string) {
@@ -236,14 +215,17 @@ export class AuthService {
     throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
   }
 
-  async loggingInUser(email: string) {
+  async loggingInUser(email: string): Promise<TokenPayload> {
     const user = await this.usersService.findByEmail(email);
     if (user) {
       await this.usersService.changeOnlineStatus(user.id, true);
-      const payload = { email: email, id: user.id, username: user.nickname };
+      const payload: TokenData = {
+        email: email,
+        id: user.id,
+        nickname: user.nickname,
+      };
       return {
         token: await this.jwtService.signAsync(payload),
-        id: user.id,
       };
     }
     throw new NotFoundException('User not found');
@@ -258,7 +240,7 @@ export class AuthService {
     }
 
     try {
-      const payload: JwtPayload = this.jwtService.verify<JwtPayload>(token, {});
+      const payload: TokenData = this.jwtService.verify<TokenData>(token, {});
       if (!payload) {
         const index = AuthService.invalidToken.indexOf(token, 0);
         if (index > -1) {
@@ -277,9 +259,7 @@ export class AuthService {
   // if token is invalid, remove it from list
   async checkTokenInvalidationList() {
     for (let i = 0; i < AuthService.invalidToken[i].length; i++) {
-      if (
-        !this.jwtService.verify<JwtPayload>(AuthService.invalidToken[i], {})
-      ) {
+      if (!this.jwtService.verify<TokenData>(AuthService.invalidToken[i], {})) {
         AuthService.invalidToken.splice(i, 1);
       }
     }

@@ -4,9 +4,17 @@ import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
 import { NotifContext } from "../../components/Auth/dto";
+import { Navigate } from "react-router-dom";
+import { ErrorContext } from "../../components/Modal/modalContext";
+import { AuthContext } from "../../components/Auth/dto";
+import { HandleError } from "../../components/HandleError";
 
 export default function Notifications() {
+  const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+  const token: string | null = localStorage.getItem("token");
   const { setNotif } = useContext(NotifContext);
+
   const [invits, setInvits] = useState([
     {
       nickname: "",
@@ -16,19 +24,18 @@ export default function Notifications() {
   ]);
 
   async function handleAccept(id: number) {
+    if (!id) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return;
+    }
+
     await axios
-      .put(
-        "http://" +
-          process.env["REACT_APP_HOST_IP"] +
-          ":5400/user/accept/" +
-          id,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      .put(apiBaseURL + "/user/accept/" + id, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         console.log("Accepted");
         removeNotif(id);
@@ -36,19 +43,18 @@ export default function Notifications() {
   }
 
   async function handleDecline(id: number) {
+    if (!id) {
+      setAuthToken(null);
+      setErrorMessage("Session expired, please login again!");
+      return;
+    }
+
     await axios
-      .put(
-        "http://" +
-          process.env["REACT_APP_HOST_IP"] +
-          ":5400/user/decline/" +
-          id,
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+      .put(apiBaseURL + "user/decline/" + id, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((res) => {
         console.log("Decline");
         removeNotif(id);
@@ -60,7 +66,6 @@ export default function Notifications() {
     setInvits(newInvits);
   }
 
-  const token: any = localStorage.getItem("token");
   // TODO: check token validity
   useEffect(() => {
     async function fetchFriends() {
@@ -74,10 +79,19 @@ export default function Notifications() {
           console.log(res.data);
           setInvits(res.data);
           console.log("VALUE: ", invits);
+        })
+        .catch((err) => {
+          return <HandleError error={err} />;
         });
     }
     fetchFriends().then(() => {});
   }, []);
+
+  if (token === null) {
+    setAuthToken(null);
+    setErrorMessage("Session expired, please login again!");
+    return <Navigate to={"/"} />;
+  }
 
   //Faire une map pour afficher toutes invites a la suite
   if (invits && invits[0] && invits[0].id > 0) {

@@ -1,16 +1,16 @@
 import { io, Socket } from "socket.io-client";
-import { MatchmakingMatchFoundCallback, MatchmakingGameStartedCallback } from "./types";
+import {
+  MatchmakingMatchFoundCallback,
+  MatchmakingGameStartedCallback,
+} from "./types";
 
 export namespace MatchmakingClient {
-
   let socket: Socket;
   let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
 
   function checkConnection(): boolean {
-
-    if (socket && socket.connected)
-      return true;
+    if (socket && socket.connected) return true;
 
     console.log("connecting to matchmaking server");
 
@@ -21,16 +21,17 @@ export namespace MatchmakingClient {
       reconnectionAttempts: 3,
       reconnectionDelay: 3000,
       timeout: 10000,
-      auth: token ? {token} : {},
-      path: '/matchmaking',
+      auth: token ? { token } : {},
+      path: "/matchmaking",
     };
 
-    const endpoint: string = "ws://" + process.env["REACT_APP_API_IP"] + ":5400";
+    const endpoint: string =
+      "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
 
     socket = io(endpoint, socketOptions);
 
     socket.on("connect_error", (err) => {
-      console.log('connexion error due to : ', err.message);
+      console.log("connexion error due to : ", err.message);
     });
 
     socket.on("connect", () => {
@@ -43,26 +44,25 @@ export namespace MatchmakingClient {
 
     socket.on("match-found", (acceptTimeout: number) => {
       console.log("match found");
-      matchFoundCallbacks.forEach(callback => callback(acceptTimeout));
+      matchFoundCallbacks.forEach((callback) => callback(acceptTimeout));
     });
 
     socket.on("game-started", () => {
       console.log("game started");
-      gameStartedCallbacks.forEach(callback => callback());
+      gameStartedCallbacks.forEach((callback) => callback());
     });
 
     socket.on("unauthorized", () => {
       console.log("unauthorized");
       const token = localStorage.getItem("token");
-      socket.emit("authorization", token ? {token} : {});
+      socket.emit("authorization", token ? { token } : {});
     });
 
     return true;
   }
 
   function disconnect() {
-    if (socket && socket.connected)
-      socket.disconnect();
+    if (socket && socket.connected) socket.disconnect();
   }
 
   export function leaveMatchmaking() {
@@ -100,7 +100,7 @@ export namespace MatchmakingClient {
   }
 
   export function offMatchFound(callback: MatchmakingMatchFoundCallback) {
-    matchFoundCallbacks = matchFoundCallbacks.filter(cb => cb !== callback);
+    matchFoundCallbacks = matchFoundCallbacks.filter((cb) => cb !== callback);
   }
 
   export function ongameStarted(callback: MatchmakingGameStartedCallback) {
@@ -108,7 +108,6 @@ export namespace MatchmakingClient {
   }
 
   export function offgameStarted(callback: MatchmakingGameStartedCallback) {
-    gameStartedCallbacks = gameStartedCallbacks.filter(cb => cb !== callback);
+    gameStartedCallbacks = gameStartedCallbacks.filter((cb) => cb !== callback);
   }
-
 }

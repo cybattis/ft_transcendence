@@ -9,13 +9,14 @@
     height: 100%;
 
     backdrop-filter: blur(10px);
+
+    overflow-y: auto;
 }
 
 .authForm {
-    position: relative;
-
     display: flex;
     flex-direction: column;
+
     align-items: center;
     justify-items: center;
 
@@ -56,6 +57,8 @@
     height: 46px;
     border-radius: 8px;
     margin: 5px 0 0 0;
+
+    gap: 10px;
 
     color: white;
     background-color: var(--purple-wave);
@@ -116,4 +119,15 @@
 
 .error {
     color: red;
+}
+
+.bottomLink {
+    color: var(--cyan);
+    background-color: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.bottomLink:hover {
+    color: var(--purple-wave);
 }
