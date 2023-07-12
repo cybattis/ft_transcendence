@@ -64,8 +64,8 @@ export default function Signup() {
     } else if (!validator.isAlpha(inputs.nickname)) {
       setErrorInput("Can't have any special chracters in your Nickname.");
       isValid = false;
-    } else if (inputs.nickname.length > 20) {
-      setErrorInput("Nickname is too long. (max 20 characters)");
+    } else if (inputs.nickname.length > 15) {
+      setErrorInput("Nickname is too long. (max 15 characters)");
       isValid = false;
     } else if (await inUse("login", inputs.nickname)) {
       setErrorInput("Nickname already in use.");

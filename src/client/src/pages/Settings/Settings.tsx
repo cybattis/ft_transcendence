@@ -84,6 +84,9 @@ export function Settings() {
     if (!user.nickname[0]) {
       setErrorMessage("Your Nickname can't be empty!");
       return;
+    } else if (user.nickname[0].length > 15) {
+      setErrorMessage("Your Nickname can't be longer than 15 characters!");
+      return;
     }
 
     await axios

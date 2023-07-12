@@ -6,7 +6,6 @@ import {
   UpdateDateColumn,
   JoinTable,
   ManyToMany,
-  OneToMany,
 } from 'typeorm';
 import { Game } from '../../game/entity/Game.entity';
 
@@ -15,7 +14,7 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 30, unique: true })
+  @Column({ type: 'varchar', length: 15, unique: true })
   nickname: string;
 
   @Column({ type: 'varchar', length: 30, select: false, nullable: true })

@@ -366,6 +366,9 @@ export class UserService implements OnModuleInit {
   }
 
   async updateUserSettings(body: UserSettings, token: string) {
+    if (body.nickname.length == 0 || body.nickname.length > 15)
+      throw new BadRequestException('nickname must be between 1 and 15 chars');
+
     const user = await this.decodeToken(token);
     if (!user) return null;
 
