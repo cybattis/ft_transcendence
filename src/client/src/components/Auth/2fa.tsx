@@ -64,7 +64,7 @@ export default function FaCode(props: FaProps) {
         .post(apiBaseURL + "auth/2fa/validate", inputs, {
           headers: {
             "Content-Type": "application/json",
-            token: token,
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => {

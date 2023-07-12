@@ -43,7 +43,7 @@ export function DisconnectButton(props: { callback?: () => void }) {
 
     await axios.put(apiBaseURL + "auth/disconnect", null, {
       headers: {
-        token: token,
+        Authorization: `Bearer ${token}`,
       },
     });
   };

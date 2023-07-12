@@ -54,7 +54,7 @@ export function Settings() {
       .post(apiBaseURL + "user/upload/avatar", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          token: token,
+          Authorization: `Bearer ${token}`,
         },
       })
       .then((res) => {
@@ -116,7 +116,7 @@ export function Settings() {
         {
           headers: {
             "Access-Control-Allow-Origin": "*",
-            token: token,
+            Authorization: `Bearer ${token}`,
           },
         }
       )
