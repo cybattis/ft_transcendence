@@ -64,7 +64,8 @@ export class AuthController {
       }
       throw new BadRequestException('Email already in use');
     } catch (err) {
-      return res.status(err.response.status).redirect(clientBaseURL);
+      console.log(err);
+      return res.redirect(clientBaseURL);
     }
   }
 
@@ -118,7 +119,7 @@ export class AuthController {
 
   @Put(':id')
   async update(@Param('id') id: number) {
-    const token = await this.authService.generateToken(90);
+    const token = await this.authService.generateToken(id);
     await this.userService.updateUserVerifiedStatus(id);
     return token;
   }
