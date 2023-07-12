@@ -170,15 +170,6 @@ export class UserController {
   }
 
   @UseGuards(TokenGuard)
-  @Put('update/2fa')
-  async update2FA(@Headers('token') header: Headers) {
-    try {
-      return await this.userService.update2FA(header.toString());
-    } catch (e) {
-      throw new BadRequestException(e.message);
-    }
-  }
-
   @Get('notifs')
   async getNotifs(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
