@@ -216,9 +216,28 @@
 
 .info {
     display: flex;
-    flex: auto;
-    margin: 10px;
     flex-direction: column;
+}
+
+@media screen and (width > 630px) {
+    .infobox {
+        flex-direction: row;
+    }
+
+    .info {
+        flex: auto;
+        margin: 10px;
+    }
+}
+
+@media screen and (width < 630px) {
+    .infobox {
+        flex-direction: column;
+    }
+
+    .info {
+        width: 100%;
+    }
 }
 
 .home-stats-container {

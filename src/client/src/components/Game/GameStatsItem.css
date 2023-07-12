@@ -37,10 +37,7 @@
         padding-right: 20px;
 
         margin-bottom: 5px;
-    }
-
-    #md-date {
-        min-width: max-content;
+        height: max-content;
     }
 }
 
@@ -75,15 +72,33 @@
 }
 
 .opponent-profile #opponent-name {
-    flex: 2;
-
     display: flex;
-    flex-direction: row;
+}
 
-    align-items: center;
-    justify-content: left;
+@media screen and (width > 630px) {
+    .opponent-profile #opponent-name {
+        flex-direction: row;
+        flex: 2;
 
-    gap: 10px;
+        gap: 10px;
+
+        align-items: center;
+        justify-content: left;
+    }
+}
+
+@media screen and (width < 630px) {
+
+    .opponent-profile #opponent-name {
+        align-items: center;
+        justify-content: right;
+
+        margin-left: 20px;
+    }
+
+    #gi-name {
+        visibility: hidden;
+    }
 }
 
 #md-win {
@@ -96,6 +111,8 @@
 
 #md-in-progress {
     color: yellow;
+    text-align: center;
+    margin-left: -15px;
 }
 
 /* ===================================================================== */
@@ -152,6 +169,6 @@
     }
 
     #md-header-date {
-        min-width: 157px;
+        min-width: 100px;
     }
 }
