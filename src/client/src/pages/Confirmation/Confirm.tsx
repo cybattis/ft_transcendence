@@ -3,10 +3,11 @@ import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { AuthContext } from "../../components/Auth/dto";
 import { apiBaseURL } from "../../utils/constant";
-import { HandleError } from "../../components/HandleError";
+import { ErrorContext } from "../../components/Modal/modalContext";
 
 async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
+  const { setErrorMessage } = React.useContext(ErrorContext);
 
   const location = useLocation();
   const id = location.search.substring(1);
@@ -18,8 +19,15 @@ async function ValidateEmail() {
       localStorage.setItem("token", data.token);
       setAuthToken(data.token);
     })
-    .catch((err) => {
-      return <HandleError error={err} />;
+    .catch((error) => {
+      if (error.response === undefined) {
+        localStorage.clear();
+        setErrorMessage("Error unknown...");
+      } else if (error.response.status === 403) {
+        localStorage.clear();
+        setAuthToken(null);
+        setErrorMessage("Session expired, please login again!");
+      } else setErrorMessage(error.response.data.message + "!");
     });
 }
 

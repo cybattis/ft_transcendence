@@ -6,7 +6,6 @@ import { apiBaseURL } from "../../utils/constant";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { AuthContext } from "../../components/Auth/dto";
-import { HandleError } from "../../components/HandleError";
 
 export default function Notifications() {
   const { setAuthToken } = useContext(AuthContext);
@@ -29,7 +28,7 @@ export default function Notifications() {
     }
 
     await axios
-      .put(apiBaseURL + "/user/accept/" + id, null, {
+      .put(apiBaseURL + "user/accept/" + id, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -64,7 +63,6 @@ export default function Notifications() {
     setInvits(newInvits);
   }
 
-  // TODO: check token validity
   useEffect(() => {
     async function fetchFriends() {
       await axios
@@ -78,8 +76,15 @@ export default function Notifications() {
           setInvits(res.data);
           console.log("VALUE: ", invits);
         })
-        .catch((err) => {
-          return <HandleError error={err} />;
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
         });
     }
     fetchFriends().then(() => {});

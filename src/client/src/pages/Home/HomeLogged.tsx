@@ -331,19 +331,27 @@ export function HomeLogged() {
         .get(apiBaseURL + "user/profile/me", {
           headers: {
             "Content-Type": "application/json",
-            token: token,
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => {
           setData(res.data);
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (
+            error.response.status === 403 ||
+            error.response.status === 400
+          ) {
             localStorage.clear();
             setAuthToken(null);
             setErrorMessage("Session expired, please login again!");
-            return <Navigate to={"/"} />;
-          } else setErrorMessage(error.message);
+          } else {
+            setErrorMessage(error.response.data.message + "!");
+          }
+          return <Navigate to={"/"} />;
         });
     }
 

@@ -8,10 +8,9 @@ export function HandleError(props: { error: ErrorResponse }) {
   const { setErrorMessage } = useContext(ErrorContext);
 
   if (props.error.response === undefined) {
+    localStorage.clear();
     setErrorMessage("Error unknown...");
-    return <></>;
-  }
-  if (props.error.response.status === 403) {
+  } else if (props.error.response.status === 403) {
     localStorage.clear();
     setAuthToken(null);
     setErrorMessage("Session expired, please login again!");

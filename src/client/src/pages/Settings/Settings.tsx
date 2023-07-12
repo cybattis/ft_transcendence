@@ -11,7 +11,6 @@ import { MessageModal } from "../../components/Modal/MessageModal";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { ErrorResponse } from "../../type/client.type";
-import { HandleError } from "../../components/HandleError";
 
 export function Settings() {
   const data = useLoaderData() as UserSettings;
@@ -62,7 +61,14 @@ export function Settings() {
         setAvatarUrl(res.data);
       })
       .catch((error: ErrorResponse) => {
-        return <HandleError error={error} />;
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (error.response.status === 403) {
+          localStorage.clear();
+          setAuthToken(null);
+          setErrorMessage("Session expired, please login again!");
+        } else setErrorMessage(error.response.data.message + "!");
       });
   }
 
@@ -94,14 +100,21 @@ export function Settings() {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
-          token: token,
+          Authorization: `Bearer ${token}`,
         },
       })
       .then(() => {
         setMessage("Update successful!");
       })
       .catch((error) => {
-        return <HandleError error={error} />;
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (error.response.status === 403) {
+          localStorage.clear();
+          setAuthToken(null);
+          setErrorMessage("Session expired, please login again!");
+        } else setErrorMessage(error.response.data.message + "!");
       });
   };
 
@@ -127,7 +140,14 @@ export function Settings() {
         setCodeForm(true);
       })
       .catch((error) => {
-        return <HandleError error={error} />;
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (error.response.status === 403) {
+          localStorage.clear();
+          setAuthToken(null);
+          setErrorMessage("Session expired, please login again!");
+        } else setErrorMessage(error.response.data.message + "!");
       });
   };
 
