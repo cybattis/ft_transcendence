@@ -24,6 +24,7 @@ import jwt_decode from 'jwt-decode';
 import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
 import { TokenData, TokenPayload } from '../type/jwt.type';
+import { Header } from 'nodemailer/lib/dkim/message-parser';
 
 @Controller('auth')
 export class AuthController {
@@ -92,6 +93,17 @@ export class AuthController {
     const email = body.email;
     await this.authService.checkCode(body.code, email);
     return this.authService.loggingInUser(email);
+  }
+
+  @UseGuards(TokenGuard)
+  @Post('2fa/validate')
+  async validate2fa(@Body() body: any, @Headers('token') token: Header) {
+    const payload: TokenData = jwt_decode(token.toString());
+
+    console.log(body.code);
+
+    await this.authService.checkCode(body.code, payload.email);
+    return this.userService.updateUser2FAstatus(token.toString());
   }
 
   @UseGuards(TokenGuard)

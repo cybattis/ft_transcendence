@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import InputForm from "../InputForm";
 import Logo from "../Logo/Logo";
@@ -14,9 +14,8 @@ type FaProps = {
 };
 
 export default function FaCode(props: FaProps) {
-  const [errorInput, setErrorInput] = React.useState("");
-  const [errorMessage, setErrorMessage] = React.useState("");
-  const { authed, setAuthToken } = useContext(AuthContext);
+  const [errorMessage, setErrorMessage] = useState("");
+  const { setAuthToken } = useContext(AuthContext);
 
   const inputs = {
     code: "",
@@ -34,13 +33,13 @@ export default function FaCode(props: FaProps) {
   const validateInput = async () => {
     let isValid = true;
     if (!inputs.code) {
-      setErrorInput("Please enter a Code.");
+      setErrorMessage("Please enter a Code.");
       isValid = false;
     } else if (inputs.code.length !== 4) {
-      setErrorInput("The code is a 4 digits number.");
+      setErrorMessage("The code is a 4 digits number.");
       isValid = false;
     } else if (!(await isOnlyDigits(inputs.code))) {
-      setErrorInput("Please enter only a Code with digits.");
+      setErrorMessage("Please enter only a Code with digits.");
       isValid = false;
     }
     return isValid;
@@ -52,39 +51,60 @@ export default function FaCode(props: FaProps) {
     await changeInputs(e);
     if (!(await validateInput())) return;
 
-    const loggin = {
+    const token: string | null = localStorage.getItem("token");
+    let email: string | null = localStorage.getItem("email");
+
+    let loggin = {
       code: inputs.code,
-      email: localStorage.getItem("email"),
+      email: email,
     };
 
-    await axios
-      .post(apiBaseURL + "auth/2fa", loggin, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      .then((res) => {
-        props.showCallback(false);
-        if (res.status === parseInt("401")) {
-          setErrorMessage(res.data.response);
-        } else if (!authed) {
+    if (token) {
+      await axios
+        .post(apiBaseURL + "auth/2fa/validate", inputs, {
+          headers: {
+            "Content-Type": "application/json",
+            token: token,
+          },
+        })
+        .then((res) => {
+          props.showCallback(false);
+          if (props.callback && props.callbackValue !== undefined)
+            props.callback(props.callbackValue);
+          return;
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            setErrorMessage(error.response.data.message);
+          } else {
+            setErrorMessage("An error occured, please try again.");
+            props.showCallback(false);
+          }
+        });
+    } else {
+      await axios
+        .post(apiBaseURL + "auth/2fa", loggin, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((res) => {
+          props.showCallback(false);
           const data = res.data;
           localStorage.setItem("token", data.token);
           setAuthToken(data.token);
           localStorage.removeItem("email");
           return <Navigate to="/" />;
-        } else {
-          if (props.callback && props.callbackValue !== undefined)
-            props.callback(props.callbackValue);
-          return;
-        }
-      })
-      .catch((error) => {
-        props.showCallback(false);
-        if (error.response && error.response.status === 401) {
-          setErrorMessage(error.response.data.message);
-        } else setErrorMessage("Server busy... try again");
-      });
+        })
+        .catch((error) => {
+          if (error.response && error.response.status === 401) {
+            setErrorMessage(error.response.data.message);
+          } else {
+            setErrorMessage("An error occured, please try again.");
+            props.showCallback(false);
+          }
+        });
+    }
   };
 
   return (
@@ -94,7 +114,6 @@ export default function FaCode(props: FaProps) {
         <div className="desc">
           Enter the Confirmation Code that has been sent to you by email.
         </div>
-        {errorInput && <p className="error"> {errorInput} </p>}
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
           <InputForm type="text" name="code" />

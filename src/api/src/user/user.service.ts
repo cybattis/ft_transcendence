@@ -149,7 +149,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async update2FA(token: string) {
+  async updateUser2FAstatus(token: string) {
     const user = await this.decodeToken(token);
     if (!user) throw new ForbiddenException('Invalid token');
 
