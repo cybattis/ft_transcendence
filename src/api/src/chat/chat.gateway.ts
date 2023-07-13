@@ -37,6 +37,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const channel = data.channel;
     const username = data.username;
+    console.log(`${socket.id} : ${username}`)
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
@@ -78,37 +79,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     {
       console.log(`inside`) ;
       this.server.to(targetSocket).emit("quit", channel);
-
     }
   }
 
   @SubscribeMessage('info')
-  handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log("fonction info");
     const channel = data.channel;
-    const msg = this.channelService.infoChannel(channel);
+    const msg = await this.channelService.infoChannel(channel);
     console.log(msg);
     this.server.emit('rcv', {msg, channel});
   }
 
   @SubscribeMessage('kick')
   async handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(socket.id, data);
-    await this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
-    const channel = data.channel;
-    if (targetSocket)
-    {
-      console.log(`inside`) ;
-      this.server.to(targetSocket).emit("quit", channel);
+    if (await this.channelService.kickChannel(this.server ,data.cmd, data.username, data.target, data.channel)){
+      console.log(`Bien le sur ${data.target}`);
+      const target = this.channelService.takeSocketByUsername(data.target);
+      if (target)
+        this.server.to(target).emit("quit", data.channel);
     }
-  }
 
-  @SubscribeMessage('cmd')
-  handleCmd(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    const channel = data.channel;
-    const msg = this.channelService.allCmd();
-    this.server.emit('rcv', {msg, channel});
   }
 
   @SubscribeMessage('ping')

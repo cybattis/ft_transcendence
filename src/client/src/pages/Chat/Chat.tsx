@@ -104,6 +104,7 @@ export default function ChatClient() {
     });
 
     newSocket.on("join", (room: string) => {
+      console.log(`JOin Front ${room}`);
       if (!channelList.includes(room)) {
         channelList.push(room);
         setRoomChange(room);
@@ -117,8 +118,8 @@ export default function ChatClient() {
     });
 
     newSocket.on("quit", (room: string) => {
+      console.log(`Quit rcv ${room}`);
       for (let index = 0; index < channelList.length; index++) {
-        console.log(channelList[index]);
         if (room === channelList[index]) {
           channelList.splice(index, 1);
           const canal = document.getElementById("canal");
@@ -158,11 +159,11 @@ export default function ChatClient() {
     });
 
     
-    newSocket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
+    newSocket.on('rcv',async (data: { sender: string, msg: string, channel: string }) => {
       if (senderIsBlocked(data.sender))
         return ;
       let addressInfo = "http://127.0.0.1:5400/chat/message/" + data.channel;
-      axios.get(addressInfo)
+      await axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
         })
@@ -185,7 +186,7 @@ export default function ChatClient() {
     return "/msg";
   }
 
-  function doCmd(cmd: string, msg: string) {
+  async function doCmd(cmd: string, msg: string) {
     const channel = takeActiveCanal();
     if (cmd === "/info") socketRef.current.emit("info", { channel });
     else if (cmd === "/cmd") {
@@ -194,7 +195,7 @@ export default function ChatClient() {
       const send = {username: username, channel: channel, msg: msg}
       socketRef.current.emit('send :', send);
       let addressInfo = "http://127.0.0.1:5400/chat/message/" + takeActiveCanal();
-      axios.get(addressInfo)
+      await axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
         })
