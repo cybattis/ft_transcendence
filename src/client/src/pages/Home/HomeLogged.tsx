@@ -5,18 +5,17 @@ import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
 import { Navigate } from "react-router-dom";
-import { GameStatsDto, GameType } from "../../type/game.type";
+import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { AuthContext } from "../../components/Auth/dto";
 import { Friends } from "../../components/Friends/Friends";
-import { SocketContext } from "../../components/Auth/dto";
-import { io } from "socket.io-client";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
+import { ErrorContext } from "../../components/Modal/modalContext";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -175,11 +174,11 @@ function GameLauncher() {
   const [searchingRanked, setSearchingRanked] = useState(false);
 
   return (
-    <div className="launcher">
+    <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
           <h4 className="game-mode-title">Game mode</h4>
-          <div className="buttons">
+          <div className="game-mode">
             <PracticeGameMode />
             <MultiplayerGameMode
               gameType={GameType.CASUAL}
@@ -216,15 +215,15 @@ function Result(props: { game: GameStatsDto; userId: number }) {
       props.game.scoreP1 < props.game.scoreP2);
 
   return (
-    <div className={"gameResult"}>
+    <div className={"home-game-result"}>
       {isWin ? (
         <div>
-          <div className={"win"}>Win</div>
+          <div className={"home-result-win"}>Win</div>
           <MatcheScore game={props.game} userId={props.userId} />
         </div>
       ) : (
         <div>
-          <div className={"loose"}>Loose</div>
+          <div className={"home-result-loose"}>Loose</div>
           <MatcheScore game={props.game} userId={props.userId} />
         </div>
       )}
@@ -233,15 +232,32 @@ function Result(props: { game: GameStatsDto; userId: number }) {
 }
 
 function LastMatch(props: { data: UserInfo }) {
+  let slice: number = -3;
+
+  if (props.data.games?.at(-1)?.status === GameStatus.IN_PROGRESS) {
+    slice = -4;
+  }
+
+  const lastGames = props.data.games?.slice(slice).filter((game) => {
+    return game.status === GameStatus.FINISHED;
+  });
+
   return (
-    <div className={"statsBox"}>
+    <div className={"lastmatch"}>
       <h5>Last matches</h5>
-      <div className={"lastmatch"}>
-        {props.data.games?.slice(-5).map((game, index) => (
-          <div key={index}>
-            <Result game={game} userId={props.data.id} />
+      <div className={"last-match-stats"}>
+        {props.data.games && props.data.games.length > 0 ? (
+          lastGames?.map((game, index) => (
+            <div key={index}>
+              <Result game={game} userId={props.data.id} />
+            </div>
+          ))
+        ) : (
+          <div className={"no-game"}>
+            <hr className={"user-profile-hr"} />
+            <div>No match</div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
@@ -251,9 +267,9 @@ function Winrate(props: { data: UserInfo }) {
   const winrate: number = calculateWinrate(props.data);
 
   return (
-    <div className={"statsBox"}>
+    <div className={"home-stat-box"}>
       <h5>Winrate</h5>
-      <br />
+      <hr className={"user-profile-hr"} />
       <div>{winrate.toFixed(0)}%</div>
     </div>
   );
@@ -261,10 +277,11 @@ function Winrate(props: { data: UserInfo }) {
 
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
+
   return (
-    <div className="user">
+    <div id={"HomeUserInfo"} className="userProfile_container">
       <div className="infobox">
-        <Avatar size="200px" img={data.avatarUrl} />
+        <Avatar size={200} img={data.avatarUrl} />
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
@@ -272,12 +289,17 @@ function UserProfile(props: { data: UserInfo }) {
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div className="stats">
+      <div className="home-stats-container">
         <LastMatch data={data} />
+        <div className={"home-stat-box"}>
+          <h5>Game played</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{data.games?.length}</div>
+        </div>
         <Winrate data={data} />
-        <div className={"statsBox"}>
+        <div className={"home-stat-box"}>
           <h5>ELO</h5>
-          <br />
+          <hr className={"user-profile-hr"} />
           <div>{data.ranking}</div>
         </div>
       </div>
@@ -286,11 +308,9 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
-  const { socketId, setSocketId } = useContext(SocketContext);
-  setSocketId(io(apiBaseURL).id);
-  console.log(socketId);
-
   const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
     id: 0,
@@ -322,8 +342,9 @@ export function HomeLogged() {
           if (error.response && error.response.status === 403) {
             localStorage.clear();
             setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
             return <Navigate to={"/"} />;
-          } else console.log(error.message);
+          } else setErrorMessage(error.message);
         });
     }
 
@@ -336,6 +357,7 @@ export function HomeLogged() {
 
   if (token === null) {
     setAuthToken(null);
+    setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
 

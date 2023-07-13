@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="mylogo">
         <Logo />
       </div>
-      <p className="msg">©BigPong, Inc. 2023. We love our users!</p>
+      <div className="msg">©BigPong, Inc. 2023.</div>
     </div>
   );
 }

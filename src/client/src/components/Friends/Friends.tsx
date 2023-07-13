@@ -113,6 +113,7 @@ function FriendsList() {
 export function Friends() {
   return (
     <div className="friendList">
+      <h4>Friends</h4>
       <FriendsList />
     </div>
   );

@@ -6,6 +6,11 @@ import "./Auth.css";
 import validator from "validator";
 import { FormContext } from "./dto";
 import { apiBaseURL } from "../../utils/constant";
+import logo42 from "../../resource/logo-42.png";
+import { MessageModal } from "../Modal/MessageModal";
+import { ErrorContext } from "../Modal/modalContext";
+import { ErrorResponse } from "../../type/client.type";
+import { HandleError } from "../HandleError";
 
 interface UserCredential {
   nickname: string;
@@ -16,9 +21,11 @@ interface UserCredential {
 }
 
 export default function Signup() {
-  const [errorInput, setErrorInput] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
+  const [errorInput, setErrorInput] = useState("");
+  const [message, setMessage] = useState("");
 
   const inputs = {
     nickname: "",
@@ -125,76 +132,77 @@ export default function Signup() {
         },
       })
       .then(() => {
-        setSignupForm(false);
-        alert(
-          "An email has been sent to verify your email address. Please check this out before continuing."
-        );
+        setMessage("Please check your email to confirm your account");
       })
       .catch((error) => {
-        console.log("Error: ", error.response.status);
-        setErrorMessage("Server error... try again");
+        return <HandleError error={error} />;
       });
   };
 
   const intraLink = process.env["REACT_APP_REDIR_URL"];
 
-  //TODO: remettre alert email
-
   return (
     <div className="background">
-      <div className="authForm">
-        <Logo />
-        <div className="desc">Join the Fever</div>
-        {errorInput ? (
-          <p className="error"> {errorInput} </p>
-        ) : errorMessage ? (
-          <p className="error"> {errorMessage} </p>
-        ) : null}
-        <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="nickname" />
-          <div className="halfInput">
+      {message ? (
+        <MessageModal
+          msg={message}
+          onClose={() => {
+            setMessage("");
+            setSignupForm(false);
+          }}
+        />
+      ) : (
+        <div className="authForm">
+          <Logo />
+          <div className="desc">Join the Fever</div>
+          {errorInput ? <p className="error"> {errorInput} </p> : null}
+          <form method="post" onSubmit={handleSubmit}>
+            <InputForm type="text" name="nickname" />
+            <div className="halfInput">
+              <InputForm
+                type="text"
+                name="firstname"
+                label="First name"
+                half={true}
+              />
+              <InputForm
+                type="text"
+                name="lastname"
+                label="Last name"
+                half={true}
+              />
+            </div>
+            <InputForm type="text" name="email" />
+            <InputForm type="text" name="confirmEmail" label="Confirm Email" />
+            <InputForm type="password" name="password" />
             <InputForm
-              type="text"
-              name="firstname"
-              label="First name"
-              half={true}
+              type="password"
+              name="confirmPassword"
+              label="Confirm Password"
             />
-            <InputForm
-              type="text"
-              name="lastname"
-              label="Last name"
-              half={true}
-            />
+            <button type="submit" className="submitButton">
+              Signup
+            </button>
+          </form>
+          <a className="link42" href={intraLink}>
+            <div>Signup with</div>
+            <img src={logo42} alt="42 logo" width={32} height={32} />
+          </a>
+          <div className="authFooter">
+            <div>Already have an account?</div>
+            <button
+              className="bottomLink"
+              onClick={() => {
+                setSignupForm(false);
+                setLoginForm(true);
+                setCodeForm(false);
+              }}
+            >
+              Sign in!
+            </button>
           </div>
-          <InputForm type="text" name="email" />
-          <InputForm type="text" name="confirmEmail" label="Confirm Email" />
-          <InputForm type="password" name="password" />
-          <InputForm
-            type="password"
-            name="confirmPassword"
-            label="Confirm Password"
-          />
-          <button type="submit" className="submitButton">
-            Signup
-          </button>
-        </form>
-        <a className="link42" href={intraLink}>
-          Signup with 42
-        </a>
-        <div className="authFooter">
-          <div>Already have an account?</div>
-          <button
-            className="link"
-            onClick={() => {
-              setSignupForm(false);
-              setLoginForm(true);
-              setCodeForm(false);
-            }}
-          >
-            Sign in!
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
