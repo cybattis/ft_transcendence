@@ -12,9 +12,15 @@ import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { JwtService } from "@nestjs/jwt";
 import { Public } from "../auth/guards/PublicDecorator";
 import { MultiplayerService } from "./multiplayer.service";
-import { MovementUpdate, PlayerSocket } from "./types/multiplayer.types";
+import { BallUpdate, MovementUpdate } from "./types/multiplayer.types";
 
-@WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: "/multiplayer"})
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+    methods: ["GET", "POST"]
+  },
+  path: "/multiplayer"
+})
 export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
 
   @WebSocketServer()
@@ -39,12 +45,13 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
     });
   }
 
-  handleConnection(socket: Socket) {
+  handleConnection(client: AuthedSocket): void {
     console.log("A user connected to the multiplayer server");
   }
 
-  handleDisconnect(socket: Socket) {
+  async handleDisconnect(client: AuthedSocket): Promise<void> {
     console.log("A user disconnected from the multiplayer server");
+    await this.multiplayerService.disconnectPlayer(client);
   }
 
   @Public()
@@ -54,13 +61,23 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   }
 
   @SubscribeMessage('ready')
-  async handleReady(@ConnectedSocket() client: PlayerSocket): Promise<void> {
+  async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
     this.multiplayerService.setClientReady(client);
   }
 
   @SubscribeMessage('update-movement')
-  async handleUpdateMovement(@ConnectedSocket() client: PlayerSocket, @MessageBody() data: MovementUpdate): Promise<void> {
+  async handleUpdateMovement(@ConnectedSocket() client: AuthedSocket, @MessageBody() data: MovementUpdate): Promise<void> {
     this.multiplayerService.processMovementUpdate(client, data);
+  }
+
+  @SubscribeMessage('update-ball')
+  async handleUpdateBall(@ConnectedSocket() client: AuthedSocket, @MessageBody() data: BallUpdate): Promise<void> {
+    this.multiplayerService.processBallUpdate(client, data);
+  }
+
+  @SubscribeMessage('goal')
+  async handleGoal(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+    await this.multiplayerService.processGoal(client);
   }
 
 }

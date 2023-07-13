@@ -5,8 +5,6 @@ export type GameRoom = {
   id: number;
   player1Id: number;
   player2Id: number;
-  player1Socket?: AuthedSocket;
-  player2Socket?: AuthedSocket;
   type: GameType;
   mode: GameMode;
   status: GameStatus;
@@ -14,12 +12,27 @@ export type GameRoom = {
   player2Score: number;
   player1Ready: boolean;
   player2Ready: boolean;
+  isServing: boolean;
 }
 
 export type MovementUpdate = {
+  playerNumber: number;
   finalY: number;
 }
 
-export type PlayerSocket = AuthedSocket & {
-  game: GameRoom;
+export type BallUpdate = {
+  x: number;
+  y: number;
+  velX: number;
+  velY: number;
+}
+
+export type ScoreUpdate = {
+  player1Score: number;
+  player2Score: number;
+}
+
+export type ServeUpdate = {
+  ballUpdate: BallUpdate;
+  playerNumber: number;
 }
