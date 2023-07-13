@@ -219,7 +219,7 @@
     flex-direction: column;
 }
 
-@media screen and (width > 630px) {
+@media screen and (width >= 630px) {
     .infobox {
         flex-direction: row;
     }
@@ -228,6 +228,19 @@
         flex: auto;
         margin: 10px;
     }
+
+    .home-stats-container-desktop {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+
+        justify-content: center;
+    }
+
+    .home-stats-container-mobile {
+        display: none
+    }
+
 }
 
 @media screen and (width < 630px) {
@@ -238,14 +251,28 @@
     .info {
         width: 100%;
     }
+
+    .home-stats-container-desktop {
+        display: none;
+    }
+
+    .home-stats-container-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+
+        justify-content: center;
+    }
 }
 
-.home-stats-container {
+#hmc-g1 {
     display: flex;
     flex-direction: row;
-    gap: 20px;
+}
 
-    justify-content: center;
+#hmc-g2 {
+    display: flex;
+    flex-direction: row;
 }
 
 .home-stat-box {
@@ -264,15 +291,13 @@
 }
 
 .home-game-result {
-    min-width: 60px;
+    min-width: 50px;
     height: 50px;
-    text-align: center;
 }
 
 .last-match-stats {
     display: flex;
     flex-direction: row;
-    gap: 20px;
     justify-content: left;
 }
 

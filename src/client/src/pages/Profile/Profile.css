@@ -82,7 +82,7 @@
 .profile-infobox #nickname {
     font-size: max(4vw, 47px);
 
-    margin-bottom: 30px;
+    margin-bottom: 50px;
     align-content: baseline;
 }
 
@@ -113,7 +113,7 @@
 
 @media screen and (width < 630px) {
     .profile-stats {
-        gap: 25px;
+        gap: 20px;
     }
 }
 

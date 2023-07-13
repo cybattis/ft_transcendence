@@ -27,7 +27,7 @@
     }
 
     #md-date {
-        min-width: 200px;
+        min-width: 175px;
     }
 }
 
@@ -44,27 +44,23 @@
 #md-date {
     flex: 1 1 0;
 
-    max-width: 250px;
+    max-width: 175px;
     margin-right: 10px;
-}
-
-#md-type{
-    flex: 1;
-
-    max-width: 150px;
-    min-width: 100px;
 }
 
 #md-score {
     flex: 1;
 
-    max-width: 150px;
-    min-width: 60px;
+    max-width: 200px;
+    min-width: 80px;
+
+    text-align: center;
 }
 
 .opponent-profile {
     text-decoration: none;
     color: var(--white);
+    justify-content: center;
 }
 
 .opponent-profile:hover {
@@ -75,7 +71,23 @@
     display: flex;
 }
 
+#md-in-progress {
+    color: yellow;
+    text-align: center;
+}
+
 @media screen and (width > 630px) {
+    #md-type{
+        flex: 1;
+
+        max-width: 100px;
+        min-width: 90px;
+    }
+
+    .opponent-profile {
+        min-width: 175px;
+    }
+
     .opponent-profile #opponent-name {
         flex-direction: row;
         flex: 2;
@@ -84,20 +96,30 @@
 
         align-items: center;
         justify-content: left;
+
+        margin-left: 25px;
     }
 }
 
 @media screen and (width < 630px) {
+    #md-type{
+        flex: 1;
+
+        max-width: 100px;
+        min-width: 70px;
+    }
+
+    .opponent-profile {
+        min-width: 100px;
+    }
 
     .opponent-profile #opponent-name {
         align-items: center;
-        justify-content: right;
-
         margin-left: 20px;
     }
 
     #gi-name {
-        visibility: hidden;
+        display: none;
     }
 }
 
@@ -107,12 +129,6 @@
 
 #md-loose {
     color: red;
-}
-
-#md-in-progress {
-    color: yellow;
-    text-align: center;
-    margin-left: -15px;
 }
 
 /* ===================================================================== */
@@ -130,21 +146,28 @@
 #md-header-date {
     flex: 1 1 0;
 
-    max-width: 250px;
+    max-width: 175px;
     margin-right: 10px;
 }
 
 #md-header-type {
     flex: 1;
-    max-width: 150px;
-    min-width: 100px;
+    max-width: 175px;
+    min-width: 80px;
 }
 
 #md-header-score {
     flex: 1;
 
     max-width: 150px;
-    min-width: 60px;
+    min-width: 70px;
+}
+
+#md-header-opponent {
+    flex: 1;
+
+    max-width: 200px;
+    min-width: 100px;
 }
 
 @media screen and (width > 630px) {
@@ -156,7 +179,7 @@
     }
 
     #md-header-date {
-        min-width: 200px;
+        min-width: 175px;
     }
 }
 

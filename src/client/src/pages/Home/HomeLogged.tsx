@@ -274,6 +274,48 @@ function Winrate(props: { data: UserInfo }) {
   );
 }
 
+function HomeStatContainerDesktop(props: { data: UserInfo }) {
+  return (
+    <div className="home-stats-container-desktop">
+      <LastMatch data={props.data} />
+      <div className={"home-stat-box"}>
+        <h5>Game played</h5>
+        <hr className={"user-profile-hr"} />
+        <div>{props.data.games?.length}</div>
+      </div>
+      <Winrate data={props.data} />
+      <div className={"home-stat-box"}>
+        <h5>ELO</h5>
+        <hr className={"user-profile-hr"} />
+        <div>{props.data.ranking}</div>
+      </div>
+    </div>
+  );
+}
+
+function HomeStatContainerMobile(props: { data: UserInfo }) {
+  return (
+    <div className="home-stats-container-mobile">
+      <div id={"hmc-g1"}>
+        <LastMatch data={props.data} />
+        <div className={"home-stat-box"}>
+          <h5>Game played</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{props.data.games?.length}</div>
+        </div>
+      </div>
+      <div id={"hmc-g2"}>
+        <Winrate data={props.data} />
+        <div className={"home-stat-box"}>
+          <h5>ELO</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{props.data.ranking}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
 
@@ -288,20 +330,8 @@ function UserProfile(props: { data: UserInfo }) {
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div className="home-stats-container">
-        <LastMatch data={data} />
-        <div className={"home-stat-box"}>
-          <h5>Game played</h5>
-          <hr className={"user-profile-hr"} />
-          <div>{data.games?.length}</div>
-        </div>
-        <Winrate data={data} />
-        <div className={"home-stat-box"}>
-          <h5>ELO</h5>
-          <hr className={"user-profile-hr"} />
-          <div>{data.ranking}</div>
-        </div>
-      </div>
+      <HomeStatContainerDesktop data={data} />
+      <HomeStatContainerMobile data={data} />
     </div>
   );
 }

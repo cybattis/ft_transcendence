@@ -2,8 +2,8 @@
     display: flex;
     flex-direction: column;
 
-    height: var(--vp-size);
     width: 100%;
+    min-width: 375px;
 
     align-items: center;
 
@@ -18,49 +18,79 @@
     padding: 10px;
 }
 
-.tableHeader {
+.table-header {
+    box-sizing: border-box;
+
     display: flex;
     flex-direction: row;
 
-    width: 50vw;
     height: 45px;
 
     align-items: center;
     justify-content: center;
 }
 
-#tableLeft {
-    display: flex;
-    flex-direction: row;
-    flex: 1 2 0;
+@media screen and (width >= 900px) {
+    .table-header {
+        width: 900px;
+        max-width: 900px;
+    }
 
-    align-items: center;
 
-    min-width: 250px;
-
-    margin-left: 50px;
-    gap: 60px;
+    #ld-rank {
+        margin-left: 50px;
+    }
 }
 
-#tableRight {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    flex: 1.5 2 0;
+@media screen and (width < 900px) {
+    .table-header {
+        min-width: 100vw;
+    }
 
-    justify-content: center;
-    align-items: center;
-
-    height: fit-content;
-    margin-right: 100px;
+    #ld-rank {
+        margin-left: 40px;
+    }
 }
 
-#ld-winrate, #ld-game-played, #ld-elo {
-    box-sizing: border-box;
-    flex: 1 auto;
+#ld-rank {
+    flex: 1;
+    max-width: 40px;
+    min-width: 40px;
 
-    width: max-content;
-    min-width: 100px;
+    text-align: left;
+}
 
-    text-align: center;
+#ld-player {
+    flex: 1;
+    max-width: 300px;
+    min-width: 70px;
+
+    text-align: left;
+}
+
+#ld-winrate {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 80px;
+
+    text-align: left;
+}
+
+#ld-game-played {
+    flex: 1;
+
+    max-width: 150px;
+    min-width: 80px;
+
+    text-align: left;
+  }
+
+#ld-elo {
+    flex: 1;
+
+    max-width: 200px;
+    min-width: 40px;
+
+    text-align: left;
 }
