@@ -1,7 +1,7 @@
-import {AIOnlyPong} from "../../game/components/AIOnlyPong";
+import { MultiplayerPong } from "../../game/components/MultiplayerPong";
 
 export function Game() {
   return (
-    <AIOnlyPong name={"BESTBESTBEST"} width={500 } height={250} leftDifficulty={"Hard"} rightDifficulty={"Hard"}/>
+    <MultiplayerPong name={"BESTBESTBEST"} width={800} height={400}/>
   );
 }
