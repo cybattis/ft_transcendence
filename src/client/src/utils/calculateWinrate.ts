@@ -1,7 +1,12 @@
 import { UserInfo } from "../type/user.type";
+import { GameStatus } from "../type/game.type";
 
 export function calculateWinrate(props: UserInfo) {
-  return props.totalGameWon && props.games?.length
-    ? (props.totalGameWon * 100) / props.games?.length
+  const actualGame = props.games?.filter(
+    (game) => game.status === GameStatus.FINISHED
+  ).length;
+
+  return props.totalGameWon && actualGame
+    ? (props.totalGameWon * 100) / actualGame
     : 0;
 }

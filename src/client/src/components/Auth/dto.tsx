@@ -1,14 +1,12 @@
 import { createContext } from "react";
 
-export interface FormContextType {
+interface FormContextType {
   loginForm: boolean;
   setLoginForm: (value: boolean) => void;
   signupForm: boolean;
   setSignupForm: (value: boolean) => void;
   codeForm: boolean;
   setCodeForm: (value: boolean) => void;
-  chatForm: boolean;
-  setChatForm: (value: boolean) => void;
 }
 
 export const defaultFormState: FormContextType = {
@@ -18,13 +16,11 @@ export const defaultFormState: FormContextType = {
   setSignupForm: () => {},
   codeForm: false,
   setCodeForm: () => {},
-  chatForm: false,
-  setChatForm: () => {},
 };
 
 export const FormContext = createContext<FormContextType>(defaultFormState);
 
-export interface AuthContextType {
+interface AuthContextType {
   authed: string | null;
   setAuthToken: (value: string | null) => void;
 }
@@ -36,10 +32,10 @@ export const defaultAuthState: AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType>(defaultAuthState);
 
-export interface NotifContextType {
+interface NotifContextType {
   notif: boolean;
   setNotif: (value: boolean) => void;
-};
+}
 
 export const defaultNotifState: NotifContextType = {
   notif: false,
@@ -48,14 +44,15 @@ export const defaultNotifState: NotifContextType = {
 
 export const NotifContext = createContext<NotifContextType>(defaultNotifState);
 
-export interface SocketContextType {
+interface SocketContextType {
   socketId: string | null; //pas definir avec socket.io sinon fou la merde
   setSocketId: (value: string | null) => void;
-};
+}
 
 export const defaultSocketState: SocketContextType = {
   socketId: null,
   setSocketId: () => {},
 };
 
-export const SocketContext = createContext<SocketContextType>(defaultSocketState);
+export const SocketContext =
+  createContext<SocketContextType>(defaultSocketState);

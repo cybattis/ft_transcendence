@@ -1,26 +1,19 @@
-.div-Project{
+.app-logo {
     display: flex;
     flex-direction: row;
+
     justify-content: center;
     align-items: center;
-    padding: 0;
+
+    height: 56px;
+
     gap: 5px;
-    isolation: isolate;
+    margin-right: 30px;
 
-    width: 190px;
-    height: 45px;
-
-    flex: none;
-    order: 0;
-    flex-grow: 0;
+    width: fit-content;
 }
 
-.logo {
-    height: 32px;
-    width: 32px;
-}
-
-.title{
+.logo-title {
     font-style: normal;
     font-weight: 800;
     font-size: 18px;

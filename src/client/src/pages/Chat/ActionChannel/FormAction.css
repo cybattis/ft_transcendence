@@ -9,7 +9,6 @@
 }
 #container-all-join, #container-all-private,#container-all-operator,#container-all-kick,#container-all-ban,#container-all-blocked,#container-all-blocked,#container-quit-channel{
     position: relative;
-    width: 80px;
 }
 
 #container-all-join{
@@ -68,7 +67,7 @@
 }
 
 .logo-chat{
-    width: 50px;
+    width: 30px;
 }
 
 .logo-chat:hover{

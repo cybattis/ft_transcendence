@@ -10,50 +10,61 @@ import {
   AuthContext,
   defaultAuthState,
   defaultNotifState,
-  NotifContext,
   SocketContext,
   defaultSocketState,
+  NotifContext
 } from "./components/Auth/dto";
 import { AuthForms } from "./components/Auth/Forms";
+import { ErrorModal } from "./components/Modal/ErrorModal";
+import {
+  defaultErrorContext,
+  ErrorContext,
+} from "./components/Modal/modalContext";
 
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
   const [signupForm, setSignupForm] = useState(defaultFormState.signupForm);
   const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
-  const [chatForm, setChatForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
   const [notif, setNotif] = useState(defaultNotifState.notif);
   const [socketId, setSocketId] = useState(defaultSocketState.socketId);
+  const [errorMessage, setErrorMessage] = useState(
+    defaultErrorContext.errorMessage
+  );
 
   return (
-    <div className="app">
-      <SocketContext.Provider
-        value={{ socketId: socketId, setSocketId: setSocketId }}
-      >
-        <NotifContext.Provider value={{ notif: notif, setNotif: setNotif }}>
-          <AuthContext.Provider
-            value={{ authed: authToken, setAuthToken: setAuthToken }}
+    <div className="app" id={"background"}>
+      <NotifContext.Provider value={{ notif: notif, setNotif: setNotif }}>
+        <AuthContext.Provider
+          value={{ authed: authToken, setAuthToken: setAuthToken }}
+        >
+          <FormContext.Provider
+            value={{
+              loginForm,
+              setLoginForm,
+              signupForm,
+              setSignupForm,
+              codeForm,
+              setCodeForm,
+            }}
           >
-            <FormContext.Provider
-              value={{
-                loginForm,
-                setLoginForm,
-                signupForm,
-                setSignupForm,
-                codeForm,
-                setCodeForm,
-                chatForm,
-                setChatForm,
-              }}
-            >
+            <ErrorContext.Provider value={{ errorMessage, setErrorMessage }}>
               <NavBar />
-              <Outlet />
+              <SocketContext.Provider
+                value={{ socketId: socketId, setSocketId: setSocketId }}
+              >
+                <Outlet />
+              </SocketContext.Provider>
               <AuthForms />
-              <Footer />
-            </FormContext.Provider>
-          </AuthContext.Provider>
-        </NotifContext.Provider>
-      </SocketContext.Provider>
+              <ErrorModal
+                error={errorMessage}
+                onClose={() => setErrorMessage("")}
+              />
+            </ErrorContext.Provider>
+          </FormContext.Provider>
+        </AuthContext.Provider>
+      </NotifContext.Provider>
+      <Footer />
     </div>
   );
 }

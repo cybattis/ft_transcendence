@@ -1,10 +1,9 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import jwt_decode from "jwt-decode";
 import { AuthContext } from "../../components/Auth/dto";
-import { TokenData } from "../../type/user.type";
 import { apiBaseURL } from "../../utils/constant";
+import { HandleError } from "../../components/HandleError";
 
 async function ValidateEmail() {
   const { setAuthToken } = React.useContext(AuthContext);
@@ -12,15 +11,17 @@ async function ValidateEmail() {
   const location = useLocation();
   const id = location.search.substring(1);
 
-  await axios.put(apiBaseURL + "auth/" + id, true).then((res) => {
-    console.log(res);
-    const data = res.data;
-    localStorage.setItem("token", data.token);
-    setAuthToken(data.token);
-
-    const decoded: TokenData = jwt_decode(data.token);
-    localStorage.setItem("id", decoded.id.toString());
-  });
+  axios
+    .put(apiBaseURL + "auth/" + id, true)
+    .then((res) => {
+      console.log(res.data);
+      const data = res.data;
+      localStorage.setItem("token", data);
+      setAuthToken(data);
+  })
+    .catch((err) => {
+      return <HandleError error={err} />;
+    });
 }
 
 export default function Confirmation() {
@@ -38,14 +39,17 @@ export default function Confirmation() {
     textAlign: "center" as "center",
   };
 
-  ValidateEmail().then();
+  ValidateEmail().catch((err) => {
+    console.log(err);
+    return <Navigate to={"/"} />;
+  });
 
   return (
     <div style={home}>
       <h3>Email Confirmed!</h3>
       <h4 style={title}>
-        Thanks for joining us! You can now return to the game and close this
-        Page.
+        Thanks for joining us! You can now return to the game by clicking on the play button.
+        You can close the other page.
       </h4>
     </div>
   );

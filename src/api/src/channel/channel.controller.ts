@@ -3,6 +3,7 @@ import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
+import { ChannelService } from './channel.service';
 
 @Controller('chat')
 export class ChannelController {
@@ -10,7 +11,8 @@ export class ChannelController {
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
         @InjectRepository(Channel)
-        private channelRepository: Repository<Channel>
+        private channelRepository: Repository<Channel>,
+        private channelService: ChannelService,
     ) {}
 
     // Chat
@@ -20,27 +22,35 @@ export class ChannelController {
     }
 
     @Get('/message/:name')
-    findChat(@Param('name') name : string): Promise<Chat[]>{
+    async findChat(@Param('name') name : string): Promise<Chat[]>{
         const decodedName = decodeURIComponent(name);
-        return (this.chatRepository.find({where: {channel : decodedName}}));
+        return (await this.chatRepository.find({where : {channel : decodedName}}));
     }
 
+    
     @Delete('/delete-chat/:channel')
     async deleteChat(@Param('channel') channel: string): Promise<void> {
         const decodedName = decodeURIComponent(channel);
         await this.chatRepository.delete({channel: decodedName});
     }
-
+    
     // Channel
     @Get('/channel')
     findAllChannel(): Promise<Channel[]>{
         return (this.channelRepository.find());
     }
-
+    
     @Get('/channel/:name')
-    findChannel(@Param('name') name : string): Promise<Channel[]>{
+    async findChannel(@Param('name') name : string): Promise<Channel[]>{
         const decodedName = decodeURIComponent(name);
-        return (this.channelRepository.find({where: {channel : decodedName}}));
+        return (await this.channelRepository.find({where: {channel : decodedName}}));
+    }
+    
+    @Get('/channel/find/:channel/:pwd')
+    async findChannelPsw(@Param('channel') channel: string, @Param('pwd') pwd: string) {
+        console.log('inpsw');
+        const decodedName = decodeURIComponent(channel);
+        return (await this.channelService.findChannel(decodedName, pwd));
     }
 
     @Delete('/delete-channel/:channel')
@@ -49,3 +59,4 @@ export class ChannelController {
         await this.channelRepository.delete({channel: decodedName});
     }
 }
+

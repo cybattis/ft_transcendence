@@ -77,7 +77,7 @@ function FriendsList() {
           {dataOnline.map((dataOnline) => {
             return (
               <div className="friends" key={dataOnline.nickname}>
-                <Link to={`/profile/${dataOnline.id}`} className="friendLink">
+                <Link to={`/profile/${dataOnline.nickname}`} className="friendLink">
                   <div>
                     <p className="friendsImg">
                       <Avatar size="50px" img={dataOnline.avatarUrl} />
@@ -92,7 +92,7 @@ function FriendsList() {
           {dataOffline.map((dataOffline) => {
             return (
               <div className="friends" key={dataOffline.nickname}>
-                <Link to={`/profile/${dataOffline.id}`} className="friendLink">
+                <Link to={`/profile/${dataOffline.nickname}`} className="friendLink">
                   <div>
                     <p className="friendsImg">
                       <Avatar size="50px" img={dataOffline.avatarUrl} />
@@ -113,6 +113,7 @@ function FriendsList() {
 export function Friends() {
   return (
     <div className="friendList">
+      <h4>Friends</h4>
       <FriendsList />
     </div>
   );

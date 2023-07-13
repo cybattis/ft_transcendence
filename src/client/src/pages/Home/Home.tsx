@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import "./Home.css";
 import { HomeLogged } from "./HomeLogged";
 import { AuthContext } from "../../components/Auth/dto";
 import { PracticePong } from "../../game/components/PracticePong";
@@ -15,46 +16,17 @@ export default function Home() {
 }
 
 function HomeUnlogged() {
-  const home = {
-    display: "flex",
-    flexDirection: "column" as "column",
-    alignItems: "center",
-    height: "var(--vp-size)",
-  };
-
-  const title = {
-    width: "715px",
-    height: "112px",
-    alignItems: "center",
-    textAlign: "center" as "center",
-  };
-
-  const game = {
-    display: "block",
-
-    maxWidth: "954px",
-    maxHeight: "537px",
-
-    width: "50vw",
-    height: "56.25vh",
-
-    boxShadow: "inset 0 0 16px 22px rgba(0, 0, 0, 0.15)",
-    borderRadius: "8px",
-
-    marginBottom: "2em",
-  };
-
   return (
-    <div style={home}>
-      <h3>PongFever</h3>
-      <h4 style={title}>
-        Come play to the new and fun multiplayer pong game !
-      </h4>
-      <div style={game}>
+    <div className={"homeUnlogged"}>
+      <div className={"homeTitle"}>
+        <h3>PongFever</h3>
+        <h4>Come play to the new and fun multiplayer pong game !</h4>
+      </div>
+      <div className={"homeGame"}>
         <PracticePong
           name={"Home game"}
-          width={954}
-          height={537}
+          width={1000}
+          height={500}
           aiDifficulty={"Medium"}
         />
       </div>

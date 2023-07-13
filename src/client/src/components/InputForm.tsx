@@ -25,7 +25,7 @@ export default function InputForm(props: LabelProps) {
     gap: "8px",
 
     width: props.half ? "174px" : "358px",
-    height: "46px",
+    height: "40px",
 
     color: "var(--black)",
     background: "white",

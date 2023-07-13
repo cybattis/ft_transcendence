@@ -1,13 +1,19 @@
-import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import { User } from './entity/Users.entity';
 import { GameService } from '../game/game.service';
 import { ModuleRef } from '@nestjs/core';
-import { TokenData, UserInfo, UserSettings } from '../type/user.type';
+import { UserInfo, UserSettings } from '../type/user.type';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
 import { apiBaseURL } from '../utils/constant';
+import { TokenData } from '../type/jwt.type';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -76,7 +82,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(token: string, id: number): Promise<UserInfo | any> {
+  async userInfo(token: string, username: string): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -94,7 +100,7 @@ export class UserService implements OnModuleInit {
         websocket: true,
       },
       where: {
-        id: id,
+        nickname: username,
       },
     });
 
@@ -136,7 +142,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async updateValidation(id: number) {
+  async updateUserVerifiedStatus(id: number) {
     await this.usersRepository.update(id, {
       isVerified: true,
       online: true,
@@ -145,7 +151,7 @@ export class UserService implements OnModuleInit {
 
   async update2FA(token: string) {
     const user = await this.decodeToken(token);
-    if (!user) return null;
+    if (!user) throw new ForbiddenException('Invalid token');
 
     return await this.usersRepository.update(user.id, {
       authActivated: !user.authActivated,
@@ -243,11 +249,25 @@ export class UserService implements OnModuleInit {
       where: { id: friendId },
     });
     me.blockedId.push(friend.id);
+    me.blockedChat.push(friend.nickname);
+    friend.blockedById.push(me.id);
+    friend.blockedChat.push(me.username);
+    await this.usersRepository.save(friend);
+    return await this.usersRepository.save(me);
+  }
+
+  async blockFriendUsr(friendName: string, myId: number) {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { nickname: friendName },
+    });
+    me.blockedId.push(friend.id);
     friend.blockedById.push(me.id);
     await this.usersRepository.save(friend);
     return await this.usersRepository.save(me);
   }
 
+  //Unblocked pas sur que ca marche
   async unblockFriend(friendId: number, myId: number) {
     const me: any = await this.usersRepository.findOne({ where: { id: myId } });
     const friend: any = await this.usersRepository.findOne({
@@ -378,7 +398,8 @@ export class UserService implements OnModuleInit {
   }
 
   async decodeToken(token: string): Promise<User | null> {
-    if (!token) return null;
+    if (!token) throw new ForbiddenException('Invalid token');
+
     const decoded: TokenData = this.jwtService.decode(token) as TokenData;
     const user = await this.usersRepository.findOne({
       where: { id: decoded.id },

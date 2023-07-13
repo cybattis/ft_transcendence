@@ -9,12 +9,15 @@ export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar'})
-  channel: string;
+    @Column({ type: 'varchar'})
+    channel: string;
+  
+    @Column({ type: 'varchar'})
+    content: string;
+  
+    @Column({ type: 'varchar', length: 40})
+    emitter: string;
 
-  @Column({ type: 'varchar'})
-  content: string;
-
-  @Column({ type: 'varchar', length: 40})
-  emitter: string;
-}
+    @Column({type: 'integer'})
+    emitterId: number;
+  }

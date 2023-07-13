@@ -30,18 +30,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send :')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.sendMessage(socket, data.channel, data.msg, data.username);
   }
 
   @SubscribeMessage('join')
-  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    const channel = data.channel;
-    const username = data.username;
-    console.log(`${socket.id} : ${username}`)
+  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string , channel: string, password: string, type: string}) {
+    let type, pass, username, channel : string;
+    if (!data)
+      return ;
+    !data.channel ? channel = '#general' : channel = data.channel;
+    !data.username ? username = 'Francis' : username = data.username;
+    !data.password ? pass = '123' : pass = data.password;
+    !data.type ? type = 'public' : type = data.type;
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
-    this.channelService.joinChannel(socket, data.type, username, channel, data.password);
+    this.channelService.joinChannel(socket, type, username, channel, pass);
   }
 
   @SubscribeMessage('prv')
@@ -73,7 +78,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
     await this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    const targetSocket = await this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
     {
@@ -113,6 +118,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const target = mess.friend.data;
     console.log(`Friend request Send`);
     this.channelService.sendFriendRequest(this.server, target, mess.from);
-    this.server.to(target.websocket).emit('friendRequest', {target});
+    this.server.to(target.websocket).emit('friendRequest');
   }
 }

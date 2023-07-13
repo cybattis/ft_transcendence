@@ -3,6 +3,8 @@
     flex-direction: column;
     align-items: center;
     height: var(--vp-size);
+
+    overflow-y: auto;
 }
 
 .settingPage_title {
@@ -20,6 +22,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+@media screen and (max-width: 650px) {
+    .settingPage_container {
+        flex-direction: column;
+    }
 }
 
 .settingPage_sendImage {
@@ -45,8 +53,8 @@
     justify-content: center;
     align-items: center;
 
-    width: 250px;
-    height: 46px;
+    width: 200px;
+    height: 40px;
     border-radius: 8px;
     margin: 20px 0 5px 0;
 
@@ -54,4 +62,10 @@
     background-color: var(--purple-wave);
     font-family: 'Space Mono', monospace;
     font-weight: bold;
+
+    cursor: pointer;
+}
+
+.avatarButton:hover {
+    background-color: var(--cyan);
 }

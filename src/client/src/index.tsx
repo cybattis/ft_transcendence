@@ -4,7 +4,6 @@ import "./index.css";
 import App from "./App";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
-import Team from "./pages/About/Team";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
@@ -16,7 +15,7 @@ import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 import { apiBaseURL } from "./utils/constant";
-import { ErrorRedirection } from "./pages/Redirection/ErrorRedirection";
+import About from "./pages/About/About";
 
 const router = createBrowserRouter([
   {
@@ -34,16 +33,16 @@ const router = createBrowserRouter([
             element: <Home />,
           },
           {
-            path: "team",
-            element: <Team />,
+            path: "about",
+            element: <About />,
           },
           {
-            path: "profile/:id",
+            path: "profile/:username",
             element: <Profile />,
             errorElement: <Error404 />,
             loader: async ({ request, params }) => {
               const res = await fetch(
-                apiBaseURL + `user/profile/${params.id}`,
+                apiBaseURL + `user/profile/${params.username}`,
                 {
                   headers: {
                     token: localStorage.getItem("token") || "",

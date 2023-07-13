@@ -1,4 +1,7 @@
-import { Injectable, OnModuleInit  } from '@nestjs/common';
+import { 
+    UnauthorizedException,
+    Injectable,
+    NotFoundException, OnModuleInit  } from '@nestjs/common';
 import { ChannelStructure } from "./channel.structure";
 import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
@@ -9,16 +12,18 @@ import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelController } from './channel.controller';
+import { UserService } from 'src/user/user.service';
+
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
     private channelStruct: ChannelStructure[];
     private usersSocketStructures: UsersSocketStructure[];
     
-    
     constructor(
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
+        private userService: UserService,
         @InjectRepository(Channel)
         private channelRepository: Repository<Channel>
         ) {
@@ -281,7 +286,6 @@ export class ChannelService implements OnModuleInit {
             if (this.checkUserIsHere(channelToJoin.users, username))
                 return ; // deja present
             channelToJoin.users.push(username);
-
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
@@ -305,7 +309,7 @@ export class ChannelService implements OnModuleInit {
             console.log("Aucune type de channel");
     }
 
-    async joinChannel(socket: Socket,type: string, username: string, channel: string, pass: string){
+    async joinChannel(socket: Socket, type: string, username: string, channel: string, pass: string){
         if (channel === "#general"){
             const channelToUpdate = await this.channelRepository.findOne({where :{channel: channel}});
             if (!channelToUpdate)
@@ -318,23 +322,24 @@ export class ChannelService implements OnModuleInit {
             socket.emit('join', channel);
             return ;
         }
-        const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
-        if (channelToJoin)
-            await this.tryJoin(socket, type, username, channel, pass);
         else {
-            const salt = await bcrypt.genSalt();
-            const hash = await bcrypt.hash(pass, salt);
-            await this.channelRepository.save({
-                channel: channel,
-                status: type,
-                users : [username],
-                owner : username,
-                operator: [username],
-                ban: [],
-                password: hash,
-            })
-            socket.join(channel);
-            socket.emit('join', channel);
+            const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
+            if (channelToJoin)
+                await this.tryJoin(socket, type, username, channel, pass);
+            else {
+                const salt = await bcrypt.genSalt();
+                const hash = await bcrypt.hash(pass, salt);
+                await this.channelRepository.save({
+                    channel: channel,
+                    status: type,
+                    users : [username],
+                    owner : username,
+                    operator: [username],
+                    ban: [],
+                    password: hash,
+                })
+                socket.emit('join', channel);
+            }
         }
     }
 
@@ -391,9 +396,10 @@ export class ChannelService implements OnModuleInit {
 
     async sendMessage(socket: Socket, channel: string, msg: string, sender: string, ){
         const send = {sender, msg, channel};
-        console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
+        console.log(`send : ${send.sender} m${send.msg} ${send.channel}`);
         if (channel[0] === "#"){
-            await this.chatRepository.save({channel : channel, content: msg, emitter: sender});
+            const emiter: any = await this.userService.findByLogin(sender); 
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: emiter.id});
             socket.broadcast.emit('rcv', send);
         }
         else
@@ -404,5 +410,18 @@ export class ChannelService implements OnModuleInit {
           if (target)
             socket.to(target).emit('rcv', prv);
         }
+    }
+
+    async findChannel(channel: string, pwd: string) {
+        if (!pwd)
+            pwd = "";
+        if (channel.indexOf("#") === -1) channel = "#" + channel;
+        for (let i = 0; this.channelStruct[i]; i ++) {
+            if (channel === this.channelStruct[i].name && pwd === this.channelStruct[i].pswd)
+                return (1);
+            else if (channel === this.channelStruct[i].name && pwd !== this.channelStruct[i].pswd)
+                return new UnauthorizedException("Password mismatch");
+        }
+        return new NotFoundException("Channel doesn't exists");
     }
 }
