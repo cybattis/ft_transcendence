@@ -5,7 +5,7 @@ import {drawText} from "../util/Utils";
 
 export type MovementCallback = (ballPos: number, paddlePos: number) => number;
 
-export class PongState {
+export class PongLogic {
   public name: string;
   private readonly leftPaddle: Paddle;
   private readonly leftName: string;
@@ -44,6 +44,10 @@ export class PongState {
     this.leftPaddle = new Paddle(true, canvas.width, canvas.height);
     this.rightPaddle = new Paddle(false, canvas.width, canvas.height);
     this.ball = new Ball(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, this.leftPaddle.size.x);
+    if (Math.random() > 0.5)
+      this.ball.serveRight();
+    else
+      this.ball.serveLeft();
 
     const ballMaxStepSizeX = Math.min(this.leftPaddle.size.x / 2, this.canvas.width / 5);
     const ballMaxStepSizeY = this.canvas.height / 5;
@@ -156,7 +160,9 @@ export class PongState {
 
       // Check for collisions
       const paddle = this.ball.pos.x > this.canvas.width / 2 ? this.rightPaddle : this.leftPaddle;
-      this.ball.checkCollision(paddle);
+      if (this.ball.checkCollision(paddle)) {
+
+      }
 
       // Check for scoring
       if (this.ball.pos.x + this.ball.radius > this.rightPaddle.pos.x) {
