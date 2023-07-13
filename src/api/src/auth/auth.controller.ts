@@ -99,14 +99,13 @@ export class AuthController {
   @Post('2fa/validate')
   async validate2fa(
     @Body() body: any,
-    @Headers('Authorization') token: Header,
+    @Headers('Authorization') header: Header,
   ) {
-    const payload: TokenData = jwt_decode(token.toString().split(' ')[1]);
-
-    console.log(body.code);
+    const token = header.toString().split(' ')[1];
+    const payload: TokenData = jwt_decode(token);
 
     await this.authService.checkCode(body.code, payload.email);
-    return this.userService.updateUser2FAstatus(token.toString());
+    return this.userService.updateUser2FAstatus(token);
   }
 
   @UseGuards(TokenGuard)

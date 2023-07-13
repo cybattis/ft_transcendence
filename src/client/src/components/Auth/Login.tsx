@@ -59,12 +59,12 @@ export default function Login() {
       .post(apiBaseURL + "auth/signin", user)
       .then((res) => {
         setLoginForm(false);
-        if (res.data) {
-          localStorage.setItem("token", res.data.token);
-          setAuthToken(res.data.token);
-        } else if (!res.data) {
+        if (res.data === "code") {
           localStorage.setItem("email", user.email);
           setCodeForm(true);
+        } else {
+          localStorage.setItem("token", res.data.token);
+          setAuthToken(res.data.token);
         }
         return;
       })
