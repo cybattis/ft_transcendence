@@ -5,6 +5,8 @@ import { Game } from "../game/entity/Game.entity";
 import { AuthedSocket } from "../auth/types/auth.types";
 import { GameStatus } from "../type/game.type";
 import { Server } from "socket.io";
+import { User } from "../user/entity/Users.entity";
+import { UserService } from "../user/user.service";
 
 @Injectable()
 export class MultiplayerService {
@@ -15,7 +17,8 @@ export class MultiplayerService {
   private readonly BALL_SPEED: number = 0.4;                          // Traveling half of the board in 1 second
   private readonly BALL_SERVING_SPEED: number = this.BALL_SPEED / 2;  // 50% of the normal speed
 
-  constructor(private readonly gameService: GameService) {
+  constructor(private readonly gameService: GameService,
+              private readonly userService: UserService) {
     console.log("[MULTIPLAYER] Service initialized");
   }
 
@@ -268,6 +271,18 @@ export class MultiplayerService {
 
     // Update the game in the database
     await this.gameService.updateGameStatus(game.id, GameStatus.FINISHED);
+
+
+    // Update the stats of the players
+    const user1: User | null = await this.userService.findByID(game.player1Id);
+    const user2: User | null = await this.userService.findByID(game.player2Id);
+
+    if (user1 && user2) {
+      if (game.player1Score > game.player2Score)
+        await this.gameService.updateUserStats(user1, user2, game.type);
+      else
+        await this.gameService.updateUserStats(user2, user1, game.type);
+    }
 
     // Remove the game from the list
     const index: number = this.rooms.indexOf(game);
