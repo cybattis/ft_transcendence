@@ -1,4 +1,6 @@
 .leaderboard-item {
+    box-sizing: border-box;
+
     display: flex;
     flex-direction: row;
 
@@ -74,19 +76,20 @@
     max-width: 150px;
     min-width: 80px;
     text-align: left;
+    margin-right: 20px;
 }
 
 #ldi-game-played {
     flex: 1 1;
     max-width: 150px;
-    min-width: 80px;
+    min-width: 50px;
     text-align: left;
 }
 
 #ldi-elo {
     flex: 1 1;
     max-width: 150px;
-    min-width: 80px;
+    min-width: 40px;
     text-align: left;
 }
 
@@ -104,6 +107,10 @@
 @media screen and (width < 900px) {
     .leaderboard-item {
         min-width: 100vw;
+    }
+
+    #LeaderboardProfileLink {
+        min-width: 70px;
     }
 
     #pastille {
