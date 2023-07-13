@@ -30,11 +30,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send :')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username);
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')
-  handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     console.log(`Join data : ${data.pass} ${data.channel}`);
     const channel = data.channel;
     const username = data.username;
@@ -62,18 +63,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('quit')
-  handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(`Quit : ${data.channel}`);
-    this.channelService.quitChannel(data.cmd, data.username, data.channel);
-    const channel = data.channel;
-    this.server.to(socket.id).emit("quit", channel);
+  async handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    await this.channelService.quitChannel(this.server, socket, data.cmd, data.username, data.channel);
   }
 
   @SubscribeMessage('ban')
-  handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
     this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    const targetSocket = await this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
     {
@@ -93,10 +91,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('kick')
-  handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
     this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    const targetSocket = await this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
     {

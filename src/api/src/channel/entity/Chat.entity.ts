@@ -17,4 +17,7 @@ import {
   
     @Column({ type: 'varchar', length: 40})
     emitter: string;
+
+    @Column({type: 'integer'})
+    emitterId: number;
   }

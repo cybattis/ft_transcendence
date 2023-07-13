@@ -327,8 +327,10 @@ export function HomeLogged() {
 
   useEffect(() => {
     async function fetchData() {
+      const payload: JwtPayload = jwt_decode(token as string);
+
       await axios
-        .get(apiBaseURL + "user/profile/me", {
+        .get(apiBaseURL + "user/profile/" + payload.username, {
           headers: {
             "Content-Type": "application/json",
             token: token,

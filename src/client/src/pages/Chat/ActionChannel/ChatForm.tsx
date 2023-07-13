@@ -5,6 +5,8 @@ import "../../../components/Auth/Auth.css"
 
 export default function ChatAction() {
 
+  //Faire un fetch/get pour choper l id du mec et faire un lien sur son profile avec un bouton
+
   return (
     <div className="background">
       <div className="authForm">

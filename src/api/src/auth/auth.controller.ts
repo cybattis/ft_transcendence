@@ -40,7 +40,7 @@ export class AuthController {
   async redirectToAppSignup(
     @Query('code') code: string,
     @Res() res: Response,
-  ): Promise<string | void> {
+  ): Promise<string | HttpException | void> {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
@@ -51,6 +51,7 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         const token = await this.authService.sendIntraToken(dataUser);
+        console.log(clientBaseURL);
         return res.redirect(clientBaseURL + 'loading?' + token.token);
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
@@ -121,6 +122,8 @@ export class AuthController {
   async update(@Param('id') id: number) {
     const token = await this.authService.generateToken(id);
     await this.userService.updateUserVerifiedStatus(id);
-    return token;
+    if (token)
+      return token.token;
+    return null;
   }
 }

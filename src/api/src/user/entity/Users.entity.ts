@@ -87,6 +87,9 @@ export class User {
   requestedId: number[];
 
   @Column('int', { array: true, default: [] })
+  blockedChat: string[];
+
+  @Column('int', { array: true, default: [] })
   blockedId: number[];
 
   @Column('int', { array: true, default: [] })

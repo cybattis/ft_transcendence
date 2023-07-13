@@ -7,8 +7,6 @@ interface FormContextType {
   setSignupForm: (value: boolean) => void;
   codeForm: boolean;
   setCodeForm: (value: boolean) => void;
-  chatForm: boolean;
-  setChatForm: (value: boolean) => void;
 }
 
 export const defaultFormState: FormContextType = {
@@ -18,8 +16,6 @@ export const defaultFormState: FormContextType = {
   setSignupForm: () => {},
   codeForm: false,
   setCodeForm: () => {},
-  chatForm: false,
-  setChatForm: () => {},
 };
 
 export const FormContext = createContext<FormContextType>(defaultFormState);
@@ -47,3 +43,16 @@ export const defaultNotifState: NotifContextType = {
 };
 
 export const NotifContext = createContext<NotifContextType>(defaultNotifState);
+
+interface SocketContextType {
+  socketId: string | null; //pas definir avec socket.io sinon fou la merde
+  setSocketId: (value: string | null) => void;
+}
+
+export const defaultSocketState: SocketContextType = {
+  socketId: null,
+  setSocketId: () => {},
+};
+
+export const SocketContext =
+  createContext<SocketContextType>(defaultSocketState);

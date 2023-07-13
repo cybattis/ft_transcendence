@@ -14,10 +14,11 @@ async function ValidateEmail() {
   axios
     .put(apiBaseURL + "auth/" + id, true)
     .then((res) => {
+      console.log(res.data);
       const data = res.data;
-      localStorage.setItem("token", data.token);
-      setAuthToken(data.token);
-    })
+      localStorage.setItem("token", data);
+      setAuthToken(data);
+  })
     .catch((err) => {
       return <HandleError error={err} />;
     });

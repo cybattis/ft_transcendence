@@ -33,7 +33,7 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
     }
 
     return (
-      <Link to={`/profile/${opponentId}`} className={"opponent-profile"}>
+      <Link to={`/profile/${name}`} className={"opponent-profile"}>
         <div id={"opponent-name"}>
           <Avatar size={"30px"} img={opponentAvatar} />
           {name}

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import axios from 'axios';
 import "./NavBar.css";
 import "./NavButton.css";
 import logo from "../../resource/signin-logo.svg";
@@ -7,6 +8,9 @@ import jwt_decode from "jwt-decode";
 import { JwtPayload } from "../../type/client.type";
 import { DisconnectButton, NavButton } from "./NavButton";
 import { Notification } from "./NavButton";
+import { apiBaseURL } from "../../utils/constant";
+import notifsLogo from "../../resource/logo-notifications.png";
+import notifsLogoOn from "../../resource/logo-notifications-on.png";
 
 function Unlogged() {
   const logoSignup = {
@@ -76,10 +80,12 @@ function Logged() {
     if (notif) setNotifs(true);
   }, []);
 
+  let username: string | null = null;
   let id: string | null = null;
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
+    username = decoded.username;
     id = decoded.id;
   } catch (e) {
     console.log("Error: Invalid token");
@@ -88,7 +94,7 @@ function Logged() {
   return (
     <>
       <Notification id={id} />
-      <NavButton content={"Profile"} link={`/profile/${id}`} />
+      <NavButton content={"Profile"} link={`/profile/${username}`} />
       <NavButton content={"Settings"} link={"/settings"} />
       <DisconnectButton />
     </>

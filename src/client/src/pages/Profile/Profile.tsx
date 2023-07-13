@@ -111,7 +111,7 @@ function AddFriend(data: any) {
         },
       })
       .then((res) => {
-        const name: string = payload.nickname;
+        const name: string = payload.username;
         const mess = { friend: data, from: name };
         socketRef.current.emit("friendRequest", mess);
       })

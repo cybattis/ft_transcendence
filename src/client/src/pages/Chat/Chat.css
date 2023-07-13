@@ -31,7 +31,7 @@
 
     width: 100%;
     max-height: 400px;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .list-msg-container{
@@ -82,7 +82,7 @@
 
 .btn-chat-principal{
     height: 25px;
-    background-color: var(--purple-wave);
+    background-color: rgb(115, 6, 161);
     color: var(--white);
     border-radius: 0 10px 10px 0;
     font-weight: bold;
@@ -90,7 +90,7 @@
 }
 
 .btn-chat-principal:hover{
-    background-color: var(--purple-darker);
+    background-color: rgb(137, 51, 174);
 }
 
 .input-chat-principal{
@@ -104,4 +104,97 @@
 
 .send-mess-container {
     width: 100%;
+}
+
+.quit-button {
+    border-radius: 5px;
+    padding: 5px;
+    background-color: rgb(115, 6, 161);
+    color: white;
+    cursor: pointer;
+}
+
+.quit-button:hover {
+    background-color: rgb(137, 51, 174);
+}
+
+.list {
+    display: flex;
+    flex-direction: row;
+}
+
+.add {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: rgb(115, 6, 161);
+    font-weight: bold;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.add:hover {
+    background-color: rgb(137, 51, 174);
+}
+
+.addImg {
+    display: flex;
+    height: 20px;
+    width: 20px;
+}
+
+.join-form {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    top: 20%;
+    min-width: max-content;
+
+    align-items: center;
+    justify-items: center;
+
+    padding: 1em 2em 1em 2em;
+
+    background-color: var(--bg);
+    border: 2px solid var(--purple-darker);
+    border-radius: 20px;
+}
+
+.input-join {
+    border-radius: 10px;
+}
+
+.buttons-form {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    top: 20%;
+    min-width: max-content;
+
+    align-items: center;
+    justify-items: center;
+
+    padding: 1em 2em 1em 2em;
+
+    background-color: var(--bg);
+    border: 2px solid var(--purple-darker);
+    border-radius: 20px;
+}
+
+.chat-buttons {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: rgb(115, 6, 161);
+    font-weight: bold;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.chat-buttons:hover {
+    background-color: rgb(137, 51, 174);
 }

@@ -1,4 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { 
+    UnauthorizedException,
+    Injectable,
+    NotFoundException } from '@nestjs/common';
 import { ChannelStructure } from "./channel.structure";
 import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
@@ -8,6 +11,7 @@ import { Chat } from './entity/Chat.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelController } from './channel.controller';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ChannelService {
@@ -15,10 +19,10 @@ export class ChannelService {
     private usersSocketStructures: UsersSocketStructure[];
     private channelController: ChannelController;
     
-    
     constructor(
         @InjectRepository(Chat)
-        private chatRepository: Repository<Chat>
+        private chatRepository: Repository<Chat>,
+        private userService: UserService,
         ) {
         this.channelStruct = [];
         this.usersSocketStructures = [];
@@ -86,12 +90,14 @@ export class ChannelService {
         return cmd;
     }
 
-    quitChannel(cmd: string, username: string, channel: string){
+    async quitChannel(server: Server, socket: Socket, cmd: string, username: string, channel: string){
         if (this.isOpe(username, channel))
             this.kickOp(channel, username);
         if (this.isUsers(username, channel))
             this.kickUser(username, channel);
         this.deleteChannel(channel);
+        console.log(socket.id);
+        server.to(socket.id).emit('quit', channel);
     }
 
     kickChannel(cmd: string, username: string, target: string, channel: string) {
@@ -359,17 +365,12 @@ export class ChannelService {
         return 0;
     }
 
-    deleteChannel(channel: string){
+    async deleteChannel(channel: string){
         const posActualChannel = this.channelPosition(channel);
-        if (posActualChannel === 0)
-            return ;
         if (this.channelStruct[posActualChannel].nbUsersInChannel() === 0)
         {
-            console.log(`Inside delete channel ${posActualChannel}`);
             this.channelStruct.splice(posActualChannel, 1);
-            console.log(`Inside delete 2 ${posActualChannel}`);
-            this.channelController.deleteChannel(channel);
-            console.log(`Inside delete 3 ${posActualChannel}`);
+            await this.chatRepository.delete({channel: channel});
         }
     }
 
@@ -379,20 +380,43 @@ export class ChannelService {
             server.to(socket.id).emit("blocked", target);
     }
 
-    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, ){
-        const send = {sender, msg, channel};
+    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+        const send = {sender, msg, channel, blockedChat};
         console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
         if (channel[0] === "#"){
-            await this.chatRepository.save({channel : channel, content: msg, emitter: sender});
+            const emiter: any = await this.userService.findByLogin(sender); 
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: emiter.id});
             socket.broadcast.emit('rcv', send);
         }
         else
         {
-          const target = this.takeSocketByUsername(channel);
-          channel = sender;
+            const target = this.takeSocketByUsername(channel);
+            channel = sender;
           const prv = {sender, msg, channel};
           if (target)
             socket.to(target).emit('rcv', prv);
         }
+    }
+
+    async findChannel(channel: string, pwd: string) {
+        if (!pwd)
+            pwd = "";
+        if (channel.indexOf("#") === -1) channel = "#" + channel;
+        for (let i = 0; this.channelStruct[i]; i ++) {
+            if (channel === this.channelStruct[i].name && pwd === this.channelStruct[i].pswd)
+                return (1);
+            else if (channel === this.channelStruct[i].name && pwd !== this.channelStruct[i].pswd)
+                return new UnauthorizedException("Password mismatch");
+        }
+        return new NotFoundException("Channel doesn't exists");
+    }
+
+    async findChannelAlone(channel: string) {
+        if (channel.indexOf("#") === -1) channel = "#" + channel;
+        for (let i = 0; this.channelStruct[i]; i ++) {
+            if (channel === this.channelStruct[i].name)
+                return (1);
+        }
+        return new NotFoundException("Channel doesn't exists");
     }
 }

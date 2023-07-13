@@ -134,6 +134,20 @@ export class AuthService {
     return await this.mailService.sendUserConfirmation(user);
   }
 
+  async generateToken(id: number) {
+    const user: User | null = await this.usersService.findByID(id);
+    if (user) {
+      const payload: TokenData = {
+        email: user.email,
+        id: user.id,
+        username: user.nickname,
+      };
+      return {
+        token: await this.jwtService.signAsync(payload),
+      };
+    }
+  }
+
   async createUser(body: SignupDto): Promise<void> {
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(body.password, salt);
@@ -170,7 +184,7 @@ export class AuthService {
 
   async sendIntraToken(dataUser: any) {
     const user: any = await this.usersService.findByEmail(dataUser.email);
-    await this.usersService.updateValidation(user.id);
+    await this.usersService.updateUserVerifiedStatus(user.id);
     const payload = { email: user.email, id: user.id, username: user.nickname };
       return {
         token: await this.jwtService.signAsync(payload),
@@ -179,14 +193,14 @@ export class AuthService {
   }
 
   async updateValidation(id: number) {
-    await this.usersService.updateValidation(id);
+    await this.usersService.updateUserVerifiedStatus(id);
     const user = await this.usersService.findByID(id);
     if (!user) throw new NotFoundException('User not found');
 
     const payload: TokenData = {
       email: user.email,
       id: id,
-      nickname: user.nickname,
+      username: user.nickname,
     };
     return {
       token: await this.jwtService.signAsync(payload),
@@ -222,7 +236,7 @@ export class AuthService {
       const payload: TokenData = {
         email: email,
         id: user.id,
-        nickname: user.nickname,
+        username: user.nickname,
       };
       return {
         token: await this.jwtService.signAsync(payload),

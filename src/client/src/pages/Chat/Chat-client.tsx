@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { apiBaseURL } from "../../utils/constant";
 
 export type newMessagesCallBack = {
-  (data: { sender: string, msg: string, channel: string }): void;
+  (data: { sender: string, msg: string, channel: string, blockedChat: any }): void;
 }
 
 export type newChannelCallBack = {
@@ -62,14 +62,14 @@ export namespace ChatClientSocket {
       newJoinChannel.forEach(callback => callback(room));
     });
 
-    socket.on('rcv', (data: { sender: string, msg: string, channel: string }) => {
+    socket.on('rcv', (data: { sender: string, msg: string, channel: string, blockedChat: any }) => {
       newMessageCallBack.forEach(callback => callback(data));
     });
 
     socket.on('blocked', (target: string) => {
       newBlockedCallBack.forEach(callback => callback(target));
     });
-
+    
     socket.on('quit', (room: string) => {
       newQuitCallBack.forEach(callback => callback(room));
     });

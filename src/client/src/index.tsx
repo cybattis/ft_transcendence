@@ -37,12 +37,12 @@ const router = createBrowserRouter([
             element: <About />,
           },
           {
-            path: "profile/:id",
+            path: "profile/:username",
             element: <Profile />,
             errorElement: <Error404 />,
             loader: async ({ request, params }) => {
               const res = await fetch(
-                apiBaseURL + `user/profile/${params.id}`,
+                apiBaseURL + `user/profile/${params.username}`,
                 {
                   headers: {
                     token: localStorage.getItem("token") || "",

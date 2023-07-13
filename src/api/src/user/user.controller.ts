@@ -64,14 +64,12 @@ export class UserController {
    * @desc Get user public info from id for profile page
    */
   @UseGuards(TokenGuard)
-  @Get('profile/:id')
+  @Get('profile/:username')
   async userInfo(
-    @Param('id') id: string,
+    @Param('username') username: string,
     @Headers('token') header: Headers,
   ): Promise<UserInfo | any> {
-    const idNum = Number(id);
-    if (!idNum) throw new BadRequestException('Invalid id');
-    return this.userService.userInfo(header.toString(), idNum);
+    return this.userService.userInfo(header.toString(), username);
   }
 
   @Get('check/login/:input')
@@ -207,6 +205,14 @@ export class UserController {
       req.headers.authorization.split(' ')[1],
     );
     return await this.userService.removeFriend(id, payload.id);
+  }
+
+  @Put('blockUsr/:username')
+  async blockFriendUsr(@Param('username') username: string, @Req() req: any) {
+    const payload: any = this.jwtService.decode(
+      req.headers.authorization.split(' ')[1],
+    );
+    return await this.userService.blockFriendUsr(username, payload.id);
   }
 
   @Put('block/:id')
