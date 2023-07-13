@@ -170,6 +170,15 @@ export class UserController {
   }
 
   @UseGuards(TokenGuard)
+  @Get('friends')
+  async getFriends(@Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return await this.userService.getFriends(payload.id);
+  }
+
+  @UseGuards(TokenGuard)
   @Get('notifs')
   async getNotifs(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
