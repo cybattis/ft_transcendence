@@ -69,13 +69,14 @@ export class GameService implements OnModuleInit {
     user1: User,
     user2: User,
     ranked: GameType,
+    score: { u1: number; u2: number },
   ): Promise<void> {
     await this.userRepository
       .createQueryBuilder()
       .update(User)
       .set({
         totalGameWon: user1.totalGameWon + 1,
-        xp: user1.xp + 150,
+        xp: user1.xp + 200 + 50 + score.u1 * 5,
       })
       .where('id = :id', { id: user1.id })
       .execute();
@@ -83,10 +84,39 @@ export class GameService implements OnModuleInit {
       .createQueryBuilder()
       .update(User)
       .set({
-        xp: user2.xp + 100,
+        xp: user2.xp + 200 + score.u2 * 5,
       })
       .where('id = :id', { id: user2.id })
       .execute();
+
+    if (
+      (user1.level === 1 && user1.xp > 1000) ||
+      user1.xp > 1000 * user1.level + user1.level * 200
+    ) {
+      await this.userRepository
+        .createQueryBuilder()
+        .update(User)
+        .set({
+          level: user1.level + 1,
+        })
+        .where('id = :id', { id: user1.id })
+        .execute();
+    }
+
+    if (
+      (user2.level === 1 && user2.xp > 1000) ||
+      user2.xp > 1000 * user2.level + user2.level * 200
+    ) {
+      await this.userRepository
+        .createQueryBuilder()
+        .update(User)
+        .set({
+          level: user2.level + 1,
+        })
+        .where('id = :id', { id: user2.id })
+        .execute();
+    }
+
     if (ranked === GameType.RANKED) {
       await this.userRepository
         .createQueryBuilder()
