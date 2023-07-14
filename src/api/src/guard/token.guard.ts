@@ -13,14 +13,12 @@ export class TokenGuard implements CanActivate {
 
     if (!token) {
       console.log(`No token: ${request.url}`);
-      // throw new ForbiddenException('Token missing');
       return false;
     }
 
     if (this.authService.validateToken(token)) return true;
     else {
       console.log(`Invalid token: ${request.url}`);
-      // throw new ForbiddenException('Token expired');
       return false;
     }
   }
