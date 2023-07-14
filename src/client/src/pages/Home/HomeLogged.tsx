@@ -85,9 +85,8 @@ function MatchmakingButton(props: {
       MatchmakingClient.offMatchFound(matchFoundCallback);
       MatchmakingClient.offgameStarted(handleGameStarted);
 
-      if (countdownTimeout)
-        clearTimeout(countdownTimeout);
-    }
+      if (countdownTimeout) clearTimeout(countdownTimeout);
+    };
   }, [timeLeft, state, props]);
 
   const handleClick = () => {
@@ -280,7 +279,7 @@ function HomeStatContainerDesktop(props: { data: UserInfo }) {
     <div className="home-stats-container-desktop">
       <LastMatch data={props.data} />
       <div className={"home-stat-box"}>
-        <h5>Game played</h5>
+        <h5>Matches</h5>
         <hr className={"user-profile-hr"} />
         <div>{props.data.games?.length}</div>
       </div>
@@ -300,7 +299,7 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
       <div id={"hmc-g1"}>
         <LastMatch data={props.data} />
         <div className={"home-stat-box"}>
-          <h5>Game played</h5>
+          <h5>Matches</h5>
           <hr className={"user-profile-hr"} />
           <div>{props.data.games?.length}</div>
         </div>
@@ -319,6 +318,7 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
 
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
+  const xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
 
   return (
     <div id={"HomeUserInfo"} className="userProfile_container">
@@ -327,7 +327,7 @@ function UserProfile(props: { data: UserInfo }) {
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
-          <p>{data.xp} xp</p>
+          <p>{xp} XP</p>
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
