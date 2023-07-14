@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 echo "Getting IP address..."
-  LOCAL_IP=$(curl -s ifconfig.me)
+LOCAL_IP=$(curl -s ifconfig.me)
 
 #LOCAL_IP=127.0.0.1
 

@@ -85,9 +85,10 @@ function MatchmakingButton(props: {
       MatchmakingClient.offMatchFound(matchFoundCallback);
       MatchmakingClient.offgameStarted(handleGameStarted);
 
-      if (countdownTimeout) clearTimeout(countdownTimeout);
-    };
-  }, []);
+      if (countdownTimeout)
+        clearTimeout(countdownTimeout);
+    }
+  }, [timeLeft, state, props]);
 
   const handleClick = () => {
     let decoded: JwtPayload | null = null;

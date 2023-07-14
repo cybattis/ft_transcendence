@@ -13,7 +13,7 @@ export default class Paddle {
     this.size = new Vec2(primarySize / 20, primarySize / 5);
 
     if (isLeft)
-      this.pos = new Vec2(canvasWidth / 20, canvasHeight / 2 - this.size.y / 2);
+      this.pos = new Vec2(canvasWidth / 20 - this.size.x, canvasHeight / 2 - this.size.y / 2);
     else
       this.pos = new Vec2(canvasWidth - canvasWidth / 20, canvasHeight / 2 - this.size.y / 2);
   }

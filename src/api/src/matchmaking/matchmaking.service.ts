@@ -290,7 +290,7 @@ export class MatchmakingService {
       ids: [player1.id, player2.id],
       scoreP1: 0,
       scoreP2: 0,
-      status: GameStatus.IN_PROGRESS,
+      status: GameStatus.WAITING_FOR_PLAYERS,
     };
 
     try {
@@ -311,7 +311,7 @@ export class MatchmakingService {
       ids: [player1.id, player2.id],
       scoreP1: 0,
       scoreP2: 0,
-      status: GameStatus.IN_PROGRESS,
+      status: GameStatus.WAITING_FOR_PLAYERS,
     };
 
     try {

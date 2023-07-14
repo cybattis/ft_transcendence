@@ -8,8 +8,9 @@ import { Game } from './entity/Game.entity';
 import { Repository } from 'typeorm';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from '../user/user.service';
-import { GameBodyDto, GameType } from '../type/game.type';
+import { GameBodyDto, GameStatus, GameType } from '../type/game.type';
 import { ModuleRef } from '@nestjs/core';
+import { ScoreUpdate } from "../multiplayer/types/multiplayer.types";
 
 @Injectable()
 export class GameService implements OnModuleInit {
@@ -121,5 +122,40 @@ export class GameService implements OnModuleInit {
       games[i] = game as Game;
     }
     return games;
+  }
+
+  /*
+    * Update a game score
+    *
+    * @param gameId The id of the game
+    * @param scoreUpdate The updated score
+   */
+  public async updateGameScore(gameId: number, scoreUpdate: ScoreUpdate): Promise<void> {
+    await this.gameRepository
+      .createQueryBuilder()
+      .update(Game)
+      .set({
+        scoreP1: scoreUpdate.player1Score,
+        scoreP2: scoreUpdate.player2Score,
+      })
+      .where('id = :id', { id: gameId })
+      .execute();
+  }
+
+  /*
+    * Update a game status
+    *
+    * @param gameId The id of the game
+    * @param status The updated status
+   */
+  public async updateGameStatus(gameId: number, status: GameStatus): Promise<void> {
+    await this.gameRepository
+      .createQueryBuilder()
+      .update(Game)
+      .set({
+        status: status,
+      })
+      .where('id = :id', { id: gameId })
+      .execute();
   }
 }
