@@ -67,17 +67,13 @@
     background-color: rgb(0, 0, 0, 0.5);
 }
 
-@media screen and (width < 1050px) {
+@media screen and (width <= 1050px) {
     .nav-style {
         display: none;
     }
 }
 
 @media screen and (width > 1050px) {
-    .nav-style {
-
-    }
-
     .nav-style-mobile {
         display: none;
     }

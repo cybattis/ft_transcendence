@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import "./Friends.css";
 import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
+import { AuthContext } from "../Auth/dto";
+import { ErrorContext } from "../Modal/modalContext";
 
 //Mettre un useState refresh automatique
 function Online(data: any) {
@@ -21,6 +23,8 @@ function Offline() {
 }
 
 function FriendsList() {
+  const { setErrorMessage } = useContext(ErrorContext);
+  const { setAuthToken } = useContext(AuthContext);
   const [dataOnline, setDataOnline] = useState([
     {
       nickname: "",
@@ -53,6 +57,16 @@ function FriendsList() {
         })
         .then((res) => {
           setDataOnline(res.data);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
         });
     }
     async function fetchDataOffline() {
@@ -64,6 +78,16 @@ function FriendsList() {
         })
         .then((res) => {
           setDataOffline(res.data);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
         });
     }
     fetchDataOnline();

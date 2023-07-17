@@ -8,7 +8,21 @@
     margin-bottom: 40px;
 }
 
+.profile-infobox-background {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    border-radius: 8px;
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgb(27, 30, 36, 0.75) 100%);
+}
+
 .profile-infobox {
+    position: relative;
     box-sizing: border-box;
 
     display: flex;
@@ -18,10 +32,6 @@
 
     align-items: center;
     justify-content: center;
-
-    border-radius: 8px;
-    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgb(27, 30, 36, 0.75) 100%);
 }
 
 .profile-infobox #info {
@@ -36,11 +46,16 @@
         flex-direction: row;
 
         max-width: 50%;
+        min-width: 630px;
 
         margin-top: 30px;
         padding: 15px 30px;
 
         gap: 25px;
+    }
+
+    .profile-infobox-background {
+
     }
 }
 
@@ -65,7 +80,9 @@
 }
 
 .profile-infobox #nickname {
-    margin-bottom: 30px;
+    font-size: max(4vw, 42px);
+
+    margin-bottom: 50px;
     align-content: baseline;
 }
 
@@ -73,14 +90,13 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    align-items: center;
 
     width: 100%;
 
     margin-top: 5px;
     margin-bottom: 25px;
     padding: 10px 0;
-
-    gap: 50px;
 
     border-radius: 8px;
     filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
@@ -90,17 +106,18 @@
 @media screen and (width > 630px) {
     .profile-stats {
         max-width: 50%;
-        min-width: 613px;
+        min-width: 630px;
+        gap: 50px;
     }
 }
 
 @media screen and (width < 630px) {
     .profile-stats {
-
+        gap: 20px;
     }
 }
 
-#elo, #game-played, #win-rate {
+#elo, #game-played, #winrate, #level, #xp {
     display: flex;
     flex-direction: column;
 
@@ -130,7 +147,7 @@
 @media screen and (width > 630px) {
     .games-stats-box {
         max-width: 50%;
-        min-width: 613px;
+        min-width: 630px;
     }
 
     #games-stats-title {
@@ -170,17 +187,29 @@
     margin-bottom: 10px;
 }
 
+#friend-request {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
 .friendButton {
-    width: 100px;
-    height: 50px;
-    margin-left: 20px;
-    padding: 0px 5px;
-    border-radius: 8px;
-    color: white;
-    background-color: var(--purple-wave);
+    box-sizing: border-box;
+
     justify-content: center;
     align-items: center;
-    font-weight: 1000;
+
+    width: max-content;
+    min-width: 32px;
+    height: max-content;
+    min-height: 32px;
+
+    margin-left: 10px;
+    border-radius: 8px;
+
+    color: var(--white);
+    background-color: var(--purple-wave);
+    font-weight: bold;
     cursor: pointer;
 }
 

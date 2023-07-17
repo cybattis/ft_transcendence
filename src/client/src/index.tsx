@@ -45,7 +45,8 @@ const router = createBrowserRouter([
                 apiBaseURL + `user/profile/${params.id}`,
                 {
                   headers: {
-                    token: localStorage.getItem("token") || "",
+                    Authorization:
+                      "Bearer " + localStorage.getItem("token") || "",
                   },
                 }
               );
@@ -65,7 +66,8 @@ const router = createBrowserRouter([
             loader: async ({ request, params }) => {
               const res = await fetch(apiBaseURL + "user/leaderboard", {
                 headers: {
-                  token: localStorage.getItem("token") || "",
+                  Authorization:
+                    "Bearer " + localStorage.getItem("token") || "",
                 },
               });
               if (res.status === 403) localStorage.clear();
@@ -78,7 +80,8 @@ const router = createBrowserRouter([
             loader: async ({ request, params }) => {
               const res = await fetch(apiBaseURL + "user/settings/", {
                 headers: {
-                  token: localStorage.getItem("token") || "",
+                  Authorization:
+                    "Bearer " + localStorage.getItem("token") || "",
                 },
               });
               if (res.status === 403) localStorage.clear();

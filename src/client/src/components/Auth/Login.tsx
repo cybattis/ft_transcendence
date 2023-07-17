@@ -5,7 +5,6 @@ import InputForm from "../InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import { AuthContext, FormContext } from "./dto";
-import { Navigate } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
 
@@ -60,19 +59,20 @@ export default function Login() {
       .post(apiBaseURL + "auth/signin", user)
       .then((res) => {
         setLoginForm(false);
-        if (res.data) {
-          localStorage.setItem("token", res.data.token);
-          setAuthToken(res.data.token);
-        } else if (!res.data) {
+        if (res.data === "code") {
           localStorage.setItem("email", user.email);
           setCodeForm(true);
+        } else {
+          localStorage.setItem("token", res.data.token);
+          setAuthToken(res.data.token);
         }
         return;
       })
       .catch((error) => {
-        if (error.response.status === 401) {
-          setErrorMessage(error.response.data.message);
-        } else setErrorMessage("Server busy... try again");
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else setErrorMessage(error.response.data.message + "!");
       });
   };
 

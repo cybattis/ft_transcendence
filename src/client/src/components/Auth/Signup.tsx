@@ -9,8 +9,6 @@ import { apiBaseURL } from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
 import { MessageModal } from "../Modal/MessageModal";
 import { ErrorContext } from "../Modal/modalContext";
-import { ErrorResponse } from "../../type/client.type";
-import { HandleError } from "../HandleError";
 
 interface UserCredential {
   nickname: string;
@@ -23,7 +21,6 @@ interface UserCredential {
 export default function Signup() {
   const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
   const { setErrorMessage } = useContext(ErrorContext);
-
   const [errorInput, setErrorInput] = useState("");
   const [message, setMessage] = useState("");
 
@@ -64,8 +61,8 @@ export default function Signup() {
     } else if (!validator.isAlpha(inputs.nickname)) {
       setErrorInput("Can't have any special chracters in your Nickname.");
       isValid = false;
-    } else if (inputs.nickname.length > 20) {
-      setErrorInput("Nickname is too long. (max 20 characters)");
+    } else if (inputs.nickname.length > 15) {
+      setErrorInput("Nickname is too long. (max 15 characters)");
       isValid = false;
     } else if (await inUse("login", inputs.nickname)) {
       setErrorInput("Nickname already in use.");
@@ -91,20 +88,14 @@ export default function Signup() {
     } else if (!inputs.password) {
       setErrorInput("Please enter a Password.");
       isValid = false;
-      //} else if (!validator.isStrongPassword(inputs.password)) {
-      //  setErrorInput("Password is not strong enough.");
-      //  isValid = false;
     } else if (
-      inputs.confirmPassword &&
-      inputs.password !== inputs.confirmPassword
+      (inputs.confirmPassword && inputs.password !== inputs.confirmPassword) ||
+      (inputs.password && inputs.confirmPassword !== inputs.password)
     ) {
       setErrorInput("Password and Confirm Password does not match.");
       isValid = false;
     } else if (!inputs.confirmPassword) {
       setErrorInput("Please enter a Confirm Password.");
-      isValid = false;
-    } else if (inputs.password && inputs.confirmPassword !== inputs.password) {
-      setErrorInput("Password and Confirm Password does not match.");
       isValid = false;
     }
     return isValid;
@@ -135,7 +126,10 @@ export default function Signup() {
         setMessage("Please check your email to confirm your account");
       })
       .catch((error) => {
-        return <HandleError error={error} />;
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else setErrorMessage(error.response.data.message + "!");
       });
   };
 

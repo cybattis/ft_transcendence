@@ -20,7 +20,6 @@ import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import jwt_decode from 'jwt-decode';
 import * as process from 'process';
 
 @Injectable()
@@ -107,7 +106,8 @@ export class AuthService {
       if (isVerified) {
         if ((await this.usersService.authActivated(user.email)) != null) {
           if (await bcrypt.compare(user.password, foundUser.password)) {
-            return await this.mailService.sendCodeConfirmation(user.email);
+            await this.mailService.sendCodeConfirmation(user.email);
+            return 'code';
           }
           throw new UnauthorizedException('Incorrect email or password');
         } else if (await bcrypt.compare(user.password, foundUser.password)) {

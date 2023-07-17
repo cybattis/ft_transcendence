@@ -27,7 +27,7 @@ export class IntraSignupDto {
 export class SignupDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(20)
+  @MaxLength(15)
   nickname: string;
 
   @IsString()

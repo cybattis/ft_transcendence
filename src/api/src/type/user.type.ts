@@ -21,3 +21,10 @@ export interface UserSettings {
   lastname: string;
   email: string;
 }
+
+export interface UserFriend {
+  FriendsId: number[];
+  RequestedId: number[];
+  blockedId: number[];
+  BlockedById: number[];
+}

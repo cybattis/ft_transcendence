@@ -3,9 +3,8 @@ import "./Profile.css";
 import axios from "axios";
 import { io } from "socket.io-client";
 import { Navigate, useLoaderData } from "react-router-dom";
-import { UserInfo } from "../../type/user.type";
+import { UserFriend, UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
-import { XPBar } from "../../components/XPBar/XPBar";
 import {
   GameStatsHeader,
   GameStatsItem,
@@ -18,19 +17,26 @@ import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { JwtPayload } from "../../type/client.type";
 
-function RemoveFriend(data: any) {
-  const [isMe, setIsMe] = useState(false);
+enum relationStatus {
+  NONE,
+  ME,
+  FRIEND,
+  REQUESTED,
+  BLOCKED,
+}
 
+interface FriendRequestProps {
+  data: UserInfo;
+  status: relationStatus;
+  setStatus: (status: relationStatus) => void;
+}
+
+function BlockUser(props: FriendRequestProps) {
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
 
-  useEffect(() => {
-    if (payload.id === data.data.id.toString()) setIsMe(true);
-  }, [data.data.id, payload.id]);
-
-  const handleRemoveButton = async () => {
+  const handleUnblockButton = async () => {
     await axios
-      .put(apiBaseURL + `user/remove/${data.data.id}`, null, {
+      .put(apiBaseURL + `user/unblock/${props.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -42,7 +48,7 @@ function RemoveFriend(data: any) {
 
   const handleBlockButton = async () => {
     await axios
-      .put(apiBaseURL + `user/block/${data.data.id}`, null, {
+      .put(apiBaseURL + `user/block/${props.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,101 +58,19 @@ function RemoveFriend(data: any) {
       });
   };
 
-  //Si jamais la target refresh sa page et pas nous notifs pas envoye
-  if (!isMe && !data.data.blockedId.includes(parseInt(payload.id))) {
+  if (props.status !== relationStatus.BLOCKED) {
     return (
       <>
-        <button
-          className="friendButton"
-          type="button"
-          onClick={handleRemoveButton}
-        >
-          Remove Friend
-        </button>
         <button
           className="friendButton"
           type="button"
           onClick={handleBlockButton}
         >
-          Block Friend
+          BLOCK
         </button>
       </>
     );
-  }
-  return <></>;
-}
-
-// TODO: ?
-function isBlocked(blockList: any, id: number) {
-  for (let i = 0; blockList[i]; i++) {
-    if (blockList[i] == id) return true;
-  }
-  return false;
-}
-
-function AddFriend(data: any) {
-  const socketRef = useRef<any>(null);
-  const [isMe, setIsMe] = useState(false);
-
-  const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
-
-  useEffect(() => {
-    if (
-      data.data.id &&
-      (payload.id === data.data.id || payload.id === data.data.id.toString())
-    )
-      setIsMe(true);
-    socketRef.current = io(apiBaseURL);
-  }, []);
-
-  if (!data.data.requestedId || !data.data.blockedById || !data.data.id)
-    return <></>;
-
-  const handleButton = async () => {
-    await axios
-      .put(apiBaseURL + `user/request/${data.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        const name: string = payload.nickname;
-        const mess = { friend: data, from: name };
-        socketRef.current.emit("friendRequest", mess);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const handleUnblockButton = async () => {
-    await axios
-      .put(apiBaseURL + `user/unblock/${data.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  if (
-    !isMe &&
-    data.data.requestedId &&
-    data.data.blockedById &&
-    !data.data.requestedId.includes(parseInt(payload.id)) &&
-    !data.data.blockedById.includes(parseInt(payload.id))
-  ) {
-    return (
-      <>
-        <button className="friendButton" type="button" onClick={handleButton}>
-          Add Friend
-        </button>
-      </>
-    );
-  } else if (data.data.blockedById.includes(parseInt(payload.id))) {
+  } else {
     return (
       <>
         <button
@@ -154,31 +78,137 @@ function AddFriend(data: any) {
           type="button"
           onClick={handleUnblockButton}
         >
-          Unblock
+          UNBLOCK
         </button>
       </>
     );
   }
-  return <></>;
+}
+
+function FriendRequest(props: FriendRequestProps) {
+  const socketRef = useRef<any>(null);
+  const token = localStorage.getItem("token");
+  const payload: JwtPayload = jwt_decode(token as string);
+
+  useEffect(() => {
+    socketRef.current = io(apiBaseURL);
+    console.log("WS Connected: ", socketRef.current.connected);
+  }, []);
+
+  const handleAddFriend = async () => {
+    await axios
+      .put(apiBaseURL + `user/request/${props.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        const name: string = payload.nickname;
+        const mess = { friend: props.data, from: name };
+        socketRef.current.emit("friendRequest", mess);
+        props.setStatus(relationStatus.REQUESTED);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handleRemoveButton = async () => {
+    await axios
+      .put(apiBaseURL + `user/remove/${props.data.id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        props.setStatus(relationStatus.NONE);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  if (props.status === relationStatus.NONE) {
+    return (
+      <>
+        <button
+          className="friendButton"
+          type="button"
+          onClick={handleAddFriend}
+        >
+          ADD FRIEND
+        </button>
+      </>
+    );
+  } else if (props.status === relationStatus.FRIEND) {
+    return (
+      <>
+        <button
+          className="friendButton"
+          type="button"
+          onClick={handleRemoveButton}
+        >
+          REMOVE FRIEND
+        </button>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <button className="friendButton">PENDING...</button>
+      </>
+    );
+  }
 }
 
 export function Profile() {
   let data = useLoaderData() as UserInfo;
+  const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+  const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
 
   const token = localStorage.getItem("token");
   let payload: JwtPayload | null = null;
   if (token) payload = jwt_decode(token as string);
 
-  const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
-
-  const [isFriend, setIsFriend] = useState(false);
+  function checkFriendStatus(meData: UserFriend) {
+    if (!payload) return;
+    console.log(payload.id, data.id);
+    if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
+    else if (
+      meData.FriendsId &&
+      meData.FriendsId.includes(parseInt(payload.id))
+    )
+      setFriendStatus(relationStatus.FRIEND);
+    else if (
+      meData.RequestedId &&
+      meData.RequestedId.includes(parseInt(payload.id))
+    )
+      setFriendStatus(relationStatus.REQUESTED);
+    else if (
+      meData.blockedId &&
+      meData.blockedId.includes(parseInt(payload.id))
+    )
+      setFriendStatus(relationStatus.BLOCKED);
+    else setFriendStatus(relationStatus.NONE);
+  }
 
   useEffect(() => {
-    if (!payload) return;
-    if (data.friendsId && data.friendsId.includes(parseInt(payload.id)))
-      setIsFriend(true);
-  }, []);
+    async function fetchData() {
+      axios
+        .get(apiBaseURL + `user/friends`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          console.log(res.data);
+          checkFriendStatus(res.data);
+        });
+    }
+
+    fetchData().then(() => {});
+  }, [checkFriendStatus]);
 
   if (token === null) {
     setAuthToken(null);
@@ -188,50 +218,52 @@ export function Profile() {
 
   const winrate: number = calculateWinrate(data);
 
-  if (
-    payload &&
-    data.blockedById &&
-    data.blockedId.includes(parseInt(payload.id))
-  ) {
-    return (
-      <div className="blocked">
-        <h3>
-          This User Blocked you. You cannot visit his profilePage anymore.
-        </h3>
-      </div>
-    );
-  }
-
   return (
     <div className={"profile-page"}>
-      <div className={"profile-infobox"}>
-        <Avatar size="200px" img={data.avatarUrl} />
-        <div id="info">
-          <div id="header">
-            <h1 id={"nickname"}>{data.nickname}</h1>
-            {!isFriend ? (
-              <AddFriend data={data} />
-            ) : (
-              <RemoveFriend data={data} />
-            )}
+      <div className={"profile-infobox-background"}>
+        <div className={"profile-infobox"}>
+          <Avatar size="200px" img={data.avatarUrl} />
+          <div id="info">
+            <div id="header">
+              <h1 id={"nickname"}>{data.nickname}</h1>
+            </div>
           </div>
-          <div>LVL {data.level}</div>
-          <p>{data.xp} xp</p>
-          <XPBar xp={data.xp} lvl={data.level} />
+          {friendStatus !== relationStatus.ME ? (
+            <div id={"friend-request"}>
+              <FriendRequest
+                data={data}
+                status={friendStatus}
+                setStatus={setFriendStatus}
+              />
+              <BlockUser
+                data={data}
+                status={friendStatus}
+                setStatus={setFriendStatus}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
       <div className={"profile-stats"}>
+        <div id={"level"}>
+          <div>Level</div>
+          <div>{data.level}</div>
+        </div>
+        <div id={"xp"}>
+          <div>XP</div>
+          <div>{data.xp}</div>
+        </div>
         <div id={"elo"}>
           <div>ELO</div>
           <div>{data.ranking}</div>
         </div>
         <div id={"game-played"}>
-          <div>Game played</div>
+          <div>Matches</div>
           <div>{data.games?.length}</div>
         </div>
         <div id={"winrate"}>
           <div>Winrate</div>
-          <div>{winrate}%</div>
+          <div>{winrate.toFixed()}%</div>
         </div>
       </div>
       <div className={"games-stats-box"}>

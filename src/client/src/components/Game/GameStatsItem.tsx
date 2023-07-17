@@ -36,7 +36,7 @@ export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
       <Link to={`/profile/${opponentId}`} className={"opponent-profile"}>
         <div id={"opponent-name"}>
           <Avatar size={"30px"} img={opponentAvatar} />
-          {name}
+          <div id={"gi-name"}>{name}</div>
         </div>
       </Link>
     );
