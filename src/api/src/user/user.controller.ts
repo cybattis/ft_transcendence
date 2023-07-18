@@ -172,7 +172,8 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       req.headers.authorization.split(' ')[1],
     );
-    return await this.userService.getNotifs(payload.id);
+    if (payload)
+      return await this.userService.getNotifs(payload.id);
   }
 
   @Get('friends/online')
@@ -191,20 +192,27 @@ export class UserController {
     return await this.userService.getOfflineFriendsList(payload.id);
   }
 
+  
   @Put('request/:id')
   async requestFriend(@Param('id') id: number, @Req() req: any) {
     const payload: any = this.jwtService.decode(
       req.headers.authorization.split(' ')[1],
-    );
-    return await this.userService.requestFriend(id, payload.id);
-  }
-
+      );
+      return await this.userService.requestFriend(id, payload.id);
+    }
+    
   @Put('remove/:id')
   async removeFriend(@Param('id') id: number, @Req() req: any) {
     const payload: any = this.jwtService.decode(
       req.headers.authorization.split(' ')[1],
-    );
-    return await this.userService.removeFriend(id, payload.id);
+      );
+      return await this.userService.removeFriend(id, payload.id);
+    }
+      
+  @UseGuards(TokenGuard)
+  @Get('blockedList/:id')
+  async getBlockedList(@Param('id') id: number, @Headers('token') header: Headers) {
+      return await this.userService.getBlockedList(id);
   }
 
   @Put('blockUsr/:username')

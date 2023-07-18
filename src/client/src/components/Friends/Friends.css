@@ -1,21 +1,4 @@
-.friendList {
-  box-sizing: border-box;
-
-  display: flex;
-  flex-direction: column;
-  flex: 1 2;
-
-  min-width: 120px;
-  text-align: center;
-
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-  background: var(--black);
-
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.friend {
+.friendLink {
   display: flex;
   color: white;
 }
@@ -71,4 +54,13 @@
   height: 22px;
   align-items: center;
   margin-left: 15px;
+}
+
+.friendList {
+  box-sizing: border-box;
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+  background: var(--black);
+  width: 200px;
+  text-align: center;
+  overflow-y: scroll;
 }

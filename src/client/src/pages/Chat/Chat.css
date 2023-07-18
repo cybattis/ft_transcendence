@@ -161,6 +161,23 @@
     border-radius: 20px;
 }
 
+.join-form {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    min-width: max-content;
+
+    align-items: center;
+    justify-items: center;
+
+    padding: 1em 2em 1em 2em;
+
+    background-color: var(--bg);
+    border: 2px solid var(--purple-darker);
+    border-radius: 20px;
+}
+
 .input-join {
     border-radius: 10px;
 }

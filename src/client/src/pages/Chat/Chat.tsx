@@ -4,11 +4,6 @@ import { ChatInterface } from "./Interface/chat.interface";
 import ChannelList from "./List/ChannelList";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
-import DoPrivateMessage from "./ActionChannel/DoPrivateMessage";
-import DoOperator from "./ActionChannel/DoOperator";
-import DoBanChannel from "./ActionChannel/DoBanChannel";
-import DoKickChannel from "./ActionChannel/DoKickChannel";
-import DoBlockUsers from "./ActionChannel/DoBlockUsers";
 import { NotifContext } from '../../components/Auth/dto';
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
@@ -39,17 +34,26 @@ function Quit(props: {canal: string}) {
   return <></>;
 }
 
+//Mettre message dans chat quand qqn join, quit etc
+//Mettre pop up pour celui qui se fait ban ou kick
+//Rendre qqn muet avec un bouton si op pendant un certain temps
+//Faire check de list channel si il est pas ban
+
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
   const [post, setPost] = useState<ChatInterface[]>([]);
+  const [messages, setMessages] = useState<ChatInterface[]>([]);
   const socketRef = useRef<any>(null);
   const blocedList: string[] = [];
   const { setNotif } = useContext(NotifContext);
   const [joinForm, setJoinForm] = useState(false);
+  const [banForm, setBanForm] = useState(false);
   const [buttons, setButtons] = useState(false);
   const [usr, setUsr] = useState("");
+  const [myBlockedList, setMyBlockedList] = useState<string[]>([]);
+  const [isOpe, setIsOpe] = useState(false);
 
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
@@ -62,6 +66,21 @@ export default function ChatClient() {
     } catch (e) {
       console.log(`Decode error ${e}`);
     }
+  }
+
+  async function getBlockedList() {
+    await axios.get(apiBaseURL + "user/blockedList/" + payload.id,
+      {
+        headers: {
+        token: token,
+        }
+      },)
+      .then((res) => {
+        setMyBlockedList(res.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }
 
   const handleButton = (user: string) => {
@@ -80,11 +99,15 @@ export default function ChatClient() {
 
   const handleButtonForm = () => {
     if (buttons)
+    {
       setButtons(false);
+      setBanForm(false);
+    }
     else
     {
       setButtons(true);
       setJoinForm(false);
+      setBanForm(false);
     }
   }
 
@@ -102,36 +125,143 @@ export default function ChatClient() {
       });
   }
 
+  const handleKick = async () => {
+    const channel = takeActiveCanal();
+    const sendKick = {
+      cmd: "kick",
+      username: username,
+      target: usr,
+      channel: channel,
+    };
+    ChatClientSocket.onKick(sendKick);
+  }
+
+  function Ban() {
+    const [time, setTime] = useState("");
+    const [errors, setErrors] = useState("");
+
+    const handleBan = async (e: any) => {
+      e.preventDefault();
+
+      if (!time || !time[0])
+      {
+        setErrors("Enter a time limit.")
+        return ;
+      }
+
+      const channel = takeActiveCanal();
+      const sendBan = {
+        cmd: "ban",
+        username: username,
+        target: usr,
+        channel: channel,
+        time: time,
+      };
+      ChatClientSocket.onBan(sendBan);
+      setButtons(false);
+      setBanForm(false);
+    }
+
+    function handleChange(e: any) {
+      e.preventDefault();
+  
+      const value = e.target.value;
+      setTime(value);
+    }
+
+    return <div className="ban-form">
+      <form method="get" onSubmit={handleBan}>
+        <h4>Ban {usr}</h4>
+        {errors ? <p className="error"> {errors} </p> : null}
+        <div className="test">
+          <label>
+            Time of ban(in ms)<br />
+            <input
+              type="text"
+              name="time"
+              value={time}
+              className="input-join"
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+        <button type="submit" className="submitButton">
+                Ban
+        </button>
+      </form>
+    </div>
+  }
+
+  const handleBanForm = async () => {
+    if (banForm)
+      setBanForm(false);
+    else
+      setBanForm(true);
+  }
+
   function Buttons() {
     const [me, setMe] = useState(false);
+    const [isOpe, setIsOpe] = useState(false);
 
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (buttons) setButtons(false);
+        if (buttons)
+        {
+          setButtons(false);
+          if (banForm)
+            setBanForm(false);
+        }
       }
     };
+
+    async function getOpeList() {
+      let name = takeActiveCanal();
+      if (name[0] === '#')
+        name = name.slice(1);
+
+      await axios.get(apiBaseURL + "chat/channelName/" + name, {
+        headers: {
+          token: token,
+        }
+      })
+      .then((res) => {
+        console.log(res.data.operator);
+        if (res.data.operator.includes(payload.username))
+          setIsOpe(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    }
   
     useEffect(() => {
+      getOpeList();
+      
       if (usr === payload.username)
         setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     });
   
+    console.log(isOpe);
+
     return <div className="buttons-form">
       <form method="get" onSubmit={handleButtonForm}>
         <h4>Choose your action <br /> on {usr}</h4>
         {!me && <button className="chat-buttons" onClick={handleBlock}>Block</button>}
+        {!me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>
+        && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
         <Link to={`/profile/${usr}`}>
           <button className="chat-buttons">Profile</button>
         </Link>
       </form>
+      {banForm && <Ban />}
     </div>
   }
 
-  function ChatMap({post} : {post : ChatInterface[]}) {
+  function ChatMap({messages} : {messages : ChatInterface[]}) {
 
-    const filteredElements = post
+    const filteredElements = messages
       .filter((rcv: ChatInterface) => rcv.channel === takeActiveCanal())
       .map((rcv: ChatInterface, key: number) => (
       rcv.emitter === username ? (
@@ -184,7 +314,17 @@ export default function ChatClient() {
       {
         setErrorInput("Enter a channel Name");
       }
-    
+      else
+      {
+        for (let i = 0; state.channel[i]; i ++)
+        {
+          if (state.channel[i] === '#')
+          {
+            setErrorInput("Can't contain '#'.")
+            return ;
+          }
+        }
+      }
       if (state.pwd[0])
       {
         const exists = await axios.get(apiBaseURL + "chat/channel/find/" + state.channel + "/" + state.pwd)
@@ -195,8 +335,7 @@ export default function ChatClient() {
         }
       else
       {
-        console.log(`steep 2`);
-        const exists = await axios.get(apiBaseURL + "chat/channel/" + state.channel);
+        const exists = await axios.get(apiBaseURL + "chat/channel/findName/" + state.channel);
         if (exists.data.status === 404 && exists.data.name === "NotFoundException")
           sendForm(state.channel, state.pwd);
         else if (exists.data.status === 404 && exists.data.name === "NotFoundException")
@@ -240,7 +379,6 @@ export default function ChatClient() {
   }
   
   function Join() {
-  
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         if (joinForm) setJoinForm(false);
@@ -279,17 +417,23 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const messageCallBack = async (data: {sender: string, msg: string, channel: string, blockedChat: any}) => {
-      let addressInfo = "http://127.0.0.1:5400/chat/message/" + data.channel;
+    getBlockedList();
+
+    const messageCallBack = async (data: {sender: string, msg: string, channel: string}) => {
+      let addressInfo = apiBaseURL + "chat/message/" + data.channel;
       await axios.get(addressInfo)
       .then(response => {
         const newData: ChatInterface[] = [];
         for (let i = 0; response.data[i]; i ++)
         {
-          // if (!data.blockedChat.includes(response.data[i].emitter))
+          if (response.data[i].emitter === payload.username)
             newData.push(response.data[i]);
+          else if (myBlockedList && myBlockedList.includes(response.data[i].emitter))
+            continue ;
+          else
+            newData.push(response.data[i])
         }
-        setPost(newData);
+        setMessages(newData);
       })
       setRecvMess(data.msg);
     }
@@ -431,17 +575,6 @@ export default function ChatClient() {
     ChatClientSocket.onBan(sendBan);
   };
 
-  const KickForm = (target: string) => {
-    const channel = takeActiveCanal();
-    const sendKick = {
-      cmd: "kick",
-      username: username,
-      target: target,
-      channel: channel,
-    };
-    ChatClientSocket.onKick(sendKick);
-  };
-
   function takeMess(mess: string): string {
     return mess.substring(mess.indexOf("%") + 1);
   }
@@ -462,7 +595,6 @@ export default function ChatClient() {
     }
   };
 
-  //Faire en sorte que si c est moi juste voir profile et msgprv
   //Si bloque du chat bouton debloque et profile
   //Si op donner tout les boutons
 
@@ -478,7 +610,7 @@ export default function ChatClient() {
           <h3 id='canal'>{defaultChannelGen}</h3>
             <Quit canal={takeActiveCanal()}/>
           <div className="rcv-mess-container">
-            <ChatMap post={post}/>
+            <ChatMap messages={messages}/>
           </div>
           <div className='send-mess-container'>
             <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />

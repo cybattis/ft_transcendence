@@ -31,7 +31,7 @@ export default function Notifications() {
     }
 
     await axios
-      .put(apiBaseURL + "/user/accept/" + id, null, {
+      .put(apiBaseURL + "user/accept/" + id, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -98,8 +98,8 @@ export default function Notifications() {
     setNotif(true);
     return (
       <div className="notifPage">
-        <h1 className="notifTitle">Notifications</h1>
-        <ul className="list">
+        <h2 className="notifTitle">Notifications</h2>
+        <div className="list">
           {invits.map((invits) => {
             return (
               <div key={invits.id}>
@@ -128,7 +128,7 @@ export default function Notifications() {
               </div>
             );
           })}
-        </ul>
+        </div>
       </div>
     );
   } else
@@ -136,7 +136,7 @@ export default function Notifications() {
 
     return (
       <div className="noNotifTitle">
-        <h1>No Notifications</h1>
+        <h2>No Notifications</h2>
       </div>
     );
 }

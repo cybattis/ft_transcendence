@@ -40,6 +40,7 @@ export function DisconnectButton(props: { callback?: () => void }) {
 
     setAuthToken(null);
     localStorage.clear();
+    window.location.reload();
 
     await axios.put(apiBaseURL + "auth/disconnect", null, {
       headers: {
@@ -48,12 +49,12 @@ export function DisconnectButton(props: { callback?: () => void }) {
     });
   };
 
-  return (
+    return (
     <Link
-      to="/"
-      className="navLink"
-      id={"disconnectButton"}
-      onClick={handleDisconnect}
+    to="/"
+    className="navLink"
+    id={"disconnectButton"}
+    onClick={handleDisconnect}
     >
       Disconnect
     </Link>

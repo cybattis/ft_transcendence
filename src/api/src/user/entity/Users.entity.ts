@@ -86,7 +86,7 @@ export class User {
   @Column('int', { array: true, default: [] })
   requestedId: number[];
 
-  @Column('int', { array: true, default: [] })
+  @Column('varchar', { array: true, default: [] })
   blockedChat: string[];
 
   @Column('int', { array: true, default: [] })
