@@ -1,17 +1,16 @@
-.ldi-container {
-    width: 50vw;
-    min-width: max-content;
-}
+.leaderboard-item {
+    box-sizing: border-box;
 
-.leaderboardItem {
     display: flex;
     flex-direction: row;
+
+    flex: 1;
 
     align-items: center;
     justify-content: center;
 
-    width: 100%;
     height: 60px;
+    min-width: 375px;
 
     margin-bottom: 10px;
 
@@ -19,7 +18,7 @@
     border-radius: 25px;
 }
 
-.leaderboardItem:hover {
+.leaderboard-item:hover {
     box-sizing: border-box;
 
     background: var(--purple-darker);
@@ -28,64 +27,24 @@
     border: 4px solid var(--purple-wave);
 }
 
-.leaderboardItem:hover #pastille {
+.leaderboard-item:hover #pastille {
     background-color: var(--cyan);
-}
-
-#ldi-leftSide {
-    display: flex;
-    flex-direction: row;
-    flex: 1 2 0;
-
-    justify-content: left;
-    align-items: center;
-
-    height: 60px;
-    min-width: 250px;
-
-    margin-left: 40px;
-    gap: 40px;
-}
-
-#ldi-rightSide {
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    flex: 1.5 2;
-
-    justify-content: left;
-    align-items: center;
-
-    height: fit-content;
-    margin-right: 100px;
-}
-
-#ldi-winrate, #ldi-game-played, #ldi-elo {
-    box-sizing: border-box;
-    flex: 1.5 1 0;
-
-    min-width: 100px;
-
-    text-align: center;
-    justify-content: left;
-}
-
-#ldi-winrate {
-    flex: 2 1.5;
-}
-
-#ldi-game-played {
-    flex: 2 1;
 }
 
 #pastille {
     display: flex;
     flex-direction: row;
+
+    flex: 1;
+
     justify-content: center;
     align-items: center;
 
-    width: 35px;
+    min-width: 35px;
+    max-width: 35px;
     height: 35px;
+
+    margin-right: 20px;
 
     border-radius: 50%;
     background: var(--purple-wave);
@@ -95,12 +54,14 @@
     display: flex;
     flex-direction: row;
 
-    min-width: 150px;
+    flex: 1;
 
     justify-content: left;
     align-items: center;
 
-    gap: 20px;
+    max-width: 300px;
+
+    gap: 10px;
 
     text-decoration: none;
     color: var(--white);
@@ -108,4 +69,57 @@
 
 #LeaderboardProfileLink:hover {
     color: var(--cyan);
+}
+
+#ldi-winrate {
+    flex: 1 1;
+    max-width: 150px;
+    min-width: 80px;
+    text-align: left;
+    margin-right: 20px;
+}
+
+#ldi-game-played {
+    flex: 1 1;
+    max-width: 150px;
+    min-width: 50px;
+    text-align: left;
+}
+
+#ldi-elo {
+    flex: 1 1;
+    max-width: 150px;
+    min-width: 40px;
+    text-align: left;
+}
+
+@media screen and (width >= 900px) {
+    .leaderboard-item {
+        width: 900px;
+        max-width: 900px;
+    }
+
+    #LeaderboardProfileLink {
+        min-width: 150px;
+    }
+}
+
+@media screen and (width < 900px) {
+    .leaderboard-item {
+        min-width: 100vw;
+    }
+
+    #LeaderboardProfileLink {
+        min-width: 70px;
+    }
+
+    #pastille {
+        margin-left: 25px;
+    }
+}
+
+@media screen and (width < 760px) {
+    #ldi-nickname {
+        display: none;
+    }
 }

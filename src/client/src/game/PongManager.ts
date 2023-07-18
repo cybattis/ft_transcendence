@@ -1,9 +1,11 @@
 import AIOnlyPongState from "./states/AIOnlyPongState";
 import PracticePongState from "./states/PracticePongState";
+import MultiplayerPongState from "./states/MultiplayerPongState";
 
 let lastFrameTimestamp: DOMHighResTimeStamp = 0;
 let AIOnlyGameList: AIOnlyPongState[] = new Array<AIOnlyPongState>();
 let practiceGameList: PracticePongState[] = new Array<PracticePongState>();
+let multiplayerGameList: MultiplayerPongState[] = new Array<MultiplayerPongState>();
 
 let upArrowPressed: boolean = false;
 let downArrowPressed: boolean = false;
@@ -28,6 +30,9 @@ export function startPongManager() {
       practiceGameList.forEach((game) => {
         game.start();
       });
+      multiplayerGameList.forEach((game: MultiplayerPongState) => {
+        game.readyUp();
+      });
     }
   });
 
@@ -42,6 +47,11 @@ export function updatePongGames(timestamp: DOMHighResTimeStamp) {
   });
 
   practiceGameList.forEach((game) => {
+    game.update((timestamp - lastFrameTimestamp) / 1000.0, upArrowPressed, downArrowPressed);
+    game.render();
+  });
+
+  multiplayerGameList.forEach((game) => {
     game.update((timestamp - lastFrameTimestamp) / 1000.0, upArrowPressed, downArrowPressed);
     game.render();
   });
@@ -85,5 +95,20 @@ export function removePracticeGame(name: string) {
 
   if (index !== -1) {
     practiceGameList.splice(index, 1);
+  }
+}
+
+export function createNewMultiplayerGame(newGame: MultiplayerPongState) {
+  multiplayerGameList.push(newGame);
+}
+
+export function removeMultiplayerGame(name: string) {
+  let index = multiplayerGameList.findIndex((game: MultiplayerPongState) => {
+    return game.state.getName() === name;
+  });
+
+  if (index !== -1) {
+    multiplayerGameList[index].removeCallbacks();
+    multiplayerGameList.splice(index, 1);
   }
 }

@@ -1,11 +1,11 @@
-import {PongState} from "./PongState";
+import {PongLogic} from "./PongLogic";
 import Paddle from "./Paddle";
 
 export type AIDifficulty = "Easy" | "Medium" | "Hard" | "Godlike";
 
 export class PongAi {
   private canvas: HTMLCanvasElement;
-  private state: PongState;
+  private state: PongLogic;
   private paddle: Paddle;
 
   private readonly isLeft: boolean;
@@ -17,7 +17,7 @@ export class PongAi {
   private returnToCenter: boolean;
   private targetPos: number;
 
-  constructor(paddle: Paddle, difficulty: AIDifficulty, canvas: HTMLCanvasElement, state: PongState) {
+  constructor(paddle: Paddle, difficulty: AIDifficulty, canvas: HTMLCanvasElement, state: PongLogic) {
     this.canvas = canvas;
     this.state = state;
     this.paddle = paddle;

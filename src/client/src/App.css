@@ -28,11 +28,22 @@ html body {
     padding: 0;
 }
 
-h1 {
-    font-size: 67px;
-    line-height: 110%;
-    margin: 10px 0 10px 0;
-}
+
+/*@media screen and (width < 900px) {*/
+/*    h1 {*/
+/*        font-size: 47px;*/
+/*        line-height: 110%;*/
+/*        margin: 10px 0 10px 0;*/
+/*    }*/
+/*}*/
+
+/*@media screen and (width > 900px) {*/
+    h1 {
+        font-size: 67px;
+        line-height: 110%;
+        margin: 10px 0 10px 0;
+    }
+/*}*/
 
 h2 {
     font-size: 51px;

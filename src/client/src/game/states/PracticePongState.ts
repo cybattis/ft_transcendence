@@ -1,9 +1,9 @@
-import {PongState} from "../logic/PongState";
+import {PongLogic} from "../logic/PongLogic";
 import {drawText} from "../util/Utils";
 import {AIDifficulty, PongAi} from "../logic/PongAi";
 
 export default class PracticePongState {
-  public readonly state: PongState;
+  public readonly state: PongLogic;
 
   private readonly canvas: HTMLCanvasElement;
   private readonly playerSpeed: number;
@@ -11,7 +11,7 @@ export default class PracticePongState {
 
   constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
     this.canvas = canvas;
-    this.state = new PongState(name, canvas, "AI", "Player");
+    this.state = new PongLogic(name, canvas, "AI", "Player");
     this.ai = new PongAi(this.state.getLeftPaddle(), aiDifficulty, canvas, this.state);
     this.playerSpeed = canvas.height * 0.8;
   }

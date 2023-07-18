@@ -62,17 +62,17 @@ export default function ChatClient() {
   if (username === "") {
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
-      if (decoded?.username) username = decoded.username;
+      if (decoded?.nickname) username = decoded.nickname;
     } catch (e) {
       console.log(`Decode error ${e}`);
     }
   }
 
   async function getBlockedList() {
-    await axios.get(apiBaseURL + "user/blockedList/" + payload.id,
+    await axios.get(apiBaseURL + "user/blockedList",
       {
         headers: {
-        token: token,
+        Authorization: `Bearer ${token}`,
         }
       },)
       .then((res) => {
@@ -226,7 +226,7 @@ export default function ChatClient() {
       })
       .then((res) => {
         console.log(res.data.operator);
-        if (res.data.operator.includes(payload.username))
+        if (res.data.operator.includes(payload.nickname))
           setIsOpe(true);
       })
       .catch((error) => {
@@ -237,7 +237,7 @@ export default function ChatClient() {
     useEffect(() => {
       getOpeList();
       
-      if (usr === payload.username)
+      if (usr === payload.nickname)
         setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
@@ -426,7 +426,7 @@ export default function ChatClient() {
         const newData: ChatInterface[] = [];
         for (let i = 0; response.data[i]; i ++)
         {
-          if (response.data[i].emitter === payload.username)
+          if (response.data[i].emitter === payload.nickname)
             newData.push(response.data[i]);
           else if (myBlockedList && myBlockedList.includes(response.data[i].emitter))
             continue ;
@@ -529,7 +529,7 @@ export default function ChatClient() {
     } else {
       const send = {username: username, channel: channel, msg: msg}
       ChatClientSocket.onSend(send);
-      let addressInfo = "http://127.0.0.1:5400/chat/message/" + takeActiveCanal();
+      let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
       axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
@@ -581,7 +581,7 @@ export default function ChatClient() {
 
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
-    let addressInfo = "http://127.0.0.1:5400/chat/message/" + newString;
+    let addressInfo = apiBaseURL + "chat/message/" + newString;
     await axios.get(addressInfo)
       .then(response => {
         setPost(response.data);

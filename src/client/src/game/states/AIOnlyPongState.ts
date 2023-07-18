@@ -1,8 +1,8 @@
-import {PongState} from "../logic/PongState";
+import {PongLogic} from "../logic/PongLogic";
 import {AIDifficulty, PongAi} from "../logic/PongAi";
 
 export default class AIOnlyPongState {
-  public state: PongState;
+  public state: PongLogic;
 
   private canvas: HTMLCanvasElement;
   private timeSinceGameOver: DOMHighResTimeStamp;
@@ -11,7 +11,7 @@ export default class AIOnlyPongState {
 
   constructor(name: string, canvas: HTMLCanvasElement, leftDifficulty: AIDifficulty, rightDifficulty: AIDifficulty) {
     this.canvas = canvas;
-    this.state = new PongState(name, canvas, "Left AI", "Right AI");
+    this.state = new PongLogic(name, canvas, "Left AI", "Right AI");
     this.state.restartGame();
     this.timeSinceGameOver = 0;
 

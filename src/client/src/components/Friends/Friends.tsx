@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import "./Friends.css"
 import { Avatar } from '../Avatar';
 import { Link } from "react-router-dom";
+import { apiBaseURL } from "../../utils/constant";
+import { AuthContext } from "../Auth/dto";
+import { ErrorContext } from "../Modal/modalContext";
 
 //Mettre un useState refresh automatique
 function Online(data: any) {
@@ -15,50 +18,74 @@ function Offline() {
   return <div className="offline"></div>
 }
 
+function FriendsList() {
+  const { setErrorMessage } = useContext(ErrorContext);
+  const { setAuthToken } = useContext(AuthContext);
 
-function FriendsList() { 
-        const [dataOnline, setDataOnline] = useState([{
-            nickname: "",
-            avatarUrl: "",
-            online: false,
-            inGame: false,
-            id: 0,
-        }]);
+  const token = localStorage.getItem("token");
 
-        const [dataOffline, setDataOffline] = useState([{
-          nickname: "",
-          avatarUrl: "",
-          online: false,
-          inGame: false,
-          id: 0,
-      }]);
+  const [dataOnline, setDataOnline] = useState([{
+    nickname: "",
+    avatarUrl: "",
+    online: false,
+    inGame: false,
+    id: 0,
+  }]);
 
-    const token = localStorage.getItem("token");
-    
-    useEffect(() => {
-        async function fetchDataOnline() {
-            await axios.get("http://localhost:5400/user/friends/online", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            })
-            .then((res) => {
-                setDataOnline(res.data);
-            });
-        }
-        async function fetchDataOffline() {
-          await axios.get("http://localhost:5400/user/friends/offline", {
-              headers: {
-                  Authorization: `Bearer ${token}`,
-              }
-          })
-          .then((res) => {
-              setDataOffline(res.data);
-          });
-      }
-        fetchDataOnline();
-        fetchDataOffline();
-    }, []);
+  const [dataOffline, setDataOffline] = useState([{
+    nickname: "",
+    avatarUrl: "",
+    online: false,
+    inGame: false,
+    id: 0,
+  }]);
+
+  useEffect(() => {
+    async function fetchDataOnline() {
+      await axios
+        .get(apiBaseURL + "user/friends/online", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          setDataOnline(res.data);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
+        });
+    }
+    async function fetchDataOffline() {
+      await axios
+        .get(apiBaseURL + "user/friends/offline", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          setDataOffline(res.data);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
+        });
+    }
+    fetchDataOnline();
+    fetchDataOffline();
+  }, []);
 
 
    if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
