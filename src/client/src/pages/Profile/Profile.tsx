@@ -16,6 +16,7 @@ import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { JwtPayload } from "../../type/client.type";
+import { hslToRgb, RGBToHSL } from "../../utils/colors";
 
 enum relationStatus {
   NONE,
@@ -32,6 +33,8 @@ interface FriendRequestProps {
 }
 
 function BlockUser(props: FriendRequestProps) {
+  const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
 
   const handleUnblockButton = async () => {
@@ -42,7 +45,20 @@ function BlockUser(props: FriendRequestProps) {
         },
       })
       .catch((error) => {
-        console.log(error);
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (
+          error.response.status === 403 ||
+          error.response.status === 400
+        ) {
+          localStorage.clear();
+          setAuthToken(null);
+          setErrorMessage("Session expired, please login again!");
+        } else {
+          setErrorMessage(error.response.data.message + "!");
+        }
+        return <Navigate to={"/"} />;
       });
   };
 
@@ -87,6 +103,8 @@ function BlockUser(props: FriendRequestProps) {
 
 function FriendRequest(props: FriendRequestProps) {
   const socketRef = useRef<any>(null);
+  const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
 
@@ -109,7 +127,20 @@ function FriendRequest(props: FriendRequestProps) {
         props.setStatus(relationStatus.REQUESTED);
       })
       .catch((error) => {
-        console.log(error);
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (
+          error.response.status === 403 ||
+          error.response.status === 400
+        ) {
+          localStorage.clear();
+          setAuthToken(null);
+          setErrorMessage("Session expired, please login again!");
+        } else {
+          setErrorMessage(error.response.data.message + "!");
+        }
+        return <Navigate to={"/"} />;
       });
   };
 
@@ -161,11 +192,64 @@ function FriendRequest(props: FriendRequestProps) {
   }
 }
 
+interface RgbColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+function PaddleColor(props: { oldColor: RgbColor }) {
+  const [hue, setHue] = useState(RGBToHSL(props.oldColor).h);
+  const [color, setColor] = useState(props.oldColor);
+
+  useEffect(() => {
+    setColor(hslToRgb({ h: hue, s: 100, l: 50 }));
+  }, [hue]);
+
+  const style = {
+    width: "20px",
+    height: "100px",
+    backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
+  };
+
+  function updatePaddleColor() {
+    // post request to update paddle color
+    console.log("update paddle color: ", color);
+  }
+
+  return (
+    <div className={"customization-content"}>
+      <h5>Customize your paddle</h5>
+      <div className={"customization-box"}>
+        <div className={"color-slider"}>
+          <div className={"color-gradient"}></div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            className="slider"
+            id="myRange"
+            value={hue}
+            onChange={(e) => setHue(parseInt(e.target.value))}
+          ></input>
+          <button className={"update-color-button"} onClick={updatePaddleColor}>
+            Update color
+          </button>
+        </div>
+        <div className={"paddle-container"}>
+          <div style={style}></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Profile() {
   let data = useLoaderData() as UserInfo;
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
+  const [customization, setCustomization] = useState(false);
 
   const token = localStorage.getItem("token");
   let payload: JwtPayload | null = null;
@@ -204,6 +288,22 @@ export function Profile() {
         .then((res) => {
           console.log(res.data);
           checkFriendStatus(res.data);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (
+            error.response.status === 403 ||
+            error.response.status === 400
+          ) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else {
+            setErrorMessage(error.response.data.message + "!");
+          }
+          return <Navigate to={"/"} />;
         });
     }
 
@@ -217,6 +317,12 @@ export function Profile() {
   }
 
   const winrate: number = calculateWinrate(data);
+  const oldColor: RgbColor = {
+    // change to color from db
+    r: 255,
+    g: 255,
+    b: 255,
+  };
 
   return (
     <div className={"profile-page"}>
@@ -241,9 +347,17 @@ export function Profile() {
                 setStatus={setFriendStatus}
               />
             </div>
-          ) : null}
+          ) : (
+            <button
+              className="friendButton customization-button"
+              onClick={() => setCustomization(!customization)}
+            >
+              Customization
+            </button>
+          )}
         </div>
       </div>
+      {customization ? <PaddleColor oldColor={oldColor} /> : null}
       <div className={"profile-stats"}>
         <div id={"level"}>
           <div>Level</div>
