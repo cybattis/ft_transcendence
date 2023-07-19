@@ -200,8 +200,17 @@
     border-radius: 20px;
 }
 
+.logo-chnl {
+    height: 50px;
+}
+
+.ctn-btn-action {
+    display: flex;
+    flex-direction: row;
+    justify-content: baseline;
+}
 .chat-buttons {
-    padding: 10px;
+    height: 50px;
     margin: 10px;
     border-radius: 5px;
     background-color: rgb(115, 6, 161);

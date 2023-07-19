@@ -225,7 +225,6 @@ export class ChannelService implements OnModuleInit {
 
     verifyUserSocket(idSocket: string, username: string) {
         for (let index = 0; index < this.usersSocketStructures.length; index++){
-            console.log(`${this.usersSocketStructures[index].username}`)
             if(username === this.usersSocketStructures[index].username){
                 if (idSocket !== this.usersSocketStructures[index].socket)
                 {
@@ -262,7 +261,6 @@ export class ChannelService implements OnModuleInit {
 
     takeSocketByUsername(username: string): string | null{
         for (let index = 0; index < this.usersSocketStructures.length; index++) {
-            console.log(`${this.usersSocketStructures[index].username}`);
             if (username === this.usersSocketStructures[index].username)
                 return this.usersSocketStructures[index].socket;
         }
