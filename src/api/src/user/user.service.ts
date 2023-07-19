@@ -82,7 +82,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(token: string, id: number): Promise<UserInfo | any> {
+  async userInfo(token: string, username: string): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -100,12 +100,12 @@ export class UserService implements OnModuleInit {
         websocket: true,
       },
       where: {
-        id: id,
+        nickname: username,
       },
     });
 
     if (!user) throw new BadRequestException('User does not exist');
-    user.games = await this.gameService.fetchUserGames(user);
+      user.games = await this.gameService.fetchUserGames(user);
     return user;
   }
 
@@ -260,7 +260,22 @@ export class UserService implements OnModuleInit {
       },
     });
     me.blockedId.push(friend.id);
+    me.blockedChat.push(friend.nickname);
     friend.blockedById.push(me.id);
+    friend.blockedChat.push(me.nickname);
+    await this.usersRepository.save(friend);
+    return await this.usersRepository.save(me);
+  }
+
+  async blockFriendUsr(friendName: string, myId: number) {
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const friend: any = await this.usersRepository.findOne({
+      where: { nickname: friendName },
+    });
+    me.blockedId.push(friend.id);
+    friend.blockedById.push(me.id);
+    me.blockedChat.push(friend.nickname);
+    friend.blockedChat.push(me.nickname);
     await this.usersRepository.save(friend);
     return await this.usersRepository.save(me);
   }
@@ -288,17 +303,37 @@ export class UserService implements OnModuleInit {
           const newBlocked: number[] = me.blockedId.splice(i, 1);
           await this.usersRepository.update(me.id, { blockedId: newBlocked });
           await this.usersRepository.save(me);
-          if (friend.blockedById) {
-            for (let i = 0; friend.blockedById[i]; i++) {
-              if (friend.blockedById[i] === me.id) {
-                const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
-                await this.usersRepository.update(friend.id, {
-                  blockedById: newBlockedBy,
-                });
-                return await this.usersRepository.save(friend);
-              }
-            }
-          }
+        }
+      }
+    }
+    if (friend.blockedById) {
+      for (let i = 0; friend.blockedById[i]; i++) {
+        if (friend.blockedById[i] === me.id) {
+          const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
+          await this.usersRepository.update(friend.id, {
+            blockedById: newBlockedBy,
+          });
+          await this.usersRepository.save(friend);
+        }
+      }
+    }
+    if (me.blockedChat) {
+      for (let i = 0; me.blockedChat[i]; i++) {
+        if (me.blockedChat[i] === friend.nickname) {
+          const newBlockedChatMe: string[] = me.blockedChat.splice(i, 1);
+          await this.usersRepository.update(me.id, { blockedChat: newBlockedChatMe });
+          await this.usersRepository.save(me);
+        }
+      }
+    }
+    if (friend.blockedChat) {
+      for (let i = 0; friend.blockedChat[i]; i++) {
+        if (friend.blockedChat[i] === me.nickname) {
+          const newBlockedChat: string[] = friend.blockedChat.splice(i, 1);
+          await this.usersRepository.update(friend.id, {
+            blockedChat: newBlockedChat,
+          });
+          return await this.usersRepository.save(friend);
         }
       }
     }
@@ -381,6 +416,11 @@ export class UserService implements OnModuleInit {
     return null;
   }
 
+  async getBlockedList(myId: number) {
+    const me: any = await this.usersRepository.findOne({where: {id: myId}});
+    return me.blockedChat;
+  }
+
   async addWebSocket(nickname: string, socket: string) {
     const user: any = await this.usersRepository.findOne({
       where: { nickname: nickname },
@@ -396,7 +436,7 @@ export class UserService implements OnModuleInit {
         requestedId: true,
       },
     });
-    if (user.requestedId && user.requestedId[0]) return true;
+    if (user && user.requestedId && user.requestedId[0]) return true;
     return null;
   }
 

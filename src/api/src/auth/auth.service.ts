@@ -28,7 +28,7 @@ export class AuthService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
-    private usersService: UserService,
+    private userService: UserService,
     private mailService: MailService,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
@@ -72,11 +72,11 @@ export class AuthService {
 
   async intraSignin(user: User): Promise<TokenPayload | null> {
     if (
-      (await this.usersService.authActivated(user?.email)) === null &&
-      (await this.usersService.isVerified(user?.email)) != null
+      (await this.userService.authActivated(user?.email)) === null &&
+      (await this.userService.isVerified(user?.email)) != null
     ) {
       if (user) {
-        await this.usersService.changeOnlineStatus(user.id, true);
+        await this.userService.changeOnlineStatus(user.id, true);
         const payload: TokenData = {
           email: user.email,
           id: user.id,
@@ -88,8 +88,8 @@ export class AuthService {
       }
     }
 
-    while ((await this.usersService.isVerified(user.email)) === null) {}
-    if (await this.usersService.authActivated(user.email)) {
+    while ((await this.userService.isVerified(user.email)) === null) {}
+    if (await this.userService.authActivated(user.email)) {
       const code = await this.mailService.sendCodeConfirmation(user.email);
       await this.cacheManager.set(code, user.email, 600000);
     }
@@ -97,21 +97,21 @@ export class AuthService {
   }
 
   async signin(user: SigninDto): Promise<string | TokenPayload> {
-    const foundUser = await this.usersService.findUserAndGetCredential(
+    const foundUser = await this.userService.findUserAndGetCredential(
       user.email,
     );
 
     if (foundUser && !foundUser.IsIntra) {
-      const isVerified = await this.usersService.isVerified(user.email);
+      const isVerified = await this.userService.isVerified(user.email);
       if (isVerified) {
-        if ((await this.usersService.authActivated(user.email)) != null) {
+        if ((await this.userService.authActivated(user.email)) != null) {
           if (await bcrypt.compare(user.password, foundUser.password)) {
             await this.mailService.sendCodeConfirmation(user.email);
             return 'code';
           }
           throw new UnauthorizedException('Incorrect email or password');
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
-          await this.usersService.changeOnlineStatus(foundUser.id, true);
+          await this.userService.changeOnlineStatus(foundUser.id, true);
           const payload: TokenData = {
             email: user.email,
             id: foundUser.id,
@@ -130,8 +130,16 @@ export class AuthService {
     throw new UnauthorizedException('Incorrect email or password');
   }
 
-  async sendEmail(user: User) {
-    return await this.mailService.sendUserConfirmation(user);
+  async generateToken(id: number) {
+    const user: User | null = await this.userService.findByID(id);
+    if (user) {
+      const payload: TokenData = {
+        email: user.email,
+        id: user.id,
+        nickname: user.nickname,
+      };
+      return await this.jwtService.signAsync(payload);
+    }
   }
 
   async createUser(body: SignupDto): Promise<void> {
@@ -168,22 +176,15 @@ export class AuthService {
     return await this.userRepository.save(user);
   }
 
-  async generateToken(id: number) {
-    const user = await this.usersService.findByID(id);
-    if (!user) throw new NotFoundException('User not found');
-
-    const payload: TokenData = {
-      email: user.email,
-      id: id,
-      nickname: user.nickname,
-    };
-    return {
-      token: await this.jwtService.signAsync(payload),
-    };
+  async sendIntraToken(dataUser: IntraSignupDto) {
+    const user: any = await this.userService.findByEmail(dataUser.email);
+    await this.userService.updateUserVerifiedStatus(user.id);
+    const payload = { email: user.email, id: user.id, nickname: user.nickname };
+    return await this.jwtService.signAsync(payload);
   }
 
   async update2fa(id: number) {
-    const user = await this.usersService.getUserEmail(id);
+    const user = await this.userService.getUserEmail(id);
     if (!user) throw new NotFoundException('User not found');
 
     return await this.mailService.sendCodeConfirmation(user.email);
@@ -205,9 +206,9 @@ export class AuthService {
   }
 
   async loggingInUser(email: string): Promise<TokenPayload> {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.userService.findByEmail(email);
     if (user) {
-      await this.usersService.changeOnlineStatus(user.id, true);
+      await this.userService.changeOnlineStatus(user.id, true);
       const payload: TokenData = {
         email: email,
         id: user.id,

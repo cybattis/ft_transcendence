@@ -40,7 +40,7 @@ export class AuthController {
   async redirectToAppSignup(
     @Query('code') code: string,
     @Res() res: Response,
-  ): Promise<string | void> {
+  ): Promise<string | HttpException | void> {
     try {
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
@@ -50,19 +50,19 @@ export class AuthController {
 
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
-        await this.authService.sendEmail(user);
-        return res.redirect(clientBaseURL);
+        const token = await this.authService.sendIntraToken(dataUser);
+        return res.redirect(clientBaseURL + 'loading?' + token);
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
         if (token)
           return res.redirect(clientBaseURL + 'loading?' + token.token);
         return res.redirect(clientBaseURL + 'code?' + dataUser.email);
       } else if (user && !user.isVerified) {
-        throw new BadRequestException(
-          'You already have an account. Verify your mailbox.',
+        return new BadRequestException(
+          'You already have an account. Go check your mailbox.',
         );
       }
-      throw new BadRequestException('Email already in use');
+      return new BadRequestException('Email already in use');
     } catch (err) {
       console.log(err);
       return res.redirect(clientBaseURL);

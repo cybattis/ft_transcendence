@@ -358,8 +358,11 @@ export function HomeLogged() {
 
   useEffect(() => {
     async function fetchData() {
+      const payload: JwtPayload = jwt_decode(token as string);
+
+      console.log(payload);
       await axios
-        .get(apiBaseURL + "user/profile/me", {
+        .get(apiBaseURL + "user/profile/" + payload.nickname, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,

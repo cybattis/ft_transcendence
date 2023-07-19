@@ -46,35 +46,17 @@ export class UserController {
   }
 
   /*
-   * GET /user/profile/me
-   * @desc Get user info from token for homepage
+   * GET /user/profile/:nickname
+   * @desc Get user public info from nickname for profile page
    */
   @UseGuards(TokenGuard)
-  @Get('profile/me')
-  async meInfo(@Headers('Authorization') header: Headers): Promise<UserInfo> {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    if (payload) {
-      return this.userService.userInfo(header.toString(), payload.id);
-    }
-    throw new ForbiddenException('Invalid token');
-  }
-
-  /*
-   * GET /user/profile/:id
-   * @desc Get user public info from id for profile page
-   */
-  @UseGuards(TokenGuard)
-  @Get('profile/:id')
+  @Get('profile/:username')
   async userInfo(
-    @Param('id') id: string,
+    @Param('username') username: string,
     @Headers('Authorization') header: Headers,
   ): Promise<UserInfo | any> {
-    const idNum = Number(id);
-    if (!idNum) throw new BadRequestException('Invalid id');
     const token = header.toString().split(' ')[1];
-    return this.userService.userInfo(token, idNum);
+    return this.userService.userInfo(token, username);
   }
 
   @Get('check/login/:input')
@@ -184,7 +166,8 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    return await this.userService.getNotifs(payload.id);
+    if (payload)
+      return await this.userService.getNotifs(payload.id);
   }
 
   @UseGuards(TokenGuard)
@@ -225,8 +208,26 @@ export class UserController {
   ) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
+      );
+      return await this.userService.removeFriend(id, payload.id);
+    }
+      
+  @UseGuards(TokenGuard)
+  @Get('blockedList')
+  async getBlockedList(@Param('id') id: number, @Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+      );
+      return await this.userService.getBlockedList(payload.id);
+  }
+
+  @UseGuards(TokenGuard)
+  @Put('blockUsr/:username')
+  async blockFriendUsr(@Param('username') username: string, @Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
     );
-    return await this.userService.removeFriend(id, payload.id);
+    return await this.userService.blockFriendUsr(username, payload.id);
   }
 
   @UseGuards(TokenGuard)

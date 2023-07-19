@@ -20,12 +20,12 @@ export default function ChannelList({ channelList, onStringChange }: ChannelList
     }
 
     return (
-        <div className='choice-canal-container'>
-            {channelList.map((channel) => (
-                <button className="channel-waiting" key={channel} onClick={() => choiceCanal(channel)} value={channel}>
-                    {channel}
-                </button>
-            ))}
-        </div>
+            <div className='choice-canal-container'>
+                {channelList.map((channel) => (
+                    <button className="channel-waiting" key={channel} onClick={() => choiceCanal(channel)} value={channel}>
+                        {channel}
+                    </button>
+                ))}
+            </div>
     );
 }

@@ -15,9 +15,10 @@ async function ValidateEmail() {
   axios
     .put(apiBaseURL + "auth/" + id, true)
     .then((res) => {
+      console.log(res.data);
       const data = res.data;
-      localStorage.setItem("token", data.token);
-      setAuthToken(data.token);
+      localStorage.setItem("token", data);
+      setAuthToken(data);
     })
     .catch((error) => {
       if (error.response === undefined) {
@@ -55,8 +56,8 @@ export default function Confirmation() {
     <div style={home}>
       <h3>Email Confirmed!</h3>
       <h4 style={title}>
-        Thanks for joining us! You can now return to the game and close this
-        Page.
+        Thanks for joining us! You can now return to the game by clicking on the play button.
+        You can close the other page.
       </h4>
     </div>
   );

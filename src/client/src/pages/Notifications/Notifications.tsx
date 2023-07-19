@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
+import { NotifContext } from "../../components/Auth/dto";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { AuthContext } from "../../components/Auth/dto";
@@ -11,6 +12,7 @@ export default function Notifications() {
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token: string | null = localStorage.getItem("token");
+  const { setNotif } = useContext(NotifContext);
 
   const [invits, setInvits] = useState([
     {
@@ -98,10 +100,11 @@ export default function Notifications() {
 
   //Faire une map pour afficher toutes invites a la suite
   if (invits && invits[0] && invits[0].id > 0) {
+    setNotif(true);
     return (
       <div className="notifPage">
-        <h1 className="notifTitle">Notifications</h1>
-        <ul className="list">
+        <h2 className="notifTitle">Notifications</h2>
+        <div className="list">
           {invits.map((invits) => {
             return (
               <div key={invits.id}>
@@ -130,13 +133,15 @@ export default function Notifications() {
               </div>
             );
           })}
-        </ul>
+        </div>
       </div>
     );
   } else
+  setNotif(false);
+
     return (
       <div className="noNotifTitle">
-        <h1>No Notifications</h1>
+        <h2>No Notifications</h2>
       </div>
     );
 }

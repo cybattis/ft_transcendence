@@ -29,36 +29,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
-  handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    let channel = data.channel;
-    const msg = data.msg;
-    const sender = data.username;
-    const send = {sender, msg, channel};
-    console.log(`send : s ${send.sender} m${send.msg} ${send.channel}`);
-    if (data.channel[0] === "#")
-      socket.broadcast.emit('rcv', send);
-    else
-    {
-      const target = this.channelService.takeSocketByUsername(channel);
-      channel = sender;
-      const prv = {sender, msg, channel};
-      if (target)
-        socket.to(target).emit('rcv', prv);
-    }
+  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')
-  handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
-    const channel = data.channel;
-    const username = data.username;
+  async handlePass(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string , channel: string, password: string, type: string}) {
+    let type, pass, username, channel : string;
+    if (!data)
+      return ;
+    !data.channel ? channel = '#general' : channel = data.channel;
+    !data.username ? username = 'Francis' : username = data.username;
+    !data.password ? pass = '123' : pass = data.password;
+    !data.type ? type = 'public' : type = data.type;
     this.userService.addWebSocket(username, socket.id);
-    let pass: string = '';
-    if (data.password !== '')
-      pass = data.password;
     if (this.channelService.verifyUserSocket(socket.id, username))
-      this.channelService.joinOldChannel(socket, username);
-    //console.log(data);
-    this.channelService.joinChannel(socket, username, channel, pass);
+      await this.channelService.joinOldChannel(socket, username);
+    this.channelService.joinChannel(socket, type, username, channel, pass);
   }
 
   @SubscribeMessage('prv')
@@ -68,66 +56,55 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('blocked')
-  handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
-    this.channelService.blockedUser(this.server ,socket, data.target);
+  async handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
+    await this.channelService.blockedUser(this.server ,socket, data.target);
   }
 
   @SubscribeMessage('op')
-  handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
+    await this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
   }
 
   @SubscribeMessage('quit')
-  handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleQuit(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(`Quit : ${data.channel}`);
-    this.channelService.quitChannel(data.cmd, data.username, data.channel);
+    await this.channelService.quitChannel(data.cmd, data.username, data.channel);
     const channel = data.channel;
     this.server.to(socket.id).emit("quit", channel);
   }
 
   @SubscribeMessage('ban')
-  handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
     console.log(socket.id, data);
-    this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
+    await this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
+    const targetSocket = await this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
     {
       console.log(`inside`) ;
       this.server.to(targetSocket).emit("quit", channel);
-
     }
   }
 
   @SubscribeMessage('info')
-  handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+  async handleInfo(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    console.log("fonction info");
     const channel = data.channel;
-    const msg = this.channelService.infoChannel(channel);
-    if (msg != null) {
-      console.log(msg);
-      this.server.emit('rcv', {msg, channel});
-    }
+    const msg = await this.channelService.infoChannel(channel);
+    console.log(msg);
+    this.server.emit('rcv', {msg, channel});
   }
 
   @SubscribeMessage('kick')
-  handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(socket.id, data);
-    this.channelService.kickChannel(data.cmd, data.username, data.target, data.channel);
-    const targetSocket = this.channelService.takeSocketByUsername(data.target);
-    const channel = data.channel;
-    if (targetSocket)
-    {
-      console.log(`inside`) ;
-      this.server.to(targetSocket).emit("quit", channel);
+  async handleBKick(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
+    if (await this.channelService.kickChannel(this.server ,data.cmd, data.username, data.target, data.channel)){
+      console.log(`Bien le sur ${data.target}`);
+      const target = this.channelService.takeSocketByUsername(data.target);
+      if (target)
+        this.server.to(target).emit("quit", data.channel);
     }
-  }
 
-  @SubscribeMessage('cmd')
-  handleCmd(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    const channel = data.channel;
-    const msg = this.channelService.allCmd();
-    this.server.emit('rcv', {msg, channel});
   }
 
   @SubscribeMessage('ping')
@@ -141,6 +118,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const target = mess.friend.data;
     console.log(`Friend request Send`);
     this.channelService.sendFriendRequest(this.server, target, mess.from);
-    this.server.to(target.websocket).emit('friendRequest', {target});
+    this.server.to(target.websocket).emit('friendRequest');
   }
 }

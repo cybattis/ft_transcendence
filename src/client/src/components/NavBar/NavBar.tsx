@@ -16,10 +16,13 @@ function MobileNavBar() {
   const { authed } = useContext(AuthContext);
   const { setLoginForm, setSignupForm } = useContext(FormContext);
 
-  let id: string = "";
+  let username: string = "";
+  let id: string = ""
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
+    if (decoded) username = decoded.nickname;
+    else username = "";
     if (decoded) id = decoded.id;
     else id = "";
   } catch (e) {}
@@ -64,7 +67,7 @@ function MobileNavBar() {
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/${id}`}
+            link={`/profile/${username}`}
             callback={handleSidePanel}
           />
           <NavButton
