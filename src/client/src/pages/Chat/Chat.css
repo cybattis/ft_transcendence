@@ -209,7 +209,8 @@
     flex-direction: row;
     justify-content: baseline;
 }
-.chat-buttons {
+
+.chat-buttons{
     height: 50px;
     margin: 10px;
     border-radius: 5px;
@@ -222,4 +223,57 @@
 
 .chat-buttons:hover {
     background-color: rgb(137, 51, 174);
+}
+
+.chat-avatar-prv {
+    width: 50px;
+    border-radius: 25%;
+}
+
+.btn-prv {
+    height: 40px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: rgb(115, 6, 161);
+    font-weight: bold;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.li-prv {
+    list-style: none;
+}
+.btn-handle-prv {
+    width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: transparent;
+    color: white;
+    cursor: pointer;
+}
+
+.chat-list-ctnr {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.pop-private {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+
+    top: 20%;
+    min-width: max-content;
+
+    align-items: center;
+    justify-items: center;
+
+    padding: 1em 2em 1em 2em;
+
+    background-color: var(--bg);
+    border: 2px solid var(--purple-darker);
+    border-radius: 20px;
 }

@@ -354,12 +354,23 @@ export class ChannelService implements OnModuleInit {
             
     }
 
-    sendPrvMess(server: Server, socket: Socket, username: string, target: string){
+    async sendPrvMess(server: Server, socket: Socket, username: string, target: string){
+        console.log("Send prv", username, target);
         const socketTarget = this.takeSocketByUsername(target);
+        const channel = username + target;
         if (socketTarget)
         {
-            socket.to(socketTarget).emit('inv', {username, target});
-            server.to(socket.id).emit('inv', {username, target});
+            await this.channelRepository.save({
+                channel: channel,
+                status: 'message',
+                users : [username, target],
+                owner : '',
+                operator: [],
+                ban: [],
+                password: '',
+            })
+            socket.to(socketTarget).emit('inv', {channel});
+            server.to(socket.id).emit('inv', {});
         }
 
     }
@@ -394,19 +405,28 @@ export class ChannelService implements OnModuleInit {
 
     async sendMessage(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
         const send = {sender, msg, channel, blockedChat};
-        console.log(`send : ${send.sender} m${send.msg} ${send.channel}`);
+        const emiter: any = await this.userService.findByLogin(sender); 
         if (channel[0] === "#"){
-            const emiter: any = await this.userService.findByLogin(sender); 
+            console.log("Message avec channel", msg)
             await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: emiter.id});
             socket.broadcast.emit('rcv', send);
         }
         else
         {
-          const target = this.takeSocketByUsername(channel);
-          channel = sender;
-          const prv = {sender, msg, channel};
-          if (target)
-            socket.to(target).emit('rcv', prv);
+            console.log("Message sans channel", msg, channel);
+            const target = this.takeSocketByUsername(channel);
+            const prv = {sender, msg, channel};
+            const find : Channel[] = await this.channelRepository.find({where : {status : "message"}});
+            for (let index = 0; find[index]; index++){
+                console.log(find[index].users[0], find[index].users[1])
+                if ((find[index].users[0] == sender && find[index].users[1] == channel) 
+                ||  (find[index].users[1] == sender && find[index].users[0] == channel)){
+                    await this.chatRepository.save({channel : find[index].channel, content: msg, emitter: sender, emitterId: emiter.id});
+                    if (target) socket.to(target).emit('rcv', prv);
+                    console.log("Send Prv ", find[index].channel);
+                }
+            }
+            
         }
     }
 

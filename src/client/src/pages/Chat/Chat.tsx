@@ -11,6 +11,7 @@ import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/addButton.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
+import { Avatar } from "../../components/Avatar";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -307,9 +308,27 @@ export default function ChatClient() {
   }
 
   function ChatMap({ messages }: { messages: ChatInterface[] }) {
+    const [channelName, setChannelName] = useState('');
+
+    useEffect(() => {
+      
+      async function actifCanal(){
+        let channel = takeActiveCanal();
+        if (channel[0] !== '#'){
+          let addressInfo = apiBaseURL + "chat/channel/private/" + channel + "/" + username;
+          await axios.get(addressInfo).then((response) =>{
+            setChannelName(response.data)
+          });
+        }
+        else
+          setChannelName(channel);
+      }
+
+      actifCanal();
+    },[])
 
     const filteredElements = post
-      .filter((rcv: ChatInterface) => rcv.channel === takeActiveCanal())
+      .filter((rcv: ChatInterface) => rcv.channel === channelName)
       .map((rcv: ChatInterface, key: number) => (
         rcv.emitter === username ? (
           <li className="Emt" key={key}>
@@ -357,7 +376,6 @@ export default function ChatClient() {
 
     const sendForm = (channel: string, password: string, type: string) => {
       if (channel.indexOf("#") === -1) channel = "#" + channel;
-      console.log(`SendJoim`, channel, password, type);
       const sendJoin = { username: username, channel: channel, password: password, type: type };
       ChatClientSocket.onJoin(sendJoin);
       setJoinForm(false);
@@ -444,17 +462,14 @@ export default function ChatClient() {
   function PrivateMessage() {
 
     const btnPrv = () => {
-      messagePrivateForm ? setMessagePrivateForm(false) : setMessagePrivateForm(true) ;setButtons(false); setJoinForm(false);
+      messagePrivateForm ? setMessagePrivateForm(false) : setMessagePrivateForm(true); setButtons(false); setJoinForm(false);
     }
 
-    const handlePrivate = () => {
-      const sendPrv = { username: username, target: usr };
-      ChatClientSocket.onPm(sendPrv);
-    };
+
 
     return (
       <>
-        <button className="prv" onClick={btnPrv}>
+        <button className="btn-prv" onClick={btnPrv}>
           Private Message
         </button>
         {messagePrivateForm && <AffPrivateMessage />}
@@ -463,10 +478,43 @@ export default function ChatClient() {
   }
 
   function AffPrivateMessage() {
+    const [usersList, setUsersList] = useState([]);
 
-    return <>
-      Message
-    </>
+    useEffect(() => {
+      async function requUser() {
+        const url = apiBaseURL + "user";
+        await axios.get(url).then((response) => {
+          setUsersList(response.data);
+        });
+      }
+      requUser();
+    }, []);
+
+    const handlePrivate = (target: string) => {
+      const sendPrv = { username: username, target: target };
+      ChatClientSocket.onPm(sendPrv);
+    };
+
+    function ListUsers() {
+      const list = usersList.map((user: any) =>
+        username !== user.nickname ?
+          <li className='li-prv' key={user.nickname}>
+            <button className="btn-handle-prv" onClick={() => handlePrivate(user.nickname)} >
+              <Avatar size={"50px"} img={user.avatarUrl} />
+              {user.nickname}
+            </button>
+          </li>
+          :
+          <li className='li-prv' key={user.nickname}></li>
+      )
+
+      return (<ul className="chat-list-ctnr">{list}</ul>);
+    }
+
+    return <div className="pop-private">
+      <h4>Message private</h4>
+      <ListUsers />
+    </ div>
   }
 
   function Join() {
@@ -537,11 +585,14 @@ export default function ChatClient() {
     }
 
     const joinCallBack = (room: string) => {
+      if (room[0] !== '#')
+        room.indexOf(username) === 0 ? room = room.substring(username.length) : room = room.substring(0, room.length - username.length);
       if (!channelList.includes(room)) {
         channelList.push(room);
         setRoomChange(room);
         const canal = document.getElementById("canal");
-        if (canal) canal.innerHTML = room;
+        if (canal)
+          canal.innerHTML = room;
       }
     }
 
@@ -612,54 +663,29 @@ export default function ChatClient() {
   }
 
   function doCmd(cmd: string, msg: string) {
-    const channel = takeActiveCanal();
+    let channel = takeActiveCanal();
     if (cmd === "/info")
       ChatClientSocket.onInfo(channel);
     else if (cmd === "/cmd") {
       ChatClientSocket.onCmd(channel);
     } else {
-      const send = { username: username, channel: channel, msg: msg }
-      ChatClientSocket.onSend(send);
-      let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
-      axios.get(addressInfo)
+      if (channel[0] !== '#')
+      {
+        let addressInfo = apiBaseURL + "chat/message/" + channel + "/" + username;
+        axios.get(addressInfo)
         .then(response => {
           setPost(response.data);
         })
+      } else {
+        let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
+        axios.get(addressInfo)
+        .then(response => {
+          setPost(response.data);
+        })  
+      }
+      const send = { username: username, channel: channel, msg: msg } 
+      ChatClientSocket.onSend(send);
     }
-  }
-
-  function senderIsBlocked(sender: string) {
-    for (let index = 0; index < blocedList.length; index++) {
-      if (sender === blocedList[index]) return true;
-    }
-    return false;
-  }
-
-  const BanForm = (target: string, action: string, time: string) => {
-    const channel = takeActiveCanal();
-    const sendBan = {
-      cmd: action,
-      username: username,
-      target: target,
-      channel: channel,
-      time: time,
-    };
-    ChatClientSocket.onBan(sendBan);
-  };
-
-  const KickForm = (target: string) => {
-    const channel = takeActiveCanal();
-    const sendKick = {
-      cmd: "kick",
-      username: username,
-      target: target,
-      channel: channel,
-    };
-    ChatClientSocket.onKick(sendKick);
-  };
-
-  function takeMess(mess: string): string {
-    return mess.substring(mess.indexOf("%") + 1);
   }
 
   async function handleStringChange(newString: string) {

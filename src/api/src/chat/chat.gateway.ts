@@ -31,6 +31,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send :')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
+    console.log('data.msg');
     await this.channelService.sendMessage(socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
@@ -50,9 +51,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('prv')
-  handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
-    console.log(` d ${data}`);
-    this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
+  async handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
+    console.log('Private :' , data.username, data.target);
+    await this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
   @SubscribeMessage('blocked')

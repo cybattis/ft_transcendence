@@ -63,6 +63,7 @@ export namespace ChatClientSocket {
     });
 
     socket.on('rcv', (data: { sender: string, msg: string, channel: string, blockedChat: any }) => {
+      console.log("Rcv un message" , data.msg);
       newMessageCallBack.forEach(callback => callback(data));
     });
 
@@ -75,6 +76,7 @@ export namespace ChatClientSocket {
     });
 
     socket.on('inv', (data: { username: string; target: string }) => {
+      console.log('recu invi mess');
       newInvCallBack.forEach(callback => callback(data));
     });
 

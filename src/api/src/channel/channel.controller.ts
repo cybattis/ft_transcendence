@@ -27,7 +27,21 @@ export class ChannelController {
         return (await this.chatRepository.find({where : {channel : decodedName}}));
     }
 
+    @Get('/message/:channel/:username')
+    async findPrivateMessage(@Param('channel') channel : string, @Param('username') username:string ): Promise<Chat[] | null>{
+        console.log("Controller messa ", channel, username);
+        const find: Channel[] = await this.channelRepository.find({where : {status: "message"}});
+        let messageChannel : Chat[] | null = null;
+        for (let index = 0; find[index]; index ++){
+            if ((find[index].users[0] == channel && find[index].users[1] == username) 
+            ||  (find[index].users[0] == username && find[index].users[1] == channel)){
+                messageChannel = await this.chatRepository.find({where : {channel : find[index].channel}});
+            }
+        }
+        return messageChannel
+    }
     
+
     @Delete('/delete-chat/:channel')
     async deleteChat(@Param('channel') channel: string): Promise<void> {
         const decodedName = decodeURIComponent(channel);
@@ -82,5 +96,14 @@ export class ChannelController {
         const decodedName = decodeURIComponent(channel);
         await this.channelRepository.delete({channel: decodedName});
     }
-}
 
+    @Get('/channel/private/:channel/:username')
+    async findChannelPrivateMessage(@Param('channel') channel: string, @Param('username') username: string): Promise<string> {
+        const find: Channel[] = await this.channelRepository.find({ where: { status: "message" } });
+        for (let index = 0; find[index]; index++) {
+            if ((find[index].users[0] == channel && find[index].users[1] == username)
+                || (find[index].users[0] == username && find[index].users[1] == channel))
+                return find[index].channel;
+        }
+        return channel
+    }}
