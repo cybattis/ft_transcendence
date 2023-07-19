@@ -392,8 +392,8 @@ export class ChannelService implements OnModuleInit {
             server.to(socket.id).emit("blocked", target);
     }
 
-    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, ){
-        const send = {sender, msg, channel};
+    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+        const send = {sender, msg, channel, blockedChat};
         console.log(`send : ${send.sender} m${send.msg} ${send.channel}`);
         if (channel[0] === "#"){
             const emiter: any = await this.userService.findByLogin(sender); 
@@ -418,6 +418,17 @@ export class ChannelService implements OnModuleInit {
             if (channel === this.channelStruct[i].name && pwd === this.channelStruct[i].pswd)
                 return (1);
             else if (channel === this.channelStruct[i].name && pwd !== this.channelStruct[i].pswd)
+                return new UnauthorizedException("Password mismatch");
+        }
+        return new NotFoundException("Channel doesn't exists");
+    }
+
+    async findChannelName(channel: string) {
+        if (channel.indexOf("#") === -1) channel = "#" + channel;
+        for (let i = 0; this.channelStruct[i]; i ++) {
+            if (channel === this.channelStruct[i].name && !this.channelStruct[i].pswd)
+                return (1);
+            else if (channel === this.channelStruct[i].name && this.channelStruct[i].pswd)
                 return new UnauthorizedException("Password mismatch");
         }
         return new NotFoundException("Channel doesn't exists");

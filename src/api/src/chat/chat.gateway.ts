@@ -31,7 +31,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send :')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username);
+    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')

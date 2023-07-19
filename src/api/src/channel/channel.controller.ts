@@ -1,4 +1,4 @@
-import {Controller, Get, Param, Delete, Inject, Injectable} from '@nestjs/common';
+import {Controller, Get, Param, Delete, Headers, Inject, Injectable} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
@@ -45,6 +45,12 @@ export class ChannelController {
         const decodedName = decodeURIComponent(name);
         return (await this.channelRepository.find({where: {channel : decodedName}}));
     }
+
+    @Get('channelName/:name')
+    async findChannelInfo(@Param('name') name : string, @Headers('token') header: Headers) {
+        const decodedName = "#" + name;
+        return (await this.channelRepository.findOne({where: {channel : decodedName}}));
+    }
     
     @Get('/channel/ope/:channel/:usr')
     async findOpeChannel(@Param('channel') channel : string, @Param('usr') usr:string ): Promise<boolean>{
@@ -61,9 +67,14 @@ export class ChannelController {
 
     @Get('/channel/find/:channel/:pwd')
     async findChannelPsw(@Param('channel') channel: string, @Param('pwd') pwd: string) {
-        console.log('inpsw');
         const decodedName = decodeURIComponent(channel);
         return (await this.channelService.findChannel(decodedName, pwd));
+    }
+
+    @Get('/channel/findName/:channel')
+    async findChannelName(@Param('channel') channel: string) {
+        const decodedName = decodeURIComponent(channel);
+        return (await this.channelService.findChannelName(decodedName));
     }
 
     @Delete('/delete-channel/:channel')

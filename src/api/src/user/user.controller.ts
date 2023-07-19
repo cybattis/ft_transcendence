@@ -46,30 +46,17 @@ export class UserController {
   }
 
   /*
-   * GET /user/profile/me
-   * @desc Get user info from token for homepage
-   */
-  @UseGuards(TokenGuard)
-  @Get('profile/me')
-  async meInfo(@Headers('token') header: Headers): Promise<UserInfo> {
-    const payload: any = this.jwtService.decode(header.toString());
-    if (payload) {
-      return this.userService.userInfo(header.toString(), payload.id);
-    }
-    throw new ForbiddenException('Invalid token');
-  }
-
-  /*
-   * GET /user/profile/:id
-   * @desc Get user public info from id for profile page
+   * GET /user/profile/:nickname
+   * @desc Get user public info from nickname for profile page
    */
   @UseGuards(TokenGuard)
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,
-    @Headers('token') header: Headers,
+    @Headers('Authorization') header: Headers,
   ): Promise<UserInfo | any> {
-    return this.userService.userInfo(header.toString(), username);
+    const token = header.toString().split(' ')[1];
+    return this.userService.userInfo(token, username);
   }
 
   @Get('check/login/:input')
@@ -95,8 +82,11 @@ export class UserController {
 
   @UseGuards(TokenGuard)
   @Get('settings')
-  async userSettings(@Headers('token') header: Headers): Promise<User | null> {
-    return await this.userService.userSettings(header.toString());
+  async userSettings(
+    @Headers('Authorization') header: Headers,
+  ): Promise<User | null> {
+    const token = header.toString().split(' ')[1];
+    return await this.userService.userSettings(token);
   }
 
   @UseGuards(TokenGuard)
@@ -112,7 +102,9 @@ export class UserController {
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: TokenData = jwt_decode(req.headers.token as string);
+          const userId: TokenData = jwt_decode(
+            req.headers.authorization?.split(' ')[1] as string,
+          );
           const path = `./avatar/${userId.id}`;
 
           fs.mkdirSync(path, { recursive: true });
@@ -135,122 +127,162 @@ export class UserController {
   uploadFile(
     @UploadedFile()
     file: Express.Multer.File,
-    @Headers('token') header: Headers,
+    @Headers('Authorization') header: Headers,
     @Req() req: any,
   ) {
     if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
-    return this.userService.updateAvatar(file.path, header.toString());
+    const token = header.toString().split(' ')[1];
+    return this.userService.updateAvatar(file.path, token);
   }
 
   @UseGuards(TokenGuard)
   @Put('update')
   async updateSettings(
     @Body() body: UserSettings,
-    @Headers('token') header: Headers,
+    @Headers('Authorization') header: Headers,
   ) {
+    const token = header.toString().split(' ')[1];
     try {
-      return await this.userService.updateUserSettings(body, header.toString());
+      return await this.userService.updateUserSettings(body, token);
     } catch (e) {
       throw new BadRequestException(e.message);
     }
   }
 
   @UseGuards(TokenGuard)
-  @Put('update/2fa')
-  async update2FA(@Headers('token') header: Headers) {
-    try {
-      return await this.userService.update2FA(header.toString());
-    } catch (e) {
-      throw new BadRequestException(e.message);
-    }
-  }
-
-  @Get('notifs')
-  async getNotifs(@Req() req: any) {
+  @Get('friends')
+  async getFriends(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
-    return await this.userService.getNotifs(payload.id);
+    return await this.userService.getFriends(payload.id);
   }
 
-  @Get('friends/online')
-  async getOnlineFriendsList(@Req() req: any) {
+  @UseGuards(TokenGuard)
+  @Get('notifs')
+  async getNotifs(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
+    );
+    if (payload)
+      return await this.userService.getNotifs(payload.id);
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('friends/online')
+  async getOnlineFriendsList(@Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
     );
     return await this.userService.getOnlineFriendsList(payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Get('friends/offline')
-  async getOfflineFriendsList(@Req() req: any) {
+  async getOfflineFriendsList(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.getOfflineFriendsList(payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('request/:id')
-  async requestFriend(@Param('id') id: number, @Req() req: any) {
+  async requestFriend(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.requestFriend(id, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('remove/:id')
-  async removeFriend(@Param('id') id: number, @Req() req: any) {
+  async removeFriend(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
-    );
-    return await this.userService.removeFriend(id, payload.id);
+      header.toString().split(' ')[1],
+      );
+      return await this.userService.removeFriend(id, payload.id);
+    }
+      
+  @UseGuards(TokenGuard)
+  @Get('blockedList')
+  async getBlockedList(@Param('id') id: number, @Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+      );
+      return await this.userService.getBlockedList(payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('blockUsr/:username')
-  async blockFriendUsr(@Param('username') username: string, @Req() req: any) {
+  async blockFriendUsr(@Param('username') username: string, @Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.blockFriendUsr(username, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('block/:id')
-  async blockFriend(@Param('id') id: number, @Req() req: any) {
+  async blockFriend(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.blockFriend(id, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('unblock/:id')
-  async unblockFriend(@Param('id') id: number, @Req() req: any) {
+  async unblockFriend(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.unblockFriend(id, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('accept/:id')
-  async acceptFriendRequest(@Param('id') id: number, @Req() req: any) {
+  async acceptFriendRequest(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.acceptFriendRequest(id, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Put('decline/:id')
-  async declineFriendRequest(@Param('id') id: number, @Req() req: any) {
+  async declineFriendRequest(
+    @Param('id') id: number,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.declineFriendRequest(id, payload.id);
   }
 
+  @UseGuards(TokenGuard)
   @Get('requested')
-  async requests(@Req() req: any) {
+  async requests(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
-      req.headers.authorization.split(' ')[1],
+      header.toString().split(' ')[1],
     );
     return await this.userService.requests(payload.id);
   }

@@ -1,7 +1,7 @@
 export type TokenData = {
   id: number;
   email: string;
-  username: string;
+  nickname: string;
 };
 
 export type TokenPayload = {

@@ -8,16 +8,12 @@ import { ErrorContext } from "../../components/Modal/modalContext";
 
 function TableHeader() {
   return (
-    <div className={"tableHeader"}>
-      <div id={"tableLeft"}>
-        <div id={"ld-rank"}>#</div>
-        <div id={"ld-player"}>Player</div>
-      </div>
-      <div id={"tableRight"}>
-        <div id={"ld-winrate"}>Winrate</div>
-        <div id={"ld-game-played"}>Game played</div>
-        <div id={"ld-elo"}>ELO</div>
-      </div>
+    <div className={"table-header"}>
+      <div id={"ld-rank"}>#</div>
+      <div id={"ld-player"}>Player</div>
+      <div id={"ld-winrate"}>Winrate</div>
+      <div id={"ld-game-played"}>Matches</div>
+      <div id={"ld-elo"}>ELO</div>
     </div>
   );
 }

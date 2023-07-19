@@ -20,7 +20,6 @@ import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import jwt_decode from 'jwt-decode';
 import * as process from 'process';
 
 @Injectable()
@@ -81,7 +80,7 @@ export class AuthService {
         const payload: TokenData = {
           email: user.email,
           id: user.id,
-          username: user.nickname,
+          nickname: user.nickname,
         };
         return {
           token: await this.jwtService.signAsync(payload),
@@ -107,7 +106,8 @@ export class AuthService {
       if (isVerified) {
         if ((await this.usersService.authActivated(user.email)) != null) {
           if (await bcrypt.compare(user.password, foundUser.password)) {
-            return await this.mailService.sendCodeConfirmation(user.email);
+            await this.mailService.sendCodeConfirmation(user.email);
+            return 'code';
           }
           throw new UnauthorizedException('Incorrect email or password');
         } else if (await bcrypt.compare(user.password, foundUser.password)) {
@@ -115,7 +115,7 @@ export class AuthService {
           const payload: TokenData = {
             email: user.email,
             id: foundUser.id,
-            username: foundUser.nickname,
+            nickname: foundUser.nickname,
           };
           return {
             token: await this.jwtService.signAsync(payload),
@@ -140,7 +140,7 @@ export class AuthService {
       const payload: TokenData = {
         email: user.email,
         id: user.id,
-        username: user.nickname,
+        nickname: user.nickname,
       };
       return {
         token: await this.jwtService.signAsync(payload),
@@ -185,10 +185,9 @@ export class AuthService {
   async sendIntraToken(dataUser: any) {
     const user: any = await this.usersService.findByEmail(dataUser.email);
     await this.usersService.updateUserVerifiedStatus(user.id);
-    const payload = { email: user.email, id: user.id, username: user.nickname };
+    const payload = { email: user.email, id: user.id, nickname: user.nickname };
       return {
         token: await this.jwtService.signAsync(payload),
-        id:user.id,
       };
   }
 
@@ -200,7 +199,7 @@ export class AuthService {
     const payload: TokenData = {
       email: user.email,
       id: id,
-      username: user.nickname,
+      nickname: user.nickname,
     };
     return {
       token: await this.jwtService.signAsync(payload),
@@ -236,7 +235,7 @@ export class AuthService {
       const payload: TokenData = {
         email: email,
         id: user.id,
-        username: user.nickname,
+        nickname: user.nickname,
       };
       return {
         token: await this.jwtService.signAsync(payload),

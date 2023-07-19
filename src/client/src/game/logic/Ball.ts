@@ -28,13 +28,12 @@ export default class Ball {
     this.maxStepSize = Math.min(maxStepSizeX, maxStepSizeY);
 
     this.canvasSize = new Vec2(canvasWidth, canvasHeight);
-    this.serving = true;
+    this.serving = false;
     this.vel = new Vec2(0, 0);
+  }
 
-    if (Math.random() > 0.5)
-      this.serveRight();
-    else
-      this.serveLeft();
+  public setServing(serving: boolean) {
+    this.serving = serving;
   }
 
   setVelocity(newVelocity: Vec2) {
@@ -48,6 +47,7 @@ export default class Ball {
   }
 
   serveRight() {
+    // TODO: check this
     const direction = Math.random() * Math.PI / 2 + Math.PI * 3 / 4;
     this.serve(direction);
   }
@@ -79,11 +79,11 @@ export default class Ball {
     }
   }
 
-  checkCollision(paddle: Paddle) {
+  public checkCollision(paddle: Paddle): boolean {
 
     // Check if the ball is near a paddle
     if (Math.abs(this.pos.x - paddle.centerX) > this.maxStepSize * 5) {
-      return;
+      return false;
     }
 
     // Compute the bounds of the paddle
@@ -102,9 +102,12 @@ export default class Ball {
       right: this.pos.x + this.radius
     }
 
+    let collided: boolean = false;
     // Check if the ball is colliding with the paddle
     if (bBounds.bottom >= pBounds.top && bBounds.top <= pBounds.bottom &&
-      bBounds.left <= pBounds.right && bBounds.right >= pBounds.left) {
+      bBounds.left <= pBounds.right && bBounds.right >= pBounds.left)
+    {
+      collided = true;
 
       if (this.pos.x > this.canvasSize.x / 2) {
         const offset = pBounds.left - bBounds.right;
@@ -126,8 +129,8 @@ export default class Ball {
 
       if (this.serving) {
         // Increase the speed of the ball to its normal speed after the first hit
-        this.vel.x *= this.baseSpeed / this.servingSpeed;
-        this.vel.y *= this.baseSpeed / this.servingSpeed;
+        this.vel.x *= 2;
+        this.vel.y *= 2;
         this.serving = false;
       } else {
         // Increase the speed of the ball after each hit
@@ -145,6 +148,8 @@ export default class Ball {
       this.vel.x *= coef;
       this.vel.y *= coef;
     }
+
+    return collided;
   }
 
   calculateStepTime(ballMaxStepSize: number, frameTime: DOMHighResTimeStamp): number {

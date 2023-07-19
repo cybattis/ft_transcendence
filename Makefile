@@ -34,6 +34,10 @@ create_dir:
 list: help
 help: _help
 
+update-npm:
+	@cd ./src/client && npm update
+	@cd ./src/api && npm update
+
 get_ip:
 	@./src/script/get_ip.sh
 

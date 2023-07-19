@@ -85,7 +85,7 @@ function Logged() {
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
-    username = decoded.username;
+    username = decoded.nickname;
     id = decoded.id;
   } catch (e) {
     console.log("Error: Invalid token");

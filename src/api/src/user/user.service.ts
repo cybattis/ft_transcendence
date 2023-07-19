@@ -105,7 +105,7 @@ export class UserService implements OnModuleInit {
     });
 
     if (!user) throw new BadRequestException('User does not exist');
-    user.games = await this.gameService.fetchUserGames(user);
+      user.games = await this.gameService.fetchUserGames(user);
     return user;
   }
 
@@ -149,7 +149,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async update2FA(token: string) {
+  async updateUser2FAstatus(token: string) {
     const user = await this.decodeToken(token);
     if (!user) throw new ForbiddenException('Invalid token');
 
@@ -165,19 +165,19 @@ export class UserService implements OnModuleInit {
   async requestFriend(friendId: number, myId: number) {
     const friend: any = await this.usersRepository.findOne({
       where: { id: myId },
+      select: {
+        id: true,
+        requestedId: true,
+      },
     });
     const user: any = await this.usersRepository.findOne({
       where: { id: friendId },
+      select: {
+        id: true,
+        requestedId: true,
+      },
     });
-    if (user.requestedId) {
-      for (let i = 0; user.requestedId[i]; i++) {
-        if (
-          user.requestedId[i] === friend.id ||
-          user.friendsId[i] === friend.id
-        )
-          return;
-      }
-    }
+    if (user.requestedId.includes(friend.id)) return;
     user.requestedId.push(friend.id);
     await this.usersRepository.save(user);
   }
@@ -244,14 +244,25 @@ export class UserService implements OnModuleInit {
 
   async blockFriend(friendId: number, myId: number) {
     await this.removeFriend(friendId, myId);
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const me: any = await this.usersRepository.findOne({
+      where: { id: myId },
+      select: {
+        id: true,
+        blockedId: true,
+        blockedById: true,
+      },
+    });
     const friend: any = await this.usersRepository.findOne({
       where: { id: friendId },
+      select: {
+        id: true,
+        blockedId: true,
+      },
     });
     me.blockedId.push(friend.id);
     me.blockedChat.push(friend.nickname);
     friend.blockedById.push(me.id);
-    friend.blockedChat.push(me.username);
+    friend.blockedChat.push(me.nickname);
     await this.usersRepository.save(friend);
     return await this.usersRepository.save(me);
   }
@@ -263,15 +274,28 @@ export class UserService implements OnModuleInit {
     });
     me.blockedId.push(friend.id);
     friend.blockedById.push(me.id);
+    me.blockedChat.push(friend.nickname);
+    friend.blockedChat.push(me.nickname);
     await this.usersRepository.save(friend);
     return await this.usersRepository.save(me);
   }
 
-  //Unblocked pas sur que ca marche
   async unblockFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const me: any = await this.usersRepository.findOne({
+      where: { id: myId },
+      select: {
+        id: true,
+        blockedId: true,
+        blockedById: true,
+      },
+    });
     const friend: any = await this.usersRepository.findOne({
       where: { id: friendId },
+      select: {
+        id: true,
+        blockedId: true,
+        blockedById: true,
+      },
     });
     if (me.blockedId) {
       for (let i = 0; me.blockedId[i]; i++) {
@@ -279,17 +303,37 @@ export class UserService implements OnModuleInit {
           const newBlocked: number[] = me.blockedId.splice(i, 1);
           await this.usersRepository.update(me.id, { blockedId: newBlocked });
           await this.usersRepository.save(me);
-          if (friend.blockedById) {
-            for (let i = 0; friend.blockedById[i]; i++) {
-              if (friend.blockedById[i] === me.id) {
-                const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
-                await this.usersRepository.update(friend.id, {
-                  blockedById: newBlockedBy,
-                });
-                return await this.usersRepository.save(friend);
-              }
-            }
-          }
+        }
+      }
+    }
+    if (friend.blockedById) {
+      for (let i = 0; friend.blockedById[i]; i++) {
+        if (friend.blockedById[i] === me.id) {
+          const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
+          await this.usersRepository.update(friend.id, {
+            blockedById: newBlockedBy,
+          });
+          await this.usersRepository.save(friend);
+        }
+      }
+    }
+    if (me.blockedChat) {
+      for (let i = 0; me.blockedChat[i]; i++) {
+        if (me.blockedChat[i] === friend.nickname) {
+          const newBlockedChatMe: string[] = me.blockedChat.splice(i, 1);
+          await this.usersRepository.update(me.id, { blockedChat: newBlockedChatMe });
+          await this.usersRepository.save(me);
+        }
+      }
+    }
+    if (friend.blockedChat) {
+      for (let i = 0; friend.blockedChat[i]; i++) {
+        if (friend.blockedChat[i] === me.nickname) {
+          const newBlockedChat: string[] = friend.blockedChat.splice(i, 1);
+          await this.usersRepository.update(friend.id, {
+            blockedChat: newBlockedChat,
+          });
+          return await this.usersRepository.save(friend);
         }
       }
     }
@@ -297,7 +341,13 @@ export class UserService implements OnModuleInit {
   }
 
   async requests(id: number) {
-    const user: any = await this.usersRepository.findOne({ where: { id: id } });
+    const user: any = await this.usersRepository.findOne({
+      where: { id: id },
+      select: {
+        id: true,
+        requestedId: true,
+      },
+    });
     if (user && user.friendsId) {
       const friends: User[] = [];
       for (let i = 0; user.requestedId[i]; i++) {
@@ -314,7 +364,13 @@ export class UserService implements OnModuleInit {
   }
 
   async acceptFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const me: any = await this.usersRepository.findOne({
+      where: { id: myId },
+      select: {
+        id: true,
+        requestedId: true,
+      },
+    });
     const friend: any = await this.usersRepository.findOne({
       where: { id: idFriend },
     });
@@ -336,7 +392,13 @@ export class UserService implements OnModuleInit {
   }
 
   async declineFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
+    const me: any = await this.usersRepository.findOne({
+      where: { id: myId },
+      select: {
+        id: true,
+        requestedId: true,
+      },
+    });
     const friend: any = await this.usersRepository.findOne({
       where: { id: idFriend },
     });
@@ -354,6 +416,11 @@ export class UserService implements OnModuleInit {
     return null;
   }
 
+  async getBlockedList(myId: number) {
+    const me: any = await this.usersRepository.findOne({where: {id: myId}});
+    return me.blockedChat;
+  }
+
   async addWebSocket(nickname: string, socket: string) {
     const user: any = await this.usersRepository.findOne({
       where: { nickname: nickname },
@@ -364,8 +431,12 @@ export class UserService implements OnModuleInit {
   async getNotifs(myId: number) {
     const user: any = await this.usersRepository.findOne({
       where: { id: myId },
+      select: {
+        id: true,
+        requestedId: true,
+      },
     });
-    if (user.requestedId && user.requestedId[0]) return true;
+    if (user && user.requestedId && user.requestedId[0]) return true;
     return null;
   }
 
@@ -380,6 +451,9 @@ export class UserService implements OnModuleInit {
   }
 
   async updateUserSettings(body: UserSettings, token: string) {
+    if (body.nickname.length == 0 || body.nickname.length > 15)
+      throw new BadRequestException('nickname must be between 1 and 15 chars');
+
     const user = await this.decodeToken(token);
     if (!user) return null;
 
@@ -406,5 +480,18 @@ export class UserService implements OnModuleInit {
     });
     if (!user) return null;
     return user;
+  }
+
+  async getFriends(id: number) {
+    return await this.usersRepository.findOneOrFail({
+      where: { id: id },
+      select: {
+        id: true,
+        friendsId: true,
+        requestedId: true,
+        blockedId: true,
+        blockedById: true,
+      },
+    });
   }
 }

@@ -96,21 +96,34 @@ export class AuthController {
   }
 
   @UseGuards(TokenGuard)
+  @Post('2fa/validate')
+  async validate2fa(
+    @Body() body: any,
+    @Headers('Authorization') header: Headers,
+  ) {
+    const token = header.toString().split(' ')[1];
+    const payload: TokenData = jwt_decode(token);
+
+    await this.authService.checkCode(body.code, payload.email);
+    return this.userService.updateUser2FAstatus(token);
+  }
+
+  @UseGuards(TokenGuard)
   @Put('2fa/update')
-  async enable2fa(@Headers('token') token: Headers) {
-    const payload: TokenData = jwt_decode(token.toString());
+  async enable2fa(@Headers('Authorization') token: Headers) {
+    const payload: TokenData = jwt_decode(token.toString().split(' ')[1]);
     return await this.authService.update2fa(payload.id);
   }
 
   @Put('disconnect')
   async disconnectUser(
     @Body() body: number,
-    @Headers('token') header: Headers,
+    @Headers('Authorization') headers: Headers,
   ) {
-    const token = header.toString();
+    const token = headers.toString().split(' ')[1];
     let payload: TokenData | null = null;
 
-    if (token) payload = jwt_decode(token.toString());
+    if (token) payload = jwt_decode(token);
 
     if (payload && token) {
       AuthService.invalidToken.push(token);

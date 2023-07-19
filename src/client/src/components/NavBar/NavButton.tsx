@@ -1,11 +1,12 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import "./NavButton.css";
 import { apiBaseURL } from "../../utils/constant";
 import axios from "axios";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { AuthContext, NotifContext } from "../Auth/dto";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
+import { ErrorContext } from "../Modal/modalContext";
 
 export function NavButton(props: {
   link: string;
@@ -40,20 +41,21 @@ export function DisconnectButton(props: { callback?: () => void }) {
 
     setAuthToken(null);
     localStorage.clear();
+    window.location.reload();
 
     await axios.put(apiBaseURL + "auth/disconnect", null, {
       headers: {
-        token: token,
+        Authorization: `Bearer ${token}`,
       },
     });
   };
 
-  return (
+    return (
     <Link
-      to="/"
-      className="navLink"
-      id={"disconnectButton"}
-      onClick={handleDisconnect}
+    to="/"
+    className="navLink"
+    id={"disconnectButton"}
+    onClick={handleDisconnect}
     >
       Disconnect
     </Link>
@@ -63,19 +65,40 @@ export function DisconnectButton(props: { callback?: () => void }) {
 function BellNotif() {
   //Marche que quan user est dans menu(websocket que la ou y chat change ca)
   const { notif, setNotif } = useContext(NotifContext);
+  const { setAuthToken } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+  const token = localStorage.getItem("token");
 
-  const fetchNotifs = async () => {
-    let JWTToken = localStorage.getItem("token");
-    await axios
-      .get(apiBaseURL + "user/notifs", {
-        headers: { Authorization: `Bearer ${JWTToken}` },
-      })
-      .then((res) => {
-        if (res.data) setNotif(true);
-      });
-  };
+  useEffect(() => {
+    const fetchNotifs = async () => {
+      let JWTToken = localStorage.getItem("token");
+      await axios
+        .get(apiBaseURL + "user/notifs", {
+          headers: { Authorization: `Bearer ${JWTToken}` },
+        })
+        .then((res) => {
+          if (res.data) setNotif(true);
+        })
+        .catch((error) => {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (error.response.status === 403) {
+            localStorage.clear();
+            setAuthToken(null);
+            setErrorMessage("Session expired, please login again!");
+          } else setErrorMessage(error.response.data.message + "!");
+        });
+    };
 
-  fetchNotifs().then(() => {});
+    fetchNotifs().then(() => {});
+  }, []);
+
+  if (token === null) {
+    setAuthToken(null);
+    setErrorMessage("Session expired, please login again!");
+    return <Navigate to={"/"} />;
+  }
 
   if (!notif)
     return (

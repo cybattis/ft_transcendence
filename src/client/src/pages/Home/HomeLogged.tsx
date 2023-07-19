@@ -87,7 +87,7 @@ function MatchmakingButton(props: {
 
       if (countdownTimeout) clearTimeout(countdownTimeout);
     };
-  }, []);
+  }, [timeLeft, state, props]);
 
   const handleClick = () => {
     let decoded: JwtPayload | null = null;
@@ -274,8 +274,51 @@ function Winrate(props: { data: UserInfo }) {
   );
 }
 
+function HomeStatContainerDesktop(props: { data: UserInfo }) {
+  return (
+    <div className="home-stats-container-desktop">
+      <LastMatch data={props.data} />
+      <div className={"home-stat-box"}>
+        <h5>Matches</h5>
+        <hr className={"user-profile-hr"} />
+        <div>{props.data.games?.length}</div>
+      </div>
+      <Winrate data={props.data} />
+      <div className={"home-stat-box"}>
+        <h5>ELO</h5>
+        <hr className={"user-profile-hr"} />
+        <div>{props.data.ranking}</div>
+      </div>
+    </div>
+  );
+}
+
+function HomeStatContainerMobile(props: { data: UserInfo }) {
+  return (
+    <div className="home-stats-container-mobile">
+      <div id={"hmc-g1"}>
+        <LastMatch data={props.data} />
+        <div className={"home-stat-box"}>
+          <h5>Matches</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{props.data.games?.length}</div>
+        </div>
+      </div>
+      <div id={"hmc-g2"}>
+        <Winrate data={props.data} />
+        <div className={"home-stat-box"}>
+          <h5>ELO</h5>
+          <hr className={"user-profile-hr"} />
+          <div>{props.data.ranking}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserProfile(props: { data: UserInfo }) {
   const data = props.data;
+  const xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
 
   return (
     <div id={"HomeUserInfo"} className="userProfile_container">
@@ -284,24 +327,12 @@ function UserProfile(props: { data: UserInfo }) {
         <div className="info">
           <h5>{data.nickname}</h5>
           <p>LVL {data.level}</p>
-          <p>{data.xp} xp</p>
+          <p>{xp} XP</p>
           <XPBar xp={data.xp} lvl={data.level} />
         </div>
       </div>
-      <div className="home-stats-container">
-        <LastMatch data={data} />
-        <div className={"home-stat-box"}>
-          <h5>Game played</h5>
-          <hr className={"user-profile-hr"} />
-          <div>{data.games?.length}</div>
-        </div>
-        <Winrate data={data} />
-        <div className={"home-stat-box"}>
-          <h5>ELO</h5>
-          <hr className={"user-profile-hr"} />
-          <div>{data.ranking}</div>
-        </div>
-      </div>
+      <HomeStatContainerDesktop data={data} />
+      <HomeStatContainerMobile data={data} />
     </div>
   );
 }
@@ -329,23 +360,32 @@ export function HomeLogged() {
     async function fetchData() {
       const payload: JwtPayload = jwt_decode(token as string);
 
+      console.log(payload);
       await axios
-        .get(apiBaseURL + "user/profile/" + payload.username, {
+        .get(apiBaseURL + "user/profile/" + payload.nickname, {
           headers: {
             "Content-Type": "application/json",
-            token: token,
+            Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => {
           setData(res.data);
         })
         .catch((error) => {
-          if (error.response && error.response.status === 403) {
+          if (error.response === undefined) {
+            localStorage.clear();
+            setErrorMessage("Error unknown...");
+          } else if (
+            error.response.status === 403 ||
+            error.response.status === 400
+          ) {
             localStorage.clear();
             setAuthToken(null);
             setErrorMessage("Session expired, please login again!");
-            return <Navigate to={"/"} />;
-          } else setErrorMessage(error.message);
+          } else {
+            setErrorMessage(error.response.data.message + "!");
+          }
+          return <Navigate to={"/"} />;
         });
     }
 

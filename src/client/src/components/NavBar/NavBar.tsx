@@ -21,7 +21,7 @@ function MobileNavBar() {
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
-    if (decoded) username = decoded.username;
+    if (decoded) username = decoded.nickname;
     else username = "";
     if (decoded) id = decoded.id;
     else id = "";

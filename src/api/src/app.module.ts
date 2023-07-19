@@ -15,10 +15,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ChatModule } from './chat/chat.module';
 import { MatchmakingModule } from './matchmaking/matchmaking.module';
 import { Channel } from './channel/entity/Channel.entity';
+import { MultiplayerModule } from "./multiplayer/multiplayer.module";
 
 @Module({
   imports: [
     MatchmakingModule,
+    MultiplayerModule,
     UserModule,
     AuthModule,
     ChatModule,

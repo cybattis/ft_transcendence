@@ -30,3 +30,10 @@ export interface TokenData {
   iat: number;
   exp: number;
 }
+
+export interface UserFriend {
+  FriendsId: number[];
+  RequestedId: number[];
+  blockedId: number[];
+  BlockedById: number[];
+}
