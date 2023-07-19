@@ -26,6 +26,7 @@ export class ChannelStructure {
     public operator: string[];
     public pswd: string;
     public ban: banStructure[];
+    public mute: string[];
 
     constructor (channelName: string, username: string, pass: string) {
         this.name = channelName;
@@ -35,6 +36,7 @@ export class ChannelStructure {
         this.operator = [];
         this.operator.push(username);
         this.ban = [];
+        this.mute= [];
         this.pswd = "";
     }
 

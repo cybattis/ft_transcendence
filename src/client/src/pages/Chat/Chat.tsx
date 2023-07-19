@@ -10,6 +10,7 @@ import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/addButton.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
+import UsersList from "./List/UsersList";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -140,18 +141,29 @@ export default function ChatClient() {
     const [time, setTime] = useState("");
     const [errors, setErrors] = useState("");
 
+    const isValidTime = async (time: string) => {
+      for (let i = 0; time[i]; i ++)
+      {
+        if (time[i] < '0' || time[i] > '9')
+          return false;
+      }
+      return true;
+    }
+
     const handleBan = async (e: any) => {
       e.preventDefault();
 
       if (!time || !time[0])
+        setTime("30000");
+      else if (time[0] === '-' || !isValidTime(time))
       {
-        setErrors("Enter a time limit.")
+        setErrors("Enter a valid time.")
         return ;
       }
 
       const channel = takeActiveCanal();
       const sendBan = {
-        cmd: "ban",
+        cmd: "+b",
         username: username,
         target: usr,
         channel: channel,
@@ -599,24 +611,29 @@ export default function ChatClient() {
   //Si op donner tout les boutons
 
   return (
-      <div className='chat'>
-        <h1>Chat</h1>
-        <div className='chat-container'>
-          <div className="list">
-            <ChannelList channelList={channelList} onStringChange={handleStringChange} />
-          </div>
-            <Join />
-            {buttons && <Buttons />}
-          <h3 id='canal'>{defaultChannelGen}</h3>
-            <Quit canal={takeActiveCanal()}/>
-          <div className="rcv-mess-container">
-            <ChatMap messages={messages}/>
-          </div>
-          <div className='send-mess-container'>
-            <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
-            <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
+      <>
+        <div className='chat'>
+          <h1>Chat</h1>
+          <div className='chat-container'>
+            <div className="list">
+              <ChannelList channelList={channelList} onStringChange={handleStringChange} />
+            </div>
+              <Join />
+              {buttons && <Buttons />}
+            <h3 id='canal'>{defaultChannelGen}</h3>
+              <Quit canal={takeActiveCanal()}/>
+            <div className="rcv-mess-container">
+              <ChatMap messages={messages}/>
+            </div>
+            <div className='send-mess-container'>
+              <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
+              <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
+            </div>
           </div>
         </div>
-      </div>
+        <div>
+          <UsersList channel={takeActiveCanal()}/>
+        </div>
+      </>
   );
 }

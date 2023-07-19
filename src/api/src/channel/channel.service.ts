@@ -41,6 +41,7 @@ export class ChannelService implements OnModuleInit {
                 owner : '',
                 operator: [],
                 ban: [],
+                mute: [],
                 password: '',
             })
     } 
@@ -336,6 +337,7 @@ export class ChannelService implements OnModuleInit {
                     owner : username,
                     operator: [username],
                     ban: [],
+                    mute: [],
                     password: hash,
                 })
                 socket.emit('join', channel);

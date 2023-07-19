@@ -27,6 +27,9 @@ operator: string[];
 @Column('text', { array: true })
 ban: string[];
 
+@Column('text', { array: true })
+mute: string[];
+
 @Column({ type: 'varchar'})
 password: string;
 }
