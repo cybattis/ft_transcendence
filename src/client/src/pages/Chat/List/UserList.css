@@ -1,0 +1,11 @@
+.lists{
+    display: flex;
+
+    height: 100%;
+    width: 100%;
+    max-width: 200px;
+
+    flex-direction: column;
+
+    overflow-y: scroll;
+}

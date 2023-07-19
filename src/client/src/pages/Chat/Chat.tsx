@@ -320,25 +320,29 @@ export default function ChatClient() {
   }
 
   function ChatMap({ messages }: { messages: ChatInterface[] }) {
+    const activeChannel = document.getElementById("canal")?.innerHTML || "";
 
-    const filteredElements = post
-      .filter((rcv: ChatInterface) => rcv.channel === takeActiveCanal())
-      .map((rcv: ChatInterface, key: number) => (
-        rcv.emitter === username ? (
-          <li className="Emt" key={key}>
-            <div className="contain-emt" onClick={() => { handleButton(rcv.emitter) }}>{rcv.emitter}</div>
-            <div className="contain-msg">{rcv.content}</div>
-          </li>
-        ) : (
-          <li className="Rcv" key={key}>
-            <div className="contain-emt" onClick={() => { handleButton(rcv.emitter) }}>{rcv.emitter}</div>
-            <div className="contain-msg">{rcv.content}</div>
-          </li>
-        )
-      ));
-    return <>
-      <ul className="list-msg-container">{filteredElements}</ul>
-    </>
+    return (
+      <>
+        <ul className="list-msg-container">
+          {messages
+          .filter((messages) => messages.channel === activeChannel)
+          .map(messages => (
+          messages.emitter === username ? (
+            <li className="Emt" key={messages.id}>
+              <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+              <div className="contain-msg">{messages.content}</div>
+            </li>
+          ) : (
+            <li className="Rcv" key={messages.id}>
+              <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+              <div className="contain-msg">{messages.content}</div>
+            </li>
+          )
+        ))}
+        </ul>
+      </>
+    )
   }
 
   function JoinForm() {
@@ -416,13 +420,13 @@ export default function ChatClient() {
     return <div className="join-form">
       <form method="get" onSubmit={handleSubmitJoin}>
         <h4>Join a Channel</h4>
-        <Select
-          defaultValue={options[0]}
-          onChange={handleSelect}
-          options={options}
-        />
         <div className="test">
           {errorInput ? <p className="error"> {errorInput} </p> : null}
+          <Select
+            defaultValue={options[0]}
+            onChange={handleSelect}
+            options={options}
+          />
           <label>
             Channel<br />
           </label>
@@ -537,7 +541,7 @@ export default function ChatClient() {
               newData.push(response.data[i])
           }
           setMessages(newData);
-        })
+        });
       setRecvMess(data.msg);
     }
 
@@ -640,36 +644,6 @@ export default function ChatClient() {
     }
   }
 
-  function senderIsBlocked(sender: string) {
-    for (let index = 0; index < blocedList.length; index++) {
-      if (sender === blocedList[index]) return true;
-    }
-    return false;
-  }
-
-  const BanForm = (target: string, action: string, time: string) => {
-    const channel = takeActiveCanal();
-    const sendBan = {
-      cmd: action,
-      username: username,
-      target: target,
-      channel: channel,
-      time: time,
-    };
-    ChatClientSocket.onBan(sendBan);
-  };
-
-  const KickForm = (target: string) => {
-    const channel = takeActiveCanal();
-    const sendKick = {
-      cmd: "kick",
-      username: username,
-      target: target,
-      channel: channel,
-    };
-    ChatClientSocket.onKick(sendKick);
-  };
-
   function takeMess(mess: string): string {
     return mess.substring(mess.indexOf("%") + 1);
   }
@@ -690,14 +664,10 @@ export default function ChatClient() {
     }
   };
 
-  //Faire en sorte que si c est moi juste voir profile et msgprv
-  //Si bloque du chat bouton debloque et profile
-  //Si op donner tout les boutons
-
   return (
-      <>
+      <div className="chat-div">
+        <h1>Chat</h1>
         <div className='chat'>
-          <h1>Chat</h1>
           <div className='chat-container'>
             <div className="list">
               <ChannelList channelList={channelList} onStringChange={handleStringChange} />
@@ -715,10 +685,10 @@ export default function ChatClient() {
               <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
             </div>
           </div>
-        </div>
-        <div>
+        <div className="user-lists">
           <UsersList channel={takeActiveCanal()}/>
         </div>
-      </>
+        </div>
+      </div>
   );
 }

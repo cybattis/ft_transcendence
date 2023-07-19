@@ -1,11 +1,23 @@
+.chat-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    width: 100%;
+}
+
 .chat{
     box-sizing: border-box;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex: 3 2;
-
+    
+    height: 80%;
+    width: 100%;
     justify-content: center;
     align-items: center;
+    background: rgba(254, 254, 254, 0.1) ;
+    border-radius: 20px;
 }
 
 .chat-container{
@@ -15,19 +27,17 @@
 
     align-items: center;
     border-radius: 10px;
-    background: rgba(254, 254, 254, 0.1) ;
     text-align: center;
 
     height: 100%;
     width: 100%;
-
-    border-radius: 10px;
-    background: rgba(254, 254, 254, 0.1);
 }
 
 .rcv-mess-container{
     flex: 1;
     flex-grow: 2;
+    display: flex;
+    position: relative;
 
     width: 100%;
     overflow-y: scroll;
@@ -36,10 +46,17 @@
 .list-msg-container{
     margin: 0;
     padding: 0;
+    width: 100%;
+
+    display: flex;
+    position: absolute;
+    z-index: 1;
+    flex-direction: column;
 }
 
 .Rcv {
     display: flex;
+    position: relative;
     flex-direction: column;
     list-style-type: none;
     text-align: left;
@@ -48,28 +65,34 @@
 
 .Emt {
     display: flex;
+    position: relative;
     flex-direction: column;
     list-style-type: none;
     text-align: right;
     margin: 5px;
+    overflow-wrap: break-word;
 }
 
 .contain-emt {
     cursor: pointer;
+    overflow-wrap: break-word;
+    width: 100%;
 }
 
 .Rcv .contain-msg{
-    display: grid;
+    display: table-caption;;
     border-radius: 5px;
     padding: 5px;
     background-color: #4E458C;
+    overflow-wrap: break-word;
 }
 
 .Emt .contain-msg{
-    display: table;
+    display: table-caption;;
     border-radius: 5px;
     padding: 5px;
     background-color: #00CCCC;
+    overflow-wrap: break-word;
 }
 
 .container-action-chat {
@@ -145,6 +168,7 @@
 
 .join-form {
     position: absolute;
+    z-index: 99;
     display: flex;
     flex-direction: column;
 
@@ -222,4 +246,16 @@
 
 .chat-buttons:hover {
     background-color: rgb(137, 51, 174);
+}
+
+.user-lists {
+    display: flex;
+
+    height: 100%;
+    width: 50%;
+    background-color: #2b2b3143;
+
+    border-radius: 10px;
+    align-items: center;
+    text-align: center;
 }
