@@ -51,8 +51,7 @@ export class AuthController {
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         const token = await this.authService.sendIntraToken(dataUser);
-        console.log(clientBaseURL);
-        return res.redirect(clientBaseURL + 'loading?' + token.token);
+        return res.redirect(clientBaseURL + 'loading?' + token);
       } else if (user.IsIntra) {
         const token = await this.authService.intraSignin(user);
         if (token)
@@ -63,7 +62,7 @@ export class AuthController {
           'You already have an account. Go check your mailbox.',
         );
       }
-      throw new BadRequestException('Email already in use');
+      return new BadRequestException('Email already in use');
     } catch (err) {
       console.log(err);
       return res.redirect(clientBaseURL);
@@ -135,8 +134,6 @@ export class AuthController {
   async update(@Param('id') id: number) {
     const token = await this.authService.generateToken(id);
     await this.userService.updateUserVerifiedStatus(id);
-    if (token)
-      return token.token;
-    return null;
+    return token;
   }
 }
