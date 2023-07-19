@@ -31,7 +31,7 @@ export default function Notifications() {
     }
 
     await axios
-      .put(apiBaseURL + "/user/accept/" + id, null, {
+      .put(apiBaseURL + "user/accept/" + id, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

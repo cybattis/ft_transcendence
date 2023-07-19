@@ -46,6 +46,19 @@ export class ChannelController {
         return (await this.channelRepository.find({where: {channel : decodedName}}));
     }
     
+    @Get('/channel/ope/:channel/:usr')
+    async findOpeChannel(@Param('channel') channel : string, @Param('usr') usr:string ): Promise<boolean>{
+        channel = "#" + channel;
+        const channelInfo: Channel | null = await this.channelRepository.findOneBy({channel : channel});
+        if (channelInfo){
+            for (let index = 0; channelInfo.operator[index]; index++){
+                if (channelInfo.operator[index] === usr)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     @Get('/channel/find/:channel/:pwd')
     async findChannelPsw(@Param('channel') channel: string, @Param('pwd') pwd: string) {
         console.log('inpsw');
