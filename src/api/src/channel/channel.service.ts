@@ -367,6 +367,7 @@ export class ChannelService implements OnModuleInit {
         const channel = username + target;
         if (socketTarget)
         {
+            console.log("in Priv");
             await this.channelRepository.save({
                 channel: channel,
                 status: 'message',
@@ -377,7 +378,7 @@ export class ChannelService implements OnModuleInit {
                 password: '',
             })
             socket.to(socketTarget).emit('inv', {channel});
-            server.to(socket.id).emit('inv', {});
+            server.to(socket.id).emit('inv', {channel});
         }
 
     }

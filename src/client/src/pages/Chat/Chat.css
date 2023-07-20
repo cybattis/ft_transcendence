@@ -309,7 +309,9 @@
 .li-prv {
     list-style: none;
 }
+
 .btn-handle-prv {
+    z-index:91;
     width: 70px;
     display: flex;
     flex-direction: column;
@@ -329,6 +331,7 @@
     position: absolute;
     display: flex;
     flex-direction: column;
+    z-index: 90;
 
     top: 20%;
     min-width: max-content;
@@ -341,4 +344,16 @@
     background-color: var(--bg);
     border: 2px solid var(--purple-darker);
     border-radius: 20px;
+}
+
+.user-lists {
+    display: flex;
+
+    height: 100%;
+    width: 50%;
+    background-color: #2b2b3143;
+
+    border-radius: 10px;
+    align-items: center;
+    text-align: center;
 }

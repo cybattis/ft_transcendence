@@ -12,6 +12,7 @@ import joinButton from "../../resource/addButton.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
+import UsersList from "./List/UsersList";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -336,11 +337,11 @@ export default function ChatClient() {
               <div className="contain-msg">{messages.content}</div>
             </li>
           ) : messages.emitter === "announce" ? (
-            <li className="Announce" key={messages.emitter}>
+            <li className="Announce" key={messages.id}>
               <div className="contain-ann-msg">{messages.content}</div>
             </li>
           ) : messages.emitter === "server" ? (
-            <li className="Serv" key={messages.emitter}>
+            <li className="Serv" key={messages.id}>
               <div className="contain-serv-msg">{messages.content}</div>
             </li>
           ) : (
@@ -469,6 +470,7 @@ export default function ChatClient() {
   function PrivateMessage() {
 
     const btnPrv = () => {
+      console.log('Inside');
       messagePrivateForm ? setMessagePrivateForm(false) : setMessagePrivateForm(true); setButtons(false); setJoinForm(false);
     }
 
@@ -505,17 +507,17 @@ export default function ChatClient() {
     function ListUsers() {
       const list = usersList.map((user: any) =>
         username !== user.nickname ?
-          <li className='li-prv' key={user.nickname}>
+          <div className='li-prv' key={user.nickname}>
             <button className="btn-handle-prv" onClick={() => handlePrivate(user.nickname)} >
               <Avatar size={"50px"} img={user.avatarUrl} />
               {user.nickname}
             </button>
-          </li>
+          </div>
           :
-          <li className='li-prv' key={user.nickname}></li>
+          <div className='li-prv' key={user.nickname}></div>
       )
 
-      return (<ul className="chat-list-ctnr">{list}</ul>);
+      return (<div className="chat-list-ctnr">{list}</div>);
     }
 
     return <div className="pop-private">
