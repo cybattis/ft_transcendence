@@ -39,6 +39,7 @@ function Quit(props: { canal: string }) {
 //FAIRE EN SORTE QUE BOUTONS S ADAPTE A SI IL EST DANS LE CHANNEL OU NON
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
+//BLOCK MARCHE QUE EN RELOADANT
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +57,8 @@ export default function ChatClient() {
   const [usr, setUsr] = useState("");
   const [myBlockedList, setMyBlockedList] = useState<string[]>([]);
   const [isOpe, setIsOpe] = useState(false);
+  const [isBan, setIsBan] = useState(false);
+  const [isMute, setIsMute] = useState(false);
 
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
@@ -153,6 +156,39 @@ export default function ChatClient() {
       channel: channel,
     };
     ChatClientSocket.onKick(sendKick);
+  }
+
+  const handleUnBan = async () => {
+    const channel = takeActiveCanal();
+    const sendBan = {
+      cmd: "-b",
+      username: username,
+      target: usr,
+      channel: channel,
+    };
+    ChatClientSocket.onUnBan(sendBan);
+  }
+
+  const handleMute = async () => {
+    const channel = takeActiveCanal();
+    const sendMute = {
+      cmd: "mute",
+      username: username,
+      target: usr,
+      channel: channel,
+    };
+    ChatClientSocket.onMute(sendMute);
+  }
+
+  const handleUnMute = async () => {
+    const channel = takeActiveCanal();
+    const sendMute = {
+      cmd: "mute",
+      username: username,
+      target: usr,
+      channel: channel,
+    };
+    ChatClientSocket.onUnMute(sendMute);
   }
 
   function Ban() {
@@ -293,6 +329,10 @@ export default function ChatClient() {
           .then((res) => {
             if (res.data.operator.includes(payload.nickname))
               setIsOpe(true);
+            if (res.data.ban.includes(usr))
+              setIsBan(true);
+            if (res.data.mute.includes(usr))
+              setIsMute(true);
           })
           .catch((error) => {
             console.log(error);
@@ -312,7 +352,10 @@ export default function ChatClient() {
         <div className="ctn-btn-action">
           {!me && <button className="chat-buttons" onClick={handleBlock}>Block</button>}
           {!me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>}
-          {!me && isOpe && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
+          {!me && isOpe && !isBan && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
+          {!me && isOpe && isBan && <button className="chat-buttons" onClick={handleUnBan}>UnBan</button>}
+          {!me && isOpe && !isMute && <button className="chat-buttons" onClick={handleMute}>Mute</button>}
+          {!me && isOpe && isMute && <button className="chat-buttons" onClick={handleUnMute}>UnMute</button>}
           <Link to={`/profile/${usr}`}>
             <button className="chat-buttons">Profile</button>
           </Link>

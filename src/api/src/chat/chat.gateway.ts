@@ -46,8 +46,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
-      const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.joinChannel(socket, type, username, channel, pass, blockedUsers);
+
   }
 
   @SubscribeMessage('prv')
@@ -58,6 +59,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('blocked')
   async handleBlocked(@ConnectedSocket() socket: Socket, @MessageBody() data: {target: string}) {
     await this.channelService.blockedUser(this.server ,socket, data.target);
+  }
+
+  @SubscribeMessage('mute')
+  async handleMute(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.muteUser(socket, data.username, data.target, data.channel, blockedUsers);
+  }
+
+  @SubscribeMessage('unmute')
+  async handleUnMute(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.unmuteUser(socket, data.username, data.target, data.channel, blockedUsers);
   }
 
   @SubscribeMessage('op')

@@ -272,7 +272,8 @@
 .ctn-btn-action {
     display: flex;
     flex-direction: row;
-    justify-content: baseline;
+    justify-content: center;
+    align-items: center;
 }
 .chat-buttons {
     height: 50px;

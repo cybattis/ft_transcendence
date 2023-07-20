@@ -50,7 +50,7 @@ export default function UsersList(props: { channel: string }) {
                 <>
                     <h4>Ban</h4>
                     {banList.map((username) => (
-                        <button className="channel-waiting" key={username} value={username}>
+                        <button className="user-list" key={username} value={username}>
                             {username}
                         </button>
                     ))}
@@ -68,7 +68,7 @@ export default function UsersList(props: { channel: string }) {
                 <>
                     <h4>Mute</h4>
                     {muteList && muteList.map((username) => (
-                        <button className="channel-waiting" key={username} value={username}>
+                        <button className="user-list" key={username} value={username}>
                             {username}
                         </button>
                     ))}
@@ -84,7 +84,7 @@ export default function UsersList(props: { channel: string }) {
             <div className="lists">
                 <h4>Users</h4>
                 {usersList && usersList.map((username) => (
-                    <button className="channel-waiting" key={username} value={username}>
+                    <button className="user-list" key={username} value={username}>
                         {username}
                     </button>
                 ))}

@@ -58,7 +58,6 @@ export namespace ChatClientSocket {
     });
 
     socket.on("join", (room: string) => {
-      console.log(room, " joined.");
       newJoinChannel.forEach(callback => callback(room));
     });
 
@@ -104,6 +103,21 @@ export namespace ChatClientSocket {
   export function onBan(sendBan: {cmd: string, username: string, target: string, channel: string, time: string}) {
     if (!checkChatConnection()) return;
     socket.emit("ban", sendBan);
+  }
+
+  export function onUnBan(sendBan: {cmd: string, username: string, target: string, channel: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("unban", sendBan);
+  }
+
+  export function onMute(sendMute: {cmd: string, username: string, target: string, channel: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("mute", sendMute);
+  }
+
+  export function onUnMute(sendMute: {cmd: string, username: string, target: string, channel: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("unmute", sendMute);
   }
 
   export function onQuit(sendQuit: {cmd: string, username: string, channel: string}) {

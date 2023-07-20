@@ -3,9 +3,24 @@
 
     height: 100%;
     width: 100%;
-    max-width: 200px;
+    max-width: 400px;
 
     flex-direction: column;
 
     overflow-y: scroll;
+
+    align-items: center;
+    text-align: center;
+}
+
+.user-list {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    background-color: #3E3C73;
+    font-weight: bold;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    width: 60%;
 }

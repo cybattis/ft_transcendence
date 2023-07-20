@@ -84,6 +84,7 @@ export class ChannelService implements OnModuleInit {
             await this.kickOp(channelToUpdate, username);
         if (this.checkUserIsHere(channelToUpdate.users, username))
             await this.kickUser(channelToUpdate, username);
+        
         await this.deleteChannel(channelToUpdate);
     }
 
@@ -419,6 +420,9 @@ export class ChannelService implements OnModuleInit {
     }
 
     async sendMessage(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+        const chan = await this.channelRepository.findOne({where: {channel: channel}});
+        if (chan && chan.mute.includes(sender))
+            return ;
         const send = {sender, msg, channel, blockedChat};
         if (channel[0] === "#"){
             const emiter: any = await this.userService.findByLogin(sender); 
@@ -501,13 +505,60 @@ export class ChannelService implements OnModuleInit {
             }
         }
         else if (action === "QUIT")
-            if (channel[0] === "#")
+        {
+            const chan = await this.channelRepository.findOne({where: {channel: channel}});
+            if (chan && channel[0] === "#")
                 msg = username + " just left the channel. Goodbye :(";
+        }
         if (msg)
         {
             const send = {emitter, msg, channel, blockedChat};
             await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
             socket.broadcast.emit('rcv', send);
+        }
+    }
+
+    async muteUser(socket: Socket, username: string, target: string, channel: string, blockedChat: any) {
+        const chan = await this.channelRepository.findOne({where: {channel: channel}});
+        if (chan)
+        {
+            if (!chan.mute.includes(target))
+            {
+                chan.mute.push(target);
+                await this.channelRepository.save(chan);
+                const msg = target + " has been muted by " + username;
+                const emitter = "server";
+                const send = {emitter, msg, channel, blockedChat};
+                await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
+                socket.broadcast.emit('rcv', send);
+            }
+        }
+    }
+
+    async unmuteUser(socket: Socket, username: string, target: string, channel: string, blockedChat: any) {
+        const chan = await this.channelRepository.findOne({where: {channel: channel}});
+        if (chan)
+        {
+            if (chan.mute.includes(target))
+            {
+                for (let i = 0; chan.mute[i]; i ++)
+                {
+                    if (chan.mute[i] === target)
+                    {
+                        const newMute: string[] = chan.mute.splice(i, 1);
+                        await this.channelRepository.update(chan.id, {
+                            mute: newMute,
+                        });
+                        await this.channelRepository.save(chan);
+                        break ;
+                    }
+                }
+                const msg = target + " has been unmuted by " + username;
+                const emitter = "server";
+                const send = {emitter, msg, channel, blockedChat};
+                await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
+                socket.broadcast.emit('rcv', send);
+            }
         }
     }
 }
