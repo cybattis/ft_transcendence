@@ -47,7 +47,7 @@ function MobileNavBar() {
         <Logo />
       </Link>
       <div className={"navbar-mobile-div"}></div>
-      <Notification id={id} />
+      <Notification />
       {authed ? (
         <button className={"navbar-button"} onClick={handleSidePanel}>
           <img src={navbarIcon} alt="navbar icon" width={25} height={25} />

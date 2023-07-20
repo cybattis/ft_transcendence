@@ -93,7 +93,7 @@ function Logged() {
 
   return (
     <>
-      <Notification id={id} />
+      <Notification />
       <NavButton content={"Profile"} link={`/profile/${username}`} />
       <NavButton content={"Settings"} link={"/settings"} />
       <DisconnectButton />

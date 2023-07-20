@@ -109,11 +109,9 @@ function BellNotif() {
   );
 }
 
-export function Notification(props: { id: string | null }) {
-  if (!props.id) return null;
-
+export function Notification() {
   return (
-    <Link to={`/notifications/${props.id}`} className="notifs">
+    <Link to={`/notifications`} className="notifs">
       <BellNotif />
       Notifs
     </Link>

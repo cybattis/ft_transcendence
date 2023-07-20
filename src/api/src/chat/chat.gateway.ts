@@ -47,7 +47,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
-    this.channelService.joinChannel(socket, type, username, channel, pass);
+    await this.channelService.joinChannel(socket, type, username, channel, pass);
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.announce(socket, "JOIN", username, channel, blockedUsers);
   }
 
   @SubscribeMessage('prv')
@@ -63,8 +65,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('op')
   async handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(socket.id, data);
-    await this.channelService.opChannel(data.channel, data.cmd, data.author, data.target);
+    await this.channelService.opChannel(socket, data.channel, data.cmd, data.author, data.target);
   }
 
   @SubscribeMessage('quit')
@@ -77,14 +78,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('ban')
   async handleBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any){
-    console.log(socket.id, data);
     await this.channelService.banChannel(data.cmd, data.username, data.target, data.channel, data.time);
     const targetSocket = await this.channelService.takeSocketByUsername(data.target);
     const channel = data.channel;
     if (targetSocket)
     {
-      console.log(`inside`) ;
       this.server.to(targetSocket).emit("quit", channel);
+      const blockedUsers: any = await this.userService.findByLogin(data.username);
+      await this.channelService.channelAnnoucement(socket, data.channel, "banned", data.username, blockedUsers.blockedChat, data.target);
     }
   }
 
@@ -93,7 +94,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("fonction info");
     const channel = data.channel;
     const msg = await this.channelService.infoChannel(channel);
-    console.log(msg);
     this.server.emit('rcv', {msg, channel});
   }
 
@@ -103,7 +103,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(`Bien le sur ${data.target}`);
       const target = this.channelService.takeSocketByUsername(data.target);
       if (target)
+      {
         this.server.to(target).emit("quit", data.channel);
+        const blockedUsers: any = await this.userService.findByLogin(data.username);
+        await this.channelService.channelAnnoucement(socket, data.channel, "kicked", data.username, blockedUsers.blockedChat, data.target);
+      }
     }
 
   }

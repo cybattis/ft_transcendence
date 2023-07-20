@@ -91,7 +91,7 @@ function FriendsList() {
    if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
     return <>
     <h4>Friends</h4>
-    <ul>
+    <>
       {dataOnline.map(dataOnline => {
         return <div className="friends" key={dataOnline.nickname}>
             <Link to={`/profile/${dataOnline.nickname}`} className="friendLink">
@@ -114,7 +114,7 @@ function FriendsList() {
               </Link>
           </div>;
       })}
-    </ul>
+    </>
 </>
    }
    else

@@ -41,6 +41,7 @@ export class ChannelService implements OnModuleInit {
                 owner : '',
                 operator: [],
                 ban: [],
+                mute: [],
                 password: '',
             })
     } 
@@ -49,7 +50,6 @@ export class ChannelService implements OnModuleInit {
         //console.log(`length ${this.channelStruct.length}`);
         for (let index = 0; index < this.channelStruct.length; index++) {
             if (channel === this.channelStruct[index].name) {
-                console.log(this.channelStruct[index].users);
                 return (this.channelStruct[index].users)
             }
         }
@@ -152,7 +152,7 @@ export class ChannelService implements OnModuleInit {
         await this.channelRepository.save(channelToUpdate);
     }
 
-    async opChannel(channel: string, cmd: string, author: string, target: string){
+    async opChannel(socket: Socket, channel: string, cmd: string, author: string, target: string){
         const channelToUpdate: Channel | null = await this.channelRepository.findOneBy({channel: channel});
         if (!channelToUpdate)
             return;
@@ -161,9 +161,15 @@ export class ChannelService implements OnModuleInit {
             return ;
         }
         if (cmd === "+o")
+        {
             await this.addNewOp(channelToUpdate, target);
+            const blockedUsers: any = await this.userService.findByLogin(author);
+            await this.channelAnnoucementOp(socket, channel, "op", author, blockedUsers.blockedChat, target);
+        }
         else if (cmd === "-o") {
             await this.kickOp(channelToUpdate, target);
+            const blockedUsers: any = await this.userService.findByLogin(author);
+            await this.channelAnnoucementOp(socket, channel, "deop", author, blockedUsers.blockedChat, target);
         }
         else {
             console.log("error invalid cmd");
@@ -334,6 +340,7 @@ export class ChannelService implements OnModuleInit {
                     owner : username,
                     operator: [username],
                     ban: [],
+                    mute: [],
                     password: hash,
                 })
                 socket.emit('join', channel);
@@ -452,5 +459,65 @@ export class ChannelService implements OnModuleInit {
                 return new UnauthorizedException("Password mismatch");
         }
         return new NotFoundException("Channel doesn't exists");
+    }
+
+    async channelAnnoucement(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any, target: string) {
+        const emitter = "server";
+        let newMsg = target + " has been " + msg + " by " + sender + ".";
+        const send = {emitter, newMsg, channel, blockedChat};
+        if (channel[0] === "#"){
+            await this.chatRepository.save({channel : channel, content: newMsg, emitter: emitter, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
+        }
+    }
+
+    async channelAnnoucementOp(socket: Socket, channel: string, action: string, sender: string, blockedChat: any, target: string) {
+        const emitter = "server";
+        let msg = "";
+        if (action === "op")
+            msg = sender + " made " + target + " an operator of this channel.";
+        else if (action === "deop")
+            msg = sender + " withdraw " + target + " powers, he is no longer an operator.";
+        const send = {emitter, msg, channel, blockedChat};
+        if (channel[0] === "#"){
+            await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
+        }
+    }
+
+    async announce(socket: Socket, action: string, username: string, channel: string, blockedChat: any) {
+        const emitter = "announce";
+        let msg = "";
+        if (action === "JOIN")
+        {
+            if (channel[0] === "#")
+            {
+                const chan = await this.channelRepository.findOne({where: {channel: channel}});
+                if (chan && !this.checkUserIsHere(chan.users, username))
+                {
+                    if (channel === "#general")
+                    msg = username + " just arrived on the server!";
+                }
+                else
+                    msg = username + " just joined the channel. Welcome him/her nicely.";
+            }
+        }
+        else if (action === "QUIT")
+        {
+            if (channel[0] === "#")
+            {
+                const chan = await this.channelRepository.findOne({where: {channel: channel}});
+                if (chan && !this.checkUserIsHere(chan.users, username))
+                {
+                    if (channel === "#general")
+                        msg = username + " just left the server!";
+                    else
+                        msg = username + " just left the channel. Goodbye :(.";
+                }
+            }
+        }
+        const send = {emitter, msg, channel, blockedChat};
+        await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
+        socket.broadcast.emit('rcv', send);
     }
 }

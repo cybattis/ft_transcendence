@@ -17,8 +17,8 @@ async function ValidateEmail() {
     .then((res) => {
       console.log(res.data);
       const data = res.data;
-      localStorage.setItem("token", data.token);
-      setAuthToken(data.token);
+      localStorage.setItem("token", data);
+      setAuthToken(data);
     })
     .catch((error) => {
       if (error.response === undefined) {

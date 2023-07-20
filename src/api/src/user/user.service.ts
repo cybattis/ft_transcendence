@@ -348,7 +348,7 @@ export class UserService implements OnModuleInit {
         requestedId: true,
       },
     });
-    if (user && user.friendsId) {
+    if (user && user.requestedId) {
       const friends: User[] = [];
       for (let i = 0; user.requestedId[i]; i++) {
         const friend: any = await this.usersRepository.findOne({
@@ -357,7 +357,6 @@ export class UserService implements OnModuleInit {
         });
         friends.push(friend);
       }
-      console.log(friends);
       return friends;
     }
     return null;
@@ -369,6 +368,7 @@ export class UserService implements OnModuleInit {
       select: {
         id: true,
         requestedId: true,
+        friendsId: true,
       },
     });
     const friend: any = await this.usersRepository.findOne({
