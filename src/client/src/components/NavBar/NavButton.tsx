@@ -72,9 +72,10 @@ function BellNotif() {
   useEffect(() => {
     const fetchNotifs = async () => {
       let JWTToken = localStorage.getItem("token");
-      await axios
+      if (JWTToken) {
+        await axios
         .get(apiBaseURL + "user/notifs", {
-          headers: { Authorization: `Bearer ${JWTToken}` },
+          headers: { Authorization: `Bearer ${JWTToken}`, },
         })
         .then((res) => {
           if (res.data) setNotif(true);
@@ -89,16 +90,17 @@ function BellNotif() {
             setErrorMessage("Session expired, please login again!");
           } else setErrorMessage(error.response.data.message + "!");
         });
+      }
     };
 
     fetchNotifs().then(() => {});
   }, []);
 
-  if (token === null) {
+  /*if (token === null) {
     setAuthToken(null);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
-  }
+  }*/
 
   if (!notif)
     return (

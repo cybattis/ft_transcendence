@@ -47,9 +47,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
-    await this.channelService.joinChannel(socket, type, username, channel, pass);
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.announce(socket, "JOIN", username, channel, blockedUsers);
+      const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.joinChannel(socket, type, username, channel, pass, blockedUsers);
   }
 
   @SubscribeMessage('prv')
@@ -74,6 +73,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     await this.channelService.quitChannel(data.cmd, data.username, data.channel);
     const channel = data.channel;
     this.server.to(socket.id).emit("quit", channel);
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.announce(socket, "QUIT", data.username, data.channel, blockedUsers);
   }
 
   @SubscribeMessage('ban')

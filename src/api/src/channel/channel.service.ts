@@ -280,7 +280,7 @@ export class ChannelService implements OnModuleInit {
         return false;
     }
 
-    async tryJoin(socket: Socket,type: string, username: string, channel: string, pass: string){
+    async tryJoin(socket: Socket,type: string, username: string, channel: string, pass: string, blockedChat: any){
         const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
         if (!channelToJoin)
             return;
@@ -293,6 +293,11 @@ export class ChannelService implements OnModuleInit {
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
+            const sender = "announce";
+            const msg = username + " just joined the channel. Welcome him/her nicely.";
+            const send = {sender, msg, channel, blockedChat};
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
         }
         else if (channelToJoin.status === "protected"){
             console.log("pas encore fait");
@@ -308,12 +313,17 @@ export class ChannelService implements OnModuleInit {
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
+            const sender = "announce";
+            const msg = username + " just joined the channel. Welcome him/her nicely.";
+            const send = {sender, msg, channel, blockedChat};
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
         }
         else
             console.log("Aucune type de channel");
     }
 
-    async joinChannel(socket: Socket, type: string, username: string, channel: string, pass: string){
+    async joinChannel(socket: Socket, type: string, username: string, channel: string, pass: string, blockedChat: any){
         if (channel === "#general"){
             const channelToUpdate = await this.channelRepository.findOne({where :{channel: channel}});
             if (!channelToUpdate)
@@ -324,12 +334,16 @@ export class ChannelService implements OnModuleInit {
             await this.channelRepository.save(channelToUpdate);
             socket.join(channel);
             socket.emit('join', channel);
-            return ;
+            const sender = "announce";
+            const msg = username + " just joined the Server!";
+            const send = {sender, msg, channel, blockedChat};
+            await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
         }
         else {
             const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
             if (channelToJoin)
-                await this.tryJoin(socket, type, username, channel, pass);
+                await this.tryJoin(socket, type, username, channel, pass, blockedChat);
             else {
                 const salt = await bcrypt.genSalt();
                 const hash = await bcrypt.hash(pass, salt);
@@ -344,6 +358,11 @@ export class ChannelService implements OnModuleInit {
                     password: hash,
                 })
                 socket.emit('join', channel);
+                const sender = "announce";
+                const msg = username + " just joined the channel. Welcome him/her nicely.";
+                const send = {sender, msg, channel, blockedChat};
+                await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: 0});
+                socket.broadcast.emit('rcv', send);
             }
         }
     }
@@ -497,28 +516,20 @@ export class ChannelService implements OnModuleInit {
                 if (chan && !this.checkUserIsHere(chan.users, username))
                 {
                     if (channel === "#general")
-                    msg = username + " just arrived on the server!";
+                        msg = username + " just arrived on the server!";
+                    else
+                        msg = username + " just joined the channel. Welcome him/her nicely.";
                 }
-                else
-                    msg = username + " just joined the channel. Welcome him/her nicely.";
             }
         }
         else if (action === "QUIT")
-        {
             if (channel[0] === "#")
-            {
-                const chan = await this.channelRepository.findOne({where: {channel: channel}});
-                if (chan && !this.checkUserIsHere(chan.users, username))
-                {
-                    if (channel === "#general")
-                        msg = username + " just left the server!";
-                    else
-                        msg = username + " just left the channel. Goodbye :(.";
-                }
-            }
+                msg = username + " just left the channel. Goodbye :(";
+        if (msg)
+        {
+            const send = {emitter, msg, channel, blockedChat};
+            await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
+            socket.broadcast.emit('rcv', send);
         }
-        const send = {emitter, msg, channel, blockedChat};
-        await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
-        socket.broadcast.emit('rcv', send);
     }
 }

@@ -49,13 +49,13 @@ function Img() {
 
   const fetchNotifs = async () => {
     let JWTToken = localStorage.getItem("token");
-    await axios
-      .get(apiBaseURL + "user/notifs", {
-        headers: { Authorization: `Bearer ${JWTToken}` },
-      })
-      .then((res) => {
-        if (res.data) setNotif(true);
-      });
+      await axios
+        .get(apiBaseURL + "user/notifs", {
+          headers: { Authorization: `Bearer ${JWTToken}`, },
+        })
+        .then((res) => {
+          if (res.data) setNotif(true);
+        });
   };
 
   useEffect(() => {
