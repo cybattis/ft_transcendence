@@ -12,6 +12,7 @@ import joinButton from "../../resource/addButton.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
 import UsersList from "./List/UsersList";
+import { ErrorModal } from "../../components/Modal/ErrorModal";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -34,6 +35,9 @@ function Quit(props: { canal: string }) {
   }
   return <></>;
 }
+
+//FAIRE EN SORTE QUE BOUTONS S ADAPTE A SI IL EST DANS LE CHANNEL OU NON
+//QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -183,8 +187,8 @@ export default function ChatClient() {
         time: time,
       };
       ChatClientSocket.onBan(sendBan);
-      setButtons(false);
       setBanForm(false);
+      setButtons(false);
     }
 
     function handleChange(e: any) {
@@ -195,7 +199,7 @@ export default function ChatClient() {
     }
 
     return <div className="ban-form">
-      <form method="get" onSubmit={handleBan}>
+      <form>
         <h4>Ban {usr}</h4>
         {errors ? <p className="error"> {errors} </p> : null}
         <div className="test">
@@ -210,7 +214,7 @@ export default function ChatClient() {
             />
           </label>
         </div>
-        <button type="submit" className="submitButton">
+        <button className="add" onClick={handleBan}>
           Ban
         </button>
       </form>
@@ -286,7 +290,6 @@ export default function ChatClient() {
           }
         })
           .then((res) => {
-            console.log(res.data.operator);
             if (res.data.operator.includes(payload.nickname))
               setIsOpe(true);
           })
@@ -307,8 +310,8 @@ export default function ChatClient() {
         <h4>Choose your action <br /> on {usr}</h4>
         <div className="ctn-btn-action">
           {!me && <button className="chat-buttons" onClick={handleBlock}>Block</button>}
-          {!me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>
-            && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
+          {!me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>}
+          {!me && isOpe && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
           <Link to={`/profile/${usr}`}>
             <button className="chat-buttons">Profile</button>
           </Link>
@@ -332,6 +335,14 @@ export default function ChatClient() {
             <li className="Emt" key={messages.id}>
               <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
               <div className="contain-msg">{messages.content}</div>
+            </li>
+          ) : messages.emitter === "announce" ? (
+            <li className="Announce" key={messages.emitter}>
+              <div className="contain-ann-msg">{messages.content}</div>
+            </li>
+          ) : messages.emitter === "server" ? (
+            <li className="Serv" key={messages.emitter}>
+              <div className="contain-serv-msg">{messages.content}</div>
             </li>
           ) : (
             <li className="Rcv" key={messages.id}>
@@ -377,13 +388,13 @@ export default function ChatClient() {
       console.log(`SendJoim`, channel, password, type);
       const sendJoin = { username: username, channel: channel, password: password, type: type };
       ChatClientSocket.onJoin(sendJoin);
+      const msg = "test";
       setJoinForm(false);
     }
 
     const handleSubmitJoin = async (e: React.SyntheticEvent) => {
       e.preventDefault();
-      if (state)
-        console.log(state);
+  
       if (!state.channel || !state.channel[0]) {
         setErrorInput("Enter a channel Name");
       }
@@ -581,7 +592,7 @@ export default function ChatClient() {
             canal.innerHTML = defaultChannelGen;
             setRoomChange(defaultChannelGen);
           }
-          return;
+          return ;
         }
       }
     }

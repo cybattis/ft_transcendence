@@ -61,6 +61,7 @@
     list-style-type: none;
     text-align: left;
     margin: 5px;
+    overflow-wrap: break-word;
 }
 
 .Emt {
@@ -71,6 +72,45 @@
     text-align: right;
     margin: 5px;
     overflow-wrap: break-word;
+}
+
+.Serv {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: right;
+    margin: 5px;
+    overflow-wrap: break-word;
+    color: rgb(227, 21, 21);
+}
+
+.Announce {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: justify;
+    margin: 5px;
+    overflow-wrap: break-word;
+}
+
+.contain-ann-msg{
+    display: table-caption;;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #2c1c598e;
+    overflow-wrap: break-word;
+    text-align: center;
+}
+
+.contain-serv-msg{
+    display: table-caption;;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #2c1c598e;
+    overflow-wrap: break-word;
+    text-align: center;
 }
 
 .contain-emt {
@@ -210,6 +250,7 @@
     position: absolute;
     display: flex;
     flex-direction: column;
+    z-index: 99;
 
     top: 20%;
     min-width: max-content;

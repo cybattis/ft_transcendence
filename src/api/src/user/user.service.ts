@@ -357,7 +357,6 @@ export class UserService implements OnModuleInit {
         });
         friends.push(friend);
       }
-      console.log(friends);
       return friends;
     }
     return null;
@@ -382,7 +381,6 @@ export class UserService implements OnModuleInit {
           await this.usersRepository.update(me.id, {
             requestedId: newRequested,
           });
-      console.log(me.friendsId);
           me.friendsId.push(friend.id);
           friend.friendsId.push(me.id);
           await this.usersRepository.save(friend);
@@ -438,7 +436,6 @@ export class UserService implements OnModuleInit {
         requestedId: true,
       },
     });
-    console.log(user)
     if (user && user.requestedId && user.requestedId[0]) return true;
     return null;
   }
