@@ -47,7 +47,6 @@ export class ChannelService implements OnModuleInit {
     } 
 
     listUsersChannel(channel: string) {
-        //console.log(`length ${this.channelStruct.length}`);
         for (let index = 0; index < this.channelStruct.length; index++) {
             if (channel === this.channelStruct[index].name) {
                 return (this.channelStruct[index].users)
@@ -381,12 +380,13 @@ export class ChannelService implements OnModuleInit {
     }
 
     async sendPrvMess(server: Server, socket: Socket, username: string, target: string){
-        console.log("Send prv", username, target);
+
         const socketTarget = this.takeSocketByUsername(target);
         const channel = username + target;
+        const res :string | null= await this.findChannelPrivateMessage(username, target);
+        if (res !== null) return ;
         if (socketTarget)
         {
-            console.log("in Priv");
             await this.channelRepository.save({
                 channel: channel,
                 status: 'message',
@@ -394,6 +394,7 @@ export class ChannelService implements OnModuleInit {
                 owner : '',
                 operator: [],
                 ban: [],
+                mute: [],
                 password: '',
             })
             socket.to(socketTarget).emit('inv', {channel});
@@ -430,27 +431,28 @@ export class ChannelService implements OnModuleInit {
             server.to(socket.id).emit("blocked", target);
     }
 
-    async sendMessage(socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+    async sendMessage(server: Server, socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
         const send = {sender, msg, channel, blockedChat};
         const emiter: any = await this.userService.findByLogin(sender); 
         if (channel[0] === "#"){
-            console.log("Message avec channel", msg)
+
             await this.chatRepository.save({channel : channel, content: msg, emitter: sender, emitterId: emiter.id});
             socket.broadcast.emit('rcv', send);
         }
         else
         {
-            console.log("Message sans channel", msg, channel);
             const target = this.takeSocketByUsername(channel);
             const prv = {sender, msg, channel};
             const find : Channel[] = await this.channelRepository.find({where : {status : "message"}});
             for (let index = 0; find[index]; index++){
-                console.log(find[index].users[0], find[index].users[1])
                 if ((find[index].users[0] == sender && find[index].users[1] == channel) 
                 ||  (find[index].users[1] == sender && find[index].users[0] == channel)){
                     await this.chatRepository.save({channel : find[index].channel, content: msg, emitter: sender, emitterId: emiter.id});
-                    if (target) socket.to(target).emit('rcv', prv);
-                    console.log("Send Prv ", find[index].channel);
+                    if (target) {
+                        server.to(target).emit('rcv', prv);
+                        server.to(socket.id).emit('rcv', prv);
+                    }
+                    return;
                 }
             }
             
@@ -531,5 +533,16 @@ export class ChannelService implements OnModuleInit {
             await this.chatRepository.save({channel : channel, content: msg, emitter: emitter, emitterId: 0});
             socket.broadcast.emit('rcv', send);
         }
+    }
+    async findChannelPrivateMessage(channel : string, username: string){
+        const find: Channel[] = await this.channelRepository.find({ where: { status: "message" } });
+        if (!find)
+            return null;
+        for (let index = 0; find[index]; index++) {
+            if ((find[index].users[0] == channel && find[index].users[1] == username)
+                || (find[index].users[0] == username && find[index].users[1] == channel))
+                return find[index].channel;
+        }
+        return null;
     }
 }

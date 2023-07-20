@@ -29,16 +29,15 @@ export class ChannelController {
 
     @Get('/message/:channel/:username')
     async findPrivateMessage(@Param('channel') channel : string, @Param('username') username:string ): Promise<Chat[] | null>{
-        console.log("Controller messa ", channel, username);
         const find: Channel[] = await this.channelRepository.find({where : {status: "message"}});
-        let messageChannel : Chat[] | null = null;
         for (let index = 0; find[index]; index ++){
             if ((find[index].users[0] == channel && find[index].users[1] == username) 
             ||  (find[index].users[0] == username && find[index].users[1] == channel)){
-                messageChannel = await this.chatRepository.find({where : {channel : find[index].channel}});
+                const mess =  await this.chatRepository.find({where : {channel : find[index].channel}});
+                return mess;
             }
         }
-        return messageChannel
+        return null;
     }
     
 
@@ -98,12 +97,7 @@ export class ChannelController {
     }
 
     @Get('/channel/private/:channel/:username')
-    async findChannelPrivateMessage(@Param('channel') channel: string, @Param('username') username: string): Promise<string> {
-        const find: Channel[] = await this.channelRepository.find({ where: { status: "message" } });
-        for (let index = 0; find[index]; index++) {
-            if ((find[index].users[0] == channel && find[index].users[1] == username)
-                || (find[index].users[0] == username && find[index].users[1] == channel))
-                return find[index].channel;
-        }
-        return channel
-    }}
+    async findChannelPrivateMessage(@Param('channel') channel: string, @Param('username') username: string): Promise<string | null> {
+        return await this.channelService.findChannelPrivateMessage(channel, username);
+    }
+}

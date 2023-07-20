@@ -16,28 +16,30 @@ export default function UsersList(props: { channel: string }) {
 
     async function fecthLists() {
         if (!props.channel || !props.channel[0])
-            return ;
+            return;
         setIsOpe(false);
         let canal = props.channel;
         if (canal[0] === '#')
-          canal = canal.slice(1);
-  
+            canal = canal.slice(1);
+        else
+            return <></>
+
         await axios.get(apiBaseURL + "chat/channelName/" + canal, {
-          headers: {
-            token: token,
-          }
+            headers: {
+                token: token,
+            }
         })
-        .then((res) => {
-            console.log(res.data.operator.includes(payload.nickname));
-            if (res.data.operator.includes(payload.nickname))
-                setIsOpe(true);
-            setUsersList(res.data.users);
-            setBanList(res.data.ban);
-            setMuteList(res.data.mute);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+            .then((res) => {
+                console.log(res.data.operator.includes(payload.nickname));
+                if (res.data.operator.includes(payload.nickname))
+                    setIsOpe(true);
+                setUsersList(res.data.users);
+                setBanList(res.data.ban);
+                setMuteList(res.data.mute);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     useEffect(() => {
@@ -57,9 +59,9 @@ export default function UsersList(props: { channel: string }) {
                 </>
             )
         }
-    return <>
-        <h4>Ban</h4>
-    </>;
+        return <>
+            <h4>Ban</h4>
+        </>;
     }
 
     function ListMute() {
@@ -75,21 +77,23 @@ export default function UsersList(props: { channel: string }) {
                 </>
             )
         }
-    return <>
-        <h4>Mute</h4>
-    </>;
+        return <>
+            <h4>Mute</h4>
+        </>;
     }
 
     return (
-            <div className="lists">
-                <h4>Users</h4>
-                {usersList && usersList.map((username) => (
-                    <button className="channel-waiting" key={username} value={username}>
-                        {username}
-                    </button>
-                ))}
-                {isOpe && <ListBan />}
-                {isOpe && <ListMute />}
-            </div>
+        props.channel[0] !== '#'  ? <></>
+        :
+        <div className="lists">
+            <h4>Users</h4>
+            {usersList && usersList.map((username) => (
+                <button className="channel-waiting" key={username} value={username}>
+                    {username}
+                </button>
+            ))}
+            {isOpe && <ListBan />}
+            {isOpe && <ListMute />}
+        </div>
     );
 }

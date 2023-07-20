@@ -20,7 +20,7 @@ let username = '';
 
 function takeActiveCanal(): string {
   const canal = document.getElementById('canal');
-  return canal?.innerHTML || '';
+  return canal ? canal.innerHTML : '#general' ;
 }
 
 function Quit(props: { canal: string }) {
@@ -44,7 +44,6 @@ export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
-  const [post, setPost] = useState<ChatInterface[]>([]);
   const [messages, setMessages] = useState<ChatInterface[]>([]);
   const socketRef = useRef<any>(null);
   const blocedList: string[] = [];
@@ -160,8 +159,7 @@ export default function ChatClient() {
     const [errors, setErrors] = useState("");
 
     const isValidTime = async (time: string) => {
-      for (let i = 0; time[i]; i ++)
-      {
+      for (let i = 0; time[i]; i++) {
         if (time[i] < '0' || time[i] > '9')
           return false;
       }
@@ -173,10 +171,9 @@ export default function ChatClient() {
 
       if (!time || !time[0])
         setTime("30000");
-      else if (time[0] === '-' || !isValidTime(time))
-      {
+      else if (time[0] === '-' || !isValidTime(time)) {
         setErrors("Enter a valid time.")
-        return ;
+        return;
       }
 
       const channel = takeActiveCanal();
@@ -324,34 +321,51 @@ export default function ChatClient() {
   }
 
   function ChatMap({ messages }: { messages: ChatInterface[] }) {
-    const activeChannel = document.getElementById("canal")?.innerHTML || "";
+    const [channelName, setChannelName] = useState('');
+
+    useEffect(() => {
+
+      async function actifCanal() {
+        let channel = takeActiveCanal();
+        if (channel[0] !== '#') {
+          let addressInfo = apiBaseURL + "chat/channel/private/" + channel + "/" + username;
+          await axios.get(addressInfo).then((response) => {
+            setChannelName(response.data)
+          });
+        }
+        else
+          setChannelName(channel);
+      }
+
+      actifCanal();
+    });
 
     return (
       <>
         <ul className="list-msg-container">
           {messages
-          .filter((messages) => messages.channel === activeChannel)
-          .map(messages => (
-          messages.emitter === username ? (
-            <li className="Emt" key={messages.id}>
-              <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
-              <div className="contain-msg">{messages.content}</div>
-            </li>
-          ) : messages.emitter === "announce" ? (
-            <li className="Announce" key={messages.id}>
-              <div className="contain-ann-msg">{messages.content}</div>
-            </li>
-          ) : messages.emitter === "server" ? (
-            <li className="Serv" key={messages.id}>
-              <div className="contain-serv-msg">{messages.content}</div>
-            </li>
-          ) : (
-            <li className="Rcv" key={messages.id}>
-              <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
-              <div className="contain-msg">{messages.content}</div>
-            </li>
-          )
-        ))}
+            .filter((messages) => channelName ? messages.channel === channelName : messages.channel === takeActiveCanal())
+            .map(messages => (
+              messages.emitter === username ? (
+                <li className="Emt" key={messages.id}>
+                  <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+                  <div className="contain-msg">{messages.content}</div>
+                </li>
+              ) : messages.emitter === "announce" ? (
+                <li className="Announce" key={messages.id}>
+                  <div className="contain-ann-msg">{messages.content}</div>
+                </li>
+              ) : messages.emitter === "server" ? (
+                <li className="Serv" key={messages.id}>
+                  <div className="contain-serv-msg">{messages.content}</div>
+                </li>
+              ) : (
+                <li className="Rcv" key={messages.id}>
+                  <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+                  <div className="contain-msg">{messages.content}</div>
+                </li>
+              )
+            ))}
         </ul>
       </>
     )
@@ -394,7 +408,7 @@ export default function ChatClient() {
 
     const handleSubmitJoin = async (e: React.SyntheticEvent) => {
       e.preventDefault();
-  
+
       if (!state.channel || !state.channel[0]) {
         setErrorInput("Enter a channel Name");
       }
@@ -471,7 +485,6 @@ export default function ChatClient() {
   function PrivateMessage() {
 
     const btnPrv = () => {
-      console.log('Inside');
       messagePrivateForm ? setMessagePrivateForm(false) : setMessagePrivateForm(true); setButtons(false); setJoinForm(false);
     }
 
@@ -570,175 +583,192 @@ export default function ChatClient() {
     getBlockedList();
 
     const messageCallBack = async (data: { sender: string, msg: string, channel: string }) => {
-      let addressInfo = apiBaseURL + "chat/message/" + data.channel;
-      await axios.get(addressInfo)
-        .then(response => {
-          const newData: ChatInterface[] = [];
-          for (let i = 0; response.data[i]; i++) {
-            if (response.data[i].emitter === payload.nickname)
-              newData.push(response.data[i]);
-            else if (myBlockedList && myBlockedList.includes(response.data[i].emitter))
-              continue;
-            else
-              newData.push(response.data[i])
-          }
-          setMessages(newData);
-        });
-      setRecvMess(data.msg);
-    }
-
-    ChatClientSocket.onMessageRecieve(messageCallBack);
-
-    if (!channelList.includes(defaultChannelGen)) {
-      const send = { username: username, channel: defaultChannelGen };
-      ChatClientSocket.joinChatServer(send);
-    }
-
-    const joinCallBack = (room: string) => {
-      if (room[0] !== '#')
-        room.indexOf(username) === 0 ? room = room.substring(username.length) : room = room.substring(0, room.length - username.length);
-      if (!channelList.includes(room)) {
-        channelList.push(room);
-        setRoomChange(room);
-        const canal = document.getElementById("canal");
-        if (canal)
-          canal.innerHTML = room;
+      if (data.channel[0] !== '#') {
+        let addressInfo = apiBaseURL + "chat/message/" + data.channel + "/" + data.sender;
+        await axios.get(addressInfo)
+          .then(response => {
+            setMessages(response.data);
+          });
+        setRecvMess(data.msg);
+      } else {
+        let addressInfo = apiBaseURL + "chat/message/" + data.channel;
+        await axios.get(addressInfo)
+          .then(response => {
+            const newData: ChatInterface[] = [];
+            for (let i = 0; response.data[i]; i++) {
+              if (response.data[i].emitter === payload.nickname)
+                newData.push(response.data[i]);
+              else if (myBlockedList && myBlockedList.includes(response.data[i].emitter))
+                continue;
+              else
+                newData.push(response.data[i])
+            }
+            setMessages(newData);
+          });
+        setRecvMess(data.msg);
       }
     }
 
-    ChatClientSocket.onJoinChan(joinCallBack);
+ChatClientSocket.onMessageRecieve(messageCallBack)
+if (!channelList.includes(defaultChannelGen)) {
+  const send = { username: username, channel: defaultChannelGen };
+  ChatClientSocket.joinChatServer(send);
+}
 
-    const blockedCallBack = (target: string) => {
-      if (!blocedList.includes(target))
-        blocedList.push(target);
-    }
+const joinCallBack = (room: string) => {
+  if (room[0] !== '#')
+    room.indexOf(username) === 0 ? room = room.substring(username.length) : room = room.substring(0, room.length - username.length);
+  if (!channelList.includes(room)) {
+    channelList.push(room);
+    setRoomChange(room);
+    const canal = document.getElementById("canal");
+    if (canal)
+      canal.innerHTML = room;
+  }
+}
 
-    ChatClientSocket.addBlockCb(blockedCallBack);
+ChatClientSocket.onJoinChan(joinCallBack);
 
-    ChatClientSocket.joinChatServer(joinCallBack);
+const blockedCallBack = (target: string) => {
+  if (!blocedList.includes(target))
+    blocedList.push(target);
+}
 
-    const quitCallBack = (room: string) => {
-      for (let index = 0; index < channelList.length; index++) {
-        if (room === channelList[index]) {
-          channelList.splice(index, 1);
-          const canal = document.getElementById("canal");
-          if (canal) {
-            canal.innerHTML = defaultChannelGen;
-            setRoomChange(defaultChannelGen);
-          }
-          return ;
-        }
+ChatClientSocket.addBlockCb(blockedCallBack);
+
+ChatClientSocket.joinChatServer(joinCallBack);
+
+const quitCallBack = (room: string) => {
+  for (let index = 0; index < channelList.length; index++) {
+    if (room === channelList[index]) {
+      channelList.splice(index, 1);
+      const canal = document.getElementById("canal");
+      if (canal) {
+        canal.innerHTML = defaultChannelGen;
+        setRoomChange(defaultChannelGen);
       }
+      return;
     }
+  }
+}
 
-    ChatClientSocket.addQuitCb(quitCallBack);
+ChatClientSocket.addQuitCb(quitCallBack);
 
-    const inviteCallBack = (data: { username: string; target: string }) => {
-      if (data.target === username) {
-        if (!channelList.includes(data.username)) {
-          channelList.push(data.username);
-          setRoomChange(data.username);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.username;
-        }
-      }
-      if (data.username === username) {
-        if (!channelList.includes(data.target)) {
-          channelList.push(data.target);
-          setRoomChange(data.target);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.target;
-        }
-      }
+const inviteCallBack = (data: { username: string; target: string }) => {
+  if (data.target === username) {
+    if (!channelList.includes(data.username)) {
+      channelList.push(data.username);
+      setRoomChange(data.username);
+      const canal = document.getElementById("canal");
+      if (canal) canal.innerHTML = data.username;
     }
-
-    ChatClientSocket.addInvCb(inviteCallBack);
-
-    return () => {
-      ChatClientSocket.offJoinChan(joinCallBack);
-      ChatClientSocket.offBlock(blockedCallBack);
-      ChatClientSocket.offQuit(quitCallBack);
-      ChatClientSocket.offInv(inviteCallBack);
-      ChatClientSocket.offMessageRecieve(messageCallBack);
+  }
+  if (data.username === username) {
+    if (!channelList.includes(data.target)) {
+      channelList.push(data.target);
+      setRoomChange(data.target);
+      const canal = document.getElementById("canal");
+      if (canal) canal.innerHTML = data.target;
     }
+  }
+}
+
+ChatClientSocket.addInvCb(inviteCallBack);
+
+return () => {
+  ChatClientSocket.offJoinChan(joinCallBack);
+  ChatClientSocket.offBlock(blockedCallBack);
+  ChatClientSocket.offQuit(quitCallBack);
+  ChatClientSocket.offInv(inviteCallBack);
+  ChatClientSocket.offMessageRecieve(messageCallBack);
+}
   }, [roomChange]);
 
-  function choiceCmd(input: string): string {
-    if (input.indexOf("/") === 0) {
-      if (input.indexOf(" ") !== -1)
-        return input.substring(0, input.indexOf(" "));
-      return input;
-    }
-    return "/msg";
+function choiceCmd(input: string): string {
+  if (input.indexOf("/") === 0) {
+    if (input.indexOf(" ") !== -1)
+      return input.substring(0, input.indexOf(" "));
+    return input;
   }
+  return "/msg";
+}
 
-  function doCmd(cmd: string, msg: string) {
-    let channel = takeActiveCanal();
-    if (cmd === "/info")
-      ChatClientSocket.onInfo(channel);
-    else if (cmd === "/cmd") {
-      ChatClientSocket.onCmd(channel);
-    } else {
-      if (channel[0] !== '#')
-      {
-        let addressInfo = apiBaseURL + "chat/message/" + channel + "/" + username;
-        axios.get(addressInfo)
+function doCmd(cmd: string, msg: string) {
+  let channel = takeActiveCanal();
+  if (cmd === "/info")
+    ChatClientSocket.onInfo(channel);
+  else if (cmd === "/cmd") {
+    ChatClientSocket.onCmd(channel);
+  } else {
+    if (channel[0] !== '#') {
+      let addressInfo = apiBaseURL + "chat/message/" + channel + "/" + username;
+      axios.get(addressInfo)
         .then(response => {
-          setPost(response.data);
+          console.log(response.data);
+          setMessages(response.data);
         })
-      } else {
-        let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
-        axios.get(addressInfo)
+    } else {
+      let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
+      axios.get(addressInfo)
         .then(response => {
-          setPost(response.data);
-        })  
-      }
-      const send = { username: username, channel: channel, msg: msg } 
-      ChatClientSocket.onSend(send);
+          setMessages(response.data);
+        })
     }
+    const send = { username: username, channel: channel, msg: msg }
+    ChatClientSocket.onSend(send);
   }
+}
 
-  async function handleStringChange(newString: string) {
-    setRoomChange(newString);
+async function handleStringChange(newString: string) {
+  setRoomChange(newString);
+  if (newString[0] !== '#'){
+    let addressInfo = apiBaseURL + "chat/message/" + newString + "/" + username;
+    await axios.get(addressInfo)
+      .then(response => {
+        setMessages(response.data);
+      })
+  }
+  else{
     let addressInfo = apiBaseURL + "chat/message/" + newString;
     await axios.get(addressInfo)
       .then(response => {
-        setPost(response.data);
+        setMessages(response.data);
       })
   }
+}
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      sendMessage();
-    }
-  };
+const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    sendMessage();
+  }
+};
 
-  return (
-      <div className="chat-div">
-        <h1>Chat</h1>
-        <div className='chat'>
-          <div className='chat-container'>
-            <div className="list">
-              <ChannelList channelList={channelList} onStringChange={handleStringChange} />
-            </div>
-              <Join />
-              <PrivateMessage />
-              {buttons && <Buttons />}
-            <h3 id='canal'>{defaultChannelGen}</h3>
-              <Quit canal={takeActiveCanal()}/>
-            <div className="rcv-mess-container">
-              <ChatMap messages={messages}/>
-            </div>
-            <div className='send-mess-container'>
-              <input  className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
-              <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
-            </div>
-          </div>
-        <div className="user-lists">
-          <UsersList channel={takeActiveCanal()}/>
+return (
+  <div className="chat-div">
+    <h1>Chat</h1>
+    <div className='chat'>
+      <div className='chat-container'>
+        <div className="list">
+          <ChannelList channelList={channelList} onStringChange={handleStringChange} />
         </div>
+        <Join />
+        <PrivateMessage />
+        {buttons && <Buttons />}
+        <h3 id='canal'>{defaultChannelGen}</h3>
+        <Quit canal={takeActiveCanal()} />
+        <div className="rcv-mess-container">
+          <ChatMap messages={messages} />
+        </div>
+        <div className='send-mess-container'>
+          <input className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
+          <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
         </div>
       </div>
-  );
+      <div className="user-lists">
+        <UsersList channel={takeActiveCanal()} />
+      </div>
+    </div>
+  </div>
+);
 }
