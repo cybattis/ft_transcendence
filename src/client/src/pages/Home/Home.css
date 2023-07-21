@@ -1,6 +1,5 @@
 .full {
     overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .homeUnlogged {
@@ -14,7 +13,7 @@
 }
 
 .homeTitle {
-    width: 715px;
+    width: 100%;
     height: 112px;
 
     text-align: center;
