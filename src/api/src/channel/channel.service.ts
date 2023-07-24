@@ -561,4 +561,8 @@ export class ChannelService implements OnModuleInit {
             }
         }
     }
+
+    async invite(channel: string, invited: number) {
+        return await this.userService.addInvite(channel, invited);
+    }
 }

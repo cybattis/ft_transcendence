@@ -1,9 +1,10 @@
-import {Controller, Get, Param, Delete, Headers, Inject, Injectable} from '@nestjs/common';
+import {Controller, Get, Param, Delete, Put, Headers, Inject, Injectable} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
 import { ChannelService } from './channel.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('chat')
 export class ChannelController {
@@ -13,6 +14,7 @@ export class ChannelController {
         @InjectRepository(Channel)
         private channelRepository: Repository<Channel>,
         private channelService: ChannelService,
+        private jwtService: JwtService,
     ) {}
 
     // Chat
@@ -75,6 +77,17 @@ export class ChannelController {
     async findChannelName(@Param('channel') channel: string) {
         const decodedName = decodeURIComponent(channel);
         return (await this.channelService.findChannelName(decodedName));
+    }
+
+    @Put('invite/:channel/:id')
+    async removeFriend(
+        @Param('channel') channel: string,
+        @Param('id') id: number,
+        @Headers('Authorization') header: Headers,
+    ) {
+        const payload: any = this.jwtService.decode(
+            header.toString().split(' ')[1], );
+        return await this.channelService.invite(channel, id);
     }
 
     @Delete('/delete-channel/:channel')

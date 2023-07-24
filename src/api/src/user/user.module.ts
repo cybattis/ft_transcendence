@@ -10,7 +10,6 @@ import { MulterModule } from '@nestjs/platform-express';
 import { MailService } from '../mail/mail.service';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelModule } from 'src/channel/channel.module';
-import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
   imports: [

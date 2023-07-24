@@ -3,7 +3,7 @@
     max-width: 400px;
     display: flex;
     flex-direction: row;
-    overflow-x: scroll;
+    overflow-x: auto;
 }
 
 .channel-waiting {

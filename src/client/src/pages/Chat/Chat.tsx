@@ -36,12 +36,10 @@ function Quit(props: { canal: string }) {
   return <></>;
 }
 
-//FAIRE EN SORTE QUE BOUTONS S ADAPTE A SI IL EST DANS LE CHANNEL OU NON
-//QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
+
+//QUAND CHANGEMENT DE PERMS BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //BLOCK MARCHE QUE EN RELOADANT
-//CHANNEL LIST FAIT AGGRANDIR PAGE
-//Mettre NAVBAR ACCEUIUL TROIS TIRET QUAND TROP PETIT AUSSI
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +59,7 @@ export default function ChatClient() {
   const [isOpe, setIsOpe] = useState(false);
   const [isBan, setIsBan] = useState(false);
   const [isMute, setIsMute] = useState(false);
+  const [isHere, setIsHere] = useState(false);
 
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
@@ -90,7 +89,7 @@ export default function ChatClient() {
     }
   }
 
-  const handleButton = (user: string) => {
+  const handleButton = async (user: string) => {
     if (user === usr) {
       if (buttons)
         setButtons(false);
@@ -100,6 +99,24 @@ export default function ChatClient() {
       setButtons(true);
       setJoinForm(false);
     }
+    let canal = takeActiveCanal();
+    if (canal[0] === '#')
+      canal = canal.slice(1);
+    await axios.get(apiBaseURL + "chat/channelName/" + canal, {
+      headers: {
+        token: token,
+      }
+    })
+    .then((res) => {
+        console.log(res.data);
+        if (res.data.users.includes(usr))
+          setIsHere(true);
+        else
+          setIsHere(false);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   }
 
   const handleButtonForm = () => {
@@ -289,7 +306,7 @@ export default function ChatClient() {
 
     return (
       <>
-        {state.senderIsOpe && username !== usr ?
+        {isHere && state.senderIsOpe && username !== usr ?
           !state.targetIsOpe ?
             <button className="chat-buttons" onClick={handleAddOpe}>
               Add operator
@@ -352,12 +369,12 @@ export default function ChatClient() {
       <form method="get" onSubmit={handleButtonForm}>
         <h4>Choose your action <br /> on {usr}</h4>
         <div className="ctn-btn-action">
-          {!me && <button className="chat-buttons" onClick={handleBlock}>Block</button>}
-          {!me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>}
-          {!me && isOpe && !isBan && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
-          {!me && isOpe && isBan && <button className="chat-buttons" onClick={handleUnBan}>UnBan</button>}
-          {!me && isOpe && !isMute && <button className="chat-buttons" onClick={handleMute}>Mute</button>}
-          {!me && isOpe && isMute && <button className="chat-buttons" onClick={handleUnMute}>UnMute</button>}
+            {isHere && !me && <button className="chat-buttons" onClick={handleBlock}>Block</button>}
+            {isHere && !me && isOpe && <button className="chat-buttons" onClick={handleKick}>Kick</button>}
+            {isHere && !me && isOpe && !isBan && <button className="chat-buttons" onClick={handleBanForm}>Ban</button>}
+            {isHere && !me && isOpe && !isMute && <button className="chat-buttons" onClick={handleMute}>Mute</button>}
+            {isHere && !me && isOpe && isMute && <button className="chat-buttons" onClick={handleUnMute}>UnMute</button>}
+            {!isHere && !me && isOpe && isBan && <button className="chat-buttons" onClick={handleUnBan}>UnBan</button>}
           <Link to={`/profile/${usr}`}>
             <button className="chat-buttons">Profile</button>
           </Link>
@@ -383,11 +400,11 @@ export default function ChatClient() {
               <div className="contain-msg">{messages.content}</div>
             </li>
           ) : messages.emitter === "announce" ? (
-            <li className="Announce" key={messages.emitter}>
+            <li className="Announce" key={messages.id}>
               <div className="contain-ann-msg">{messages.content}</div>
             </li>
           ) : messages.emitter === "server" ? (
-            <li className="Serv" key={messages.emitter}>
+            <li className="Serv" key={messages.id}>
               <div className="contain-serv-msg">{messages.content}</div>
             </li>
           ) : (
@@ -444,11 +461,10 @@ export default function ChatClient() {
       if (!state.channel || !state.channel[0]) {
         setErrorInput("Enter a channel Name");
       }
-      if (state.pwd[0]) {
+      if (state.channel[0]) {
         for (let i = 0; state.channel[i]; i++) {
           if (state.channel[i] === '#') {
             setErrorInput("Can't contain '#'.")
-            return;
           }
         }
       }
@@ -478,7 +494,7 @@ export default function ChatClient() {
       <form method="get" onSubmit={handleSubmitJoin}>
         <h4>Join a Channel</h4>
         <div className="test">
-          {errorInput ? <p className="error"> {errorInput} </p> : null}
+          {errorInput && <p className="error"> {errorInput} </p>}
           <Select
             defaultValue={options[0]}
             onChange={handleSelect}

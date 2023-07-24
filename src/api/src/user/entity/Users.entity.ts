@@ -94,6 +94,11 @@ export class User {
   @Column('int', { array: true, default: [] })
   blockedById: number[];
 
+  // Chat
+  // ============================================================
+  @Column('varchar', { array: true, default: [] })
+  invites: string[];
+
   @Column({ type: 'varchar', default: '' })
   websocket: string;
 }

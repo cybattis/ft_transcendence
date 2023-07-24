@@ -2,13 +2,21 @@
     display: flex;
     align-items: center;
     text-align: center;
-    justify-content: center;
 
     flex-direction: column;
     width: 100%;
     height: var(--vp-size);
-    overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.first-title {
+    display: flex;
+
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+
+    width: 100%;
 }
 
 .title {
@@ -19,8 +27,6 @@
     justify-content: center;
 
     width: 100%;
-
-    font-size: max(1vw, 25px);
 }
 
 @media screen and (width < 800px) {
@@ -48,12 +54,20 @@
     
     .description {
         display: flex;
-        position: relative;
     
         flex-direction: column;
+        justify-content: center;
         text-align: center;
         overflow-wrap: break-word;
         font-size: max(0.6vw, 15px);
+    }
+
+    .first-title {
+        font-size: max(1vw, 25px);
+    }
+
+    .title {
+        font-size: max(1vw, 20px);
     }
 }
 
@@ -62,14 +76,13 @@
         display: flex;
     
         border-radius: 50%;
-        width: 300px;
-        height: 300px;
+        width: 250px;
+        height: 250px;
     }
 
     .left {
         display: flex;
         
-        max-width: 60%;
         flex-direction: row;
         justify-content: left;
     }
@@ -77,19 +90,27 @@
     .right {
         display: flex;
     
-        max-width: 60%;
         flex-direction: row;
         justify-content: right;
     }
     
     .description {
         display: flex;
-        position: relative;
     
         flex-direction: column;
+        justify-content: center;
         text-align: center;
         overflow-wrap: break-word;
         font-size: max(0.6vw, 15px);
+        max-width: 400px;
+    }
+
+    .first-title {
+        font-size: max(1vw, 35px);
+    }
+
+    .title {
+        font-size: max(1vw, 25px);
     }
 }
 
