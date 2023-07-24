@@ -16,6 +16,7 @@ import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
+import { UserData } from "../Profile/user-data";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -354,6 +355,7 @@ export function HomeLogged() {
     requestedId: [],
     blockedId: [],
     blockedById: [],
+    paddleColor: "ffffff",
   });
 
   useEffect(() => {
@@ -369,6 +371,8 @@ export function HomeLogged() {
           },
         })
         .then((res) => {
+          UserData.updatePaddleColor(res.data.paddleColor);
+          UserData.updateNickname(res.data.nickname);
           setData(res.data);
         })
         .catch((error) => {
