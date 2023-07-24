@@ -11,7 +11,6 @@ import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ChannelController } from './channel.controller';
 import { UserService } from 'src/user/user.service';
 
 
@@ -58,6 +57,7 @@ export class ChannelService implements OnModuleInit {
     async infoChannel(channel: string) {
         const channelInfo: Channel | null = await this.channelRepository.findOneBy({channel: channel});
         let res: string = `Channel : ${channel} \n`;
+        console.log("res :",res);
         if (!channelInfo)
             return res;
         res += 'Operator :';
@@ -100,6 +100,7 @@ export class ChannelService implements OnModuleInit {
             console.log(`Ban : ${target} isn't users`);
             return false;
         }
+        
         if (cmd === "kick") {
             console.log(`Kick Target ${target}`);
             this.kickOp(channelToUpdate, target);
@@ -279,15 +280,24 @@ export class ChannelService implements OnModuleInit {
         return false;
     }
 
-    async tryJoin(socket: Socket,type: string, username: string, channel: string, pass: string, blockedChat: any){
+    async tryJoin(server: Server, socket: Socket, type: string, username: string, channel: string, pass: string, blockedChat: any){
+        console.log("Inside");
         const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
         if (!channelToJoin)
             return;
         if (channelToJoin.status === "public"){
-            if (this.checkUserIsHere(channelToJoin.ban, username))
-                return ; // Send message pour deja liste banni
-            if (this.checkUserIsHere(channelToJoin.users, username))
-                return ; // deja present
+            if (this.checkUserIsHere(channelToJoin.ban, username)){
+                const reason : string = "You are banned.";
+                const err = {channel, reason};
+                server.to(socket.id).emit('err', err);
+                return ;
+            }
+            if (this.checkUserIsHere(channelToJoin.users, username)){
+                const reason : string = "You are aleready present";
+                const err = {channel, reason};
+                server.to(socket.id).emit('err', err);
+                return ;
+            }
             channelToJoin.users.push(username);
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
@@ -299,15 +309,32 @@ export class ChannelService implements OnModuleInit {
             socket.broadcast.emit('rcv', send);
         }
         else if (channelToJoin.status === "protected"){
-            console.log("pas encore fait");
+            const reason : string = "The channel is protected, you have to be invited.";
+            const err = {channel, reason};
+            server.to(socket.id).emit('err', err);
+            return; // Only invitation
         }
         else if(channelToJoin.status === "private"){
             if (this.checkUserIsHere(channelToJoin.ban, username))
+            {
+                const reason : string = "You are banned.";
+                const data = {channel, reason};
+                server.to(socket.id).emit('err', data);
                 return ; // Send message pour deja liste banni
-            if (this.checkUserIsHere(channelToJoin.users, username))
+            }
+            if (this.checkUserIsHere(channelToJoin.users, username)){
+                const reason : string = "You are already present.";
+                const err = {channel, reason};
+                server.to(socket.id).emit('err', err);
                 return ; // deja present
-            if (await bcrypt.compare(pass, channelToJoin.password))
+            }
+            if (await bcrypt.compare(pass, channelToJoin.password) === false){
+                const reason : string = "Bad password";
+                const err = {channel, reason};
+                server.to(socket.id).emit('err', err);
                 return ; // bad mpd
+            }
+            console.log("Await", await bcrypt.compare(pass, channelToJoin.password));
             channelToJoin.users.push(username);
             await this.channelRepository.save(channelToJoin);
             socket.join(channel);
@@ -322,7 +349,7 @@ export class ChannelService implements OnModuleInit {
             console.log("Aucune type de channel");
     }
 
-    async joinChannel(socket: Socket, type: string, username: string, channel: string, pass: string, blockedChat: any){
+    async joinChannel(server: Server, socket: Socket, type: string, username: string, channel: string, pass: string, blockedChat: any){
         if (channel === "#general"){
             const channelToUpdate = await this.channelRepository.findOne({where :{channel: channel}});
             if (!channelToUpdate)
@@ -342,7 +369,7 @@ export class ChannelService implements OnModuleInit {
         else {
             const channelToJoin = await this.channelRepository.findOne({where :{channel: channel}});
             if (channelToJoin)
-                await this.tryJoin(socket, type, username, channel, pass, blockedChat);
+                await this.tryJoin(server, socket, type, username, channel, pass, blockedChat);
             else {
                 const salt = await bcrypt.genSalt();
                 const hash = await bcrypt.hash(pass, salt);
@@ -545,4 +572,24 @@ export class ChannelService implements OnModuleInit {
         }
         return null;
     }
+
+    async changeParam(channel : string, type : string, pwd : string, username : string){
+        const channelToUpdate : Channel | null = await this.channelRepository.findOne({where: {channel : channel}});
+        if (!channelToUpdate) return;
+        if (channelToUpdate.owner !== username) return ;
+        if (type === "public" || type === "private" || type === "protected"){
+            channelToUpdate.status = type;
+            if (type === "private"){
+                // verifie si c'est private changer le mdp
+                const salt = await bcrypt.genSalt();
+                const hash = await bcrypt.hash(pwd, salt);
+                channelToUpdate.password = hash;
+            }
+        } 
+        await this.channelRepository.save(channelToUpdate);
+    }
+    
+    async JoinWithInvitation(){
+        return ;
+    } 
 }

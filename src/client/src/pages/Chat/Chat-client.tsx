@@ -21,6 +21,10 @@ export type newInvCallBack = {
   (data: {username: string, target: string}): void;
 }
 
+export type newErrCallBack = {
+  (data: {channel: string, reason: string}): void;
+}
+
 export namespace ChatClientSocket {
 
   let socket: Socket;
@@ -29,6 +33,7 @@ export namespace ChatClientSocket {
   let newBlockedCallBack: newBlockedCallBack[] = [];
   let newQuitCallBack: newQuitCallBack[] = [];
   let newInvCallBack: newInvCallBack[] = [];
+  let newErrCallBack: newErrCallBack[] = [];
 
   function checkChatConnection(): boolean {
 
@@ -63,7 +68,7 @@ export namespace ChatClientSocket {
     });
 
     socket.on('rcv', (data: { sender: string, msg: string, channel: string, blockedChat: any }) => {
-      console.log("Rcv un message" , data.msg);
+      console.log("Rcv un message" , data);
       newMessageCallBack.forEach(callback => callback(data));
     });
 
@@ -75,9 +80,14 @@ export namespace ChatClientSocket {
       newQuitCallBack.forEach(callback => callback(room));
     });
 
-    socket.on('inv', (data: { username: string; target: string }) => {
+    socket.on('inv', (data: { username: string, target: string }) => {
       console.log('recu invi mess');
       newInvCallBack.forEach(callback => callback(data));
+    });
+
+    socket.on('err', (data: { channel: string, reason: string }) => {
+      console.log('recu err', data);
+      newErrCallBack.forEach(callback => callback(data));
     });
 
     return true;
@@ -129,6 +139,11 @@ export namespace ChatClientSocket {
     socket.emit("join", sendJoin);
   }
 
+  export function onChange(sendChange: {channel: string, type: string, pwd: string, username: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("change", sendChange);
+  }
+
   export function onBlocked(sendBlock: any) {
     if (!checkChatConnection()) return;
     socket.emit("blocked", sendBlock);
@@ -165,6 +180,10 @@ export namespace ChatClientSocket {
     newInvCallBack.push(callback);
   }
 
+  export function addErr(callback: newErrCallBack) {
+    newErrCallBack.push(callback);
+  }
+
   export function offMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack = newMessageCallBack.filter((cb) => cb !== callback);
   }
@@ -183,5 +202,9 @@ export namespace ChatClientSocket {
 
   export function offInv(callback: newInvCallBack) {
     newInvCallBack = newInvCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offErr(callback: newErrCallBack){
+    newErrCallBack = newErrCallBack.filter((cb) => cb !== callback);
   }
 }

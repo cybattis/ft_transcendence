@@ -30,7 +30,6 @@ export default function UsersList(props: { channel: string }) {
             }
         })
             .then((res) => {
-                console.log(res.data.operator.includes(payload.nickname));
                 if (res.data.operator.includes(payload.nickname))
                     setIsOpe(true);
                 setUsersList(res.data.users);

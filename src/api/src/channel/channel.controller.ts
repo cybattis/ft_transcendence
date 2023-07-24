@@ -100,4 +100,15 @@ export class ChannelController {
     async findChannelPrivateMessage(@Param('channel') channel: string, @Param('username') username: string): Promise<string | null> {
         return await this.channelService.findChannelPrivateMessage(channel, username);
     }
+
+    @Get('/channel/owner/:channel/:username')
+    async findOwnerChannel(@Param('channel') channel: string, @Param('username') username: string): Promise<boolean> {
+        channel = "#" + channel;
+        const find = await this.channelRepository.findOne({where: {channel : channel}});
+        if (!find)
+        return false;
+        if(find.owner === username)
+            return true;
+        return false;
+    }
 }

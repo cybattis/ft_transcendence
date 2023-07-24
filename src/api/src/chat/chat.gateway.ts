@@ -41,14 +41,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!data)
       return ;
     !data.channel ? channel = '#general' : channel = data.channel;
-    !data.username ? username = 'Francis' : username = data.username;
-    !data.password ? pass = '123' : pass = data.password;
-    !data.type ? type = 'public' : type = data.type;
+    !data.username ? username = '' : username = data.username;
+    !data.password ? pass = '' : pass = data.password;
+    !data.type ? type = '' : type = data.type;
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
       const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.joinChannel(socket, type, username, channel, pass, blockedUsers);
+    await this.channelService.joinChannel(this.server, socket, type, username, channel, pass, blockedUsers);
+  }
+
+  @SubscribeMessage('change')
+  async handleChange(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, type: string, pwd: string, username: string}) {
+    await this.channelService.changeParam(data.channel, data.type, data.pwd, data.username);
   }
 
   @SubscribeMessage('prv')
@@ -95,6 +100,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("fonction info");
     const channel = data.channel;
     const msg = await this.channelService.infoChannel(channel);
+    console.log(msg)
     this.server.emit('rcv', {msg, channel});
   }
 
@@ -125,5 +131,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Friend request Send`);
     this.channelService.sendFriendRequest(this.server, target, mess.from);
     this.server.to(target.websocket).emit('friendRequest');
+  }
+
+  @SubscribeMessage('join')
+  async handleInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string , channel: string, password: string, type: string}) {
+    await this.channelService.JoinWithInvitation();
   }
 }

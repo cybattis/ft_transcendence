@@ -13,6 +13,11 @@ import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
+import { ErrorModalChat } from "../../components/Modal/ErrorModal";
+import ParamLogo  from "../../resource/param-logo.png";
+import PrvLogo  from "../../resource/message-logo.png";
+import QuitLogo  from "../../resource/quit-logo.png";
+
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -31,11 +36,112 @@ function Quit(props: { canal: string }) {
   };
 
   if (props.canal !== "#general") {
-    return <button className="quit-button" onClick={handleQuitButton}>Leave Channel</button>
+    return <button className="button-chat" onClick={handleQuitButton}>
+          <img className="logo-chat" src={QuitLogo} alt="Quit Channel" title={"Quit channel"} />
+    </button>
   }
   return <></>;
 }
 
+function Param(props: {canal: string}){
+  const [buttonParam, setButtonParam] = useState(false);
+  const [owner, setOwner] = useState(false);
+  const channel = takeActiveCanal();
+
+  
+  function AffParam(){
+    const [inputParam, setInputForm] = useState({
+      pwd: "",
+      selectedOption: "public",
+    });
+
+    const handleSubmitParam = async (e: React.SyntheticEvent) => {
+      e.preventDefault();
+      const channel = takeActiveCanal();
+      const sendParam = {channel: channel, type: inputParam.selectedOption, pwd: inputParam.pwd, username: username};
+      ChatClientSocket.onChange(sendParam);
+      setButtonParam(false);
+    }
+
+    const handleParam = (event: any) => {
+      event.preventDefault();
+
+      const value = event.target.value;
+      setInputForm({
+        ...inputParam,
+        [event.target.name]: value
+      });
+    }
+
+    const handleSelectParam = (event: any) => {
+      if (event) {
+        const value = event.value;
+        inputParam.selectedOption = value;
+      }
+    }
+
+    const options = [
+      { value: "public", label: 'Public' },
+      { value: "private", label: 'Private' },
+      { value: "protected", label: 'Protected' }
+    ]
+
+    return <div className="ctnr-param">
+      <form className="form-param" method="get" onSubmit={handleSubmitParam}>
+      <Select
+      defaultValue={options[0]}
+      onChange={handleSelectParam}
+      options={options}
+      />
+        <label>
+            Password<br />
+            <input
+              type="password"
+              name="pwd"
+              className="input-join"
+              onChange={handleParam}
+              value={inputParam.pwd}
+            />
+          </label>
+      <button type="submit" className="submitButton">
+          Change
+        </button>
+      </form>
+    </div>
+  }
+
+  useEffect(() => {
+    async function isOwner() {
+      if (props.canal[0] != '#'){
+        setOwner(false);
+        return ;
+      }
+      const channelB = channel.substring(1);
+      const sendOwner = apiBaseURL + "chat/channel/owner/" + channelB + "/" + username;
+      const bool = await axios.get(sendOwner);
+      bool.data ? setOwner(true) : setOwner(false);
+      console.log(bool.data , username);
+    }
+  
+    isOwner();
+  });
+
+  const btnParam = () => {
+    buttonParam ? setButtonParam(false) : setButtonParam(true);
+  }
+
+  if (owner === false)
+    return(<></>)
+  else
+    return (
+    <>
+      <button className="button-chat" onClick={btnParam}>
+        <img className="logo-chat" src={ParamLogo} alt="Param" title={"Channel Param"} />
+      </button>
+      {buttonParam && <AffParam />}
+    </>
+  )
+}
 //FAIRE EN SORTE QUE BOUTONS S ADAPTE A SI IL EST DANS LE CHANNEL OU NON
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
@@ -55,7 +161,10 @@ export default function ChatClient() {
   const [usr, setUsr] = useState("");
   const [myBlockedList, setMyBlockedList] = useState<string[]>([]);
   const [isOpe, setIsOpe] = useState(false);
-
+  const [errorMessage, setErrorMessage] = useState({
+    channel: "",
+    error: "",
+  });
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
 
@@ -371,6 +480,7 @@ export default function ChatClient() {
     )
   }
 
+  /////////////////////////////////////JOIN////////////////////
   function JoinForm() {
     const [errorInput, setErrorInput] = useState("");
     const [state, setState] = useState({
@@ -482,6 +592,14 @@ export default function ChatClient() {
     </div>
   }
 
+  ////////////////////////////////////////INVITATION///////////////////////////////////
+  function Invitation () {
+    return <>
+      Invitation
+      </>
+  }
+
+  ///////////////////////////////////////PRV MESSAGE////////////////////////////////
   function PrivateMessage() {
 
     const btnPrv = () => {
@@ -492,8 +610,8 @@ export default function ChatClient() {
 
     return (
       <>
-        <button className="btn-prv" onClick={btnPrv}>
-          Private Message
+        <button className="button-chat" onClick={btnPrv}>
+          <img className="logo-chat" src={PrvLogo} alt="Private Message" title={"Private Message"} />
         </button>
         {messagePrivateForm && <AffPrivateMessage />}
       </>
@@ -502,6 +620,17 @@ export default function ChatClient() {
 
   function AffPrivateMessage() {
     const [usersList, setUsersList] = useState([]);
+
+    const keyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMessagePrivateForm(false);
+      }
+    };
+
+    useEffect(() => {
+      document.addEventListener("keydown", keyPress);
+      return () => document.removeEventListener("keydown", keyPress);
+    });
 
     useEffect(() => {
       async function requUser() {
@@ -540,6 +669,7 @@ export default function ChatClient() {
     </ div>
   }
 
+  //////////////////////////////////////JOIN//////////////////////////////
   function Join() {
 
     const keyPress = (event: KeyboardEvent) => {
@@ -675,12 +805,20 @@ const inviteCallBack = (data: { username: string; target: string }) => {
 
 ChatClientSocket.addInvCb(inviteCallBack);
 
+const errCallBack = (data: { channel: string; reason: string}) => {
+  setErrorMessage({channel: data.channel, error: data.reason});
+}
+
+ChatClientSocket.addErr(errCallBack);
+
+
 return () => {
   ChatClientSocket.offJoinChan(joinCallBack);
   ChatClientSocket.offBlock(blockedCallBack);
   ChatClientSocket.offQuit(quitCallBack);
   ChatClientSocket.offInv(inviteCallBack);
   ChatClientSocket.offMessageRecieve(messageCallBack);
+  ChatClientSocket.offErr(errCallBack);
 }
   }, [roomChange]);
 
@@ -704,7 +842,6 @@ function doCmd(cmd: string, msg: string) {
       let addressInfo = apiBaseURL + "chat/message/" + channel + "/" + username;
       axios.get(addressInfo)
         .then(response => {
-          console.log(response.data);
           setMessages(response.data);
         })
     } else {
@@ -752,11 +889,17 @@ return (
         <div className="list">
           <ChannelList channelList={channelList} onStringChange={handleStringChange} />
         </div>
-        <Join />
-        <PrivateMessage />
+        <div className="chat-line">
+          <Join />
+          <PrivateMessage />
+          <Invitation />
+        </div>
         {buttons && <Buttons />}
-        <h3 id='canal'>{defaultChannelGen}</h3>
-        <Quit canal={takeActiveCanal()} />
+        <div className="chat-line">
+          <h3 id='canal'>{defaultChannelGen}</h3>
+          <Param canal ={takeActiveCanal()}/>
+          <Quit canal={takeActiveCanal()} />
+        </div>
         <div className="rcv-mess-container">
           <ChatMap messages={messages} />
         </div>
@@ -768,6 +911,10 @@ return (
       <div className="user-lists">
         <UsersList channel={takeActiveCanal()} />
       </div>
+      <ErrorModalChat
+        msg={errorMessage}
+        onClose={() => setErrorMessage({channel: '', error: ''})}
+      />
     </div>
   </div>
 );
