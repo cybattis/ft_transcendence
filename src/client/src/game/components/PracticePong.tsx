@@ -2,21 +2,23 @@ import {createNewPracticeGame, removePracticeGame} from "../PongManager";
 import {AIDifficulty} from "../logic/PongAi";
 import PracticePongState from "../states/PracticePongState"
 import {useEffect, useRef} from "react";
+import { RgbColor } from "../../utils/colors";
 
 export type PracticePongProps = {
   name: string;
   width: number;
   height: number;
   aiDifficulty: AIDifficulty;
+  paddleColor: RgbColor;
 }
 
-export function PracticePong({name, width, height, aiDifficulty}: PracticePongProps) {
+export function PracticePong({name, width, height, aiDifficulty, paddleColor}: PracticePongProps) {
   let canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!canvasRef || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    createNewPracticeGame(new PracticePongState(name, canvas, aiDifficulty));
+    createNewPracticeGame(new PracticePongState(name, canvas, aiDifficulty, paddleColor));
 
     return () => removePracticeGame(name);
   }, [name, height, aiDifficulty, width]);

@@ -286,4 +286,36 @@ export class UserController {
     );
     return await this.userService.requests(payload.id);
   }
+
+  @UseGuards(TokenGuard)
+  @Put('customization/paddleColor')
+  async updatePaddleColor(
+    @Body() body: { color: string },
+    @Headers('Authorization') header: Headers,
+  ): Promise<void> {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+
+    const clientId = payload.id;
+
+    const result: boolean = await this.userService.updatePaddleColor(
+      clientId,
+      body.color,
+    );
+
+    if (!result) {
+      const actualPaddleColor = await this.userService.getPaddleColor(clientId);
+      throw new BadRequestException({
+        message: 'Invalid color',
+        paddleColor: actualPaddleColor,
+      });
+    }
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('customization/paddleColor/:id')
+  async getPaddleColor(@Param('id') id: number): Promise<string> {
+    return await this.userService.getPaddleColor(id);
+  }
 }

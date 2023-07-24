@@ -2,6 +2,7 @@ import { drawText } from "../util/Utils";
 import { MultiplayerPongLogic } from "../logic/MultiplayerPongLogic";
 import { MultiplayerClient } from "../networking/multiplayer-client";
 import { BallUpdate, MovementUpdate, ScoreUpdate, ServeUpdate } from "../networking/types";
+import { RgbColor } from "../../utils/colors";
 
 export default class MultiplayerPongState {
   public readonly state: MultiplayerPongLogic;
@@ -9,9 +10,13 @@ export default class MultiplayerPongState {
   private readonly canvas: HTMLCanvasElement;
   private readonly playerSpeed: number;
 
-  constructor(name: string, canvas: HTMLCanvasElement) {
+  constructor(name: string, canvas: HTMLCanvasElement,
+              paddleColor: RgbColor, opponentPaddleColor: RgbColor)
+  {
     this.canvas = canvas;
-    this.state = new MultiplayerPongLogic(name, canvas, "Opponent", "Player"); // TODO: fetch the real opponent name
+    this.state = new MultiplayerPongLogic(name, canvas);
+    this.state.setPlayerPaddleColor(paddleColor);
+    this.state.setOpponentPaddleColor(opponentPaddleColor);
     this.playerSpeed = canvas.height * 0.8;
 
     MultiplayerClient.checkConnection();

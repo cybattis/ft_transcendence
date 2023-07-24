@@ -140,8 +140,28 @@ export class MatchmakingService {
       // TODO: return error if game creation fails
       // If both players are ready, create the game
       if (pendingCasualGame.player1Ready && pendingCasualGame.player2Ready) {
-        pendingCasualGame.player1.socket.emit("game-started");
-        pendingCasualGame.player2.socket.emit("game-started");
+        // Retreiving the players from the database
+        const player1: User | null = await this.getUserFromDb(pendingCasualGame.player1.id);
+        const player2: User | null = await this.getUserFromDb(pendingCasualGame.player2.id);
+
+        if (!player1 || !player2)
+          return;
+
+        const player1Infos = {
+          id: player1.id,
+          nickname: player1.nickname,
+          paddleColor: player1.paddleColor,
+        };
+
+        const player2Infos = {
+          id: player2.id,
+          nickname: player2.nickname,
+          paddleColor: player2.paddleColor,
+        };
+
+        // Sending the game start event to the players
+        pendingCasualGame.player1.socket.emit("game-started", player2Infos);
+        pendingCasualGame.player2.socket.emit("game-started", player1Infos);
         await this.createCasualGame(pendingCasualGame.player1, pendingCasualGame.player2);
         this.removePendingCasualGame(pendingCasualGame);
       }
@@ -157,9 +177,27 @@ export class MatchmakingService {
 
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
-        console.log("Both players are ready");
-        pendingRankedGame.player1.socket.emit("game-started");
-        pendingRankedGame.player2.socket.emit("game-started");
+        // Retreiving the players from the database
+        const player1: User | null = await this.getUserFromDb(pendingRankedGame.player1.id);
+        const player2: User | null = await this.getUserFromDb(pendingRankedGame.player2.id);
+
+        if (!player1 || !player2)
+          return;
+
+        const player1Infos = {
+          id: player1.id,
+          nickname: player1.nickname,
+          paddleColor: player1.paddleColor,
+        };
+
+        const player2Infos = {
+          id: player2.id,
+          nickname: player2.nickname,
+          paddleColor: player2.paddleColor,
+        };
+
+        pendingRankedGame.player1.socket.emit("game-started", player2Infos);
+        pendingRankedGame.player2.socket.emit("game-started", player1Infos);
         await this.createRankedGame(pendingRankedGame.player1, pendingRankedGame.player2);
         this.removePendingRankedGame(pendingRankedGame);
       }

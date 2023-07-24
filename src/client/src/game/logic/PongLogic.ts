@@ -2,6 +2,7 @@ import Vec2 from "../util/Vec2";
 import Ball from "../logic/Ball";
 import Paddle from "../logic/Paddle";
 import {drawText} from "../util/Utils";
+import { RgbColor } from "../../utils/colors";
 
 export type MovementCallback = (ballPos: number, paddlePos: number) => number;
 
@@ -127,8 +128,8 @@ export class PongLogic {
     this.leftPaddleColor = color;
   }
 
-  public setRightPaddleColor(color: string): void {
-    this.rightPaddleColor = color;
+  public setRightPaddleColor(color: RgbColor): void {
+    this.rightPaddleColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`;
   }
 
   public setBallColor(color: string): void {

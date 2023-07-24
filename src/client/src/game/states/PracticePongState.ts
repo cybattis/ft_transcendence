@@ -1,6 +1,7 @@
 import {PongLogic} from "../logic/PongLogic";
 import {drawText} from "../util/Utils";
 import {AIDifficulty, PongAi} from "../logic/PongAi";
+import { RgbColor } from "../../utils/colors";
 
 export default class PracticePongState {
   public readonly state: PongLogic;
@@ -9,9 +10,10 @@ export default class PracticePongState {
   private readonly playerSpeed: number;
   private ai: PongAi;
 
-  constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty) {
+  constructor(name: string, canvas: HTMLCanvasElement, aiDifficulty: AIDifficulty, paddleColor: RgbColor) {
     this.canvas = canvas;
     this.state = new PongLogic(name, canvas, "AI", "Player");
+    this.state.setRightPaddleColor(paddleColor);
     this.ai = new PongAi(this.state.getLeftPaddle(), aiDifficulty, canvas, this.state);
     this.playerSpeed = canvas.height * 0.8;
   }

@@ -11,6 +11,7 @@ import { MessageModal } from "../../components/Modal/MessageModal";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { ErrorResponse } from "../../type/client.type";
+import { UserData } from "../Profile/user-data";
 
 export function Settings() {
   const data = useLoaderData() as UserSettings;
@@ -87,10 +88,10 @@ export function Settings() {
       return <Navigate to={"/"} />;
     }
 
-    if (!user.nickname[0]) {
+    if (user.nickname.length == 0) {
       setErrorMessage("Your Nickname can't be empty!");
       return;
-    } else if (user.nickname[0].length > 15) {
+    } else if (user.nickname.length > 15) {
       setErrorMessage("Your Nickname can't be longer than 15 characters!");
       return;
     }
@@ -104,6 +105,7 @@ export function Settings() {
         },
       })
       .then(() => {
+        UserData.updateNickname(user.nickname);
         setMessage("Update successful!");
       })
       .catch((error) => {
