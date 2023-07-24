@@ -13,6 +13,7 @@ export interface UserInfo {
   blockedId: number[];
   blockedById: number[];
   totalGameWon?: number;
+  paddleColor: string;
 }
 
 export interface UserSettings {
