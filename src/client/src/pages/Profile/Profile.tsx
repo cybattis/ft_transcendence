@@ -15,7 +15,9 @@ import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { JwtPayload } from "../../type/client.type";
-import { hslToRgb, RGBToHSL } from "../../utils/colors";
+import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
+import { MessageModal } from "../../components/Modal/MessageModal";
+import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 
 enum relationStatus {
@@ -105,7 +107,6 @@ function FriendRequest(props: FriendRequestProps) {
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
 
   const handleAddFriend = async () => {
     await axios
@@ -120,7 +121,7 @@ function FriendRequest(props: FriendRequestProps) {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
+          // localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
@@ -185,19 +186,13 @@ function FriendRequest(props: FriendRequestProps) {
   }
 }
 
-interface RgbColor {
-  r: number;
-  g: number;
-  b: number;
-}
-
 function PaddleColor(props: { oldColor: RgbColor }) {
   const [hue, setHue] = useState(RGBToHSL(props.oldColor).h);
-  const [color, setColor] = useState(props.oldColor);
+  const { setErrorMessage } = useContext(ErrorContext);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const color: RgbColor = hslToRgb({ h: hue, s: 100, l: 50 });
 
-  useEffect(() => {
-    setColor(hslToRgb({ h: hue, s: 100, l: 50 }));
-  }, [hue]);
+  console.log("hue: ", hue);
 
   const style = {
     width: "20px",
@@ -205,40 +200,84 @@ function PaddleColor(props: { oldColor: RgbColor }) {
     backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
   };
 
-  function updatePaddleColor() {
-    // post request to update paddle color
-    console.log("update paddle color: ", color);
+  function updatePaddleColor(): void {
+    function componentToHex(c: number) {
+      const hex: string = c.toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    }
+
+    const colorString: string =
+      componentToHex(color.r) +
+      componentToHex(color.g) +
+      componentToHex(color.b);
+    axios
+      .put(
+        apiBaseURL + "user/customization/paddleColor",
+        { color: colorString },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      .then((res): void => {
+        UserData.updatePaddleColor(colorString);
+        setShowSuccess(true);
+      })
+      .catch((err): void => {
+        const response = err.response?.data;
+        setErrorMessage(response?.message);
+
+        const actualColor: RgbColor = {
+          r: parseInt(response?.paddleColor.substring(0, 2), 16),
+          g: parseInt(response?.paddleColor.substring(2, 4), 16),
+          b: parseInt(response?.paddleColor.substring(4, 6), 16),
+        };
+        setHue(RGBToHSL(actualColor).h);
+      });
   }
 
   return (
-    <div className={"customization-content"}>
-      <h5>Customize your paddle</h5>
-      <div className={"customization-box"}>
-        <div className={"color-slider"}>
-          <div className={"color-gradient"}></div>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            className="slider"
-            id="myRange"
-            value={hue}
-            onChange={(e) => setHue(parseInt(e.target.value))}
-          ></input>
-          <button className={"update-color-button"} onClick={updatePaddleColor}>
-            Update color
-          </button>
-        </div>
-        <div className={"paddle-container"}>
-          <div style={style}></div>
+    <>
+      <div className={"customization-content"}>
+        <h5>Customize your paddle</h5>
+        <div className={"customization-box"}>
+          <div className={"color-slider"}>
+            <div className={"color-gradient"}></div>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              className="slider"
+              id="myRange"
+              value={hue}
+              onChange={(e) => setHue(parseInt(e.target.value))}
+            ></input>
+            <button
+              className={"update-color-button"}
+              onClick={updatePaddleColor}
+            >
+              Update color
+            </button>
+          </div>
+          <div className={"paddle-container"}>
+            <div style={style}></div>
+          </div>
         </div>
       </div>
-    </div>
+      {showSuccess ? (
+        <MessageModal
+          msg={"Color updated successfully!"}
+          onClose={() => setShowSuccess(false)}
+        />
+      ) : null}
+    </>
   );
 }
 
 export function Profile() {
-  let data = useLoaderData() as UserInfo;
+  let data: UserInfo = useLoaderData() as UserInfo;
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
@@ -309,9 +348,9 @@ export function Profile() {
   const winrate: number = calculateWinrate(data);
   const oldColor: RgbColor = {
     // change to color from db
-    r: 255,
-    g: 255,
-    b: 255,
+    r: data.paddleColor ? parseInt(data.paddleColor.substring(0, 2), 16) : 255,
+    g: data.paddleColor ? parseInt(data.paddleColor.substring(2, 4), 16) : 255,
+    b: data.paddleColor ? parseInt(data.paddleColor.substring(4, 6), 16) : 255,
   };
 
   return (

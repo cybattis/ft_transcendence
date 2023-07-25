@@ -1,13 +1,18 @@
 import { io, Socket } from "socket.io-client";
 import {
   MatchmakingMatchFoundCallback,
-  MatchmakingGameStartedCallback,
+  MatchmakingGameStartedCallback, PlayerInfos,
 } from "./types";
 
 export namespace MatchmakingClient {
   let socket: Socket;
   let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
+  let currentOpponentInfos: PlayerInfos = {
+    id: 0,
+    nickname: "",
+    paddleColor: "ffffff",
+  };
 
   function checkConnection(): boolean {
     if (socket && socket.connected) return true;
@@ -47,8 +52,9 @@ export namespace MatchmakingClient {
       matchFoundCallbacks.forEach((callback) => callback(acceptTimeout));
     });
 
-    socket.on("game-started", () => {
+    socket.on("game-started", (opponentInfos: PlayerInfos) => {
       console.log("game started");
+      currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback());
     });
 
@@ -63,6 +69,10 @@ export namespace MatchmakingClient {
 
   function disconnect() {
     if (socket && socket.connected) socket.disconnect();
+  }
+
+  export function getOpponentInfos(): PlayerInfos {
+    return currentOpponentInfos;
   }
 
   export function leaveMatchmaking() {

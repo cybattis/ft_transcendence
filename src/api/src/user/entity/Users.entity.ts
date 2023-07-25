@@ -96,4 +96,9 @@ export class User {
 
   @Column({ type: 'varchar', default: '' })
   websocket: string;
+
+  // Customisation
+  // ============================================================
+  @Column({ type: 'varchar', length: 6, default: 'ffffff' })
+  paddleColor: string;
 }

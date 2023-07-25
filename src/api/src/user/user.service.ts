@@ -98,6 +98,7 @@ export class UserService implements OnModuleInit {
         blockedId: true,
         blockedById: true,
         websocket: true,
+        paddleColor: true,
       },
       where: {
         nickname: username,
@@ -488,5 +489,28 @@ export class UserService implements OnModuleInit {
         blockedById: true,
       },
     });
+  }
+
+  async updatePaddleColor(id: number, color: string): Promise<boolean> {
+    if (!color.match(/^[0-9A-F]{6}$/i)) {
+      return false;
+    }
+
+    await this.usersRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({ paddleColor: color })
+      .where('id = :id', { id: id })
+      .execute();
+
+    return true;
+  }
+
+  async getPaddleColor(id: number): Promise<string> {
+    const user: User = await this.usersRepository.findOneOrFail({
+      where: { id: id },
+    });
+
+    return user.paddleColor;
   }
 }

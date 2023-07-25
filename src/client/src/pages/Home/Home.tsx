@@ -3,6 +3,7 @@ import "./Home.css";
 import { HomeLogged } from "./HomeLogged";
 import { AuthContext } from "../../components/Auth/dto";
 import { PracticePong } from "../../game/components/PracticePong";
+import { RgbColor, stringToRGB } from "../../utils/colors";
 
 export default function Home() {
   const { authed } = useContext(AuthContext);
@@ -16,6 +17,8 @@ export default function Home() {
 }
 
 function HomeUnlogged() {
+  const paddleColor: RgbColor = stringToRGB("ffffff");
+
   return (
     <div className={"homeUnlogged"}>
       <div className={"homeTitle"}>
@@ -28,6 +31,7 @@ function HomeUnlogged() {
           width={1000}
           height={500}
           aiDifficulty={"Medium"}
+          paddleColor={paddleColor}
         />
       </div>
     </div>

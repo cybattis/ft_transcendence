@@ -55,3 +55,9 @@ export type MultiplayerServeCallback = {
 export type MultiplayerReadyAckCallback = {
   (playerNumber: number): void;
 }
+
+export type PlayerInfos = {
+  id: number;
+  nickname: string;
+  paddleColor: string;
+}
