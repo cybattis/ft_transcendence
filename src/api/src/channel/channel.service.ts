@@ -3,7 +3,6 @@ import {
     Injectable,
     NotFoundException, OnModuleInit  } from '@nestjs/common';
 import { ChannelStructure } from "./channel.structure";
-import { banStructure } from "./channel.structure";
 import { UsersSocketStructure } from "./usersSocket.structure";
 import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +11,7 @@ import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { User } from 'src/user/entity/Users.entity';
 
 
 @Injectable()
@@ -22,6 +22,8 @@ export class ChannelService implements OnModuleInit {
     constructor(
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
+        @InjectRepository(User)
+        private usersRepository: Repository<User>,
         private userService: UserService,
         @InjectRepository(Channel)
         private channelRepository: Repository<Channel>
@@ -424,8 +426,8 @@ export class ChannelService implements OnModuleInit {
                 mute: [],
                 password: '',
             })
-            socket.to(socketTarget).emit('inv', {channel});
-            server.to(socket.id).emit('inv', {channel});
+            socket.to(socketTarget).emit('inv', {username, target});
+            server.to(socket.id).emit('inv', {username, target});
         }
 
     }
@@ -589,7 +591,23 @@ export class ChannelService implements OnModuleInit {
         await this.channelRepository.save(channelToUpdate);
     }
     
-    async JoinWithInvitation(){
-        return ;
+    async JoinWithInvitation(channel: string, target: string){
+        console.log('Inside Join Invit', channel, target);
+        const find = await this.usersRepository.findOne({where : {nickname : target}});
+        if (!find) return;
+        find.joinChannel.push(channel);
+        await this.channelRepository.save(find);
+    }
+
+    async AcceptInvitationChannel(channel: string, target: string){
+        const find = await this.usersRepository.findOne({where : {nickname : target}});
+        if (!find) return;
+        for (let index = 0; find.joinChannel[index]; index++){
+            if (channel === find.joinChannel[index]){
+                find.joinChannel.splice(index, 1)
+                await this.channelRepository.save(find);
+            }
+        }
+        // Channel n'existe plus
     } 
 }

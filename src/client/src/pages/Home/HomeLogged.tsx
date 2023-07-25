@@ -354,6 +354,7 @@ export function HomeLogged() {
     requestedId: [],
     blockedId: [],
     blockedById: [],
+    joinChannel: [],
   });
 
   useEffect(() => {

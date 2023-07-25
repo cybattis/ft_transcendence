@@ -96,4 +96,7 @@ export class User {
 
   @Column({ type: 'varchar', default: '' })
   websocket: string;
+
+  @Column('text', {array: true, default: []})
+  joinChannel: string[];
 }

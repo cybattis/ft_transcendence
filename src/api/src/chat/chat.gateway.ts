@@ -133,8 +133,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(target.websocket).emit('friendRequest');
   }
 
-  @SubscribeMessage('join')
-  async handleInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string , channel: string, password: string, type: string}) {
-    await this.channelService.JoinWithInvitation();
+  @SubscribeMessage('inv')
+  async handleInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, target: string}) {
+    await this.channelService.JoinWithInvitation(data.channel, data.target);
+  }
+
+  @SubscribeMessage('acc')
+  async AcceptInvitationChannel(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, target: string}) {
+    await this.channelService.AcceptInvitationChannel(data.channel, data.target);
   }
 }

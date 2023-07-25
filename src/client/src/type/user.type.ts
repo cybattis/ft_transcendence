@@ -13,6 +13,8 @@ export interface UserInfo {
   blockedId: number[];
   blockedById: number[];
   totalGameWon?: number;
+  joinChannel: [],
+
 }
 
 export interface UserSettings {
@@ -36,4 +38,5 @@ export interface UserFriend {
   RequestedId: number[];
   blockedId: number[];
   BlockedById: number[];
+  joinChannel: [],
 }

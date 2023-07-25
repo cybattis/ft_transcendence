@@ -8,7 +8,7 @@ import Select from "react-select";
 import { NotifContext } from '../../components/Auth/dto';
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
-import joinButton from "../../resource/addButton.png"
+import joinButton from "../../resource/more-logo.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
@@ -17,6 +17,7 @@ import { ErrorModalChat } from "../../components/Modal/ErrorModal";
 import ParamLogo  from "../../resource/param-logo.png";
 import PrvLogo  from "../../resource/message-logo.png";
 import QuitLogo  from "../../resource/quit-logo.png";
+import InvLogo  from "../../resource/invite-logo.png";
 
 
 const defaultChannelGen: string = "#general";
@@ -35,7 +36,7 @@ function Quit(props: { canal: string }) {
     ChatClientSocket.onQuit(sendQuit);
   };
 
-  if (props.canal !== "#general") {
+  if (props.canal !== "#general" && props.canal[0] === '#') {
     return <button className="button-chat" onClick={handleQuitButton}>
           <img className="logo-chat" src={QuitLogo} alt="Quit Channel" title={"Quit channel"} />
     </button>
@@ -87,6 +88,7 @@ function Param(props: {canal: string}){
     ]
 
     return <div className="ctnr-param">
+      <h4>Setting Channel</h4>
       <form className="form-param" method="get" onSubmit={handleSubmitParam}>
       <Select
       defaultValue={options[0]}
@@ -593,10 +595,74 @@ export default function ChatClient() {
   }
 
   ////////////////////////////////////////INVITATION///////////////////////////////////
-  function Invitation () {
-    return <>
-      Invitation
+  function Invitation (props: {canal: string}) {
+    const [buttonInvitation, setButtonInvitation] = useState(false);
+    const [usersList, setUsersList] = useState([]);
+
+    const setBtnInvit = () => {
+      if (buttonInvitation)
+        setButtonInvitation(false);
+      else{
+        setButtonInvitation(true);
+      }
+    };
+
+    // const keyPress = (event: KeyboardEvent) => {
+    //   if (event.key === "Escape") {
+    //     setMessagePrivateForm(false);
+    //   }
+    // };
+
+    // useEffect(() => {
+    //   document.addEventListener("keydown", keyPress);
+    //   return () => document.removeEventListener("keydown", keyPress);
+    // });
+
+    useEffect(() => {
+      async function requUser() {
+        const url = apiBaseURL + "user";
+        await axios.get(url).then((response) => {
+          setUsersList(response.data);
+        });
+      }
+      requUser();
+    }, []);
+
+    const handleInvite = (target: string) => {
+      const sendInv = { channel: takeActiveCanal(), target: target };
+      ChatClientSocket.onInvChannel(sendInv);
+    };
+
+    function ListUsers() {
+      const list = usersList.map((user: any) =>
+        username !== user.nickname ?
+          <div className='li-prv' key={user.nickname}>
+            <button className="btn-handle-prv" onClick={() => handleInvite(user.nickname)}>
+              <Avatar size={"50px"} img={user.avatarUrl} />
+              {user.nickname}
+            </button>
+          </div>
+          :
+          <div className='li-prv' key={user.nickname}></div>
+      )
+
+      return (
+      <div className="pop-invite">
+        <h4>Invite in channel</h4>
+        <div className="chat-list-ctnr">{list}</div>
+      </div>)
+    }
+    if (props.canal[0] !== '#'){
+      return <></>
+    }
+    else{
+      return <>
+      <button className="button-chat" onClick={setBtnInvit}>
+        <img className="logo-chat" src={InvLogo} alt="Invite Message" title={"Invite Message"} />
+      </button>
+      {buttonInvitation && <ListUsers/>}
       </>
+    }  
   }
 
   ///////////////////////////////////////PRV MESSAGE////////////////////////////////
@@ -643,8 +709,9 @@ export default function ChatClient() {
     }, []);
 
     const handlePrivate = (target: string) => {
+      setMessagePrivateForm(false);
       const sendPrv = { username: username, target: target };
-      ChatClientSocket.onPm(sendPrv);
+      ChatClientSocket.onPv(sendPrv);
     };
 
     function ListUsers() {
@@ -664,7 +731,7 @@ export default function ChatClient() {
     }
 
     return <div className="pop-private">
-      <h4>Message private</h4>
+      <h4>Private Message</h4>
       <ListUsers />
     </ div>
   }
@@ -694,8 +761,8 @@ export default function ChatClient() {
     }
 
     return <>
-      <button className="add" onClick={handleJoin}>
-        <img className="addImg" src={joinButton}></img>
+      <button className="button-chat" onClick={handleJoin}>
+        <img className="logo-chnl" src={joinButton}></img>
       </button>
       {joinForm && <JoinForm />}
     </>
@@ -787,6 +854,7 @@ ChatClientSocket.addQuitCb(quitCallBack);
 const inviteCallBack = (data: { username: string; target: string }) => {
   if (data.target === username) {
     if (!channelList.includes(data.username)) {
+      console.log("step 2")
       channelList.push(data.username);
       setRoomChange(data.username);
       const canal = document.getElementById("canal");
@@ -892,7 +960,7 @@ return (
         <div className="chat-line">
           <Join />
           <PrivateMessage />
-          <Invitation />
+          <Invitation canal={takeActiveCanal()} />
         </div>
         {buttons && <Buttons />}
         <div className="chat-line">

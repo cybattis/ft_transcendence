@@ -98,9 +98,14 @@ export namespace ChatClientSocket {
       socket.disconnect();
   }
 
-  export function onPm(sendPrv: {username: string, target: string}) {
+  export function onPv(sendPrv: {username: string, target: string}) {
     if (!checkChatConnection()) return;
     socket.emit("prv", sendPrv);
+  }
+
+  export function onInvChannel(sendInv: {channel: string, target: string}) {
+    if (!checkChatConnection()) return;
+    socket.emit("inv", sendInv);
   }
 
   export function onOp(message: {op: string, channel: string, author: string, cmd: string, target: string}) {
