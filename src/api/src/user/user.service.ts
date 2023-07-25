@@ -105,7 +105,7 @@ export class UserService implements OnModuleInit {
     });
 
     if (!user) throw new BadRequestException('User does not exist');
-      user.games = await this.gameService.fetchUserGames(user);
+    user.games = await this.gameService.fetchUserGames(user);
     return user;
   }
 
@@ -163,23 +163,23 @@ export class UserService implements OnModuleInit {
   }
 
   async requestFriend(friendId: number, myId: number) {
-    const friend: any = await this.usersRepository.findOne({
+    const me: any = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    const user: any = await this.usersRepository.findOne({
+    const friend: any = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    if (user.requestedId.includes(friend.id)) return;
-    user.requestedId.push(friend.id);
-    await this.usersRepository.save(user);
+    if (friend.requestedId.includes(me.id)) return;
+    friend.requestedId.push(me.id);
+    await this.usersRepository.save(friend);
   }
 
   async getOnlineFriendsList(id: number) {
@@ -321,7 +321,9 @@ export class UserService implements OnModuleInit {
       for (let i = 0; me.blockedChat[i]; i++) {
         if (me.blockedChat[i] === friend.nickname) {
           const newBlockedChatMe: string[] = me.blockedChat.splice(i, 1);
-          await this.usersRepository.update(me.id, { blockedChat: newBlockedChatMe });
+          await this.usersRepository.update(me.id, {
+            blockedChat: newBlockedChatMe,
+          });
           await this.usersRepository.save(me);
         }
       }
@@ -417,15 +419,8 @@ export class UserService implements OnModuleInit {
   }
 
   async getBlockedList(myId: number) {
-    const me: any = await this.usersRepository.findOne({where: {id: myId}});
+    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
     return me.blockedChat;
-  }
-
-  async addWebSocket(nickname: string, socket: string) {
-    const user: any = await this.usersRepository.findOne({
-      where: { nickname: nickname },
-    });
-    if (user) await this.usersRepository.update(user.id, { websocket: socket });
   }
 
   async getNotifs(myId: number) {
