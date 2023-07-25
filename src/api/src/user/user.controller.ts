@@ -11,7 +11,6 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -262,12 +261,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
+    const userID = this.jwtService.decode(header.toString().split(' ')[1]);
 
-    console.log('ACCEPT: ', id, payload.id);
-    return await this.userService.acceptFriendRequest(id, payload.id);
+    console.log('friend request accepted by: ', id, userID);
+    return await this.userService.acceptFriendRequest(id, userID);
   }
 
   @UseGuards(TokenGuard)
@@ -276,10 +273,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.declineFriendRequest(id, payload.id);
+    const userID = this.jwtService.decode(header.toString().split(' ')[1]);
+
+    console.log('friend request accepted by: ', id, userID);
+    return await this.userService.declineFriendRequest(id, userID);
   }
 
   @UseGuards(TokenGuard)

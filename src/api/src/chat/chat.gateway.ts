@@ -63,9 +63,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     !data.username ? (username = 'Francis') : (username = data.username);
     !data.password ? (pass = '123') : (pass = data.password);
     !data.type ? (type = 'public') : (type = data.type);
-    // Check if user is in socket list.
-    // if (this.channelService.verifyUserSocket(socket.id, username))
-    //   await this.channelService.joinOldChannel(socket, username);
+
+    await this.channelService.joinOldChannel(socket, username);
+
     const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.joinChannel(
       socket,
