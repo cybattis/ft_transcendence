@@ -261,10 +261,12 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const userID = this.jwtService.decode(header.toString().split(' ')[1]);
+    const userID = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    ) as TokenData;
 
-    console.log('friend request accepted by: ', id, userID);
-    return await this.userService.acceptFriendRequest(id, userID);
+    console.log('friend request accepted by: ', id, userID.id);
+    return await this.userService.acceptFriendRequest(id, userID.id);
   }
 
   @UseGuards(TokenGuard)
@@ -273,10 +275,12 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const userID = this.jwtService.decode(header.toString().split(' ')[1]);
+    const userID = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    ) as TokenData;
 
-    console.log('friend request accepted by: ', id, userID);
-    return await this.userService.declineFriendRequest(id, userID);
+    console.log('friend request accepted by: ', id, userID.id);
+    return await this.userService.declineFriendRequest(id, userID.id);
   }
 
   @UseGuards(TokenGuard)
