@@ -12,7 +12,6 @@ import joinButton from "../../resource/addButton.png"
 import { apiBaseURL } from "../../utils/constant";
 import { Link } from "react-router-dom";
 import UsersList from "./List/UsersList";
-import { ErrorModal } from "../../components/Modal/ErrorModal";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -35,16 +34,15 @@ function Quit(props: { canal: string }) {
   }
   return <></>;
 }
+//BLOCK MARCHE QUE EN RELOADANT
 
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
-
-//QUAND CHANGEMENT DE PERMS BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
-//BLOCK MARCHE QUE EN RELOADANT
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [recvMess, setRecvMess] = useState('');
   const [roomChange, setRoomChange] = useState('');
+  const [blocked, setBlocked] = useState('');
   const [post, setPost] = useState<ChatInterface[]>([]);
   const [messages, setMessages] = useState<ChatInterface[]>([]);
   const socketRef = useRef<any>(null);
@@ -63,21 +61,6 @@ export default function ChatClient() {
 
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
-
-  async function getBlockedList() {
-    await axios.get(apiBaseURL + "user/blockedList",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      },)
-      .then((res) => {
-        setMyBlockedList(res.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
 
   let decoded: JwtPayload | null = null;
   if (username === "") {
@@ -99,24 +82,6 @@ export default function ChatClient() {
       setButtons(true);
       setJoinForm(false);
     }
-    let canal = takeActiveCanal();
-    if (canal[0] === '#')
-      canal = canal.slice(1);
-    await axios.get(apiBaseURL + "chat/channelName/" + canal, {
-      headers: {
-        token: token,
-      }
-    })
-    .then((res) => {
-        console.log(res.data);
-        if (res.data.users.includes(usr))
-          setIsHere(true);
-        else
-          setIsHere(false);
-    })
-    .catch((error) => {
-      console.log(error);
-    });
   }
 
   const handleButtonForm = () => {
@@ -142,6 +107,7 @@ export default function ChatClient() {
       .catch((error) => {
         console.log(error);
       });
+    setBlocked(usr);
   }
 
   const handleAddOpe = async () => {
@@ -335,6 +301,28 @@ export default function ChatClient() {
         }
       };
 
+      async function isUsrInChan() {
+        let canal = takeActiveCanal();
+        if (canal[0] === '#')
+          canal = canal.slice(1);
+        await axios.get(apiBaseURL + "chat/channelName/" + canal, {
+          headers: {
+            token: token,
+          }
+        })
+        .then((res) => {
+            console.log(res.data);
+            if (res.data.users.includes(usr))
+              setIsHere(true);
+            else
+              setIsHere(false);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      }
+      isUsrInChan();
+
       async function getOpeList() {
         let name = takeActiveCanal();
         if (name[0] === '#')
@@ -385,8 +373,10 @@ export default function ChatClient() {
     </div>
   }
 
-  function ChatMap({ messages }: { messages: ChatInterface[] }) {
-    const activeChannel = document.getElementById("canal")?.innerHTML || "";
+  function ChatMap({messages} : {messages : ChatInterface[]}) {
+  const activeChannel = document.getElementById("canal")?.innerHTML || "";
+
+    console.log(messages);
 
     return (
       <>
@@ -394,7 +384,7 @@ export default function ChatClient() {
           {messages
           .filter((messages) => messages.channel === activeChannel)
           .map(messages => (
-          messages.emitter === username ? (
+            messages.emitter === username ? (
             <li className="Emt" key={messages.id}>
               <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
               <div className="contain-msg">{messages.content}</div>
@@ -598,10 +588,23 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    getBlockedList();
+    async function getBlockedList() {
+      await axios.get(apiBaseURL + "user/blockedList",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        },)
+        .then((res) => {
+          setMyBlockedList(res.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
 
-    const messageCallBack = async (data: { sender: string, msg: string, channel: string }) => {
-      let addressInfo = apiBaseURL + "chat/message/" + data.channel;
+    async function getMessages() {
+      let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
       await axios.get(addressInfo)
         .then(response => {
           const newData: ChatInterface[] = [];
@@ -615,6 +618,11 @@ export default function ChatClient() {
           }
           setMessages(newData);
         });
+    }
+
+    const messageCallBack = async (data: { sender: string, msg: string, channel: string }) => {
+      await getBlockedList();
+      await getMessages();
       setRecvMess(data.msg);
     }
 
@@ -636,12 +644,17 @@ export default function ChatClient() {
 
     ChatClientSocket.onJoinChan(joinCallBack);
 
-    const blockedCallBack = (target: string) => {
-      if (!blocedList.includes(target))
-        blocedList.push(target);
+    const blockedCallBack = async (target: string) => {
+      await getMessages();
     }
 
     ChatClientSocket.addBlockCb(blockedCallBack);
+
+    /*const wasBlockedCallBack = (target: string) => {
+      //Pour que les messages se reload par celui bloque
+    }*/
+
+    //ChatClientSocket.addWasBlockCb(blockedCallBack);
 
     ChatClientSocket.joinChatServer(joinCallBack);
 
@@ -682,14 +695,18 @@ export default function ChatClient() {
 
     ChatClientSocket.addInvCb(inviteCallBack);
 
+    getBlockedList();
+    getMessages();
+
     return () => {
       ChatClientSocket.offJoinChan(joinCallBack);
       ChatClientSocket.offBlock(blockedCallBack);
+      //ChatClientSocket.offWasBlock(wasBlockedCallBack);
       ChatClientSocket.offQuit(quitCallBack);
       ChatClientSocket.offInv(inviteCallBack);
       ChatClientSocket.offMessageRecieve(messageCallBack);
     }
-  }, [roomChange]);
+  }, [roomChange, messages]);
 
   function choiceCmd(input: string): string {
     if (input.indexOf("/") === 0) {
@@ -759,7 +776,7 @@ export default function ChatClient() {
             </div>
           </div>
         <div className="user-lists">
-          <UsersList channel={takeActiveCanal()}/>
+          <UsersList channel={takeActiveCanal()} messages={messages}/>
         </div>
         </div>
       </div>

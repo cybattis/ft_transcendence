@@ -272,10 +272,22 @@ export class UserService implements OnModuleInit {
     const friend: any = await this.usersRepository.findOne({
       where: { nickname: friendName },
     });
-    me.blockedId.push(friend.id);
-    friend.blockedById.push(me.id);
-    me.blockedChat.push(friend.nickname);
-    friend.blockedChat.push(me.nickname);
+    const blockedMeChat = me.blockedChat;
+    blockedMeChat.push(friend.nickname);
+    const blockedMeId = me.blockedById;
+    blockedMeId.push(friend.id);
+    const blockedFriendChat = friend.blockedChat;
+    blockedFriendChat.push(me.nickname);
+    const blockedFriendId = friend.blockedById;
+    blockedFriendId.push(me.id);
+    await this.usersRepository.update(me.id, {
+      blockedChat: blockedMeChat,
+      blockedId: blockedMeId,
+    });
+    await this.usersRepository.update(friend.id, {
+      blockedChat: blockedFriendChat,
+      blockedId: blockedFriendId,
+    });
     await this.usersRepository.save(friend);
     return await this.usersRepository.save(me);
   }
@@ -418,6 +430,7 @@ export class UserService implements OnModuleInit {
 
   async getBlockedList(myId: number) {
     const me: any = await this.usersRepository.findOne({where: {id: myId}});
+    console.log(me);
     return me.blockedChat;
   }
 

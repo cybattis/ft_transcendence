@@ -214,7 +214,7 @@ export class UserController {
       
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(@Param('id') id: number, @Headers('Authorization') header: Headers) {
+  async getBlockedList(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
       );

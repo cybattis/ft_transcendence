@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import { apiBaseURL } from '../../../utils/constant';
 import { JwtPayload } from "../../../type/client.type";
+import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
 
-export default function UsersList(props: { channel: string }) {
+export default function UsersList(props: { channel: string, messages: ChatInterface[] }) {
     const [usersList, setUsersList] = useState([]);
     const [banList, setBanList] = useState([]);
     const [muteList, setMuteList] = useState([]);
@@ -42,7 +43,7 @@ export default function UsersList(props: { channel: string }) {
 
     useEffect(() => {
         fecthLists();
-    }, [props.channel]);
+    }, [props.channel, props.messages]);
 
     function ListBan() {
         if (banList) {

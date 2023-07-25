@@ -413,7 +413,7 @@ export class ChannelService implements OnModuleInit {
         }
     }
 
-    blockedUser(server: Server, socket: Socket, target: string){
+    async blockedUser(server: Server, socket: Socket, target: string){
         const targetUser = this.takeSocketByUsername(target);
         if (targetUser != null)
             server.to(socket.id).emit("blocked", target);
