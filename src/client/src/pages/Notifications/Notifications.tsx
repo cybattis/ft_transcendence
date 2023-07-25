@@ -24,11 +24,7 @@ export default function Notifications() {
   ]);
 
   async function handleAccept(id: number) {
-    if (!id) {
-      setAuthToken(null);
-      setErrorMessage("Session expired, please login again!");
-      return;
-    }
+    if (!id) return;
 
     await axios
       .put(apiBaseURL + "user/accept/" + id, null, {
@@ -39,15 +35,14 @@ export default function Notifications() {
       .then((res) => {
         ChatClientSocket.notificationEvent(id);
         removeNotif(id);
+      })
+      .catch((error) => {
+        console.log(error);
       });
   }
 
   async function handleDecline(id: number) {
-    if (!id) {
-      setAuthToken(null);
-      setErrorMessage("Session expired, please login again!");
-      return;
-    }
+    if (!id) return;
 
     await axios
       .put(apiBaseURL + "user/decline/" + id, null, {

@@ -290,8 +290,6 @@ export function Profile() {
   function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
 
-    console.log(meData.friendsId);
-
     if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
     else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
       setFriendStatus(relationStatus.FRIEND);
@@ -307,6 +305,7 @@ export function Profile() {
 
   useEffect(() => {
     async function fetchData() {
+      if (data.id === undefined) return;
       axios
         .get(apiBaseURL + `user/friends-data/${data.id}`, {
           headers: {
@@ -314,12 +313,11 @@ export function Profile() {
           },
         })
         .then((res) => {
-          console.log(res.data);
           checkFriendStatus(res.data);
         })
         .catch((error) => {
           if (error.response === undefined) {
-            localStorage.clear();
+            // localStorage.clear();
             setErrorMessage("Error unknown...");
           } else if (
             error.response.status === 403 ||
