@@ -22,6 +22,8 @@ export default function Notifications() {
     },
   ]);
 
+  const [channelInvits, setChannelInvits] = useState([]);
+
   async function handleAccept(id: number) {
     if (!id) {
       setAuthToken(null);
@@ -91,6 +93,21 @@ export default function Notifications() {
     }
     fetchFriends().then(() => {});
   }, []);
+
+  useEffect(() => {
+    async function fetchInvChannel(){
+      const urlInv = apiBaseURL + "user/request/channel";
+      await axios.get(urlInv, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setChannelInvits(res.data);
+      });
+      }
+      fetchInvChannel();
+    }, []);
 
   if (token === null) {
     setAuthToken(null);

@@ -29,7 +29,20 @@ export class ChannelController {
         return (await this.chatRepository.find({where : {channel : decodedName}}));
     }
 
+    @Get('/message/:channel/:username')
+    async findPrivateMessage(@Param('channel') channel : string, @Param('username') username:string ): Promise<Chat[] | null>{
+        const find: Channel[] = await this.channelRepository.find({where : {status: "message"}});
+        for (let index = 0; find[index]; index ++){
+            if ((find[index].users[0] == channel && find[index].users[1] == username) 
+            ||  (find[index].users[0] == username && find[index].users[1] == channel)){
+                const mess =  await this.chatRepository.find({where : {channel : find[index].channel}});
+                return mess;
+            }
+        }
+        return null;
+    }
     
+
     @Delete('/delete-chat/:channel')
     async deleteChat(@Param('channel') channel: string): Promise<void> {
         const decodedName = decodeURIComponent(channel);
@@ -79,21 +92,25 @@ export class ChannelController {
         return (await this.channelService.findChannelName(decodedName));
     }
 
-    @Put('invite/:channel/:id')
-    async removeFriend(
-        @Param('channel') channel: string,
-        @Param('id') id: number,
-        @Headers('Authorization') header: Headers,
-    ) {
-        const payload: any = this.jwtService.decode(
-            header.toString().split(' ')[1], );
-        return await this.channelService.invite(channel, id);
-    }
-
     @Delete('/delete-channel/:channel')
     async deleteChannel(@Param('channel') channel: string): Promise<void> {
         const decodedName = decodeURIComponent(channel);
         await this.channelRepository.delete({channel: decodedName});
     }
-}
 
+    @Get('/channel/private/:channel/:username')
+    async findChannelPrivateMessage(@Param('channel') channel: string, @Param('username') username: string): Promise<string | null> {
+        return await this.channelService.findChannelPrivateMessage(channel, username);
+    }
+
+    @Get('/channel/owner/:channel/:username')
+    async findOwnerChannel(@Param('channel') channel: string, @Param('username') username: string): Promise<boolean> {
+        channel = "#" + channel;
+        const find = await this.channelRepository.findOne({where: {channel : channel}});
+        if (!find)
+        return false;
+        if(find.owner === username)
+            return true;
+        return false;
+    }
+}

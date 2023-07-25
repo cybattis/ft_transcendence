@@ -31,7 +31,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('send :')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.sendMessage(socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
+    console.log('data.msg');
+    await this.channelService.sendMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')
@@ -40,20 +41,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!data)
       return ;
     !data.channel ? channel = '#general' : channel = data.channel;
-    !data.username ? username = 'Francis' : username = data.username;
-    !data.password ? pass = '123' : pass = data.password;
-    !data.type ? type = 'public' : type = data.type;
+    !data.username ? username = '' : username = data.username;
+    !data.password ? pass = '' : pass = data.password;
+    !data.type ? type = '' : type = data.type;
     this.userService.addWebSocket(username, socket.id);
     if (this.channelService.verifyUserSocket(socket.id, username))
       await this.channelService.joinOldChannel(socket, username);
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.joinChannel(socket, type, username, channel, pass, blockedUsers);
+      const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.joinChannel(this.server, socket, type, username, channel, pass, blockedUsers);
+  }
 
+  @SubscribeMessage('change')
+  async handleChange(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, type: string, pwd: string, username: string}) {
+    await this.channelService.changeParam(data.channel, data.type, data.pwd, data.username);
   }
 
   @SubscribeMessage('prv')
-  handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
-    this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
+  async handlePrv(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string, target: string}) {
+    console.log('Private :' , data.username, data.target);
+    await this.channelService.sendPrvMess(this.server ,socket, data.username, data.target);
   }
 
   @SubscribeMessage('blocked')
@@ -106,6 +112,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log("fonction info");
     const channel = data.channel;
     const msg = await this.channelService.infoChannel(channel);
+    console.log(msg)
     this.server.emit('rcv', {msg, channel});
   }
 
@@ -136,5 +143,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Friend request Send`);
     this.channelService.sendFriendRequest(this.server, target, mess.from);
     this.server.to(target.websocket).emit('friendRequest');
+  }
+
+  @SubscribeMessage('inv')
+  async handleInvitation(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, target: string}) {
+    await this.channelService.JoinWithInvitation(data.channel, data.target);
+  }
+
+  @SubscribeMessage('acc')
+  async AcceptInvitationChannel(@ConnectedSocket() socket: Socket, @MessageBody() data: {channel: string, target: string}) {
+    await this.channelService.AcceptInvitationChannel(data.channel, data.target);
   }
 }
