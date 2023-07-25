@@ -17,7 +17,7 @@ function MobileNavBar() {
   const { setLoginForm, setSignupForm } = useContext(FormContext);
 
   let username: string = "";
-  let id: string = ""
+  let id: string = "";
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
@@ -47,11 +47,13 @@ function MobileNavBar() {
         <Logo />
       </Link>
       <div className={"navbar-mobile-div"}></div>
-      <Notification />
       {authed ? (
-        <button className={"navbar-button"} onClick={handleSidePanel}>
-          <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
-        </button>
+        <>
+          <Notification />
+          <button className={"navbar-button"} onClick={handleSidePanel}>
+            <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
+          </button>
+        </>
       ) : null}
       {sidePanel && authed ? (
         <div className={"navbar-mobile-sidepanel"}>

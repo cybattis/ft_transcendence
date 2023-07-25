@@ -7,6 +7,7 @@ import { NotifContext } from "../../components/Auth/dto";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { AuthContext } from "../../components/Auth/dto";
+import { ChatClientSocket } from "../Chat/Chat-client";
 
 export default function Notifications() {
   const { setAuthToken } = useContext(AuthContext);
@@ -36,7 +37,7 @@ export default function Notifications() {
         },
       })
       .then((res) => {
-        console.log("Accepted");
+        ChatClientSocket.notificationEvent(id);
         removeNotif(id);
       });
   }
@@ -55,7 +56,7 @@ export default function Notifications() {
         },
       })
       .then((res) => {
-        console.log("Decline");
+        ChatClientSocket.notificationEvent(id);
         removeNotif(id);
       });
   }
@@ -90,6 +91,8 @@ export default function Notifications() {
         });
     }
     fetchFriends().then(() => {});
+
+    ChatClientSocket.onNotificationEvent(fetchFriends);
   }, []);
 
   if (token === null) {
@@ -136,12 +139,11 @@ export default function Notifications() {
         </div>
       </div>
     );
-  } else
-  setNotif(false);
+  } else setNotif(false);
 
-    return (
-      <div className="noNotifTitle">
-        <h2>No Notifications</h2>
-      </div>
-    );
+  return (
+    <div className="noNotifTitle">
+      <h2>No Notifications</h2>
+    </div>
+  );
 }

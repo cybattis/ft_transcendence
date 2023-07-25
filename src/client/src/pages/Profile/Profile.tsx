@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./Profile.css";
 import axios from "axios";
-import { io } from "socket.io-client";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { UserFriend, UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
@@ -17,6 +16,7 @@ import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { JwtPayload } from "../../type/client.type";
 import { hslToRgb, RGBToHSL } from "../../utils/colors";
+import { ChatClientSocket } from "../Chat/Chat-client";
 
 enum relationStatus {
   NONE,
@@ -102,16 +102,10 @@ function BlockUser(props: FriendRequestProps) {
 }
 
 function FriendRequest(props: FriendRequestProps) {
-  const socketRef = useRef<any>(null);
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
-
-  useEffect(() => {
-    socketRef.current = io(apiBaseURL);
-    console.log("WS Connected: ", socketRef.current.connected);
-  }, []);
 
   const handleAddFriend = async () => {
     await axios
@@ -121,9 +115,7 @@ function FriendRequest(props: FriendRequestProps) {
         },
       })
       .then((res) => {
-        const name: string = payload.nickname;
-        const mess = { friend: props.data, from: name };
-        socketRef.current.emit("friendRequest", mess);
+        ChatClientSocket.sendFriendRequest(props.data.id);
         props.setStatus(relationStatus.REQUESTED);
       })
       .catch((error) => {
@@ -152,6 +144,7 @@ function FriendRequest(props: FriendRequestProps) {
         },
       })
       .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.NONE);
       })
       .catch((error) => {
@@ -257,22 +250,18 @@ export function Profile() {
 
   function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
-    console.log(payload.id, data.id);
+
+    console.log(meData.friendsId);
+
     if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
-    else if (
-      meData.FriendsId &&
-      meData.FriendsId.includes(parseInt(payload.id))
-    )
+    else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
       setFriendStatus(relationStatus.FRIEND);
     else if (
-      meData.RequestedId &&
-      meData.RequestedId.includes(parseInt(payload.id))
+      meData.requestedId &&
+      meData.requestedId.includes(Number(payload.id))
     )
       setFriendStatus(relationStatus.REQUESTED);
-    else if (
-      meData.blockedId &&
-      meData.blockedId.includes(parseInt(payload.id))
-    )
+    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
       setFriendStatus(relationStatus.BLOCKED);
     else setFriendStatus(relationStatus.NONE);
   }
@@ -280,7 +269,7 @@ export function Profile() {
   useEffect(() => {
     async function fetchData() {
       axios
-        .get(apiBaseURL + `user/friends`, {
+        .get(apiBaseURL + `user/friends-data/${data.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -297,7 +286,7 @@ export function Profile() {
             error.response.status === 403 ||
             error.response.status === 400
           ) {
-            localStorage.clear();
+            // localStorage.clear();
             setAuthToken(null);
             setErrorMessage("Session expired, please login again!");
           } else {
@@ -308,6 +297,7 @@ export function Profile() {
     }
 
     fetchData().then(() => {});
+    ChatClientSocket.onNotificationEvent(fetchData);
   }, [checkFriendStatus]);
 
   if (token === null) {
