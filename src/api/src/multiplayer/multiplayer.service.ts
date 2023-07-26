@@ -330,4 +330,9 @@ export class MultiplayerService {
       await this.endGame(game);
     }
   }
+
+  public isPlayerInGame(playerId: number): boolean {
+    const game: GameRoom | undefined = this.getRoomByPlayerId(playerId);
+    return game !== undefined;
+  }
 }
