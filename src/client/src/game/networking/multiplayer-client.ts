@@ -155,4 +155,9 @@ export namespace MultiplayerClient {
     if (!checkConnection()) return;
     socket.emit("goal");
   }
+
+  export function quitGame() {
+    if (!checkConnection()) return;
+    socket.emit("quit");
+  }
 }
