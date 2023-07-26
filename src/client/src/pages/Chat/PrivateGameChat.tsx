@@ -140,7 +140,7 @@ export default function PrivateGameChat() {
       msg: string;
       channel: string;
     }) => {
-      let addressInfo = apiBaseURL + "chat/gameChat/" + data.channel;
+      let addressInfo = apiBaseURL + "chat-controller/gameChat/" + data.channel;
       await axios.get(addressInfo).then((res) => {
         console.log("LA: ", res.data);
         setMessages(res.data);

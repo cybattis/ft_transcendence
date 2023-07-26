@@ -1,6 +1,5 @@
-import { io, Socket } from "socket.io-client";
-import { apiBaseURL } from "../../utils/constant";
-import { UserInfo, FriendRequestDto } from "../../type/user.type";
+import { wsBaseURL } from "../../utils/constant";
+import { SocketManager } from "../../utils/socketManager";
 
 export type newMessagesCallBack = {
   (data: {
@@ -36,7 +35,9 @@ export type newErrCallBack = {
 };
 
 export namespace ChatClientSocket {
-  let socket: Socket;
+  import SocketParameters = SocketManager.SocketParameters;
+  import ManagedSocket = SocketManager.ManagedSocket;
+  let socket: ManagedSocket;
   let newMessageCallBack: newMessagesCallBack[] = [];
   let newJoinChannel: newChannelCallBack[] = [];
   let newBlockedCallBack: newBlockedCallBack[] = [];
@@ -46,27 +47,20 @@ export namespace ChatClientSocket {
   let newErrCallBack: newErrCallBack[] = [];
 
   export function checkChatConnection(): boolean {
-    if (socket && socket.connected) return true;
+    if (socket && !socket.needsToConnect()) return true;
 
     const token = localStorage.getItem("token");
 
-    const socketOptions = {
+    const socketOptions: SocketParameters = {
       reconnection: true,
       reconnectionAttempts: 3,
       reconnectionDelay: 3000,
       timeout: 10000,
       auth: token ? { token } : {},
+      path: "/chat",
     };
 
-    socket = io(apiBaseURL, socketOptions);
-
-    socket.on("connect", () => {
-      console.log("connected to chat server.");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected from chat server.");
-    });
+    socket = SocketManager.configureSocket(wsBaseURL, socketOptions);
 
     socket.on("join", (room: string) => {
       newJoinChannel.forEach((callback) => callback(room));
@@ -110,7 +104,7 @@ export namespace ChatClientSocket {
   }
 
   export function disconnect() {
-    if (socket && socket.connected) socket.disconnect();
+    if (socket) socket.disconnect();
   }
 
   export function privateMessage(sendPrv: {

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Delete, Put, Headers } from '@nestjs/common';
+import { Controller, Get, Param, Delete, Headers } from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { GameChat } from './entity/GameChat.entity';
@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelService } from './channel.service';
 
-@Controller('chat')
+@Controller('chat-controller')
 export class ChannelController {
   constructor(
     @InjectRepository(Chat)

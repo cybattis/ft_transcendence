@@ -133,7 +133,12 @@ function Param(props: { canal: string }) {
       }
       const channelB = channel.substring(1);
       const sendOwner =
-        apiBaseURL + "chat/channel/owner/" + channelB + "/" + username;
+        apiBaseURL +
+        "chat-controller/channel/owner/" +
+        channelB +
+        "/" +
+        username;
+      console.log(sendOwner);
       const bool = await axios.get(sendOwner);
       bool.data ? setOwner(true) : setOwner(false);
       console.log(bool.data, username);
@@ -386,14 +391,18 @@ export default function ChatClient() {
       async function IsOpe() {
         const channelB = channel.substring(1);
         const sendUsername =
-          apiBaseURL + "chat/channel/ope/" + channelB + "/" + username;
+          apiBaseURL +
+          "chat-controller/channel/ope/" +
+          channelB +
+          "/" +
+          username;
         const sendTarget =
-          apiBaseURL + "chat/channel/ope/" + channelB + "/" + usr;
+          apiBaseURL + "chat-controller/channel/ope/" + channelB + "/" + usr;
         const info = await axios.get(sendUsername);
         const bis = await axios.get(sendTarget);
         setState({ senderIsOpe: info.data, targetIsOpe: bis.data });
       }
-      IsOpe();
+      IsOpe().then();
     }, []);
 
     return (
@@ -432,7 +441,7 @@ export default function ChatClient() {
         let canal = takeActiveCanal();
         if (canal[0] === "#") canal = canal.slice(1);
         await axios
-          .get(apiBaseURL + "chat/channelName/" + canal, {
+          .get(apiBaseURL + "chat-controller/channelName/" + canal, {
             headers: {
               token: token,
             },
@@ -453,7 +462,7 @@ export default function ChatClient() {
         if (name[0] === "#") name = name.slice(1);
 
         await axios
-          .get(apiBaseURL + "chat/channelName/" + name, {
+          .get(apiBaseURL + "chat-controller/channelName/" + name, {
             headers: {
               token: token,
             },
@@ -472,7 +481,7 @@ export default function ChatClient() {
       if (usr === payload.nickname) setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
-    });
+    }, []);
 
     return (
       <div className="buttons-form">
@@ -531,7 +540,11 @@ export default function ChatClient() {
         console.log(channel);
         if (channel[0] !== "#") {
           let addressInfo =
-            apiBaseURL + "chat/channel/private/" + channel + "/" + username;
+            apiBaseURL +
+            "chat-controller/channel/private/" +
+            channel +
+            "/" +
+            username;
           await axios
             .get(addressInfo)
             .then((response) => {
@@ -652,7 +665,11 @@ export default function ChatClient() {
       }
       if (state.pwd[0]) {
         const exists = await axios.get(
-          apiBaseURL + "chat/channel/find/" + state.channel + "/" + state.pwd
+          apiBaseURL +
+            "chat-controller/channel/find/" +
+            state.channel +
+            "/" +
+            state.pwd
         );
         if (
           exists.data.status === 404 &&
@@ -666,7 +683,7 @@ export default function ChatClient() {
           setErrorInput("Password mismatch.");
       } else {
         const exists = await axios.get(
-          apiBaseURL + "chat/channel/findName/" + state.channel
+          apiBaseURL + "chat-controller/channel/findName/" + state.channel
         );
         if (
           exists.data.status === 404 &&
@@ -967,13 +984,18 @@ export default function ChatClient() {
     }) => {
       if (data.channel[0] !== "#") {
         let addressInfo =
-          apiBaseURL + "chat/message/" + data.channel + "/" + data.sender;
+          apiBaseURL +
+          "chat-controller/message/" +
+          data.channel +
+          "/" +
+          data.sender;
         await axios.get(addressInfo).then((response) => {
           setMessages(response.data);
         });
         setRecvMess(data.msg);
       } else {
-        let addressInfo = apiBaseURL + "chat/message/" + data.channel;
+        let addressInfo =
+          apiBaseURL + "chat-controller/message/" + data.channel;
         await axios.get(addressInfo).then((response) => {
           const newData: ChatInterface[] = [];
           for (let i = 0; response.data[i]; i++) {
@@ -1091,12 +1113,13 @@ export default function ChatClient() {
     } else {
       if (channel[0] !== "#") {
         let addressInfo =
-          apiBaseURL + "chat/message/" + channel + "/" + username;
+          apiBaseURL + "chat-controller/message/" + channel + "/" + username;
         axios.get(addressInfo).then((response) => {
           setMessages(response.data);
         });
       } else {
-        let addressInfo = apiBaseURL + "chat/message/" + takeActiveCanal();
+        let addressInfo =
+          apiBaseURL + "chat-controller/message/" + takeActiveCanal();
         axios.get(addressInfo).then((response) => {
           setMessages(response.data);
         });
@@ -1110,12 +1133,12 @@ export default function ChatClient() {
     setRoomChange(newString);
     if (newString[0] !== "#") {
       let addressInfo =
-        apiBaseURL + "chat/message/" + newString + "/" + username;
+        apiBaseURL + "chat-controller/message/" + newString + "/" + username;
       await axios.get(addressInfo).then((response) => {
         setMessages(response.data);
       });
     } else {
-      let addressInfo = apiBaseURL + "chat/message/" + newString;
+      let addressInfo = apiBaseURL + "chat-controller/message/" + newString;
       await axios.get(addressInfo).then((response) => {
         setMessages(response.data);
       });

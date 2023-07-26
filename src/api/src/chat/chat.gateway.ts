@@ -15,7 +15,9 @@ import { UserService } from '../user/user.service';
 @WebSocketGateway({
   cors: {
     origin: '*',
+    methods: ['GET', 'POST'],
   },
+  path: '/chat',
 })
 @Injectable()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
