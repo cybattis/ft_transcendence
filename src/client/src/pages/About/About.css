@@ -1,0 +1,125 @@
+.about-page {
+    display: flex;
+    align-items: center;
+    text-align: center;
+
+    flex-direction: column;
+    width: 100%;
+    height: var(--vp-size);
+    overflow-y: auto;
+}
+
+.first-title {
+    display: flex;
+
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+
+    width: 100%;
+}
+
+.title {
+    display: flex;
+
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+
+    width: 100%;
+}
+
+@media screen and (width < 800px) {
+    .img {
+        display: flex;
+    
+        border-radius: 50%;
+        width: 200px;
+        height: 200px;
+    }
+
+    .left {
+        display: flex;
+            
+        flex-direction: row;
+        justify-content: left;
+    }
+
+    .right {
+        display: flex;
+    
+        flex-direction: row;
+        justify-content: right;
+    }
+    
+    .description {
+        display: flex;
+    
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        overflow-wrap: break-word;
+        font-size: max(0.6vw, 15px);
+    }
+
+    .first-title {
+        font-size: max(1vw, 25px);
+    }
+
+    .title {
+        font-size: max(1vw, 20px);
+    }
+}
+
+@media screen and (width > 800px) {
+    .img {
+        display: flex;
+    
+        border-radius: 50%;
+        width: 250px;
+        height: 250px;
+    }
+
+    .left {
+        display: flex;
+        
+        flex-direction: row;
+        justify-content: left;
+    }
+    
+    .right {
+        display: flex;
+    
+        flex-direction: row;
+        justify-content: right;
+    }
+    
+    .description {
+        display: flex;
+    
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+        overflow-wrap: break-word;
+        font-size: max(0.6vw, 15px);
+        max-width: 400px;
+    }
+
+    .first-title {
+        font-size: max(1vw, 35px);
+    }
+
+    .title {
+        font-size: max(1vw, 25px);
+    }
+}
+
+.r-title {
+    text-align: center;
+    font-size: max(1vw, 25px);
+}
+
+.l-title {
+    text-align: center;
+    font-size: max(1vw, 25px);
+}

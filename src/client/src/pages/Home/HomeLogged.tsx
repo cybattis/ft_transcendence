@@ -17,6 +17,7 @@ import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
+import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 
 enum MatchmakingAcceptButtonState {
@@ -356,6 +357,7 @@ export function HomeLogged() {
     requestedId: [],
     blockedId: [],
     blockedById: [],
+    joinChannel: [],
     paddleColor: "ffffff",
   });
 
@@ -398,6 +400,8 @@ export function HomeLogged() {
     }
 
     fetchData().then(() => {});
+
+    ChatClientSocket.onNotificationEvent(fetchData);
 
     return () => {
       MatchmakingClient.leaveMatchmaking();

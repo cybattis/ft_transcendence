@@ -1,21 +1,26 @@
-import React, { useEffect, useState, useContext } from 'react';
-import axios from 'axios';
-import "./Friends.css"
-import { Avatar } from '../Avatar';
+import React, { useEffect, useState, useContext } from "react";
+import axios from "axios";
+import "./Friends.css";
+import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
 import { AuthContext } from "../Auth/dto";
 import { ErrorContext } from "../Modal/modalContext";
+import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 
 //Mettre un useState refresh automatique
 function Online(data: any) {
-  return <div className="online">
-    <div className="status">{(data.inGame === true) ? "In game" : "In menu"}</div>
-  </div>
+  return (
+    <div className="online">
+      <div className="status">
+        {data.inGame === true ? "In game" : "In menu"}
+      </div>
+    </div>
+  );
 }
 
 function Offline() {
-  return <div className="offline"></div>
+  return <div className="offline"></div>;
 }
 
 function FriendsList() {
@@ -24,21 +29,25 @@ function FriendsList() {
 
   const token = localStorage.getItem("token");
 
-  const [dataOnline, setDataOnline] = useState([{
-    nickname: "",
-    avatarUrl: "",
-    online: false,
-    inGame: false,
-    id: 0,
-  }]);
+  const [dataOnline, setDataOnline] = useState([
+    {
+      nickname: "",
+      avatarUrl: "",
+      online: false,
+      inGame: false,
+      id: 0,
+    },
+  ]);
 
-  const [dataOffline, setDataOffline] = useState([{
-    nickname: "",
-    avatarUrl: "",
-    online: false,
-    inGame: false,
-    id: 0,
-  }]);
+  const [dataOffline, setDataOffline] = useState([
+    {
+      nickname: "",
+      avatarUrl: "",
+      online: false,
+      inGame: false,
+      id: 0,
+    },
+  ]);
 
   useEffect(() => {
     async function fetchDataOnline() {
@@ -74,7 +83,6 @@ function FriendsList() {
         })
         .catch((error) => {
           if (error.response === undefined) {
-            localStorage.clear();
             setErrorMessage("Error unknown...");
           } else if (error.response.status === 403) {
             localStorage.clear();
@@ -83,46 +91,64 @@ function FriendsList() {
           } else setErrorMessage(error.response.data.message + "!");
         });
     }
-    fetchDataOnline();
-    fetchDataOffline();
+    fetchDataOnline().then();
+    fetchDataOffline().then();
+
+    ChatClientSocket.onNotificationEvent(fetchDataOffline);
+    ChatClientSocket.onNotificationEvent(fetchDataOnline);
   }, []);
 
-
-   if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
-    return <>
-    <h4>Friends</h4>
-    <ul>
-      {dataOnline.map(dataOnline => {
-        return <div className="friends" key={dataOnline.nickname}>
-            <Link to={`/profile/${dataOnline.nickname}`} className="friendLink">
-              <div>
-                <p  className="friendsImg"><Avatar size="50px" img={dataOnline.avatarUrl} /></p>
-                {<Online inGame={dataOnline.inGame}/>}
+  if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
+    return (
+      <>
+        <h4>Friends</h4>
+        <>
+          {dataOnline.map((dataOnline) => {
+            return (
+              <div className="friends" key={dataOnline.nickname}>
+                <Link
+                  to={`/profile/${dataOnline.nickname}`}
+                  className="friendLink"
+                >
+                  <div>
+                    <p className="friendsImg">
+                      <Avatar size="50px" img={dataOnline.avatarUrl} />
+                    </p>
+                    {<Online inGame={dataOnline.inGame} />}
+                  </div>
+                  <p className="nickname">{dataOnline.nickname}</p>
+                </Link>
               </div>
-                <p className="nickname">{dataOnline.nickname}</p>
-            </Link>
-          </div>;
-      })}
-      {dataOffline.map(dataOffline => {
-        return <div className="friends" key={dataOffline.nickname}>
-            <Link to={`/profile/${dataOffline.nickname}`} className="friendLink">
-              <div>
-                <p  className="friendsImg"><Avatar size="50px" img={dataOffline.avatarUrl} /></p>
-                {<Offline />}
+            );
+          })}
+          {dataOffline.map((dataOffline) => {
+            return (
+              <div className="friends" key={dataOffline.nickname}>
+                <Link
+                  to={`/profile/${dataOffline.nickname}`}
+                  className="friendLink"
+                >
+                  <div>
+                    <p className="friendsImg">
+                      <Avatar size="50px" img={dataOffline.avatarUrl} />
+                    </p>
+                    {<Offline />}
+                  </div>
+                  <p className="nickname">{dataOffline.nickname}</p>
+                </Link>
               </div>
-                <p className="nickname">{dataOffline.nickname}</p>
-              </Link>
-          </div>;
-      })}
-    </ul>
-</>
-   }
-   else
-    return <h4>No Friends</h4>
+            );
+          })}
+        </>
+      </>
+    );
+  } else return <h4>No Friends</h4>;
 }
-        
+
 export function Friends() {
-    return <div className="friendList">
-        <FriendsList />
-    </div>;
+  return (
+    <div className="friendList">
+      <FriendsList />
+    </div>
+  );
 }

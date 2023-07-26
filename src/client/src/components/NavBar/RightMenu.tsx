@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from 'axios';
+import axios from "axios";
 import "./NavBar.css";
 import "./NavButton.css";
 import logo from "../../resource/signin-logo.svg";
@@ -40,37 +40,6 @@ function Unlogged() {
   );
 }
 
-function Img() {
-  const { notif, setNotif } = useContext(NotifContext);
-  const logoNotifs = {
-    width: "45px",
-    height: "45px",
-  };
-
-  const fetchNotifs = async () => {
-    let JWTToken = localStorage.getItem("token");
-    await axios
-      .get(apiBaseURL + "user/notifs", {
-        headers: { Authorization: `Bearer ${JWTToken}` },
-      })
-      .then((res) => {
-        if (res.data) setNotif(true);
-      });
-  };
-
-  useEffect(() => {
-    fetchNotifs();
-    if (fetchNotifs.length) fetchNotifs();
-
-    console.log("reload");
-  }, [notif, fetchNotifs]);
-
-
-  if (!notif)
-    return <img style={logoNotifs} src={notifsLogo} alt={"logo notif"}></img>;
-  return <img style={logoNotifs} src={notifsLogoOn} alt={"logo notif"}></img>;
-}
-
 function Logged() {
   const { notif } = useContext(NotifContext);
   const [notifs, setNotifs] = useState(false);
@@ -81,19 +50,17 @@ function Logged() {
   }, []);
 
   let username: string | null = null;
-  let id: string | null = null;
 
   try {
     const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
     username = decoded.nickname;
-    id = decoded.id;
   } catch (e) {
     console.log("Error: Invalid token");
   }
 
   return (
     <>
-      <Notification id={id} />
+      <Notification />
       <NavButton content={"Profile"} link={`/profile/${username}`} />
       <NavButton content={"Settings"} link={"/settings"} />
       <DisconnectButton />

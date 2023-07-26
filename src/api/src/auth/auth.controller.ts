@@ -42,12 +42,13 @@ export class AuthController {
     @Res() res: Response,
   ): Promise<string | HttpException | void> {
     try {
+      console.log("inside ");
+
       const token = await this.authService.exchangeCodeForToken(code);
       const dataUser = await this.authService.infoUser(token);
       let user = await this.userService.findUserAndGetCredential(
         dataUser.email,
       );
-
       if (!user) {
         user = await this.authService.createUserIntra(dataUser);
         const token = await this.authService.sendIntraToken(dataUser);
@@ -64,7 +65,7 @@ export class AuthController {
       }
       return new BadRequestException('Email already in use');
     } catch (err) {
-      console.log(err);
+      console.log("this error", err);
       return res.redirect(clientBaseURL);
     }
   }
