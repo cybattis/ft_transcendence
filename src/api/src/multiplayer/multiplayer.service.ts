@@ -282,6 +282,9 @@ export class MultiplayerService {
     // Send the end event to all players and spectators
     this.server.to(game.serverRoomId).emit('game-end');
 
+    // Remove all players from the room
+    this.server.socketsLeave(game.serverRoomId);
+
     console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' ended');
 
     // Update the game in the database
