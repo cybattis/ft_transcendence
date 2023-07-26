@@ -1,0 +1,29 @@
+.gamePage {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+
+    text-align: center;
+    justify-content: center;
+    margin-top: 8%;
+}
+
+@media screen and (width < 1400px) {
+    .gamePage {
+        flex-direction: column;
+        height: var(--vp-size);
+    }
+}
+
+@media screen and (width >= 1400px) {
+    .gamePage {
+        flex-direction: row;
+        max-height: 600px;
+    }
+}
+
+.chatBox {
+    display: flex;
+
+    text-align: center;
+}

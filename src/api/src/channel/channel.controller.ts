@@ -119,6 +119,6 @@ export class ChannelController {
 
     @Get('gameChat/:channel')
     async getGameChat(@Param('channel') channel: string) {
-        return await this.gameChatRepository.findOne({where: {channel: channel}})
+        return await this.channelService.getGameChat(channel);
     }
 }

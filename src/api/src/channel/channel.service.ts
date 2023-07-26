@@ -271,7 +271,9 @@ export class ChannelService implements OnModuleInit {
     }
 
     takeSocketByUsername(username: string): string | null{
+        console.log(this.usersSocketStructures);
         for (let index = 0; index < this.usersSocketStructures.length; index++) {
+            console.log(this.usersSocketStructures[index].username);
             if (username === this.usersSocketStructures[index].username)
                 return this.usersSocketStructures[index].socket;
         }
@@ -403,14 +405,9 @@ export class ChannelService implements OnModuleInit {
         const channelToJoin = await this.gameChatRepository.findOne({where: {channel: channel}}); //Mettre id de la game
         if (channelToJoin) 
         { 
-            if (this.checkUserIsHere(channelToJoin.users, username)){
-                const reason : string = "You are already present.";
-                const err = {channel, reason};
-                server.to(socket.id).emit('err', err);
-                return ;
-            }
+            if (this.checkUserIsHere(channelToJoin.users, username)) return ;
             channelToJoin.users.push(username);
-            await this.channelRepository.save(channelToJoin);
+            await this.gameChatRepository.save(channelToJoin);
             socket.join(channel);
             socket.emit('join', channel);
         }
@@ -526,12 +523,12 @@ export class ChannelService implements OnModuleInit {
     }
 
     //gere avec changement de noms etc
-    async sendGameMessage(server: Server, socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+    async sendGameMessage(server: Server, socket: Socket, channel: string, msg: string, sender: string, opponent: string, blockedChat: any){
         const chan = await this.gameChatRepository.findOne({where: {channel: channel}});
         if (!chan)
             return ;
         const send = {sender, msg, channel, blockedChat};
-        const target = this.takeSocketByUsername(channel);
+        const target = this.takeSocketByUsername(opponent);
         const messages = chan.messages;
         messages.push(msg);
         const senders = chan.emitter;
@@ -541,10 +538,11 @@ export class ChannelService implements OnModuleInit {
             emitter: senders,
         })
         await this.gameChatRepository.save(chan);
-        if (target) {
+        //ATTENDRE PUSH CYRIL POUR CHOPPER WS PARCE QUE PAS DE TARGET MAIS CENSE MARCHE
+        console.log("TARGET: ", target);
+        if (target)
             server.to(target).emit('rcv', send);
-            server.to(socket.id).emit('rcv', send);
-        }
+        server.to(socket.id).emit('rcv', send);
     }
 
     async findChannel(channel: string, pwd: string) {
@@ -716,5 +714,21 @@ export class ChannelService implements OnModuleInit {
             }
         }
         // Channel n'existe plus
-    } 
+    }
+
+    async getGameChat(channel: string) {
+        const chan = await this.gameChatRepository.findOne({where: {channel: channel}});
+        const gameChatMap = [{
+            id: -1,
+            channel: channel,
+            content: "",
+            emitter: "",
+        }];
+        if (chan)
+        {
+            for (let i = 0; chan.messages[i]; i ++)
+                gameChatMap.push({id: i, channel: channel, content: chan.messages[i], emitter: chan.emitter[i]});
+            return gameChatMap;
+        }
+    }
 }

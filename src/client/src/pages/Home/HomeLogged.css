@@ -17,7 +17,7 @@
     }
 }
 
-@media screen and (width > 1000px) {
+@media screen and (width >= 1000px) {
     .home {
         display: flex;
         flex-direction: row;

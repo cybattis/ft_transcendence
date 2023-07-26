@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ChatInterface } from "./Interface/chat.interface";
+import { GameChatInterface } from "./Interface/gamechat.interface";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import { apiBaseURL } from "../../utils/constant";
 import UsersList from "./List/UsersList";
+import "./PrivateGameChat.css";
 import { ErrorModalChat } from "../../components/Modal/ErrorModal";
 
 export default function PrivateGameChat() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [messages, setMessages] = useState<ChatInterface[]>([]);
+  const [messages, setMessages] = useState<GameChatInterface[]>([]);
   const [isMute, setIsMute] = useState(false);
   const [canal, setCanal] = useState('');
   const [playerOne, setPlayerOne] = useState('');
@@ -84,7 +85,23 @@ export default function PrivateGameChat() {
     </div>
   }
 
-  function ChatMap({ messages }: { messages: ChatInterface[] }) {
+  function UsersGameList(props: { channel: string, messages: GameChatInterface[] }) {
+      const [usersList, setUsersList] = useState([]);
+
+      return (
+              <div className="lists">
+                  <h4>Players</h4>
+                    <button className="user-list">
+                        {playerOne}
+                    </button>
+                    <button className="user-list">
+                        {playerTwo}
+                    </button>
+              </div>
+      );
+  }
+
+  function ChatMap({ messages }: { messages: GameChatInterface[] }) {
 
     return (
       <>
@@ -121,16 +138,13 @@ export default function PrivateGameChat() {
   useEffect(() => {
 
     setPlayerOne('A');
-    setPlayerTwo('B');
+    setPlayerTwo('a');
     setCanal('dcvfdbgfhlioj'); // METTRE UN ID comme nom de canal
-
-    console.log("p1: ", playerOne, " | p2: ", playerTwo, " | canal: ", canal);
 
      const messageCallBack = async (data: { sender: string, msg: string, channel: string }) => {
           let addressInfo = apiBaseURL + "chat/gameChat/" + data.channel;
           await axios.get(addressInfo)
           .then(res => {
-            console.log("LA: ", res.data);
               setMessages(res.data);
             });
         }
@@ -153,7 +167,7 @@ function choiceCmd(input: string): string {
 }
 
 function doCmd(cmd: string, msg: string) {
-    const send = { username: payload.nickname, channel: canal, msg: msg }
+    const send = { username: payload.nickname, opponent: playerTwo, channel: canal, msg: msg }
     ChatClientSocket.onSendGameChat(send);
   }
 
@@ -179,7 +193,7 @@ return (
         </div>
       </div>
       <div className="user-lists">
-        <UsersList messages={messages} channel={canal} />
+        <UsersGameList messages={messages} channel={canal} />
       </div>
     </div>
   </div>

@@ -29,15 +29,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
-  async handleGameMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.sendMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('sendGame')
-  async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  async handleGameMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
-    await this.channelService.sendGameMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
+    await this.channelService.sendGameMessage(this.server, socket, data.channel, data.msg, data.username, data.opponent, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')

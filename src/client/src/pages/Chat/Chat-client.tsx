@@ -179,7 +179,7 @@ export namespace ChatClientSocket {
     socket.emit("send :", send);
   }
 
-  export function onSendGameChat(send: {username: string, channel: string, msg: string}) {
+  export function onSendGameChat(send: {username: string, opponent: string, channel: string, msg: string}) {
     if (!checkChatConnection()) return;
     if (!send.msg || !send.msg[0]) return ;
     socket.emit("sendGame", send);
