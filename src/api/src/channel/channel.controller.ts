@@ -1,6 +1,7 @@
 import {Controller, Get, Param, Delete, Put, Headers, Inject, Injectable} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
+import { GameChat } from './entity/GameChat.entity';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm';
 import { ChannelService } from './channel.service';
@@ -11,6 +12,8 @@ export class ChannelController {
     constructor(
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
+        @InjectRepository(GameChat)
+        private gameChatRepository: Repository<GameChat>,
         @InjectRepository(Channel)
         private channelRepository: Repository<Channel>,
         private channelService: ChannelService,
@@ -112,5 +115,10 @@ export class ChannelController {
         if(find.owner === username)
             return true;
         return false;
+    }
+
+    @Get('gameChat/:channel')
+    async getGameChat(@Param('channel') channel: string) {
+        return await this.gameChatRepository.findOne({where: {channel: channel}})
     }
 }

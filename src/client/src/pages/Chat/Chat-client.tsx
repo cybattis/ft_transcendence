@@ -179,6 +179,18 @@ export namespace ChatClientSocket {
     socket.emit("send :", send);
   }
 
+  export function onSendGameChat(send: {username: string, channel: string, msg: string}) {
+    if (!checkChatConnection()) return;
+    if (!send.msg || !send.msg[0]) return ;
+    socket.emit("sendGame", send);
+  }
+
+  export function joinGameChat(joinGame: { username: string, canal: string }) {
+    if (!checkChatConnection()) return;
+    console.log(`Join dert ${joinGame.username} ${joinGame.canal}`);
+    socket.emit("joinGame", joinGame);
+  }
+
   export function onMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack.push(callback);
   }

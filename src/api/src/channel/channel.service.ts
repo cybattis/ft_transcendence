@@ -8,6 +8,7 @@ import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
+import { GameChat } from './entity/GameChat.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
@@ -22,6 +23,8 @@ export class ChannelService implements OnModuleInit {
     constructor(
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
+        @InjectRepository(GameChat)
+        private gameChatRepository: Repository<GameChat>,
         @InjectRepository(User)
         private usersRepository: Repository<User>,
         private userService: UserService,
@@ -396,6 +399,36 @@ export class ChannelService implements OnModuleInit {
         }
     }
 
+    async tryJoinGameChat(server: Server, socket: Socket, username: string, channel: string, blockedChat: any){
+        const channelToJoin = await this.gameChatRepository.findOne({where: {channel: channel}}); //Mettre id de la game
+        if (channelToJoin) 
+        { 
+            if (this.checkUserIsHere(channelToJoin.users, username)){
+                const reason : string = "You are already present.";
+                const err = {channel, reason};
+                server.to(socket.id).emit('err', err);
+                return ;
+            }
+            channelToJoin.users.push(username);
+            await this.channelRepository.save(channelToJoin);
+            socket.join(channel);
+            socket.emit('join', channel);
+        }
+    }
+
+    async joinGameChannel(server: Server, socket: Socket, username: string, canal: string, blockedChat: any){
+        const channelToJoin = await this.gameChatRepository.findOne({where : {channel: canal}});
+        if (channelToJoin)
+            await this.tryJoinGameChat(server, socket, username, canal, blockedChat);
+        else {
+            await this.gameChatRepository.save({
+                channel: canal,
+                users : [username],
+            })
+            socket.emit('join', canal);
+        }
+    }
+
     async joinOldChannel(socket: Socket, username: string){
         const allChannel: Channel[] =  await this.channelRepository.find();
         if (allChannel){
@@ -489,6 +522,28 @@ export class ChannelService implements OnModuleInit {
                 }
             }
             
+        }
+    }
+
+    //gere avec changement de noms etc
+    async sendGameMessage(server: Server, socket: Socket, channel: string, msg: string, sender: string, blockedChat: any){
+        const chan = await this.gameChatRepository.findOne({where: {channel: channel}});
+        if (!chan)
+            return ;
+        const send = {sender, msg, channel, blockedChat};
+        const target = this.takeSocketByUsername(channel);
+        const messages = chan.messages;
+        messages.push(msg);
+        const senders = chan.emitter;
+        senders.push(sender);
+        await this.gameChatRepository.update(chan.id, {
+            messages: messages,
+            emitter: senders,
+        })
+        await this.gameChatRepository.save(chan);
+        if (target) {
+            server.to(target).emit('rcv', send);
+            server.to(socket.id).emit('rcv', send);
         }
     }
 

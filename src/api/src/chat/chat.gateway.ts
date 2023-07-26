@@ -29,10 +29,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('send :')
+  async handleGameMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.sendMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
+  }
+
+  @SubscribeMessage('sendGame')
   async handleMessage(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
-    console.log('data.msg');
-    await this.channelService.sendMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
+    await this.channelService.sendGameMessage(this.server, socket, data.channel, data.msg, data.username, blockedUsers.blockedChat);
   }
 
   @SubscribeMessage('join')
@@ -49,6 +54,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.channelService.joinOldChannel(socket, username);
       const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.joinChannel(this.server, socket, type, username, channel, pass, blockedUsers);
+  }
+
+  @SubscribeMessage('joinGame')
+  async joinGameChat(@ConnectedSocket() socket: Socket, @MessageBody() data: {username: string , canal: string}) {
+    if (!data)
+      return ;
+    this.userService.addWebSocket(data.username, socket.id);
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.joinGameChannel(this.server, socket, data.username, data.canal, blockedUsers);
   }
 
   @SubscribeMessage('change')
