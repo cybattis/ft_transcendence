@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import { apiBaseURL } from '../../../utils/constant';
 import { JwtPayload } from "../../../type/client.type";
+import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
 
-export default function UsersList(props: { channel: string }) {
+export default function UsersList(props: { channel: string, messages: ChatInterface[] }) {
     const [usersList, setUsersList] = useState([]);
     const [banList, setBanList] = useState([]);
     const [muteList, setMuteList] = useState([]);
@@ -16,33 +17,34 @@ export default function UsersList(props: { channel: string }) {
 
     async function fecthLists() {
         if (!props.channel || !props.channel[0])
-            return ;
+            return;
         setIsOpe(false);
         let canal = props.channel;
         if (canal[0] === '#')
-          canal = canal.slice(1);
-  
+            canal = canal.slice(1);
+        else
+            return <></>
+
         await axios.get(apiBaseURL + "chat/channelName/" + canal, {
-          headers: {
-            token: token,
-          }
+            headers: {
+                token: token,
+            }
         })
-        .then((res) => {
-            console.log(res.data.operator.includes(payload.nickname));
-            if (res.data.operator.includes(payload.nickname))
-                setIsOpe(true);
-            setUsersList(res.data.users);
-            setBanList(res.data.ban);
-            setMuteList(res.data.mute);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+            .then((res) => {
+                if (res.data.operator.includes(payload.nickname))
+                    setIsOpe(true);
+                setUsersList(res.data.users);
+                setBanList(res.data.ban);
+                setMuteList(res.data.mute);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }
 
     useEffect(() => {
         fecthLists();
-    }, [props.channel]);
+    }, [props.channel, props.messages]);
 
     function ListBan() {
         if (banList) {
@@ -57,9 +59,9 @@ export default function UsersList(props: { channel: string }) {
                 </>
             )
         }
-    return <>
-        <h4>Ban</h4>
-    </>;
+        return <>
+            <h4>Ban</h4>
+        </>;
     }
 
     function ListMute() {
@@ -75,9 +77,9 @@ export default function UsersList(props: { channel: string }) {
                 </>
             )
         }
-    return <>
-        <h4>Mute</h4>
-    </>;
+        return <>
+            <h4>Mute</h4>
+        </>;
     }
 
     return (

@@ -12,7 +12,8 @@ export default function ChannelList({ channelList, onStringChange }: ChannelList
     function choiceCanal(value: string) {
         let principal = document.getElementById('canal');
         let focus = document.getElementById('focus-principal-chat');
-        if (principal) principal.innerHTML = value;
+        if (principal)
+            principal.innerHTML = value;
         setInputValue(value);
         onStringChange(value);
         if (focus)

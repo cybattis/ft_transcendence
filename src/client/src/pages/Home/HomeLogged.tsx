@@ -356,6 +356,7 @@ export function HomeLogged() {
     requestedId: [],
     blockedId: [],
     blockedById: [],
+    joinChannel: [],
     paddleColor: "ffffff",
   });
 

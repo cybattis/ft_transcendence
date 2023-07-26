@@ -23,6 +23,8 @@ export default function Notifications() {
     },
   ]);
 
+  const [channelInvits, setChannelInvits] = useState([]);
+
   async function handleAccept(id: number) {
     if (!id) return;
 
@@ -88,6 +90,25 @@ export default function Notifications() {
     fetchFriends().then(() => {});
 
     ChatClientSocket.onNotificationEvent(fetchFriends);
+  }, []);
+
+  useEffect(() => {
+    async function fetchInvChannel() {
+      const urlInv = apiBaseURL + "user/request/channel";
+      await axios
+        .get(urlInv, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          setChannelInvits(res.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    fetchInvChannel().then();
   }, []);
 
   if (token === null) {

@@ -430,9 +430,10 @@ export class UserService implements OnModuleInit {
       select: {
         id: true,
         requestedId: true,
+        invites: true,
       },
     });
-    if (user && user.requestedId && user.requestedId[0]) return true;
+    if ((user && user.requestedId && user.requestedId[0]) || (user && user.invites && user.invites[0])) return true;
     return null;
   }
 
@@ -489,6 +490,19 @@ export class UserService implements OnModuleInit {
         blockedById: true,
       },
     });
+  }
+
+  async addInvite(channel: string, id: number) {
+    const user = await this.usersRepository.findOne({where: {id: id}});
+    if (user)
+    {
+      if (!user.invites.includes(channel))
+      {
+        user.invites.push(channel);
+        return await this.usersRepository.save(user);
+      }
+      //Jeter error comme quoi deja invite
+    }
   }
 
   async updatePaddleColor(id: number, color: string): Promise<boolean> {

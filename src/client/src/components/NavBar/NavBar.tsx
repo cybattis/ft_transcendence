@@ -50,11 +50,11 @@ function MobileNavBar() {
       {authed ? (
         <>
           <Notification />
-          <button className={"navbar-button"} onClick={handleSidePanel}>
-            <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
-          </button>
         </>
       ) : null}
+      <button className={"navbar-button"} onClick={handleSidePanel}>
+        <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
+      </button>
       {sidePanel && authed ? (
         <div className={"navbar-mobile-sidepanel"}>
           <NavButton
@@ -88,16 +88,30 @@ function MobileNavBar() {
             <DisconnectButton callback={handleSidePanel} />
           </div>
         </div>
-      ) : !authed ? (
-        <>
-          <button className="login-button" onClick={toggleLoginForm}>
-            Login
-          </button>
-          <button className="signup-button" onClick={toggleSignupForm}>
-            <img src={logo} alt="logo" />
-            SignUp
-          </button>
-        </>
+      ) : !authed && sidePanel ? (
+        <div className={"navbar-mobile-sidepanel"}>
+          <NavButton
+            content={"About"}
+            link={"/about"}
+            callback={handleSidePanel}
+          />
+          <div
+            style={{
+              height: "1px",
+              width: "100%",
+              backgroundColor: "white",
+              margin: "10px 0",
+            }}
+          >
+            <button className="login-button" onClick={toggleLoginForm}>
+              Login
+            </button>
+            <button className="signup-button" onClick={toggleSignupForm}>
+              <img src={logo} alt="logo" />
+              SignUp
+            </button>
+          </div>
+        </div>
       ) : null}
     </nav>
   );

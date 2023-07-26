@@ -31,6 +31,10 @@ export type notificationEventCallback = {
   (): void;
 };
 
+export type newErrCallBack = {
+  (data: { channel: string; reason: string }): void;
+};
+
 export namespace ChatClientSocket {
   let socket: Socket;
   let newMessageCallBack: newMessagesCallBack[] = [];
@@ -39,6 +43,7 @@ export namespace ChatClientSocket {
   let newQuitCallBack: newQuitCallBack[] = [];
   let newInvCallBack: newInvCallBack[] = [];
   let notificationEventCallbacks: notificationEventCallback[] = [];
+  let newErrCallBack: newErrCallBack[] = [];
 
   export function checkChatConnection(): boolean {
     if (socket && socket.connected) return true;
@@ -96,6 +101,11 @@ export namespace ChatClientSocket {
       notificationEventCallbacks.forEach((callback) => callback());
     });
 
+    socket.on("err", (data: { channel: string; reason: string }) => {
+      console.log("recu err", data);
+      newErrCallBack.forEach((callback) => callback(data));
+    });
+
     return true;
   }
 
@@ -109,6 +119,14 @@ export namespace ChatClientSocket {
   }) {
     if (!checkChatConnection()) return;
     socket.emit("prv", sendPrv);
+  }
+
+  export function inviteToChannel(sendInv: {
+    channel: string;
+    target: string;
+  }) {
+    if (!checkChatConnection()) return;
+    socket.emit("inv", sendInv);
   }
 
   export function operator(message: {
@@ -187,11 +205,6 @@ export namespace ChatClientSocket {
     socket.emit("join", res);
   }
 
-  export function channelInfo(channel: string) {
-    if (!checkChatConnection()) return;
-    socket.emit("info", { channel });
-  }
-
   export function joinChannel(sendJoin: {
     username: string;
     channel: string;
@@ -203,6 +216,16 @@ export namespace ChatClientSocket {
       `Join ${sendJoin.username} ${sendJoin.channel} ${sendJoin.password}`
     );
     socket.emit("join", sendJoin);
+  }
+
+  export function updateChannel(sendChange: {
+    channel: string;
+    type: string;
+    pwd: string;
+    username: string;
+  }) {
+    if (!checkChatConnection()) return;
+    socket.emit("change", sendChange);
   }
 
   export function blocked(sendBlock: any) {
@@ -237,6 +260,22 @@ export namespace ChatClientSocket {
     socket.emit("notif-event", target);
   }
 
+  export function sendGameChat(send: {
+    username: string;
+    channel: string;
+    msg: string;
+  }) {
+    if (!checkChatConnection()) return;
+    if (!send.msg || !send.msg[0]) return;
+    socket.emit("sendGame", send);
+  }
+
+  export function joinGameChat(joinGame: { username: string; canal: string }) {
+    if (!checkChatConnection()) return;
+    console.log(`Join dert ${joinGame.username} ${joinGame.canal}`);
+    socket.emit("joinGame", joinGame);
+  }
+
   // Callbacks
   // ========================================================================
   export function onMessageRecieve(callback: newMessagesCallBack) {
@@ -259,6 +298,10 @@ export namespace ChatClientSocket {
     newInvCallBack.push(callback);
   }
 
+  export function addErr(callback: newErrCallBack) {
+    newErrCallBack.push(callback);
+  }
+
   export function offMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack = newMessageCallBack.filter((cb) => cb !== callback);
   }
@@ -277,6 +320,10 @@ export namespace ChatClientSocket {
 
   export function offInv(callback: newInvCallBack) {
     newInvCallBack = newInvCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offErr(callback: newErrCallBack) {
+    newErrCallBack = newErrCallBack.filter((cb) => cb !== callback);
   }
 
   export function onNotificationEvent(callback: notificationEventCallback) {

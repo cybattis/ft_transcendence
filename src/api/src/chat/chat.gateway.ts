@@ -43,6 +43,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.sendMessage(
+      this.server,
+      socket,
+      data.channel,
+      data.msg,
+      data.username,
+      blockedUsers.blockedChat,
+    );
+  }
+
+  @SubscribeMessage('sendGame')
+  async handleGameMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: any,
+  ) {
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.sendGameMessage(
+      this.server,
       socket,
       data.channel,
       data.msg,
@@ -60,14 +77,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let type, pass, username, channel: string;
     if (!data) return;
     !data.channel ? (channel = '#general') : (channel = data.channel);
-    !data.username ? (username = 'Francis') : (username = data.username);
-    !data.password ? (pass = '123') : (pass = data.password);
-    !data.type ? (type = 'public') : (type = data.type);
+    !data.username ? (username = '') : (username = data.username);
+    !data.password ? (pass = '') : (pass = data.password);
+    !data.type ? (type = '') : (type = data.type);
 
     await this.channelService.joinOldChannel(socket, username);
 
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers = await this.userService.findByLogin(data.username);
     await this.channelService.joinChannel(
+      this.server,
       socket,
       type,
       username,
@@ -77,12 +95,43 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
   }
 
+  @SubscribeMessage('joinGame')
+  async joinGameChat(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { username: string; canal: string },
+  ) {
+    if (!data) return;
+    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    await this.channelService.joinGameChannel(
+      this.server,
+      socket,
+      data.username,
+      data.canal,
+      blockedUsers,
+    );
+  }
+
+  @SubscribeMessage('change')
+  async handleChange(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: { channel: string; type: string; pwd: string; username: string },
+  ) {
+    await this.channelService.changeParam(
+      data.channel,
+      data.type,
+      data.pwd,
+      data.username,
+    );
+  }
+
   @SubscribeMessage('prv')
-  handlePrv(
+  async handlePrv(
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { username: string; target: string },
   ) {
-    this.channelService.sendPrvMess(
+    console.log('Private :', data.username, data.target);
+    await this.channelService.sendPrvMess(
       this.server,
       socket,
       data.username,
@@ -191,17 +240,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('info')
-  async handleInfo(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() data: any,
-  ) {
-    console.log('fonction info');
-    const channel = data.channel;
-    const msg = await this.channelService.infoChannel(channel);
-    this.server.emit('rcv', { msg, channel });
-  }
-
   @SubscribeMessage('kick')
   async handleBKick(
     @ConnectedSocket() socket: Socket,
@@ -264,5 +302,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     console.log(`server send notification to ${targetSocket}`);
     this.server.to(targetSocket).emit('notification');
+  }
+
+  @SubscribeMessage('inv')
+  async handleInvitation(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { channel: string; target: string },
+  ) {
+    await this.channelService.JoinWithInvitation(data.channel, data.target);
+  }
+
+  @SubscribeMessage('acc')
+  async AcceptInvitationChannel(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() data: { channel: string; target: string },
+  ) {
+    await this.channelService.AcceptInvitationChannel(
+      data.channel,
+      data.target,
+    );
   }
 }
