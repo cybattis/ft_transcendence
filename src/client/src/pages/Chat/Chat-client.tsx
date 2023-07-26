@@ -67,7 +67,6 @@ export namespace ChatClientSocket {
     });
 
     socket.on('rcv', (data: { sender: string, msg: string, channel: string, blockedChat: any }) => {
-      console.log("Rcv un message" , data);
       newMessageCallBack.forEach(callback => callback(data));
     });
 

@@ -48,8 +48,7 @@ export class UserController {
   /*
    * GET /user/profile/:nickname
    * @desc Get user public info from nickname for profile page
-   */
-  @UseGuards(TokenGuard)
+  */
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,

@@ -337,10 +337,11 @@ function UserProfile(props: { data: UserInfo }) {
   );
 }
 
+
 export function HomeLogged() {
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
-
+  
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
     id: 0,
@@ -410,7 +411,7 @@ export function HomeLogged() {
         <UserProfile data={data} />
       </div>
       <div className="rightside">
-        <ChatClient />
+        <ChatClient/>
         <Friends />
       </div>
     </div>

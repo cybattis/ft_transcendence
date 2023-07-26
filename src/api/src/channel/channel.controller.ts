@@ -1,18 +1,25 @@
-import {Controller, Get, Param, Delete, Put, Headers, Inject, Injectable} from '@nestjs/common';
+import {Controller, Get, Param, Delete, UseGuards, Headers, Inject, Injectable} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm';
+import { Repository, Not, In } from 'typeorm';
 import { ChannelService } from './channel.service';
 import { JwtService } from '@nestjs/jwt';
+import { User } from 'src/user/entity/Users.entity';
+import { TokenGuard } from 'src/guard/token.guard';
+import { UserService } from 'src/user/user.service';
 
+@UseGuards(TokenGuard)
 @Controller('chat')
 export class ChannelController {
     constructor(
+        private userService: UserService,
         @InjectRepository(Chat)
         private chatRepository: Repository<Chat>,
         @InjectRepository(Channel)
         private channelRepository: Repository<Channel>,
+        @InjectRepository(User)
+        private usersRepository: Repository<User>,
         private channelService: ChannelService,
         private jwtService: JwtService,
     ) {}
@@ -20,13 +27,24 @@ export class ChannelController {
     // Chat
     @Get('/message')
     findAllChat(): Promise<Chat[]>{
+        console.log("fetch all chat");
         return (this.chatRepository.find());
     }
 
-    @Get('/message/:name')
-    async findChat(@Param('name') name : string): Promise<Chat[]>{
-        const decodedName = decodeURIComponent(name);
-        return (await this.chatRepository.find({where : {channel : decodedName}}));
+    @Get('/message/:channel')
+    async findChat(@Param('channel') channel : string): Promise<Chat[]>{
+        channel = "#" + channel;
+        return (await this.chatRepository.find({where : {channel : channel}}));
+    }
+
+    
+    @Get('/message/channel/:channel/:username')
+    async findMessageChatWBlocked(@Param('channel') channel : string, @Param('username') username: string, @Headers('Authorization') header: Headers): Promise<Chat[]>{
+        const payload: any = this.jwtService.decode(header.toString().split(' ')[1],);
+        channel = "#" + channel;
+        const listBlocked : string[] = await this.userService.getBlockedList(payload.id);
+        console.log("List Blocked", listBlocked);
+        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked]))} }));
     }
 
     @Get('/message/:channel/:username')
