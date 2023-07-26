@@ -3,6 +3,7 @@ import { AuthedSocket } from "../../auth/types/auth.types";
 
 export type GameRoom = {
   id: number;
+  serverRoomId: string;
   player1Id: number;
   player2Id: number;
   type: GameType;

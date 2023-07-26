@@ -57,6 +57,7 @@ export class MultiplayerService {
   ): void {
     const gameRoom: GameRoom = {
       id: gameInfos.id,
+      serverRoomId: 'game-' + gameInfos.id.toString(),
       player1Id: player1Id,
       player2Id: player2Id,
       type: gameInfos.type,
@@ -91,7 +92,7 @@ export class MultiplayerService {
         return;
       }
 
-      client.join('game-' + room.id.toString());
+      client.join(room.serverRoomId);
 
       console.log('[MULTIPLAYER] Player ' + client.userId + ' is ready.');
 
@@ -141,7 +142,7 @@ export class MultiplayerService {
     };
 
     this.server
-      .to('game-' + game.id.toString())
+      .to(game.serverRoomId)
       .emit('game-start', serveUpdate);
 
     console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' started.');
@@ -172,7 +173,7 @@ export class MultiplayerService {
     if (!game) return;
 
     client.broadcast
-      .to('game-' + game.id.toString())
+      .to(game.serverRoomId)
       .emit('update-movement', update);
   }
 
@@ -188,7 +189,7 @@ export class MultiplayerService {
 
     // Send the update to all players and spectators
     client.broadcast
-      .to('game-' + game.id.toString())
+      .to(game.serverRoomId)
       .emit('update-ball', update);
   }
 
@@ -213,7 +214,7 @@ export class MultiplayerService {
 
     // Send the updated score to all players and spectators
     this.server
-      .to('game-' + game.id.toString())
+      .to(game.serverRoomId)
       .emit('update-score', scoreUpdate);
     console.log('[MULTIPLAYER] Score updated for game ' + game.id.toString());
 
@@ -226,7 +227,7 @@ export class MultiplayerService {
     };
 
     this.server
-      .to('game-' + game.id.toString())
+      .to(game.serverRoomId)
       .emit('update-ball', ballUpdate);
 
     // Update the game in the database
@@ -263,7 +264,7 @@ export class MultiplayerService {
       playerNumber: playerNumber,
     };
 
-    this.server.to('game-' + game.id.toString()).emit('serve', serveUpdate);
+    this.server.to(game.serverRoomId).emit('serve', serveUpdate);
   }
 
   /*
@@ -273,7 +274,9 @@ export class MultiplayerService {
    */
   public async endGame(game: GameRoom): Promise<void> {
     game.status = GameStatus.FINISHED;
-    this.server.to('game-' + game.id.toString()).emit('game-end');
+
+    // Send the end event to all players and spectators
+    this.server.to(game.serverRoomId).emit('game-end');
 
     console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' ended');
 
