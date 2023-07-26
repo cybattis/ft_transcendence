@@ -273,6 +273,9 @@ export class MultiplayerService {
    * @param game The game to end
    */
   public async endGame(game: GameRoom): Promise<void> {
+    // If the game is already finished, don't do anything
+    if (game.status === GameStatus.FINISHED) return;
+
     game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
