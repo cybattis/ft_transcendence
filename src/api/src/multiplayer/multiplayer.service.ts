@@ -67,6 +67,8 @@ export class MultiplayerService {
       player2Score: gameInfos.scoreP2,
       player1Ready: false,
       player2Ready: false,
+      player1Disconnected: false,
+      player2Disconnected: false,
       isServing: false,
     };
 
@@ -277,7 +279,10 @@ export class MultiplayerService {
     if (game.status === GameStatus.FINISHED) return;
 
     // Update the game status
-    game.status = GameStatus.FINISHED;
+    if (game.player1Disconnected || game.player2Disconnected)
+      game.status = GameStatus.PLAYER_DISCONNECTED;
+    else
+      game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
     this.server.to(game.serverRoomId).emit('game-end');
@@ -288,7 +293,7 @@ export class MultiplayerService {
     console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' ended');
 
     // Update the game in the database
-    await this.gameService.updateGameStatus(game.id, GameStatus.FINISHED);
+    await this.gameService.updateGameStatus(game.id, game.status);
 
     // Update the stats of the players
     const user1: User | null = await this.userService.findByID(game.player1Id);
@@ -296,7 +301,11 @@ export class MultiplayerService {
     const score = { u1: game.player1Score, u2: game.player2Score };
 
     if (user1 && user2) {
-      if (game.player1Score > game.player2Score)
+      if (game.player1Disconnected)
+        await this.gameService.updateUserStats(user2, user1, game.type, score);
+      else if (game.player2Disconnected)
+        await this.gameService.updateUserStats(user1, user2, game.type, score);
+      else if (game.player1Score > game.player2Score)
         await this.gameService.updateUserStats(user1, user2, game.type, score);
       else
         await this.gameService.updateUserStats(user2, user1, game.type, score);
@@ -318,6 +327,12 @@ export class MultiplayerService {
     if (game) {
       // If the game is already finished, don't do anything
       if (game.status === GameStatus.FINISHED) return;
+
+      // Update the game
+      if (game.player1Id === client.userId)
+        game.player1Disconnected = true;
+      else
+        game.player2Disconnected = true;
 
       console.log(
         '[MULTIPLAYER] Player ' +
