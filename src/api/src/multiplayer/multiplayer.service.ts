@@ -308,7 +308,7 @@ export class MultiplayerService {
    *
    * @param client The client that disconnected
    */
-  public async disconnectPlayer(client: AuthedSocket): Promise<void> {
+  public async disconnectPlayerFromGame(client: AuthedSocket): Promise<void> {
     // Remove the player from the game
     const game: GameRoom | undefined = this.getRoomByPlayerId(client.userId);
     if (game) {
