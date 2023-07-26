@@ -4,6 +4,7 @@ import MultiplayerPongState from "../states/MultiplayerPongState";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { PlayerInfos } from "../networking/types";
 import { MatchmakingClient } from "../networking/matchmaking-client";
+import { MultiplayerClient } from "../networking/multiplayer-client";
 
 export type MultiplayerPongProps = {
   name: string;
@@ -24,7 +25,10 @@ export function MultiplayerPong({name, width, height, paddleColor}: MultiplayerP
     createNewMultiplayerGame(new MultiplayerPongState(name, canvas,
       paddleColor, stringToRGB(opponentInfos.paddleColor)));
 
-    return () => removeMultiplayerGame(name);
+    return () => {
+      removeMultiplayerGame(name);
+      MultiplayerClient.quitGame();
+    }
   }, [name, width, height, paddleColor]);
 
   return (
