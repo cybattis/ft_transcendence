@@ -17,6 +17,7 @@ import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
+import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -359,6 +360,9 @@ export function HomeLogged() {
   });
 
   useEffect(() => {
+    MatchmakingClient.connect();
+    MultiplayerClient.connect();
+
     async function fetchData() {
       const payload: JwtPayload = jwt_decode(token as string);
 
