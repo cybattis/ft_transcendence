@@ -13,6 +13,8 @@ export type GameRoom = {
   player2Score: number;
   player1Ready: boolean;
   player2Ready: boolean;
+  player1Disconnected: boolean;
+  player2Disconnected: boolean;
   isServing: boolean;
 }
 
