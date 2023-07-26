@@ -7,6 +7,7 @@ import { AuthContext, NotifContext } from "../Auth/dto";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { ErrorContext } from "../Modal/modalContext";
+import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 
 export function NavButton(props: {
   link: string;
@@ -39,6 +40,7 @@ export function DisconnectButton(props: { callback?: () => void }) {
       await axios.put(apiBaseURL + "user/disconnect");
     }
 
+    ChatClientSocket.disconnect();
     setAuthToken(null);
     localStorage.clear();
     window.location.reload();
@@ -50,12 +52,12 @@ export function DisconnectButton(props: { callback?: () => void }) {
     });
   };
 
-    return (
+  return (
     <Link
-    to="/"
-    className="navLink"
-    id={"disconnectButton"}
-    onClick={handleDisconnect}
+      to="/"
+      className="navLink"
+      id={"disconnectButton"}
+      onClick={handleDisconnect}
     >
       Disconnect
     </Link>
@@ -72,26 +74,29 @@ function BellNotif() {
   useEffect(() => {
     const fetchNotifs = async () => {
       let JWTToken = localStorage.getItem("token");
-      await axios
-        .get(apiBaseURL + "user/notifs", {
-          headers: { Authorization: `Bearer ${JWTToken}` },
-        })
-        .then((res) => {
-          if (res.data) setNotif(true);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            localStorage.clear();
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthToken(null);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
+      if (JWTToken) {
+        await axios
+          .get(apiBaseURL + "user/notifs", {
+            headers: { Authorization: `Bearer ${JWTToken}` },
+          })
+          .then((res) => {
+            if (res.data) setNotif(true);
+          })
+          .catch((error) => {
+            if (error.response === undefined) {
+              setErrorMessage("Error unknown...");
+            } else if (error.response.status === 403) {
+              localStorage.clear();
+              setAuthToken(null);
+              setErrorMessage("Session expired, please login again!");
+            } else setErrorMessage(error.response.data.message + "!");
+          });
+      }
     };
 
     fetchNotifs().then(() => {});
+
+    ChatClientSocket.onNotificationEvent(fetchNotifs);
   }, []);
 
   if (token === null) {
@@ -109,11 +114,9 @@ function BellNotif() {
   );
 }
 
-export function Notification(props: { id: string | null }) {
-  if (!props.id) return null;
-
+export function Notification() {
   return (
-    <Link to={`/notifications/${props.id}`} className="notifs">
+    <Link to={`/notifications`} className="notifs">
       <BellNotif />
       Notifs
     </Link>

@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./Profile.css";
 import axios from "axios";
-import { io } from "socket.io-client";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { UserFriend, UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
@@ -17,8 +16,9 @@ import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
 import { JwtPayload } from "../../type/client.type";
 import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
-import {MessageModal} from "../../components/Modal/MessageModal";
+import { MessageModal } from "../../components/Modal/MessageModal";
 import { UserData } from "./user-data";
+import { ChatClientSocket } from "../Chat/Chat-client";
 
 enum relationStatus {
   NONE,
@@ -104,18 +104,12 @@ function BlockUser(props: FriendRequestProps) {
 }
 
 function FriendRequest(props: FriendRequestProps) {
-  const socketRef = useRef<any>(null);
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
-
-  useEffect(() => {
-    socketRef.current = io(apiBaseURL);
-    console.log("WS Connected: ", socketRef.current.connected);
-  }, []);
 
   const handleAddFriend = async () => {
+    console.log("ADD FRIEND: ", props.data.id);
     await axios
       .put(apiBaseURL + `user/request/${props.data.id}`, null, {
         headers: {
@@ -123,14 +117,12 @@ function FriendRequest(props: FriendRequestProps) {
         },
       })
       .then((res) => {
-        const name: string = payload.nickname;
-        const mess = { friend: props.data, from: name };
-        socketRef.current.emit("friendRequest", mess);
+        ChatClientSocket.sendFriendRequest(props.data.id);
         props.setStatus(relationStatus.REQUESTED);
       })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
+          // localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
@@ -154,6 +146,7 @@ function FriendRequest(props: FriendRequestProps) {
         },
       })
       .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.NONE);
       })
       .catch((error) => {
@@ -197,7 +190,7 @@ function FriendRequest(props: FriendRequestProps) {
 function PaddleColor(props: { oldColor: RgbColor }) {
   const [hue, setHue] = useState(RGBToHSL(props.oldColor).h);
   const { setErrorMessage } = useContext(ErrorContext);
-  const [ showSuccess, setShowSuccess ] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const color: RgbColor = hslToRgb({ h: hue, s: 100, l: 50 });
 
   console.log("hue: ", hue);
@@ -214,16 +207,21 @@ function PaddleColor(props: { oldColor: RgbColor }) {
       return hex.length === 1 ? "0" + hex : hex;
     }
 
-    const colorString: string = componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
+    const colorString: string =
+      componentToHex(color.r) +
+      componentToHex(color.g) +
+      componentToHex(color.b);
     axios
-      .put(apiBaseURL + "user/customization/paddleColor",
-        {color: colorString},
+      .put(
+        apiBaseURL + "user/customization/paddleColor",
+        { color: colorString },
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-          }
-        })
+          },
+        }
+      )
       .then((res): void => {
         UserData.updatePaddleColor(colorString);
         setShowSuccess(true);
@@ -236,42 +234,46 @@ function PaddleColor(props: { oldColor: RgbColor }) {
           r: parseInt(response?.paddleColor.substring(0, 2), 16),
           g: parseInt(response?.paddleColor.substring(2, 4), 16),
           b: parseInt(response?.paddleColor.substring(4, 6), 16),
-        }
+        };
         setHue(RGBToHSL(actualColor).h);
       });
   }
 
   return (
     <>
-    <div className={"customization-content"}>
-      <h5>Customize your paddle</h5>
-      <div className={"customization-box"}>
-        <div className={"color-slider"}>
-          <div className={"color-gradient"}></div>
-          <input
-            type="range"
-            min="0"
-            max="360"
-            className="slider"
-            id="myRange"
-            value={hue}
-            onChange={(e) => setHue(parseInt(e.target.value))}
-          ></input>
-          <button className={"update-color-button"} onClick={updatePaddleColor}>
-            Update color
-          </button>
-        </div>
-        <div className={"paddle-container"}>
-          <div style={style}></div>
+      <div className={"customization-content"}>
+        <h5>Customize your paddle</h5>
+        <div className={"customization-box"}>
+          <div className={"color-slider"}>
+            <div className={"color-gradient"}></div>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              className="slider"
+              id="myRange"
+              value={hue}
+              onChange={(e) => setHue(parseInt(e.target.value))}
+            ></input>
+            <button
+              className={"update-color-button"}
+              onClick={updatePaddleColor}
+            >
+              Update color
+            </button>
+          </div>
+          <div className={"paddle-container"}>
+            <div style={style}></div>
+          </div>
         </div>
       </div>
-    </div>
-    {showSuccess ?
-      <MessageModal
-        msg={"Color updated successfully!"}
-        onClose={() => setShowSuccess(false)}
-      /> : null}
-  </>
+      {showSuccess ? (
+        <MessageModal
+          msg={"Color updated successfully!"}
+          onClose={() => setShowSuccess(false)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -288,47 +290,41 @@ export function Profile() {
 
   function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
-    console.log(payload.id, data.id);
+
     if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
-    else if (
-      meData.FriendsId &&
-      meData.FriendsId.includes(parseInt(payload.id))
-    )
+    else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
       setFriendStatus(relationStatus.FRIEND);
     else if (
-      meData.RequestedId &&
-      meData.RequestedId.includes(parseInt(payload.id))
+      meData.requestedId &&
+      meData.requestedId.includes(Number(payload.id))
     )
       setFriendStatus(relationStatus.REQUESTED);
-    else if (
-      meData.blockedId &&
-      meData.blockedId.includes(parseInt(payload.id))
-    )
+    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
       setFriendStatus(relationStatus.BLOCKED);
     else setFriendStatus(relationStatus.NONE);
   }
 
   useEffect(() => {
     async function fetchData() {
+      if (data.id === undefined) return;
       axios
-        .get(apiBaseURL + `user/friends`, {
+        .get(apiBaseURL + `user/friends-data/${data.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => {
-          console.log(res.data);
           checkFriendStatus(res.data);
         })
         .catch((error) => {
           if (error.response === undefined) {
-            localStorage.clear();
+            // localStorage.clear();
             setErrorMessage("Error unknown...");
           } else if (
             error.response.status === 403 ||
             error.response.status === 400
           ) {
-            localStorage.clear();
+            // localStorage.clear();
             setAuthToken(null);
             setErrorMessage("Session expired, please login again!");
           } else {
@@ -339,6 +335,7 @@ export function Profile() {
     }
 
     fetchData().then(() => {});
+    ChatClientSocket.onNotificationEvent(fetchData);
   }, [checkFriendStatus]);
 
   if (token === null) {

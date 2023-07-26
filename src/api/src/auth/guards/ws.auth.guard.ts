@@ -65,7 +65,7 @@ export class WsAuthGuard implements CanActivate {
     const validateToken = (token: string): boolean => {
       try {
         const payload: TokenData = jwtService.verify<TokenData>(token);
-        if (!payload) return false;
+          if (!payload) return false;
         client.userId = payload.id;
         return true;
       } catch (e) {

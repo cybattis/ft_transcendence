@@ -10,9 +10,7 @@ import {
   AuthContext,
   defaultAuthState,
   defaultNotifState,
-  SocketContext,
-  defaultSocketState,
-  NotifContext
+  NotifContext,
 } from "./components/Auth/dto";
 import { AuthForms } from "./components/Auth/Forms";
 import { ErrorModal } from "./components/Modal/ErrorModal";
@@ -27,7 +25,6 @@ function App() {
   const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
   const [notif, setNotif] = useState(defaultNotifState.notif);
-  const [socketId, setSocketId] = useState(defaultSocketState.socketId);
   const [errorMessage, setErrorMessage] = useState(
     defaultErrorContext.errorMessage
   );
@@ -50,11 +47,7 @@ function App() {
           >
             <ErrorContext.Provider value={{ errorMessage, setErrorMessage }}>
               <NavBar />
-              <SocketContext.Provider
-                value={{ socketId: socketId, setSocketId: setSocketId }}
-              >
-                <Outlet />
-              </SocketContext.Provider>
+              <Outlet />
               <AuthForms />
               <ErrorModal
                 error={errorMessage}

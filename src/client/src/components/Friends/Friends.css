@@ -1,6 +1,7 @@
 .friendLink {
   display: flex;
   color: white;
+  margin: 5px 5px 5px 5px;
 }
 
 .friends {
@@ -10,16 +11,18 @@
 }
 
 .friendsImg {
-    width: 20%;
-    height: 20%;
+    width: 18%;
+    height: 18%;
     display: block;
     z-index: 1;
 }
 
 .nickname {
   display: flex;
-  margin-left: 20%;
+  margin-left: 10%;
   margin-top: 20%;
+  font-size: min(1vw, 13px);
+  font-size: max(0.5vw, 13px);
 }
 
 .online {
@@ -62,5 +65,5 @@
   background: var(--black);
   width: 200px;
   text-align: center;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
