@@ -276,6 +276,7 @@ export class MultiplayerService {
     // If the game is already finished, don't do anything
     if (game.status === GameStatus.FINISHED) return;
 
+    // Update the game status
     game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
