@@ -3,6 +3,7 @@ import { AuthedSocket } from "../../auth/types/auth.types";
 
 export type GameRoom = {
   id: number;
+  serverRoomId: string;
   player1Id: number;
   player2Id: number;
   type: GameType;
@@ -12,6 +13,8 @@ export type GameRoom = {
   player2Score: number;
   player1Ready: boolean;
   player2Ready: boolean;
+  player1Disconnected: boolean;
+  player2Disconnected: boolean;
   isServing: boolean;
 }
 
