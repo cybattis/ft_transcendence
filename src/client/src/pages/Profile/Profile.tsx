@@ -26,6 +26,7 @@ enum relationStatus {
   FRIEND,
   REQUESTED,
   BLOCKED,
+  BLOCKEDBY,
 }
 
 interface FriendRequestProps {
@@ -45,6 +46,10 @@ function BlockUser(props: FriendRequestProps) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.NONE);
       })
       .catch((error) => {
         if (error.response === undefined) {
@@ -70,6 +75,10 @@ function BlockUser(props: FriendRequestProps) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.BLOCKED);
       })
       .catch((error) => {
         console.log(error);
@@ -122,7 +131,6 @@ function FriendRequest(props: FriendRequestProps) {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          // localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
@@ -175,6 +183,14 @@ function FriendRequest(props: FriendRequestProps) {
           onClick={handleRemoveButton}
         >
           REMOVE FRIEND
+        </button>
+      </>
+    );
+  } else if (props.status === relationStatus.BLOCKEDBY) {
+    return (
+      <>
+        <button className="friendButton" type="button">
+          YOU ARE BLOCKED
         </button>
       </>
     );
@@ -299,8 +315,13 @@ export function Profile() {
       meData.requestedId.includes(Number(payload.id))
     )
       setFriendStatus(relationStatus.REQUESTED);
-    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
+    else if (
+      meData.blockedById &&
+      meData.blockedById.includes(Number(payload.id))
+    )
       setFriendStatus(relationStatus.BLOCKED);
+    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
+      setFriendStatus(relationStatus.BLOCKEDBY);
     else setFriendStatus(relationStatus.NONE);
   }
 
@@ -364,11 +385,13 @@ export function Profile() {
           </div>
           {friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
-              <FriendRequest
-                data={data}
-                status={friendStatus}
-                setStatus={setFriendStatus}
-              />
+              {friendStatus !== relationStatus.BLOCKED ? (
+                <FriendRequest
+                  data={data}
+                  status={friendStatus}
+                  setStatus={setFriendStatus}
+                />
+              ) : null}
               <BlockUser
                 data={data}
                 status={friendStatus}
