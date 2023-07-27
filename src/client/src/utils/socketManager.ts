@@ -1,6 +1,5 @@
 import { io, Socket } from "socket.io-client";
 export namespace SocketManager {
-
   export type SocketParameters = {
     reconnection: boolean;
     reconnectionAttempts: number;
@@ -16,12 +15,16 @@ export namespace SocketManager {
     needsToConnect: () => boolean;
   };
 
-  export function configureSocket(endpoint: string, parameters: SocketParameters): ManagedSocket {
-
+  export function configureSocket(
+    endpoint: string,
+    parameters: SocketParameters
+  ): ManagedSocket {
     const sock = io(endpoint, parameters);
-    const socket: ManagedSocket = Object.assign(
-      sock,
-      {isConnected: false, isConnecting: false, needsToConnect: () => (!socket.isConnected && !socket.isConnecting) });
+    const socket: ManagedSocket = Object.assign(sock, {
+      isConnected: false,
+      isConnecting: false,
+      needsToConnect: () => !socket.isConnected && !socket.isConnecting,
+    });
 
     socket.isConnecting = true;
 
@@ -35,19 +38,16 @@ export namespace SocketManager {
     });
 
     socket.on("connect", () => {
-      console.log("connected to matchmaking server");
       socket.isConnecting = false;
       socket.isConnected = true;
     });
 
     socket.on("disconnect", () => {
-      console.log("disconnected from matchmaking server");
       socket.isConnecting = false;
       socket.isConnected = false;
     });
 
     socket.on("reconnect", () => {
-      console.log("reconnected to matchmaking server");
       socket.isConnecting = false;
       socket.isConnected = true;
     });

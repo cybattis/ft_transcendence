@@ -61,6 +61,7 @@ export namespace ChatClientSocket {
     };
 
     socket = SocketManager.configureSocket(wsBaseURL, socketOptions);
+    console.log("Client connect to chat server");
 
     socket.on("join", (room: string) => {
       newJoinChannel.forEach((callback) => callback(room));

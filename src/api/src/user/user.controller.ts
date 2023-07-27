@@ -11,7 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -48,7 +48,8 @@ export class UserController {
   /*
    * GET /user/profile/:nickname
    * @desc Get user public info from nickname for profile page
-  */
+   */
+  @UseGuards(TokenGuard)
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,
@@ -209,9 +210,7 @@ export class UserController {
 
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(
-    @Headers('Authorization') header: Headers,
-  ) {
+  async getBlockedList(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
@@ -238,9 +237,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.blockFriend(id, payload.id);
   }
 
@@ -250,9 +250,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.unblockFriend(id, payload.id);
   }
 
