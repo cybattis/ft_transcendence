@@ -1,4 +1,3 @@
-import { io, Socket } from "socket.io-client";
 import {
   MultiplayerGameStartedCallback,
   MultiplayerGameEndedCallback,
@@ -11,10 +10,13 @@ import {
   MovementUpdate,
   ScoreUpdate, ServeUpdate
 } from "./types";
+import { SocketManager } from "../../utils/socketManager";
 
 export namespace MultiplayerClient {
 
-  let socket: Socket;
+  import SocketParameters = SocketManager.SocketParameters;
+  import ManagedSocket = SocketManager.ManagedSocket;
+  let socket: ManagedSocket;
   let gameStartedCallback: MultiplayerGameStartedCallback = (serveUpdate: ServeUpdate): void => {};
   let gameEndedCallback: MultiplayerGameEndedCallback = (): void => {};
   let movementUpdateCallback: MultiplayerMovementUpdateCallback = (movementUpdate: MovementUpdate): void => {};
@@ -24,15 +26,18 @@ export namespace MultiplayerClient {
   let readyAckCallback: MultiplayerReadyAckCallback = (playerNUmber: number): void => {};
 
   export function checkConnection(): boolean {
+    if (socket && !socket.needsToConnect()) return true;
+    return connect();
+  }
 
-    if (socket && socket.connected)
-      return true;
+  export function connect(): boolean {
+    if (socket && !socket.needsToConnect()) return true;
 
     console.log("connecting to multiplayer server");
 
     const token = localStorage.getItem("token");
 
-    const socketOptions = {
+    const socketOptions: SocketParameters = {
       reconnection: true,
       reconnectionAttempts: 3,
       reconnectionDelay: 3000,
@@ -43,19 +48,7 @@ export namespace MultiplayerClient {
 
     const endpoint: string = "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
 
-    socket = io(endpoint, socketOptions);
-
-    socket.on("connect_error", (err) => {
-      console.log('connexion error due to : ', err.message);
-    });
-
-    socket.on("connect", () => {
-      console.log("connected to matchmaking server");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected from matchmaking server");
-    });
+    socket = SocketManager.configureSocket(endpoint, socketOptions);
 
     socket.on("update-score", (scoreUpdate: ScoreUpdate) => {
       console.log("update-score");
@@ -161,5 +154,10 @@ export namespace MultiplayerClient {
   export function sendGoal(): void {
     if (!checkConnection()) return;
     socket.emit("goal");
+  }
+
+  export function quitGame() {
+    if (!checkConnection()) return;
+    socket.emit("quit");
   }
 }

@@ -16,6 +16,9 @@ import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
+import { UserData } from "../Profile/user-data";
+import { ChatClientSocket } from "../Chat/Chat-client";
+import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -356,9 +359,13 @@ export function HomeLogged() {
     blockedId: [],
     blockedById: [],
     joinChannel: [],
+    paddleColor: "ffffff",
   });
 
   useEffect(() => {
+    MatchmakingClient.connect();
+    MultiplayerClient.connect();
+
     async function fetchData() {
       const payload: JwtPayload = jwt_decode(token as string);
 
@@ -371,6 +378,8 @@ export function HomeLogged() {
           },
         })
         .then((res) => {
+          UserData.updatePaddleColor(res.data.paddleColor);
+          UserData.updateNickname(res.data.nickname);
           setData(res.data);
         })
         .catch((error) => {
@@ -392,6 +401,8 @@ export function HomeLogged() {
     }
 
     fetchData().then(() => {});
+
+    ChatClientSocket.onNotificationEvent(fetchData);
 
     return () => {
       MatchmakingClient.leaveMatchmaking();

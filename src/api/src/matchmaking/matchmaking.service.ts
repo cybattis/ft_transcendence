@@ -46,8 +46,14 @@ export class MatchmakingService {
     // If the player was not found, return
     if (!user) return false;
 
+    // Check if the user is already in game
+    if (this.multiplayerService.isPlayerInGame(playerId)) return false;
+
     // Create a new player object
     const player: CasualMatchmakingPlayer = {socket: socket, id: playerId};
+
+    // Check if the user is already in matchmaking
+    if (this.isPlayerInCasualMatchmaking(player)) return false;
 
     // Make him join the matchmaking
     await this.addPlayerToCasualQueue(player);
@@ -84,8 +90,14 @@ export class MatchmakingService {
     // If the player was not found, return
     if (!user) return false;
 
+    // Check if the user is already in game
+    if (this.multiplayerService.isPlayerInGame(playerId)) return false;
+
     // Create a new player object
     const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.ranking};
+
+    // Check if the user is already in matchmaking
+    if (this.isPlayerInRankedMatchmaking(player)) return false;
 
     // Make him join the matchmaking
     await this.addPlayerToRankedQueue(player);
@@ -140,8 +152,28 @@ export class MatchmakingService {
       // TODO: return error if game creation fails
       // If both players are ready, create the game
       if (pendingCasualGame.player1Ready && pendingCasualGame.player2Ready) {
-        pendingCasualGame.player1.socket.emit("game-started");
-        pendingCasualGame.player2.socket.emit("game-started");
+        // Retreiving the players from the database
+        const player1: User | null = await this.getUserFromDb(pendingCasualGame.player1.id);
+        const player2: User | null = await this.getUserFromDb(pendingCasualGame.player2.id);
+
+        if (!player1 || !player2)
+          return;
+
+        const player1Infos = {
+          id: player1.id,
+          nickname: player1.nickname,
+          paddleColor: player1.paddleColor,
+        };
+
+        const player2Infos = {
+          id: player2.id,
+          nickname: player2.nickname,
+          paddleColor: player2.paddleColor,
+        };
+
+        // Sending the game start event to the players
+        pendingCasualGame.player1.socket.emit("game-started", player2Infos);
+        pendingCasualGame.player2.socket.emit("game-started", player1Infos);
         await this.createCasualGame(pendingCasualGame.player1, pendingCasualGame.player2);
         this.removePendingCasualGame(pendingCasualGame);
       }
@@ -157,9 +189,27 @@ export class MatchmakingService {
 
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
-        console.log("Both players are ready");
-        pendingRankedGame.player1.socket.emit("game-started");
-        pendingRankedGame.player2.socket.emit("game-started");
+        // Retreiving the players from the database
+        const player1: User | null = await this.getUserFromDb(pendingRankedGame.player1.id);
+        const player2: User | null = await this.getUserFromDb(pendingRankedGame.player2.id);
+
+        if (!player1 || !player2)
+          return;
+
+        const player1Infos = {
+          id: player1.id,
+          nickname: player1.nickname,
+          paddleColor: player1.paddleColor,
+        };
+
+        const player2Infos = {
+          id: player2.id,
+          nickname: player2.nickname,
+          paddleColor: player2.paddleColor,
+        };
+
+        pendingRankedGame.player1.socket.emit("game-started", player2Infos);
+        pendingRankedGame.player2.socket.emit("game-started", player1Infos);
         await this.createRankedGame(pendingRankedGame.player1, pendingRankedGame.player2);
         this.removePendingRankedGame(pendingRankedGame);
       }
@@ -171,8 +221,6 @@ export class MatchmakingService {
    */
 
   private async addPlayerToCasualQueue(player: CasualMatchmakingPlayer): Promise<void> {
-    if (this.isPlayerInCasualMatchmaking(player)) return;
-
     // If there is at least one player in the queue, match them together
     if (this.casualMatchmakingQueue.length >= 1) {
       this.invitePlayersToCasualGame(this.casualMatchmakingQueue[0], player);
@@ -196,9 +244,6 @@ export class MatchmakingService {
 
   private async addPlayerToRankedQueue(player: RankedMatchmakingPlayer): Promise<void> {
     // TODO: match players based on their rank
-
-    if (this.isPlayerInRankedMatchmaking(player)) return;
-
     // If there is at least one player in the queue, match them together
     if (this.rankedMatchmakingQueue.length >= 1) {
       this.invitePlayersToRankedGame(this.rankedMatchmakingQueue[0], player);

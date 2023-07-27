@@ -28,3 +28,8 @@ export interface UserFriend {
   blockedId: number[];
   BlockedById: number[];
 }
+
+export interface UserSocketInfo {
+  socketId: string;
+  nickname: string;
+}

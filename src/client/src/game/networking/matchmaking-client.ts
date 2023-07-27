@@ -1,16 +1,27 @@
-import { io, Socket } from "socket.io-client";
 import {
   MatchmakingMatchFoundCallback,
-  MatchmakingGameStartedCallback,
+  MatchmakingGameStartedCallback, PlayerInfos,
 } from "./types";
+import { SocketManager } from "../../utils/socketManager";
 
 export namespace MatchmakingClient {
-  let socket: Socket;
+  import ManagedSocket = SocketManager.ManagedSocket;
+  let socket: ManagedSocket;
   let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
+  let currentOpponentInfos: PlayerInfos = {
+    id: 0,
+    nickname: "",
+    paddleColor: "ffffff",
+  };
 
-  function checkConnection(): boolean {
-    if (socket && socket.connected) return true;
+  export function checkConnection(): boolean {
+    if (socket && !socket.needsToConnect()) return true;
+    return connect();
+  }
+
+  export function connect(): boolean {
+    if (socket && !socket.needsToConnect()) return true;
 
     console.log("connecting to matchmaking server");
 
@@ -28,27 +39,16 @@ export namespace MatchmakingClient {
     const endpoint: string =
       "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
 
-    socket = io(endpoint, socketOptions);
-
-    socket.on("connect_error", (err) => {
-      console.log("connexion error due to : ", err.message);
-    });
-
-    socket.on("connect", () => {
-      console.log("connected to matchmaking server");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("disconnected from matchmaking server");
-    });
+    socket = SocketManager.configureSocket(endpoint, socketOptions);
 
     socket.on("match-found", (acceptTimeout: number) => {
       console.log("match found");
       matchFoundCallbacks.forEach((callback) => callback(acceptTimeout));
     });
 
-    socket.on("game-started", () => {
+    socket.on("game-started", (opponentInfos: PlayerInfos) => {
       console.log("game started");
+      currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback());
     });
 
@@ -62,7 +62,11 @@ export namespace MatchmakingClient {
   }
 
   function disconnect() {
-    if (socket && socket.connected) socket.disconnect();
+    if (socket && socket.isConnected) socket.disconnect();
+  }
+
+  export function getOpponentInfos(): PlayerInfos {
+    return currentOpponentInfos;
   }
 
   export function leaveMatchmaking() {

@@ -102,6 +102,11 @@ export class User {
   @Column({ type: 'varchar', default: '' })
   websocket: string;
 
-  @Column('text', {array: true, default: []})
+  @Column('text', { array: true, default: [] })
   joinChannel: string[];
+
+  // Customisation
+  // ============================================================
+  @Column({ type: 'varchar', length: 6, default: 'ffffff' })
+  paddleColor: string;
 }
