@@ -11,7 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException,
+  ForbiddenException
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';

@@ -1,4 +1,4 @@
-import {Controller, Get, Param, Delete, UseGuards, Headers, Inject, Injectable} from '@nestjs/common';
+import {Controller, Get, Param, Delete, UseGuards, Headers} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { GameChat } from './entity/GameChat.entity';
 import { Channel } from './entity/Channel.entity';

@@ -571,11 +571,22 @@ export default function ChatClient() {
       <>
         <ul className="list-msg-container">
           {messages
-            .filter((messages) => channelName ? messages.channel === channelName : messages.channel === takeActiveCanal())
-            .map(messages => (
+            .filter((messages) =>
+              channelName
+                ? messages.channel === channelName
+                : messages.channel === takeActiveCanal()
+            )
+            .map((messages) =>
               messages.emitter === username ? (
                 <li className="Emt" key={messages.id}>
-                  <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+                  <div
+                    className="contain-emt"
+                    onClick={() => {
+                      handleButton(messages.emitter);
+                    }}
+                  >
+                    {messages.emitter}
+                  </div>
                   <div className="contain-msg">{messages.content}</div>
                 </li>
               ) : messages.emitter === "announce" ? (
@@ -588,14 +599,21 @@ export default function ChatClient() {
                 </li>
               ) : (
                 <li className="Rcv" key={messages.id}>
-                  <div className="contain-emt" onClick={() => { handleButton(messages.emitter) }}>{messages.emitter}</div>
+                  <div
+                    className="contain-emt"
+                    onClick={() => {
+                      handleButton(messages.emitter);
+                    }}
+                  >
+                    {messages.emitter}
+                  </div>
                   <div className="contain-msg">{messages.content}</div>
                 </li>
               )
-            ))}
+            )}
         </ul>
       </>
-    )
+    );
   }
 
   /////////////////////////////////////JOIN////////////////////
