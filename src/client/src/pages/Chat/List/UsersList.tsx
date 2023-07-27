@@ -28,7 +28,7 @@ export default function UsersList(props: {
     await axios
       .get(apiBaseURL + "chat-controller/channelName/" + canal, {
         headers: {
-          token: token,
+          Authorization: `Bearer ${token}`,
         },
       })
       .then((res) => {

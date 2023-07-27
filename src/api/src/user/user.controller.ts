@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
+  ForbiddenException
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -47,8 +48,7 @@ export class UserController {
   /*
    * GET /user/profile/:nickname
    * @desc Get user public info from nickname for profile page
-   */
-  @UseGuards(TokenGuard)
+  */
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,
@@ -227,7 +227,9 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    return await this.userService.blockFriendUsr(username, payload.id);
+    const blockedUser: User | null = await this.userService.findByLogin(username);
+    if (!blockedUser) throw new ForbiddenException("User does not exist");
+    return await this.userService.blockFriend(blockedUser.id, payload.id);
   }
 
   @UseGuards(TokenGuard)

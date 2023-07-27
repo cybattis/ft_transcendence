@@ -8,17 +8,16 @@ import { GameChat } from './entity/GameChat.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
 import { UserController } from 'src/user/user.controller';
-import { AuthService } from 'src/auth/auth.service';
 import { AuthModule } from 'src/auth/auth.module';
-import { JwtService } from '@nestjs/jwt';
+
 
 @Module({
-  imports: [
-    AuthModule,
-    TypeOrmModule.forFeature([Chat, User, Channel, GameChat]),
-  ],
-  controllers: [ChannelController, UserController],
-  providers: [ChannelService, UserService, JwtService, AuthService],
-  exports: [ChannelService, ChannelModule],
+    imports: [
+      AuthModule,
+      TypeOrmModule.forFeature([Chat, User, Channel, GameChat])
+    ],
+    controllers: [ChannelController, UserController],
+    providers: [ChannelService, UserService],
+    exports: [ChannelService, ChannelModule],
 })
 export class ChannelModule {}
