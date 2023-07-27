@@ -35,21 +35,30 @@ export function DisconnectButton(props: { callback?: () => void }) {
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
+    setAuthToken(null);
+    ChatClientSocket.disconnect();
+
     const token: string | null = localStorage.getItem("token");
     if (!token) {
-      await axios.put(apiBaseURL + "user/disconnect");
+      await axios.put(apiBaseURL + "user/disconnect").then(() => {
+        return <Navigate to={"/"} />;
+      });
     }
 
-    ChatClientSocket.disconnect();
-    setAuthToken(null);
     localStorage.clear();
-    window.location.reload();
 
-    await axios.put(apiBaseURL + "auth/disconnect", null, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await axios
+      .put(apiBaseURL + "auth/disconnect", null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(() => {
+        return <Navigate to={"/"} />;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
