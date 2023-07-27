@@ -94,9 +94,8 @@ export default function Notifications() {
 
   useEffect(() => {
     async function fetchInvChannel() {
-      const urlInv = apiBaseURL + "user/request/channel";
       await axios
-        .get(urlInv, {
+        .get(apiBaseURL + "user/request/channel", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

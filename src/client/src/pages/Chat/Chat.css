@@ -33,7 +33,7 @@
     width: 100%;
 }
 
-.rcv-mess-container{
+#rcv-mess-container{
     flex: 1;
     flex-grow: 2;
     display: flex;

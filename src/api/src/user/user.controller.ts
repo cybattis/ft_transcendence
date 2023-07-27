@@ -226,7 +226,9 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    return await this.userService.blockFriendUsr(username, payload.id);
+    const blockedUser: User | null = await this.userService.findByLogin(username);
+    if (!blockedUser) throw new ForbiddenException("User does not exist");
+    return await this.userService.blockFriend(blockedUser.id, payload.id);
   }
 
   @UseGuards(TokenGuard)
