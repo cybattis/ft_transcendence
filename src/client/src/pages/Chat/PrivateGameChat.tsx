@@ -19,7 +19,7 @@ export default function PrivateGameChat() {
   //Si user est bloque faire en sorte que rien ne marche dans le chat
 
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
+  const payload: JwtPayload = jwt_decode(token!);
 
   let decoded: JwtPayload | null = null;
   try {
@@ -129,6 +129,7 @@ export default function PrivateGameChat() {
   };
 
   useEffect(() => {
+    if (!token) return;
     setPlayerOne("A");
     setPlayerTwo("B");
     setCanal("dcvfdbgfhlioj"); // METTRE UN ID comme nom de canal

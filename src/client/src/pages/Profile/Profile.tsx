@@ -301,31 +301,37 @@ export function Profile() {
   const [customization, setCustomization] = useState(false);
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload | null = null;
-  if (token) payload = jwt_decode(token as string);
-
-  function checkFriendStatus(meData: UserFriend) {
-    if (!payload) return;
-
-    if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
-    else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.FRIEND);
-    else if (
-      meData.requestedId &&
-      meData.requestedId.includes(Number(payload.id))
-    )
-      setFriendStatus(relationStatus.REQUESTED);
-    else if (
-      meData.blockedById &&
-      meData.blockedById.includes(Number(payload.id))
-    )
-      setFriendStatus(relationStatus.BLOCKED);
-    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.BLOCKEDBY);
-    else setFriendStatus(relationStatus.NONE);
-  }
 
   useEffect(() => {
+    if (!token) return;
+    const payload: JwtPayload | null = jwt_decode(token);
+
+    function checkFriendStatus(meData: UserFriend) {
+      if (!payload) return;
+      if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
+      else if (
+        meData.friendsId &&
+        meData.friendsId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.FRIEND);
+      else if (
+        meData.requestedId &&
+        meData.requestedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.REQUESTED);
+      else if (
+        meData.blockedById &&
+        meData.blockedById.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKED);
+      else if (
+        meData.blockedId &&
+        meData.blockedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKEDBY);
+      else setFriendStatus(relationStatus.NONE);
+    }
+
     async function fetchData() {
       if (data.id === undefined) return;
       axios
@@ -357,7 +363,7 @@ export function Profile() {
 
     fetchData().then(() => {});
     ChatClientSocket.onNotificationEvent(fetchData);
-  }, [checkFriendStatus]);
+  }, []);
 
   if (token === null) {
     setAuthToken(null);

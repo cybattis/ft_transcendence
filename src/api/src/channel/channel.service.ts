@@ -889,7 +889,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   addUserSocketToList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;
@@ -906,7 +906,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   removeUserSocketFromList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;
