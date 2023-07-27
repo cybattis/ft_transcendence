@@ -1,18 +1,26 @@
-export function hslToRgb(hsl: { h: number; s: number; l: number }): {
+export type RgbColor = {
   r: number;
   g: number;
   b: number;
-} {
+}
+
+export type HslColor = {
+  h: number;
+  s: number;
+  l: number;
+}
+
+export function hslToRgb(hsl: HslColor): RgbColor {
   const { h, s, l } = hsl;
 
-  const hDecimal = h / 100;
+  const hDecimal = h / 360;
   const sDecimal = s / 100;
   const lDecimal = l / 100;
 
   let r, g, b;
 
   if (s === 0) {
-    return { r: lDecimal, g: lDecimal, b: lDecimal };
+    return { r: Math.round(lDecimal), g: Math.round(lDecimal), b: Math.round(lDecimal) };
   }
 
   const HueToRGB = (p: number, q: number, t: number) => {
@@ -34,19 +42,15 @@ export function hslToRgb(hsl: { h: number; s: number; l: number }): {
   g = HueToRGB(p, q, hDecimal);
   b = HueToRGB(p, q, hDecimal - 1 / 3);
 
-  return { r: r * 255, g: g * 255, b: b * 255 };
+  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
 }
 
-export function RGBToHSL(rgb: { r: number; g: number; b: number }): {
-  h: number;
-  s: number;
-  l: number;
-} {
-  const { r: r255, g: g255, b: b255 } = rgb;
+export function RGBToHSL(rgb: RgbColor): HslColor {
+  const color: RgbColor = rgb;
 
-  const r = r255 / 255;
-  const g = g255 / 255;
-  const b = b255 / 255;
+  const r = color.r / 255;
+  const g = color.g / 255;
+  const b = color.b / 255;
 
   let max = Math.max(r, g, b);
   let min = Math.min(r, g, b);
@@ -65,6 +69,7 @@ export function RGBToHSL(rgb: { r: number; g: number; b: number }): {
   switch (max) {
     case r:
       h = ((g - b) / d) * 60;
+      if (h < 0) h += 360;
       break;
     case g:
       h = ((b - r) / d + 2) * 60;
@@ -75,4 +80,16 @@ export function RGBToHSL(rgb: { r: number; g: number; b: number }): {
   }
 
   return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+export function stringToRGB(colorStr: string) {
+  if (!colorStr.match(/[0-9A-F]{6}/i)) {
+    return { r: 255, g: 255, b: 255 };
+  }
+
+  return {
+    r: parseInt(colorStr.substring(0, 2), 16),
+    g: parseInt(colorStr.substring(2, 4), 16),
+    b: parseInt(colorStr.substring(4, 6), 16),
+  }
 }

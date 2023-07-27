@@ -1,6 +1,8 @@
 export interface GameChatInterface{
     id: number;
+    sender: string;
+    opponent: string;
+    msg: string;
     channel: string;
-    content: string;
-    emitter: string;
+    blockedUsers: any;
 }

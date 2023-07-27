@@ -1,20 +1,19 @@
 import Vec2 from "../util/Vec2";
 import Ball from "../logic/Ball";
 import Paddle from "../logic/Paddle";
-import {drawText} from "../util/Utils";
+import { drawText } from "../util/Utils";
 import { MultiplayerClient } from "../networking/multiplayer-client";
 import { BallUpdate, ScoreUpdate, ServeUpdate } from "../networking/types";
+import { RgbColor } from "../../utils/colors";
 
 export class MultiplayerPongLogic {
   public name: string;
 
   private playerNumber: number;
   private readonly opponentPaddle: Paddle;
-  private readonly opponentName: string;
   private opponentScore: number;
 
   private readonly playerPaddle: Paddle;
-  private readonly playerName: string;
   private playerScore: number;
 
   private readonly ball: Ball;
@@ -40,12 +39,10 @@ export class MultiplayerPongLogic {
   private readonly font: string;
   private readonly fontSize: number;
 
-  constructor(name: string, canvas: HTMLCanvasElement, leftName: string, rightName: string) {
+  constructor(name: string, canvas: HTMLCanvasElement) {
     this.name = name;
     this.playerNumber = 0;
     this.canvas = canvas;
-    this.opponentName = leftName;
-    this.playerName = rightName;
 
     this.opponentPaddle = new Paddle(true, canvas.width, canvas.height);
     this.playerPaddle = new Paddle(false, canvas.width, canvas.height);
@@ -148,12 +145,12 @@ export class MultiplayerPongLogic {
     this.backgroundColor = color;
   }
 
-  public setOpponentPaddleColor(color: string): void {
-    this.leftPaddleColor = color;
+  public setOpponentPaddleColor(color: RgbColor): void {
+    this.leftPaddleColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`;
   }
 
-  public setPlayerPaddleColor(color: string): void {
-    this.rightPaddleColor = color;
+  public setPlayerPaddleColor(color: RgbColor): void {
+    this.rightPaddleColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`;
   }
 
   public setBallColor(color: string): void {

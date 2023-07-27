@@ -1,15 +1,96 @@
-.chat-div {
-    height: auto;
-}
-
-.list-msg-container{
-    margin: 0;
-    padding: 0;
+.gamechat-div {
+    display: flex;
     width: 100%;
     height: 500px;
 
-    display: flex;
-    position: absolute;
-    z-index: 1;
     flex-direction: column;
+    overflow-y: auto;
+}
+
+.gamechat{
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    flex: 3 2;
+    
+    height: 80%;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    background: rgba(254, 254, 254, 0.1) ;
+    border-radius: 20px;
+}
+
+.chat-container{
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    border-radius: 10px;
+    text-align: center;
+
+    height: 100%;
+    width: 100%;
+}
+
+.rcv-gamemess-container{
+    flex: 1;
+    flex-grow: 2;
+    display: flex;
+    position: relative;
+
+    width: 100%;
+    overflow-y: auto;
+}
+
+.list-gamemsg-container{
+    margin: 0;
+    padding: 0;
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.GameRcv {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: left;
+    margin: 5px;
+    overflow-wrap: break-word;
+}
+
+.GameEmt {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    list-style-type: none;
+    text-align: right;
+    margin: 5px;
+    overflow-wrap: break-word;
+}
+
+.contain-game-emt {
+    cursor: pointer;
+    overflow-wrap: break-word;
+    width: 100%;
+}
+
+.GameRcv .contain-game-msg{
+    display: table-caption;;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #4E458C;
+    overflow-wrap: break-word;
+}
+
+.GameEmt .contain-game-msg{
+    display: table-caption;;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #00CCCC;
+    overflow-wrap: break-word;
 }

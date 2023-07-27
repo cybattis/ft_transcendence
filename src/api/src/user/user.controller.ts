@@ -11,7 +11,6 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -152,12 +151,9 @@ export class UserController {
   }
 
   @UseGuards(TokenGuard)
-  @Get('friends')
-  async getFriends(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.getFriends(payload.id);
+  @Get('friends-data/:id')
+  async getFriends(@Param('id') id: number) {
+    return await this.userService.getFriends(id);
   }
 
   @UseGuards(TokenGuard)
@@ -166,8 +162,7 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    if (payload)
-      return await this.userService.getNotifs(payload.id);
+    if (payload) return await this.userService.getNotifs(payload.id);
   }
 
   @UseGuards(TokenGuard)
@@ -208,22 +203,27 @@ export class UserController {
   ) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
-      );
-      return await this.userService.removeFriend(id, payload.id);
-    }
-      
+    );
+    return await this.userService.removeFriend(id, payload.id);
+  }
+
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(@Headers('Authorization') header: Headers) {
+  async getBlockedList(
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
-      );
-      return await this.userService.getBlockedList(payload.id);
+    );
+    return await this.userService.getBlockedList(payload.id);
   }
 
   @UseGuards(TokenGuard)
   @Put('blockUsr/:username')
-  async blockFriendUsr(@Param('username') username: string, @Headers('Authorization') header: Headers) {
+  async blockFriendUsr(
+    @Param('username') username: string,
+    @Headers('Authorization') header: Headers,
+  ) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
@@ -260,10 +260,12 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const userID = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
-    return await this.userService.acceptFriendRequest(id, payload.id);
+    ) as TokenData;
+
+    console.log('friend request accepted by: ', id, userID.id);
+    return await this.userService.acceptFriendRequest(id, userID.id);
   }
 
   @UseGuards(TokenGuard)
@@ -272,10 +274,12 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const userID = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
-    return await this.userService.declineFriendRequest(id, payload.id);
+    ) as TokenData;
+
+    console.log('friend request accepted by: ', id, userID.id);
+    return await this.userService.declineFriendRequest(id, userID.id);
   }
 
   @UseGuards(TokenGuard)
@@ -285,5 +289,37 @@ export class UserController {
       header.toString().split(' ')[1],
     );
     return await this.userService.requests(payload.id);
+  }
+
+  @UseGuards(TokenGuard)
+  @Put('customization/paddleColor')
+  async updatePaddleColor(
+    @Body() body: { color: string },
+    @Headers('Authorization') header: Headers,
+  ): Promise<void> {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+
+    const clientId = payload.id;
+
+    const result: boolean = await this.userService.updatePaddleColor(
+      clientId,
+      body.color,
+    );
+
+    if (!result) {
+      const actualPaddleColor = await this.userService.getPaddleColor(clientId);
+      throw new BadRequestException({
+        message: 'Invalid color',
+        paddleColor: actualPaddleColor,
+      });
+    }
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('customization/paddleColor/:id')
+  async getPaddleColor(@Param('id') id: number): Promise<string> {
+    return await this.userService.getPaddleColor(id);
   }
 }
