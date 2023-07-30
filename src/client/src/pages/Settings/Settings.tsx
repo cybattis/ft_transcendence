@@ -1,43 +1,42 @@
 import "./Settings.css";
-import { Avatar } from "../../components/Avatar";
+import {Avatar} from "../../components/Avatar";
 import axios from "axios";
-import { ChangeEvent, FormEvent, useContext, useState } from "react";
+import {ChangeEvent, FormEvent, useContext, useState} from "react";
 import InputForm from "../../components/InputForm";
-import { UserSettings } from "../../type/user.type";
-import { Navigate, useLoaderData } from "react-router-dom";
-import { AuthContext } from "../../components/Auth/dto";
-import FaCode from "../../components/Auth/2fa";
-import { MessageModal } from "../../components/Modal/MessageModal";
-import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
-import { ErrorResponse } from "../../type/client.type";
-import { UserData } from "../Profile/user-data";
+import {UserSettings} from "../../type/user.type";
+import {Navigate, useLoaderData} from "react-router-dom";
+import {MessageModal} from "../../components/Modal/MessageModal";
+import {apiBaseURL} from "../../utils/constant";
+import {ErrorContext} from "../../components/Modal/modalContext";
+import {ErrorResponse} from "../../type/client.type";
+import {UserData} from "../Profile/user-data";
+import {AuthContext} from "../../components/Auth/auth.context";
+import {FormContext, FormState} from "../../components/Auth/form.context";
 
 export function Settings() {
   const data = useLoaderData() as UserSettings;
   const token = localStorage.getItem("token");
 
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed, tfaActivated } = useContext(AuthContext);
+  const { setFormState } = useContext(FormContext);
   const { setErrorMessage } = useContext(ErrorContext);
 
-  const [codeForm, setCodeForm] = useState(false);
   const [nickname, setNickname] = useState(data.nickname);
   const [firstName, setFirstName] = useState(data.firstname);
   const [lastName, setLastName] = useState(data.lastname);
   const [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
-  const [tfaState, setTfaState] = useState(data.authActivated);
 
   const [message, setMessage] = useState("");
 
   if (token === null) {
-    setAuthToken(null);
+    setAuthed(false);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
     if (!token) {
-      setAuthToken(null);
+      setAuthed(false);
       setErrorMessage("Session expired, please login again!");
       return <Navigate to={"/"} />;
     }
@@ -67,7 +66,7 @@ export function Settings() {
           setErrorMessage("Error unknown...");
         } else if (error.response.status === 403) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else setErrorMessage(error.response.data.message + "!");
       });
@@ -83,12 +82,12 @@ export function Settings() {
     };
 
     if (!token) {
-      setAuthToken(null);
+      setAuthed(false);
       setErrorMessage("Session expired, please login again!");
       return <Navigate to={"/"} />;
     }
 
-    if (user.nickname.length == 0) {
+    if (user.nickname.length === 0) {
       setErrorMessage("Your Nickname can't be empty!");
       return;
     } else if (user.nickname.length > 15) {
@@ -114,7 +113,7 @@ export function Settings() {
           setErrorMessage("Error unknown...");
         } else if (error.response.status === 403) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else setErrorMessage(error.response.data.message + "!");
       });
@@ -122,7 +121,7 @@ export function Settings() {
 
   const handle2fa = async () => {
     if (!token) {
-      setAuthToken(null);
+      setAuthed(false);
       setErrorMessage("Session expired, please login again!");
       return <Navigate to={"/"} />;
     }
@@ -139,7 +138,7 @@ export function Settings() {
         }
       )
       .then((res) => {
-        setCodeForm(true);
+        setFormState(FormState.TFA_CODE);
       })
       .catch((error) => {
         if (error.response === undefined) {
@@ -147,7 +146,7 @@ export function Settings() {
           setErrorMessage("Error unknown...");
         } else if (error.response.status === 403) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else setErrorMessage(error.response.data.message + "!");
       });
@@ -155,13 +154,6 @@ export function Settings() {
 
   return (
     <div className={"settingPage"}>
-      {codeForm ? (
-        <FaCode
-          showCallback={setCodeForm}
-          callback={setTfaState}
-          callbackValue={!tfaState}
-        />
-      ) : null}
       <MessageModal msg={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
@@ -215,7 +207,7 @@ export function Settings() {
           </form>
           <hr id={"hr1"} />
           <button type="submit" className="submitButton" onClick={handle2fa}>
-            {!tfaState ? "Activate 2FA" : "Deactivate 2FA"}
+            {!tfaActivated ? "Activate 2FA" : "Deactivate 2FA"}
           </button>
         </div>
       </div>

@@ -1,13 +1,34 @@
-import React, { useContext } from "react";
+import React, {useContext, useEffect} from "react";
 import "./Home.css";
 import { HomeLogged } from "./HomeLogged";
-import { AuthContext } from "../../components/Auth/dto";
 import { PracticePong } from "../../game/components/PracticePong";
 import { RgbColor, stringToRGB } from "../../utils/colors";
+import { AuthContext } from "../../components/Auth/auth.context";
+import axios from "axios";
+import {apiBaseURL} from "../../utils/constant";
+import {ErrorContext} from "../../components/Modal/modalContext";
+import {Navigate} from "react-router-dom";
 
 export default function Home() {
-  const { authed } = useContext(AuthContext);
+  const { authed, setAuthed } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    axios
+      .get(apiBaseURL + "auth/token-validation", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      }).then((res) => {
+        setAuthed(true);
+      }).catch((error) => {
+        setAuthed(false);
+        setErrorMessage("Your session has expired, please log in again.");
+        localStorage.removeItem("token");
+        return <Navigate to="/" />;
+      });
+  }, [token, authed]);
 
   return (
     <div className="full">

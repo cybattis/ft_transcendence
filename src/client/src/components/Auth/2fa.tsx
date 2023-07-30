@@ -1,21 +1,17 @@
-import React, { useContext, useState } from "react";
+import React, {useContext, useState} from "react";
 import axios from "axios";
 import InputForm from "../InputForm";
 import Logo from "../Logo/Logo";
-import { AuthContext } from "./dto";
-import { Navigate } from "react-router-dom";
+import {Navigate} from "react-router-dom";
 import "./Auth.css";
-import { apiBaseURL } from "../../utils/constant";
+import {apiBaseURL} from "../../utils/constant";
+import {AuthContext} from "./auth.context";
+import {FormContext, FormState} from "./form.context";
 
-type FaProps = {
-  showCallback: (value: boolean) => void;
-  callback?: (value: boolean) => void;
-  callbackValue?: boolean;
-};
-
-export default function FaCode(props: FaProps) {
+export default function FaCode() {
   const [errorMessage, setErrorMessage] = useState("");
-  const { setAuthToken } = useContext(AuthContext);
+  const { tfaActivated, setAuthed, setTfaActivated } = useContext(AuthContext);
+  const { setFormState } = useContext(FormContext);
 
   const inputs = {
     code: "",
@@ -68,9 +64,8 @@ export default function FaCode(props: FaProps) {
           },
         })
         .then((res) => {
-          props.showCallback(false);
-          if (props.callback && props.callbackValue !== undefined)
-            props.callback(props.callbackValue);
+          setFormState(FormState.NONE);
+          setTfaActivated(!tfaActivated);
           return;
         })
         .catch((error) => {
@@ -78,7 +73,7 @@ export default function FaCode(props: FaProps) {
             setErrorMessage(error.response.data.message);
           } else {
             setErrorMessage("An error occured, please try again.");
-            props.showCallback(false);
+            setFormState(FormState.NONE);
           }
         });
     } else {
@@ -89,10 +84,11 @@ export default function FaCode(props: FaProps) {
           },
         })
         .then((res) => {
-          props.showCallback(false);
+          setFormState(FormState.NONE);
+          setTfaActivated(true);
           const data = res.data;
           localStorage.setItem("token", data.token);
-          setAuthToken(data.token);
+          setAuthed(true);
           localStorage.removeItem("email");
           return <Navigate to="/" />;
         })
@@ -101,7 +97,7 @@ export default function FaCode(props: FaProps) {
             setErrorMessage(error.response.data.message);
           } else {
             setErrorMessage("An error occured, please try again.");
-            props.showCallback(false);
+            setFormState(FormState.NONE);
           }
         });
     }

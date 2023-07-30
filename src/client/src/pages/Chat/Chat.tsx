@@ -5,7 +5,6 @@ import ChannelList from "./List/ChannelList";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
-import { NotifContext } from "../../components/Auth/dto";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
@@ -179,7 +178,6 @@ export default function ChatClient() {
   const [post, setPost] = useState<ChatInterface[]>([]);
   const [messages, setMessages] = useState<ChatInterface[]>([]);
   const blocedList: string[] = [];
-  const { setNotif } = useContext(NotifContext);
   const [joinForm, setJoinForm] = useState(false);
   const [banForm, setBanForm] = useState(false);
   const [messagePrivateForm, setMessagePrivateForm] = useState(false);

@@ -11,7 +11,7 @@ import {
   Put,
   Headers,
   UseGuards,
-  HttpException,
+  HttpException, ForbiddenException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -136,5 +136,15 @@ export class AuthController {
     const token = await this.authService.generateToken(id);
     await this.userService.updateUserVerifiedStatus(id);
     return token;
+  }
+
+  @Get('token-validation')
+  async tokenValidation(@Headers('Authorization') token: Headers) {
+    try {
+      this.jwtService.verify(token.toString().split(' ')[1]);
+      return;
+    } catch (e) {
+      return new ForbiddenException();
+    }
   }
 }

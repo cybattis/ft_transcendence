@@ -4,9 +4,9 @@ import "./Friends.css";
 import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
-import { AuthContext } from "../Auth/dto";
 import { ErrorContext } from "../Modal/modalContext";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
+import {AuthContext} from "../Auth/auth.context";
 
 //Mettre un useState refresh automatique
 function Online(data: any) {
@@ -25,7 +25,7 @@ function Offline() {
 
 function FriendsList() {
   const { setErrorMessage } = useContext(ErrorContext);
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
 
   const token = localStorage.getItem("token");
 
@@ -66,7 +66,7 @@ function FriendsList() {
             setErrorMessage("Error unknown...");
           } else if (error.response.status === 403) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else setErrorMessage(error.response.data.message + "!");
         });
@@ -86,7 +86,7 @@ function FriendsList() {
             setErrorMessage("Error unknown...");
           } else if (error.response.status === 403) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else setErrorMessage(error.response.data.message + "!");
         });

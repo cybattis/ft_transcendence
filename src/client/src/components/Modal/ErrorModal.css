@@ -21,7 +21,7 @@
 
 
 dialog[open] {
-    animation: toggle-modal .3s ease-in-out;
+    animation: toggle-modal 3s ease-in-out;
 }
 
 @keyframes toggle-modal {
@@ -35,5 +35,5 @@ dialog[open] {
 }
 
 dialog[close] {
-    animation: toggle-modal .3s ease-in-out;
+    animation: toggle-modal 3s ease-in-out;
 }

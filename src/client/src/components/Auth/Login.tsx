@@ -1,12 +1,13 @@
-import React, { useContext } from "react";
+import React, {useContext} from "react";
 import "./Auth.css";
 import axios from "axios";
 import InputForm from "../InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
-import { AuthContext, FormContext } from "./dto";
-import { apiBaseURL } from "../../utils/constant";
+import {apiBaseURL} from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
+import {AuthContext} from "./auth.context";
+import {FormContext, FormState} from "./form.context";
 
 interface SigninDto {
   email: string;
@@ -15,8 +16,8 @@ interface SigninDto {
 
 export default function Login() {
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { setLoginForm, setSignupForm, setCodeForm } = useContext(FormContext);
-  const { setAuthToken } = useContext(AuthContext);
+  const { setFormState } = useContext(FormContext);
+  const { setAuthed } = useContext(AuthContext);
   const inputs: SigninDto = {
     email: "",
     password: "",
@@ -58,13 +59,13 @@ export default function Login() {
     await axios
       .post(apiBaseURL + "auth/signin", user)
       .then((res) => {
-        setLoginForm(false);
         if (res.data === "code") {
           localStorage.setItem("email", user.email);
-          setCodeForm(true);
+          setFormState(FormState.TFA_CODE);
         } else {
           localStorage.setItem("token", res.data.token);
-          setAuthToken(res.data.token);
+          setAuthed(true);
+          setFormState(FormState.NONE);
         }
         return;
       })
@@ -101,9 +102,7 @@ export default function Login() {
           <button
             className="bottomLink"
             onClick={() => {
-              setSignupForm(true);
-              setLoginForm(false);
-              setCodeForm(false);
+              setFormState(FormState.SIGNUP);
             }}
           >
             Sign up!
