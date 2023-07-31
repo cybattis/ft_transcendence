@@ -144,7 +144,7 @@ export class AuthController {
       this.jwtService.verify(token.toString().split(' ')[1]);
       return;
     } catch (e) {
-      return new ForbiddenException();
+      throw new ForbiddenException();
     }
   }
 }
