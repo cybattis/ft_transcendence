@@ -11,34 +11,38 @@ import {Navigate} from "react-router-dom";
 
 export default function Home() {
   const { authed, setAuthed } = useContext(AuthContext);
+
+  return (
+    <div className="full">
+      {!authed  ? <HomeUnlogged /> : <HomeLogged />}
+    </div>
+  );
+}
+
+function HomeUnlogged() {
+  const { authed, setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
+  const paddleColor: RgbColor = stringToRGB("ffffff");
 
   useEffect(() => {
+    if (!token)
+      return;
+
     axios
       .get(apiBaseURL + "auth/token-validation", {
         headers: {
           Authorization: `Bearer ${token}`,
         }
       }).then((res) => {
-        setAuthed(true);
-      }).catch((error) => {
-        setAuthed(false);
-        setErrorMessage("Your session has expired, please log in again.");
-        localStorage.removeItem("token");
-        return <Navigate to="/" />;
-      });
+      setAuthed(true);
+    }).catch((error) => {
+      setAuthed(false);
+      setErrorMessage("Your session has expired, please log in again.");
+      localStorage.removeItem("token");
+      return <Navigate to="/"/>;
+    });
   }, [token, authed]);
-
-  return (
-    <div className="full">
-      {!authed || !token ? <HomeUnlogged /> : <HomeLogged />}
-    </div>
-  );
-}
-
-function HomeUnlogged() {
-  const paddleColor: RgbColor = stringToRGB("ffffff");
 
   return (
     <div className={"homeUnlogged"}>
