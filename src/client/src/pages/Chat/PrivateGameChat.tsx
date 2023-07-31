@@ -3,19 +3,14 @@ import { GameChatInterface } from "./Interface/gamechat.interface";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import { ChatClientSocket } from "./Chat-client";
-import axios from "axios";
 import "./PrivateGameChat.css";
-import { apiBaseURL } from "../../utils/constant";
 
 const allMessages: any = [];
 
-export default function PrivateGameChat() {
+export default function PrivateGameChat(props: {playerOne: string, playerTwo: string, canal: string, myUsername: string}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [all, setAll] = useState<GameChatInterface[]>([]);
   const [isMute, setIsMute] = useState(false);
-  const [canal, setCanal] = useState('');
-  const [playerOne, setPlayerOne] = useState('');
-  const [playerTwo, setPlayerTwo] = useState('');
   const [me, setMe] = useState('');
   const [other, setOther] = useState('');
   const [msgNum, setMsgNum] = useState(0);
@@ -34,21 +29,21 @@ export default function PrivateGameChat() {
 
   const handleMute = async () => {
     let sendMute;
-    if (playerOne === payload.nickname)
+    if (props.playerOne === props.myUsername)
     {
         sendMute = {
             cmd: "mute",
-            username: playerOne,
-            target: playerTwo,
-            channel: canal,
+            username: props.playerOne,
+            target: props.playerTwo,
+            channel: props.canal,
         };
     }
     else {
         sendMute = {
             cmd: "mute",
-            username: playerTwo,
-            target: playerOne,
-            channel: canal,
+            username: props.playerTwo,
+            target: props.playerOne,
+            channel: props.canal,
         };
     }
     ChatClientSocket.mute(sendMute);
@@ -56,21 +51,21 @@ export default function PrivateGameChat() {
 
   const handleUnMute = async () => {
     let sendMute;
-    if (playerOne === payload.nickname)
+    if (props.playerOne === props.myUsername)
     {
         sendMute = {
             cmd: "mute",
-            username: playerOne,
-            target: playerTwo,
-            channel: canal,
+            username: props.playerOne,
+            target: props.playerTwo,
+            channel: props.canal,
         };
     }
     else {
         sendMute = {
             cmd: "mute",
-            username: playerTwo,
-            target: playerOne,
-            channel: canal,
+            username: props.playerTwo,
+            target: props.playerOne,
+            channel: props.canal,
         };
     }
     ChatClientSocket.unMute(sendMute);
@@ -92,16 +87,13 @@ export default function PrivateGameChat() {
 
     useEffect(() => {}, [messages]);
 
-    console.log(canal);
-    console.log(messages);
-
     return (
       <>
         <ul className="list-gamemsg-container">
           {messages
-            .filter((messages) => canal ? messages.channel === canal : null)
+            .filter((messages) => props.canal ? messages.channel === props.canal : null)
             .map((messages) =>
-              messages.sender === payload.nickname ? (
+              messages.sender === props.myUsername ? (
                 <li className="GameEmt" key={messages.id}>
                   <div className="contain-game-emt">{messages.sender}</div>
                   <div className="contain-game-msg">{messages.msg}</div>
@@ -120,7 +112,7 @@ export default function PrivateGameChat() {
 
   const sendMessage = () => {
     if (inputRef.current && inputRef.current.value && inputRef.current.value[0]) {
-      const send = { username: me, opponent: other, channel: canal, msg: inputRef.current.value }
+      const send = { username: me, opponent: other, channel: props.canal, msg: inputRef.current.value }
       ChatClientSocket.sendGameChat(send);
       inputRef.current.value = "";
     }
@@ -136,25 +128,15 @@ export default function PrivateGameChat() {
   useEffect(() => {
 
     const fetchgameInfo = async () => {
-      await axios.get(apiBaseURL + "game/info/" + payload.id)
-      .then((res) => {
-        console.log("RES: ", res);
-        setPlayerOne(res.data.playerOne);
-        setPlayerTwo(res.data.playerTwo);
-        setCanal(res.data.id + res.data.mode + res.data.type);
-        if (playerOne === payload.nickname)
+        if (props.playerOne === props.myUsername)
         {
-          setMe(playerOne);
-          setOther(playerTwo)
+          setMe(props.playerOne);
+          setOther(props.playerTwo)
         }
         else {
-          setOther(playerOne);
-          setMe(playerTwo)
+          setOther(props.playerOne);
+          setMe(props.playerTwo)
         }
-      })
-      .catch((error) => {
-        console.log(error);
-      });
     }
 
     fetchgameInfo();
@@ -177,12 +159,12 @@ export default function PrivateGameChat() {
     }
         
     ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
-    ChatClientSocket.joinGameChat({ canal: canal});
+    ChatClientSocket.joinGameChat({ canal: props.canal});
 
     return () => {
       ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
     }
-  }, [msgNum, me, other, playerOne, playerTwo, canal]);
+  }, [msgNum, me, other]);
 
   return (
     <div className="chat-div">
