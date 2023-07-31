@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import axios from "axios";
-import InputForm from "../InputForm";
+import InputForm from "../InputForm/InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import { Navigate } from "react-router-dom";

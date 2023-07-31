@@ -48,7 +48,6 @@ function BlockUser(props: FriendRequestProps) {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||

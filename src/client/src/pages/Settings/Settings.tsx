@@ -1,10 +1,10 @@
 import "./Settings.css";
 import {Avatar} from "../../components/Avatar";
 import axios from "axios";
-import {ChangeEvent, FormEvent, useContext, useState} from "react";
-import InputForm from "../../components/InputForm";
+import {ChangeEvent, FormEvent, useContext, useEffect, useState} from "react";
+import InputForm from "../../components/InputForm/InputForm";
 import {UserSettings} from "../../type/user.type";
-import {Navigate, useLoaderData} from "react-router-dom";
+import {Navigate} from "react-router-dom";
 import {MessageModal} from "../../components/Modal/MessageModal";
 import {apiBaseURL} from "../../utils/constant";
 import {ErrorContext} from "../../components/Modal/modalContext";
@@ -12,9 +12,57 @@ import {ErrorResponse} from "../../type/client.type";
 import {UserData} from "../Profile/user-data";
 import {AuthContext} from "../../components/Auth/auth.context";
 import {FormContext, FormState} from "../../components/Auth/form.context";
+import ReactLoading from 'react-loading';
 
 export function Settings() {
-  const data = useLoaderData() as UserSettings;
+  const [data, setData] = useState<UserSettings | null>(null);
+  const { setAuthed } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(ErrorContext);
+
+  useEffect( () => {
+    function goToHome() {
+      return <Navigate to={"/"}/>;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      goToHome();
+      return;
+    }
+
+    axios
+      .get(apiBaseURL + "user/settings/", {
+        headers: {
+          Authorization:
+            "Bearer " + token,
+        },
+      })
+      .then((res) => {
+        setData(res.data);
+      })
+      .catch((error) => {
+        if (error.response === undefined) {
+          localStorage.clear();
+          setErrorMessage("Error unknown...");
+        } else if (error.response.status === 403) {
+          localStorage.clear();
+          setAuthed(false);
+          setErrorMessage("Session expired, please login again!");
+        } else setErrorMessage(error.response.data.message + "!");
+        return <Navigate to={"/"}/>;
+      });
+  }, []);
+
+  return data ? <SettingsLoaded data={data} /> : <SettingsLoading />;
+}
+
+function SettingsLoading() {
+  return (
+    <ReactLoading type={"spinningBubbles"} className={"settingPage"} />
+  );
+}
+
+export function SettingsLoaded({data }: { data: UserSettings }) {
   const token = localStorage.getItem("token");
 
   const { setAuthed, tfaActivated } = useContext(AuthContext);

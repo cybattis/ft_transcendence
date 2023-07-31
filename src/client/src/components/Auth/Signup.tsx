@@ -1,7 +1,7 @@
 import React, {useContext, useState} from "react";
 import axios from "axios";
 import Logo from "../Logo/Logo";
-import InputForm from "../InputForm";
+import InputForm from "../InputForm/InputForm";
 import "./Auth.css";
 import validator from "validator";
 import {apiBaseURL} from "../../utils/constant";

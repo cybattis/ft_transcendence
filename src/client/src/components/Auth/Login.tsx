@@ -1,7 +1,7 @@
 import React, {useContext} from "react";
 import "./Auth.css";
 import axios from "axios";
-import InputForm from "../InputForm";
+import InputForm from "../InputForm/InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import {apiBaseURL} from "../../utils/constant";
@@ -71,7 +71,6 @@ export default function Login() {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
           setErrorMessage("Error unknown...");
         } else setErrorMessage(error.response.data.message + "!");
       });

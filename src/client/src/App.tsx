@@ -16,17 +16,17 @@ function App() {
 
   return (
     <div className="app" id={"background"}>
+      <ErrorContext.Provider value={{ errorMessage, setErrorMessage }}>
         <AuthContextProvider>
           <FormContextProvider>
-            <ErrorContext.Provider value={{ errorMessage, setErrorMessage }}>
-              <NavBar />
-              <Outlet />
-              <AuthForms />
-              <ErrorModal error={errorMessage} onClose={() => setErrorMessage("")}/>
-            </ErrorContext.Provider>
+            <NavBar />
+            <Outlet />
+            <AuthForms />
+            <ErrorModal error={errorMessage} onClose={() => setErrorMessage("")}/>
           </FormContextProvider>
         </AuthContextProvider>
-        <Footer />
+      </ErrorContext.Provider>
+      <Footer />
     </div>
   );
 }

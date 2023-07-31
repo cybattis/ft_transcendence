@@ -1,8 +1,8 @@
-import React from "react";
+import React, {useContext} from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
@@ -16,6 +16,7 @@ import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 import { apiBaseURL } from "./utils/constant";
 import About from "./pages/About/About";
+import {AuthedRoute} from "./components/Auth/AuthedRoute";
 
 const router = createBrowserRouter([
   {
@@ -52,7 +53,9 @@ const router = createBrowserRouter([
               );
               if (res.status === 400)
                 throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) localStorage.clear();
+              else if (res.status === 403) {
+                localStorage.clear();
+              }
               return res.json();
             },
           },
@@ -70,23 +73,16 @@ const router = createBrowserRouter([
                     "Bearer " + localStorage.getItem("token") || "",
                 },
               });
-              if (res.status === 403) localStorage.clear();
+              if (res.status === 403) {
+                localStorage.clear();
+                localStorage.clear();
+              }
               return res.json();
             },
           },
           {
             path: "settings",
-            element: <Settings />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(apiBaseURL + "user/settings/", {
-                headers: {
-                  Authorization:
-                    "Bearer " + localStorage.getItem("token") || "",
-                },
-              });
-              if (res.status === 403) localStorage.clear();
-              return res.json();
-            },
+            element: <AuthedRoute component={<Settings/>} />,
           },
           {
             path: "game",
