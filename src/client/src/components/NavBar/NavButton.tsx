@@ -112,7 +112,7 @@ function BellNotif({hasNotifs, setHasNotifs}: { hasNotifs: boolean, setHasNotifs
   const logo: string = hasNotifs ? notifsLogoOn : notifsLogo;
 
   return (
-    <img src={logo} alt={"logo notif"} width={45} height={45}></img>
+    <img src={logo} alt={"logo notif"} width={45} height={45}/>
   );
 }
 
