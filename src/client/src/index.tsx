@@ -61,7 +61,7 @@ const router = createBrowserRouter([
           },
           {
             path: "notifications",
-            element: <Notifications />,
+            element: <AuthedRoute component={<Notifications/>} />,
           },
           {
             path: "leaderboard",
