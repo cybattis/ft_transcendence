@@ -193,11 +193,11 @@ export default function ChatClient() {
   });
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload | null = null;
+  let payload: JwtPayload;
 
-  if (username === "") {
+  if (username === "" && token) {
     try {
-      payload = jwt_decode(token!);
+      payload = jwt_decode(token);
       if (payload?.nickname) username = payload.nickname;
     } catch (e) {
       console.log(`Decode error ${e}`);
