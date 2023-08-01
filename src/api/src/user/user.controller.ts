@@ -284,7 +284,7 @@ export class UserController {
       header.toString().split(' ')[1],
     ) as TokenData;
 
-    console.log('friend request accepted by: ', id, userID.id);
+    console.log('friend request declined by: ', id, userID.id);
     return await this.userService.declineFriendRequest(id, userID.id);
   }
 

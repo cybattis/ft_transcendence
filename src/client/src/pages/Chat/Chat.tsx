@@ -5,7 +5,6 @@ import ChannelList from "./List/ChannelList";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
-import { NotifContext } from "../../components/Auth/dto";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";

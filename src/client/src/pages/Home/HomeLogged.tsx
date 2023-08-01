@@ -9,7 +9,6 @@ import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
-import { AuthContext } from "../../components/Auth/dto";
 import { Friends } from "../../components/Friends/Friends";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
@@ -19,6 +18,7 @@ import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -341,7 +341,7 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
 
   const token = localStorage.getItem("token");
@@ -391,7 +391,7 @@ export function HomeLogged() {
             error.response.status === 400
           ) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else {
             setErrorMessage(error.response.data.message + "!");
@@ -410,7 +410,7 @@ export function HomeLogged() {
   }, []);
 
   if (token === null) {
-    setAuthToken(null);
+    setAuthed(false);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }

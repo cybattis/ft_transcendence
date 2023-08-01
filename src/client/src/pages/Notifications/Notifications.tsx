@@ -3,18 +3,15 @@ import axios from "axios";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
-import { NotifContext } from "../../components/Auth/dto";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
-import { AuthContext } from "../../components/Auth/dto";
 import { ChatClientSocket } from "../Chat/Chat-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 export default function Notifications() {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token: string | null = localStorage.getItem("token");
-  const { setNotif } = useContext(NotifContext);
-
   const [invits, setInvits] = useState([
     {
       nickname: "",
@@ -82,7 +79,7 @@ export default function Notifications() {
             setErrorMessage("Error unknown...");
           } else if (error.response.status === 403) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else setErrorMessage(error.response.data.message + "!");
         });
@@ -111,14 +108,13 @@ export default function Notifications() {
   }, []);
 
   if (token === null) {
-    setAuthToken(null);
+    setAuthed(false);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
 
   //Faire une map pour afficher toutes invites a la suite
   if (invits && invits[0] && invits[0].id > 0) {
-    setNotif(true);
     return (
       <div className="notifPage">
         <h2 className="notifTitle">Notifications</h2>
@@ -154,7 +150,7 @@ export default function Notifications() {
         </div>
       </div>
     );
-  } else setNotif(false);
+  }
 
   return (
     <div className="noNotifTitle">
