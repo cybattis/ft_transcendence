@@ -9,15 +9,19 @@ import Footer from "../Footer/Footer";
 
 interface AuthContextType {
   authed: boolean,
+  isAuthing: boolean,
   tfaActivated: boolean,
   setAuthed: (authed: boolean) => void,
+  setIsAuthing(authing: boolean): void,
   setTfaActivated: (authed: boolean) => void,
 }
 
 const defaultAuthContext: AuthContextType = {
   authed: false,
+  isAuthing: false,
   tfaActivated: false,
   setAuthed: () => {},
+  setIsAuthing: () => {},
   setTfaActivated: () => {},
 }
 
@@ -25,6 +29,7 @@ export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
 export function AuthContextProvider({children}: {children: ReactNode}) {
   const [authed, setAuthed] = useState<boolean>(false);
+  const [isAuthing, setIsAuthing] = useState<boolean>(!authed);
   const [tfaActivated, setTfaActivated] = useState<boolean>(false);
   const {setErrorMessage} = useContext(ErrorContext);
   const token = localStorage.getItem("token");
@@ -32,12 +37,14 @@ export function AuthContextProvider({children}: {children: ReactNode}) {
   function setAuthedFunction(authed: boolean) {
     console.log("setting authed to :", authed);
     console.trace("setAuthedFunction");
+    setIsAuthing(false);
     setAuthed(authed);
   }
 
   useEffect(() => {
     if (!token) {
       console.log("no token, returning");
+      setIsAuthing(false);
       return;
     }
 
@@ -48,20 +55,22 @@ export function AuthContextProvider({children}: {children: ReactNode}) {
         }
       }).then((res) => {
       setAuthed(true);
+      setIsAuthing(false);
       console.log("token valid");
     }).catch((error) => {
       setAuthed(false);
+      setIsAuthing(false);
       console.log("token invalid");
       setErrorMessage("Your session has expired, please log in again.");
       localStorage.removeItem("token");
       return <Navigate to="/"/>;
     });
-  }, [token, authed]);
+  }, [token]);
 
   console.log("end of use effect auth context");
 
   return (
-    <AuthContext.Provider value={{authed, tfaActivated, setAuthed: setAuthedFunction, setTfaActivated}}>
+    <AuthContext.Provider value={{authed, isAuthing, tfaActivated, setAuthed: setAuthedFunction, setIsAuthing, setTfaActivated}}>
       {children}
     </AuthContext.Provider>
   );
