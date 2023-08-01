@@ -13,6 +13,7 @@ import {UserData} from "../Profile/user-data";
 import {AuthContext} from "../../components/Auth/auth.context";
 import {FormContext, FormState} from "../../components/Auth/form.context";
 import ReactLoading from 'react-loading';
+import {LoadingPage} from "../Loading/LoadingPage";
 
 export function Settings() {
   const [data, setData] = useState<UserSettings | null>(null);
@@ -53,13 +54,7 @@ export function Settings() {
       });
   }, []);
 
-  return data ? <SettingsLoaded data={data} /> : <SettingsLoading />;
-}
-
-function SettingsLoading() {
-  return (
-    <ReactLoading type={"spinningBubbles"} className={"settingPage"} />
-  );
+  return data ? <SettingsLoaded data={data} /> : <LoadingPage/>;
 }
 
 export function SettingsLoaded({data }: { data: UserSettings }) {
