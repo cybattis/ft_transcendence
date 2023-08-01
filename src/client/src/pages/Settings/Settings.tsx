@@ -12,47 +12,11 @@ import {ErrorResponse} from "../../type/client.type";
 import {UserData} from "../Profile/user-data";
 import {AuthContext} from "../../components/Auth/auth.context";
 import {FormContext, FormState} from "../../components/Auth/form.context";
-import ReactLoading from 'react-loading';
 import {LoadingPage} from "../Loading/LoadingPage";
+import {useData} from "../../hooks/UseData";
 
 export function Settings() {
-  const [data, setData] = useState<UserSettings | null>(null);
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
-
-  useEffect( () => {
-    function goToHome() {
-      return <Navigate to={"/"}/>;
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      goToHome();
-      return;
-    }
-
-    axios
-      .get(apiBaseURL + "user/settings/", {
-        headers: {
-          Authorization:
-            "Bearer " + token,
-        },
-      })
-      .then((res) => {
-        setData(res.data);
-      })
-      .catch((error) => {
-        if (error.response === undefined) {
-          localStorage.clear();
-          setErrorMessage("Error unknown...");
-        } else if (error.response.status === 403) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else setErrorMessage(error.response.data.message + "!");
-        return <Navigate to={"/"}/>;
-      });
-  }, []);
+  const { data, error} = useData<UserSettings>("user/settings");
 
   return data ? <SettingsLoaded data={data} /> : <LoadingPage/>;
 }
