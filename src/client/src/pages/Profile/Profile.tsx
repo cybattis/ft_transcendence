@@ -26,6 +26,7 @@ enum relationStatus {
   FRIEND,
   REQUESTED,
   BLOCKED,
+  BLOCKEDBY,
 }
 
 interface FriendRequestProps {
@@ -45,6 +46,10 @@ function BlockUser(props: FriendRequestProps) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.NONE);
       })
       .catch((error) => {
         if (error.response === undefined) {
@@ -69,6 +74,10 @@ function BlockUser(props: FriendRequestProps) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.BLOCKED);
       })
       .catch((error) => {
         console.log(error);
@@ -173,6 +182,14 @@ function FriendRequest(props: FriendRequestProps) {
           onClick={handleRemoveButton}
         >
           REMOVE FRIEND
+        </button>
+      </>
+    );
+  } else if (props.status === relationStatus.BLOCKEDBY) {
+    return (
+      <>
+        <button className="friendButton" type="button">
+          YOU ARE BLOCKED
         </button>
       </>
     );
@@ -282,28 +299,37 @@ export function Profile() {
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
   const [customization, setCustomization] = useState(false);
 
-  const token = localStorage.getItem("token");
-  let payload: JwtPayload | null = null;
-  if (token) payload = jwt_decode(token as string);
-
-  function checkFriendStatus(meData: UserFriend) {
-    if (!payload) return;
-
-    console.log("meData: ", meData);
-    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
-    else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.FRIEND);
-    else if (
-      meData.requestedId &&
-      meData.requestedId.includes(Number(payload.id))
-    )
-      setFriendStatus(relationStatus.REQUESTED);
-    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.BLOCKED);
-    else setFriendStatus(relationStatus.NONE);
-  }
-
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const payload: JwtPayload | null = jwt_decode(token);
+
+    function checkFriendStatus(meData: UserFriend) {
+    if (!payload) return;
+    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
+      else if (
+        meData.friendsId &&
+        meData.friendsId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.FRIEND);
+      else if (
+        meData.requestedId &&
+        meData.requestedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.REQUESTED);
+      else if (
+        meData.blockedById &&
+        meData.blockedById.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKED);
+      else if (
+        meData.blockedId &&
+        meData.blockedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKEDBY);
+      else setFriendStatus(relationStatus.NONE);
+    }
+
     async function fetchData() {
       if (data.id === undefined) return;
       axios
@@ -313,7 +339,6 @@ export function Profile() {
           },
         })
         .then((res) => {
-          console.log("res: ", res.data);
           checkFriendStatus(res.data);
         })
         .catch((error) => {
@@ -339,13 +364,7 @@ export function Profile() {
     return () => {
       ChatClientSocket.offNotificationEvent(fetchData);
     }
-  }, [checkFriendStatus, data, token]);
-
-  if (token === null) {
-    setAuthed(false);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+  }, []);
 
   const winrate: number = calculateWinrate(data);
   const oldColor: RgbColor = {
@@ -367,11 +386,13 @@ export function Profile() {
           </div>
           {friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
-              <FriendRequest
-                data={data}
-                status={friendStatus}
-                setStatus={setFriendStatus}
-              />
+              {friendStatus !== relationStatus.BLOCKED ? (
+                <FriendRequest
+                  data={data}
+                  status={friendStatus}
+                  setStatus={setFriendStatus}
+                />
+              ) : null}
               <BlockUser
                 data={data}
                 status={friendStatus}

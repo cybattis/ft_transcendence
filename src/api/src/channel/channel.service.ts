@@ -570,7 +570,8 @@ export class ChannelService implements OnModuleInit {
     });
     if (chan && chan.mute.includes(sender)) return;
     const send = { sender, msg, channel, blockedChat };
-    const emiter: any = await this.userService.findByLogin(sender);
+    const emiter = await this.userService.findByLogin(sender);
+    if (!emiter) return;
     if (channel[0] === '#') {
       await this.chatRepository.save({
         channel: channel,
@@ -579,6 +580,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: emiter.id,
       });
       socket.broadcast.emit('rcv', send);
+      server.to(socket.id).emit('rcv', send);
     } else {
       const target = this.getSocketByUsername(channel);
       const prv = { sender, msg, channel };
@@ -887,7 +889,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   addUserSocketToList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string | null = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;
@@ -904,7 +906,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   removeUserSocketFromList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string | null = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;

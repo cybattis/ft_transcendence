@@ -366,7 +366,8 @@ export function HomeLogged() {
     MultiplayerClient.connect();
 
     async function fetchData() {
-      const payload: JwtPayload = jwt_decode(token as string);
+      if (!token) return;
+      const payload: JwtPayload = jwt_decode(token);
 
       console.log(payload);
       await axios
