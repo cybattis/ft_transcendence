@@ -13,7 +13,7 @@ import { GameStatsDto } from "../../type/game.type";
 import { AuthContext } from "../../components/Auth/dto";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { JwtPayload } from "../../type/client.type";
 import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
 import { MessageModal } from "../../components/Modal/MessageModal";
@@ -37,7 +37,7 @@ interface FriendRequestProps {
 
 function BlockUser(props: FriendRequestProps) {
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
   const handleUnblockButton = async () => {
@@ -114,7 +114,7 @@ function BlockUser(props: FriendRequestProps) {
 
 function FriendRequest(props: FriendRequestProps) {
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
   const handleAddFriend = async () => {
@@ -205,7 +205,7 @@ function FriendRequest(props: FriendRequestProps) {
 
 function PaddleColor(props: { oldColor: RgbColor }) {
   const [hue, setHue] = useState(RGBToHSL(props.oldColor).h);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const [showSuccess, setShowSuccess] = useState(false);
   const color: RgbColor = hslToRgb({ h: hue, s: 100, l: 50 });
 
@@ -296,7 +296,7 @@ function PaddleColor(props: { oldColor: RgbColor }) {
 export function Profile() {
   let data: UserInfo = useLoaderData() as UserInfo;
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
   const [customization, setCustomization] = useState(false);
 

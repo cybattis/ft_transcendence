@@ -5,7 +5,7 @@ import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
 import { AuthContext } from "../Auth/dto";
-import { ErrorContext } from "../Modal/modalContext";
+import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 
 //Mettre un useState refresh automatique
@@ -24,7 +24,7 @@ function Offline() {
 }
 
 function FriendsList() {
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const { setAuthToken } = useContext(AuthContext);
 
   const token = localStorage.getItem("token");

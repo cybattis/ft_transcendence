@@ -12,12 +12,8 @@ import {
   defaultNotifState,
   NotifContext,
 } from "./components/Auth/dto";
+import { PopupProvider } from "./components/Modal/Popup.context";
 import { AuthForms } from "./components/Auth/Forms";
-import { ErrorModal } from "./components/Modal/ErrorModal";
-import {
-  defaultErrorContext,
-  ErrorContext,
-} from "./components/Modal/modalContext";
 
 function App() {
   const [loginForm, setLoginForm] = useState(defaultFormState.loginForm);
@@ -25,9 +21,6 @@ function App() {
   const [codeForm, setCodeForm] = useState(defaultFormState.signupForm);
   const [authToken, setAuthToken] = useState(defaultAuthState.authed);
   const [notif, setNotif] = useState(defaultNotifState.notif);
-  const [errorMessage, setErrorMessage] = useState(
-    defaultErrorContext.errorMessage
-  );
 
   return (
     <div className="app" id={"background"}>
@@ -45,15 +38,11 @@ function App() {
               setCodeForm,
             }}
           >
-            <ErrorContext.Provider value={{ errorMessage, setErrorMessage }}>
+            <PopupProvider>
               <NavBar />
               <Outlet />
               <AuthForms />
-              <ErrorModal
-                error={errorMessage}
-                onClose={() => setErrorMessage("")}
-              />
-            </ErrorContext.Provider>
+            </PopupProvider>
           </FormContext.Provider>
         </AuthContext.Provider>
       </NotifContext.Provider>

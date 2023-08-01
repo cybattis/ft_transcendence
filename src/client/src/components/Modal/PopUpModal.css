@@ -19,6 +19,26 @@
     color: var(--white);
 }
 
+#info-modal {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+
+    width: 300px;
+    height: 100px;
+    align-items: center;
+    justify-content: center;
+
+    top: 75%;
+    z-index: 100;
+
+    background-color: var(--purple-darker);
+
+    border-radius: 8px;
+    border: 2px solid var(--cyan);
+
+    color: var(--white);
+}
 
 dialog[open] {
     animation: toggle-modal .3s ease-in-out;

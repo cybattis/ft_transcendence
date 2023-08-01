@@ -6,7 +6,7 @@ import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import { apiBaseURL } from "../../utils/constant";
 import UsersList from "./List/UsersList";
-import { ErrorModalChat } from "../../components/Modal/ErrorModal";
+import { ErrorModalChat } from "../../components/Modal/PopUpModal";
 
 export default function PrivateGameChat() {
   const inputRef = useRef<HTMLInputElement>(null);

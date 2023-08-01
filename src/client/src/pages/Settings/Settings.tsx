@@ -7,9 +7,8 @@ import { UserSettings } from "../../type/user.type";
 import { Navigate, useLoaderData } from "react-router-dom";
 import { AuthContext } from "../../components/Auth/dto";
 import FaCode from "../../components/Auth/2fa";
-import { MessageModal } from "../../components/Modal/MessageModal";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { ErrorResponse } from "../../type/client.type";
 import { UserData } from "../Profile/user-data";
 
@@ -18,7 +17,7 @@ export function Settings() {
   const token = localStorage.getItem("token");
 
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage, setInfoMessage } = useContext(PopupContext);
 
   const [codeForm, setCodeForm] = useState(false);
   const [nickname, setNickname] = useState(data.nickname);
@@ -26,8 +25,6 @@ export function Settings() {
   const [lastName, setLastName] = useState(data.lastname);
   const [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
   const [tfaState, setTfaState] = useState(data.authActivated);
-
-  const [message, setMessage] = useState("");
 
   if (token === null) {
     setAuthToken(null);
@@ -58,7 +55,7 @@ export function Settings() {
         },
       })
       .then((res) => {
-        setMessage("Avatar updated!");
+        setInfoMessage("Avatar updated!");
         setAvatarUrl(res.data);
       })
       .catch((error: ErrorResponse) => {
@@ -106,7 +103,7 @@ export function Settings() {
       })
       .then(() => {
         UserData.updateNickname(user.nickname);
-        setMessage("Update successful!");
+        setInfoMessage("Update successful!");
       })
       .catch((error) => {
         if (error.response === undefined) {
@@ -162,7 +159,6 @@ export function Settings() {
           callbackValue={!tfaState}
         />
       ) : null}
-      <MessageModal msg={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>

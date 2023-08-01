@@ -13,7 +13,7 @@ import { apiBaseURL } from "../../utils/constant";
 import { Link, Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
-import { ErrorModalChat } from "../../components/Modal/ErrorModal";
+import { ErrorModalChat } from "../../components/Modal/PopUpModal";
 import ParamLogo from "../../resource/param-logo.png";
 import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";

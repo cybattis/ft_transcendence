@@ -6,7 +6,7 @@ import { useContext, useEffect } from "react";
 import { AuthContext, NotifContext } from "../Auth/dto";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
-import { ErrorContext } from "../Modal/modalContext";
+import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 
 export function NavButton(props: {
@@ -74,10 +74,9 @@ export function DisconnectButton(props: { callback?: () => void }) {
 }
 
 function BellNotif() {
-  //Marche que quan user est dans menu(websocket que la ou y chat change ca)
   const { notif, setNotif } = useContext(NotifContext);
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
   useEffect(() => {

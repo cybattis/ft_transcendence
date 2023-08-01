@@ -15,10 +15,10 @@ import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import { PopupContext } from "../../components/Modal/Popup.context";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -342,7 +342,7 @@ function UserProfile(props: { data: UserInfo }) {
 
 export function HomeLogged() {
   const { setAuthToken } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
 
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
