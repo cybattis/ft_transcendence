@@ -11,7 +11,7 @@ import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
-import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import {Leaderboard, LeaderboardLoader} from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 import { apiBaseURL } from "./utils/constant";
@@ -65,20 +65,7 @@ const router = createBrowserRouter([
           },
           {
             path: "leaderboard",
-            element: <Leaderboard />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(apiBaseURL + "user/leaderboard", {
-                headers: {
-                  Authorization:
-                    "Bearer " + localStorage.getItem("token") || "",
-                },
-              });
-              if (res.status === 403) {
-                localStorage.clear();
-                localStorage.clear();
-              }
-              return res.json();
-            },
+            element: <AuthedRoute component={<LeaderboardLoader/>} />,
           },
           {
             path: "settings",
