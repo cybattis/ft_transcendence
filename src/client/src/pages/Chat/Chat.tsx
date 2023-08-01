@@ -193,13 +193,12 @@ export default function ChatClient() {
   });
 
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
-  let decoded: JwtPayload | null = null;
+  let payload: JwtPayload;
 
-  if (username === "") {
+  if (username === "" && token) {
     try {
-      decoded = jwt_decode(localStorage.getItem("token")!);
-      if (decoded?.nickname) username = decoded.nickname;
+      payload = jwt_decode(token);
+      if (payload?.nickname) username = payload.nickname;
     } catch (e) {
       console.log(`Decode error ${e}`);
     }
@@ -473,7 +472,7 @@ export default function ChatClient() {
           })
           .then((res) => {
             if (!res.data) return;
-            if (res.data.operator.includes(payload.nickname)) setIsOpe(true);
+            if (res.data.operator.includes(payload?.nickname)) setIsOpe(true);
             if (res.data.ban.includes(usr)) setIsBan(true);
             if (res.data.mute.includes(usr)) setIsMute(true);
           })
@@ -483,7 +482,7 @@ export default function ChatClient() {
       }
       getOpeList();
 
-      if (usr === payload.nickname) setMe(true);
+      if (usr === payload?.nickname) setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);

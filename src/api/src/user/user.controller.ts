@@ -102,10 +102,11 @@ export class UserController {
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: TokenData = jwt_decode(
-            req.headers.authorization?.split(' ')[1] as string,
-          );
-          const path = `./avatar/${userId.id}`;
+          const token = req.headers.authorization?.split(' ')[1];
+          if (!token)
+            throw new ForbiddenException('Token invalid, please login again.');
+          const data: TokenData = jwt_decode(token);
+          const path = `./avatar/${data.id}`;
 
           fs.mkdirSync(path, { recursive: true });
 
@@ -226,8 +227,10 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    const blockedUser: User | null = await this.userService.findByLogin(username);
-    if (!blockedUser) throw new ForbiddenException("User does not exist");
+    const blockedUser: User | null = await this.userService.findByLogin(
+      username,
+    );
+    if (!blockedUser) throw new ForbiddenException('User does not exist');
     return await this.userService.blockFriend(blockedUser.id, payload.id);
   }
 

@@ -340,11 +340,10 @@ function UserProfile(props: { data: UserInfo }) {
   );
 }
 
-
 export function HomeLogged() {
   const { setAuthToken } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
-  
+
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({
     id: 0,
@@ -367,7 +366,8 @@ export function HomeLogged() {
     MultiplayerClient.connect();
 
     async function fetchData() {
-      const payload: JwtPayload = jwt_decode(token as string);
+      if (!token) return;
+      const payload: JwtPayload = jwt_decode(token);
 
       console.log(payload);
       await axios
@@ -422,7 +422,7 @@ export function HomeLogged() {
         <UserProfile data={data} />
       </div>
       <div className="rightside">
-        <ChatClient/>
+        <ChatClient />
         <Friends />
       </div>
     </div>
