@@ -43,7 +43,6 @@ export function AuthContextProvider({children}: {children: ReactNode}) {
 
   useEffect(() => {
     if (!token) {
-      console.log("no token, returning");
       setIsAuthing(false);
       return;
     }
@@ -56,18 +55,14 @@ export function AuthContextProvider({children}: {children: ReactNode}) {
       }).then((res) => {
       setAuthed(true);
       setIsAuthing(false);
-      console.log("token valid");
     }).catch((error) => {
       setAuthed(false);
       setIsAuthing(false);
-      console.log("token invalid");
       setErrorMessage("Your session has expired, please log in again.");
       localStorage.removeItem("token");
       return <Navigate to="/"/>;
     });
   }, [token]);
-
-  console.log("end of use effect auth context");
 
   return (
     <AuthContext.Provider value={{authed, isAuthing, tfaActivated, setAuthed: setAuthedFunction, setIsAuthing, setTfaActivated}}>
