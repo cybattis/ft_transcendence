@@ -10,16 +10,17 @@ import { MulterModule } from '@nestjs/platform-express';
 import { MailService } from '../mail/mail.service';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelModule } from 'src/channel/channel.module';
+import { Channel } from 'src/channel/entity/Channel.entity';
+
 
 @Module({
   imports: [
     AuthModule,
-    ChannelModule,
-    TypeOrmModule.forFeature([User, Game]),
+    TypeOrmModule.forFeature([User, Game, Channel]),
     MulterModule.register({ dest: './avatar' }),
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService, JwtService],
-  exports: [UserService, TypeOrmModule.forFeature([User])],
+  exports: [UserService,]
 })
 export class UserModule {}

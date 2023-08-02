@@ -26,6 +26,7 @@ import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
 import { TokenData } from '../type/jwt.type';
 import {TypeCheckers} from "../utils/type-checkers";
+import { channel } from 'diagnostics_channel';
 
 @Controller('user')
 export class UserController {
@@ -344,5 +345,16 @@ export class UserController {
   @Get('customization/paddleColor/:id')
   async getPaddleColor(@Param('id') id: number): Promise<string> {
     return await this.userService.getPaddleColor(id);
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('request/channel')
+  async fetchInvChannel(
+    @Headers('Authorization') header: Headers,
+  ){
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return await this.userService.fetchInvChannel(payload.id);
   }
 }

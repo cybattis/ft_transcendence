@@ -60,7 +60,72 @@ export default function Notifications() {
     setInvits(newInvits);
   }
 
+  async function handleAcceptChannel(channel: string){
+    if (channel[0] === '#')
+      channel = channel.substring(1);
+    console.log(channel);
+    const addr = apiBaseURL + "chat-controller/request/" + channel;
+    await axios
+    .put(addr, null,  {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((res) => {
+      const newInvits: any = channelInvits.filter((invits :string) => invits !== invits);
+      setChannelInvits(newInvits);
+    });
+  }
+
+  async function handleDeclineChannel(channel: string) {
+    if (channel[0] === '#')
+      channel = channel.substring(1);
+    console.log(channel);
+    const addr = apiBaseURL + "chat-controller/decline/" + channel;
+    await axios.put(addr, null, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    .then((res) =>{
+      const newInvits: any = channelInvits.filter((invits :string) => invits !== invits);
+      setChannelInvits(newInvits);
+    });
+  }
+
+  function InviteChannel(){
+    return (<>
+      {
+
+        channelInvits.map((info, i) => (
+          <div className="ctnr-notif-channel">
+            <div className="invits-channel" key={i}>
+                <p className="text-channel">
+                  You are invited to the channel {info}
+                </p>
+                <div className="buttons">
+                  <button
+                    className="refuse"
+                    onClick={() => handleDeclineChannel(info)}
+                  >
+                    <div className="cross"></div>Decline
+                  </button>
+                  <button
+                    className="accept"
+                    onClick={() => handleAcceptChannel(info)}
+                  >
+                    <div className="tick-mark"></div>Accept
+                  </button>
+                </div>
+            </div>
+          </div>
+        ))
+      }
+    </>)
+  }
+
   useEffect(() => {
+
     async function fetchFriends() {
       await axios
         .get(apiBaseURL + "user/requested", {
@@ -84,12 +149,7 @@ export default function Notifications() {
           } else setErrorMessage(error.response.data.message + "!");
         });
     }
-    fetchFriends().then(() => {});
 
-    ChatClientSocket.onNotificationEvent(fetchFriends);
-  }, []);
-
-  useEffect(() => {
     async function fetchInvChannel() {
       await axios
         .get(apiBaseURL + "user/request/channel", {
@@ -99,13 +159,20 @@ export default function Notifications() {
         })
         .then((res) => {
           setChannelInvits(res.data);
+          console.log("Channel to join", res.data);
         })
         .catch((error) => {
           console.log(error);
         });
     }
+    
     fetchInvChannel().then();
+    fetchFriends().then(() => {});
+
+    ChatClientSocket.onNotificationEvent(fetchFriends);
+    ChatClientSocket.onNotificationEvent(fetchInvChannel);
   }, []);
+
 
   if (token === null) {
     setAuthed(false);
@@ -113,45 +180,59 @@ export default function Notifications() {
     return <Navigate to={"/"} />;
   }
 
-  //Faire une map pour afficher toutes invites a la suite
-  if (invits && invits[0] && invits[0].id > 0) {
-    return (
-      <div className="notifPage">
-        <h2 className="notifTitle">Notifications</h2>
-        <div className="list">
-          {invits.map((invits) => {
-            return (
-              <div key={invits.id}>
-                <div className="notifsElements">
-                  <div className="invits">
-                    <Avatar size="50px" img={invits.avatarUrl} />
-                    <p className="notifText">
-                      {invits.nickname} wants to be your Friend!
-                    </p>
-                    <div className="buttons">
-                      <button
-                        className="refuse"
-                        onClick={() => handleDecline(invits.id)}
-                      >
-                        <div className="cross"></div>Decline
-                      </button>
-                      <button
-                        className="accept"
-                        onClick={() => handleAccept(invits.id)}
-                      >
-                        <div className="tick-mark"></div>Accept
-                      </button>
-                    </div>
-                  </div>
+  function FetchFriend () {
+    return  (     
+    <div className="notifPage">
+    <h2 className="notifTitle">Notifications</h2>
+    <div className="list">
+      {invits.map((invits) => {
+        return (
+          <div key={invits.id}>
+            <div className="notifsElements">
+              <div className="invits">
+                <Avatar size="50px" img={invits.avatarUrl} />
+                <p className="notifText">
+                  {invits.nickname} wants to be your Friend!
+                </p>
+                <div className="buttons">
+                  <button
+                    className="refuse"
+                    onClick={() => handleDecline(invits.id)}
+                  >
+                    <div className="cross"></div>Decline
+                  </button>
+                  <button
+                    className="accept"
+                    onClick={() => handleAccept(invits.id)}
+                  >
+                    <div className="tick-mark"></div>Accept
+                  </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    );
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>);
   }
 
+  //Faire une map pour afficher toutes invites a la suite
+  if (invits && invits[0] && invits[0].id > 0 && channelInvits.length > 0) {
+    return (
+      <>
+        <FetchFriend/>
+        <InviteChannel/>
+      </>
+    );
+  } else if (channelInvits.length > 0){
+    return (
+    <InviteChannel/>);
+  } else if (invits && invits[0] && invits[0].id > 0){
+    return (
+    <FetchFriend/>);
+  }
+  else
   return (
     <div className="noNotifTitle">
       <h2>No Notifications</h2>

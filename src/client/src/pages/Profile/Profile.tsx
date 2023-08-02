@@ -117,7 +117,6 @@ function FriendRequest(props: FriendRequestProps) {
   const token = localStorage.getItem("token");
 
   const handleAddFriend = async () => {
-    console.log("ADD FRIEND: ", props.data.id);
     await axios
       .put(apiBaseURL + `user/request/${props.data.id}`, null, {
         headers: {
