@@ -7,13 +7,27 @@
 
     text-align: center;
     justify-content: center;
+    overflow-y: auto;
+}
+
+.gameBox {
+    display: flex;
+    gap: 10px;
+
+    flex-direction: column;
 }
 
 .gameScreen {
-    box-sizing: border-box;
     display: flex;
+    box-sizing: border-box;
 
     aspect-ratio: 16 / 9;
+}
+
+.players {
+    display: flex;
+    justify-content: center;
+    text-align: center;
 }
 
 .chatBox {
@@ -39,11 +53,11 @@
     }
 
     .chatBox {
-        max-height: 58%;
+        max-height: 50%;
     }
 }
 
-@media screen and (width >= 800px) and (width < 1500px) {
+@media screen and (width >= 800px) and (width < 1600px) {
     .gamePage {
         flex-direction: column;
         height: var(--vp-size);
@@ -51,7 +65,8 @@
     }
 
     .gameScreen {
-        height: 50%;
+        width: 90%;
+        justify-content: center;
     }
 
     .chatBox {
@@ -60,7 +75,7 @@
     }
 }
 
-@media screen and (width >= 1500px) {
+@media screen and (width >= 1600px) {
     .gamePage {
         flex-direction: row;
         min-width: 1600px;
@@ -70,6 +85,7 @@
     .gameScreen {
         width: 50%;
         height: 50%;
+        justify-content: center;
     }
 
     .chatBox {

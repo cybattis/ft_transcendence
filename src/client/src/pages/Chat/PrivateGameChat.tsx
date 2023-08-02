@@ -35,21 +35,29 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
 
   function Buttons() {
     
-    return <div className="buttons-form">
+    return <>
         <div className="ctn-btn-action">
-            {!isMute && <img src={unmuteLogo} alt={"logo notif"} width={50} height={50} onClick={handleMute}></img>}
-            {isMute && <img src={muteLogo} alt={"logo notif"} width={50} height={50} onClick={handleMute}></img>}
+            {!isMute && <img src={unmuteLogo} width={50} height={50} onClick={handleMute}></img>}
+            {isMute && <img src={muteLogo} width={50} height={50} onClick={handleMute}></img>}
         </div>
-    </div>
+    </>
   }
 
   function ChatMap({ messages }: { messages: GameChatInterface[] }) {
 
-    useEffect(() => {}, [messages]);
+    useEffect(() => {
+      function scrollbar(){
+        const scr = document.getElementById("list-gamemsg-container");
+        if (scr) scr.scrollTop += scr.clientHeight;
+        console.log(scr?.clientHeight);
+      }
+
+      scrollbar();
+    }, [messages]);
 
     return (
       <>
-        <ul className="list-gamemsg-container">
+        <ul id="list-gamemsg-container" className="list-gamemsg-container">
           {messages
             .filter((messages) => props.canal ? messages.channel === props.canal : null)
             .map((messages) =>
@@ -126,19 +134,19 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
     return () => {
       ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
     }
-  }, [msgNum, me, other, props]);
+  }, [msgNum, me, other, props, isMute]);
 
   return (
     <div className="gamechat-div">
       <div className='gamechat'>
         <div className='gamechat-container'>
-          <Buttons />
-          <div className="rcv-gamemess-container">
+          <div className="rcv-gamemess-container" id="rcv-gamemess-container">
             <ChatMap messages={all} />
           </div>
           <div className='send-gamemess-container'>
             <input className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
             <button className="btn-gamechat-principal" onClick={sendMessage}>Send</button>
+            <Buttons />
           </div>
         </div>
       </div>

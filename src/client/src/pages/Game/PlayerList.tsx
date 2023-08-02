@@ -14,14 +14,15 @@ export default function PlayerList(props: {playerOne: PlayerInterface | undefine
     {
         return <div className="playerList">
             <div>
-                <div className="friendsImg">
+                <div className="playerAvatar">
                     <Avatar size="50px" img={props.playerOne.avatar} />
                 </div>
                 <h5>{props.playerOne.username}</h5>
                 <div>Elo: {props.playerOne.elo}</div>
             </div>
+            <h3 className="vs">VS</h3>
             <div>
-                <div className="friendsImg">
+                <div className="playerAvatar">
                     <Avatar size="50px" img={props.playerTwo.avatar} />
                 </div>
                 <h5>{props.playerTwo.username}</h5>

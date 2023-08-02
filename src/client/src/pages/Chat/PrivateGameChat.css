@@ -56,6 +56,12 @@
 }
 
 .send-gamemess-container {
+    display: flex;
+
+    flex-direction: row;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
     width: 100%;
 }
 

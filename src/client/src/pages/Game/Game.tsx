@@ -71,7 +71,9 @@ export function Game() {
           paddleColor={rgb}
           />
       </div>
-      <PlayerList playerOne={playerOne} playerTwo={playerTwo}/>
+      <div className="players">
+        <PlayerList playerOne={playerOne} playerTwo={playerTwo}/>
+      </div>
       <div className="chatBox">
         <PrivateGameChat playerOne={p1} playerTwo={p2} canal={canal} myUsername={myUsername}/>
       </div>
