@@ -291,6 +291,7 @@ export namespace ChatClientSocket {
 
   export function joinGameChat(joinGame: { canal: string }) {
     if (!checkChatConnection()) return;
+    console.log("GAME: ", joinGame);
     socket.emit("joinGame", joinGame);
   }
 

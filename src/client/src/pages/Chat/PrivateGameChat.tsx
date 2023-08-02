@@ -3,6 +3,8 @@ import { GameChatInterface } from "./Interface/gamechat.interface";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import { ChatClientSocket } from "./Chat-client";
+import muteLogo from "../../resource/muted-logo.png";
+import unmuteLogo from "../../resource/unmuted-logo.png";
 import "./PrivateGameChat.css";
 
 const allMessages: any = [];
@@ -28,57 +30,15 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   }
 
   const handleMute = async () => {
-    let sendMute;
-    if (props.playerOne === props.myUsername)
-    {
-        sendMute = {
-            cmd: "mute",
-            username: props.playerOne,
-            target: props.playerTwo,
-            channel: props.canal,
-        };
-    }
-    else {
-        sendMute = {
-            cmd: "mute",
-            username: props.playerTwo,
-            target: props.playerOne,
-            channel: props.canal,
-        };
-    }
-    ChatClientSocket.mute(sendMute);
-  }
-
-  const handleUnMute = async () => {
-    let sendMute;
-    if (props.playerOne === props.myUsername)
-    {
-        sendMute = {
-            cmd: "mute",
-            username: props.playerOne,
-            target: props.playerTwo,
-            channel: props.canal,
-        };
-    }
-    else {
-        sendMute = {
-            cmd: "mute",
-            username: props.playerTwo,
-            target: props.playerOne,
-            channel: props.canal,
-        };
-    }
-    ChatClientSocket.unMute(sendMute);
+    setIsMute(!isMute);
   }
 
   function Buttons() {
     
-    //Mettre icone en haut a droit du channel pour mute
-    return <></>
     return <div className="buttons-form">
         <div className="ctn-btn-action">
-            {!isMute && <button className="chat-buttons" onClick={handleMute}>Mute</button>}
-            {isMute && <button className="chat-buttons" onClick={handleUnMute}>UnMute</button>}
+            {!isMute && <img src={unmuteLogo} alt={"logo notif"} width={50} height={50} onClick={handleMute}></img>}
+            {isMute && <img src={muteLogo} alt={"logo notif"} width={50} height={50} onClick={handleMute}></img>}
         </div>
     </div>
   }
@@ -126,7 +86,6 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   };
   
   useEffect(() => {
-
     const fetchgameInfo = async () => {
         if (props.playerOne === props.myUsername)
         {
@@ -141,6 +100,8 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
 
     fetchgameInfo();
 
+    ChatClientSocket.joinGameChat({ canal: props.canal});
+
     const gameMessageCallBack = async (data: { sender: string, opponent: string, msg: string, channel: string, blockedUsers: any }) => {
       const newObj = {
         id: msgNum,
@@ -150,34 +111,34 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
         channel: data.channel,
         blockedUsers: data.blockedUsers,
       };
-      allMessages.push(newObj);
+      if (!isMute || (isMute && data.sender == me))
+        allMessages.push(newObj);
       const newData: GameChatInterface[] = [];
       for (let i = 0; allMessages[i]; i++)
         newData.push(allMessages[i]);
       setAll(newData);
-      setMsgNum(msgNum + 1);
+      if (!isMute || (isMute && data.sender == me))
+        setMsgNum(msgNum + 1);
     }
         
     ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
-    ChatClientSocket.joinGameChat({ canal: props.canal});
 
     return () => {
       ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
     }
-  }, [msgNum, me, other]);
+  }, [msgNum, me, other, props]);
 
   return (
-    <div className="chat-div">
-      <h1>Game Chat</h1>
-      <div className='chat'>
-        <div className='chat-container'>
+    <div className="gamechat-div">
+      <div className='gamechat'>
+        <div className='gamechat-container'>
           <Buttons />
-          <div className="rcv-mess-container">
+          <div className="rcv-gamemess-container">
             <ChatMap messages={all} />
           </div>
-          <div className='send-mess-container'>
+          <div className='send-gamemess-container'>
             <input className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
-            <button className="btn-chat-principal" onClick={sendMessage}>Send</button>
+            <button className="btn-gamechat-principal" onClick={sendMessage}>Send</button>
           </div>
         </div>
       </div>

@@ -58,6 +58,17 @@ export class UserController {
     return this.userService.userInfo(token, username);
   }
 
+  @UseGuards(TokenGuard)
+  @Get('myProfile')
+  async getUserInfo(
+    @Headers('Authorization') header: Headers,
+  ): Promise<UserInfo | any> {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return this.userService.myInfo(payload.id);
+  }
+
   @Get('check/login/:input')
   async checkNicknameInUse(@Param('input') input: string) {
     return await this.userService.findByLogin(input);

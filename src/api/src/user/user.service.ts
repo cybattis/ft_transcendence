@@ -110,6 +110,34 @@ export class UserService implements OnModuleInit {
     return user;
   }
 
+  async myInfo(token: number): Promise<UserInfo | any> {
+    const user: User | null = await this.usersRepository.findOne({
+      select: {
+        id: true,
+        nickname: true,
+        level: true,
+        ranking: true,
+        avatarUrl: true,
+        totalGameWon: true,
+        xp: true,
+        games: true,
+        friendsId: true,
+        requestedId: true,
+        blockedId: true,
+        blockedById: true,
+        websocket: true,
+        paddleColor: true,
+      },
+      where: {
+        id: token,
+      },
+    });
+
+    if (!user) throw new BadRequestException('User does not exist');
+    user.games = await this.gameService.fetchUserGames(user);
+    return user;
+  }
+
   async leaderboard(): Promise<UserInfo[] | any> {
     return this.usersRepository.find({
       order: { ranking: 'DESC' },

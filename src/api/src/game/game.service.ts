@@ -194,21 +194,27 @@ export class GameService implements OnModuleInit {
     const games: any = await this.findUserGames(id);
     if (games)
     {
-      console.log(games);
       for (let i = 0; games[i]; i ++)
       {
         if (games[i].status !== "Finished" && games[i].status !== "Player disconnected")
         {
           const actualGame: Game = games[i];
-          console.log("MY GAME: ", actualGame);
           const playerOne: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[0]}});
           const playerTwo: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[1]}});
           if (playerOne && playerTwo)
           {
             const result = {
               id: actualGame.id,
-              playerOne: playerOne.nickname,
-              playerTwo: playerTwo.nickname,
+              playerOne: {
+                username: playerOne.nickname,
+                avatar: playerOne.avatarUrl,
+                elo: playerOne.ranking,
+              },
+              playerTwo: {
+                username: playerTwo.nickname,
+                avatar: playerTwo.avatarUrl,
+                elo: playerTwo.ranking,
+              },
               mode: actualGame.mode,
               type: actualGame.type,
             }
