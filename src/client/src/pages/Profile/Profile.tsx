@@ -281,12 +281,6 @@ function PaddleColor(props: { oldColor: RgbColor }) {
           </div>
         </div>
       </div>
-      {showSuccess ? (
-        <MessageModal
-          msg={"Color updated successfully!"}
-          onClose={() => setShowSuccess(false)}
-        />
-      ) : null}
     </>
   );
 }

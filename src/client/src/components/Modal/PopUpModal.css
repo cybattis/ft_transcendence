@@ -55,5 +55,5 @@ dialog[open] {
 }
 
 dialog[close] {
-    animation: toggle-modal 3s ease-in-out;
+    animation: toggle-modal 0.2s ease-in-out;
 }
