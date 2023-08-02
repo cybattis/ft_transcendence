@@ -25,6 +25,7 @@ import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
 import { TokenData } from '../type/jwt.type';
+import {TypeCheckers} from "../utils/type-checkers";
 
 @Controller('user')
 export class UserController {
@@ -57,6 +58,22 @@ export class UserController {
   ): Promise<UserInfo | any> {
     const token = header.toString().split(' ')[1];
     return this.userService.userInfo(token, username);
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('my-profile')
+  async myProfile(
+    @Headers('Authorization') header: Headers
+  ): Promise<UserInfo | any> {
+    const tokens = header.toString().split(' ');
+    if (tokens.length !== 2)
+      throw new BadRequestException();
+
+    const decoded = this.jwtService.decode(tokens[1]);
+    if (!TypeCheckers.isTokenData(decoded))
+      throw new BadRequestException();
+
+    return this.userService.findByID(decoded.id);
   }
 
   @Get('check/login/:input')
