@@ -2,12 +2,12 @@ import { Link, Navigate } from "react-router-dom";
 import "./NavButton.css";
 import { apiBaseURL } from "../../utils/constant";
 import axios from "axios";
-import { useContext, useEffect } from "react";
-import { AuthContext, NotifContext } from "../Auth/dto";
+import {useContext, useEffect, useState} from "react";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
+import {AuthContext} from "../Auth/auth.context";
 
 export function NavButton(props: {
   link: string;
@@ -30,12 +30,12 @@ export function PlayButton(props: { text: string; link: string }) {
 }
 
 export function DisconnectButton(props: { callback?: () => void }) {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
 
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
-    setAuthToken(null);
+    setAuthed(false);
     ChatClientSocket.disconnect();
 
     const token: string | null = localStorage.getItem("token");
@@ -73,59 +73,64 @@ export function DisconnectButton(props: { callback?: () => void }) {
   );
 }
 
-function BellNotif() {
-  const { notif, setNotif } = useContext(NotifContext);
-  const { setAuthToken } = useContext(AuthContext);
+function BellNotif({hasNotifs, setHasNotifs}: { hasNotifs: boolean, setHasNotifs: (value: boolean) => void}) {
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(PopupContext);
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      let JWTToken = localStorage.getItem("token");
-      if (JWTToken) {
+      let token = localStorage.getItem("token");
+      if (token) {
         await axios
           .get(apiBaseURL + "user/notifs", {
-            headers: { Authorization: `Bearer ${JWTToken}` },
+            headers: { Authorization: `Bearer ${token}` },
           })
           .then((res) => {
-            if (res.data) setNotif(true);
+            if (res.data) setHasNotifs(true);
           })
           .catch((error) => {
             if (error.response === undefined) {
               setErrorMessage("Error unknown...");
             } else if (error.response.status === 403) {
               localStorage.clear();
-              setAuthToken(null);
+              setAuthed(false);
               setErrorMessage("Session expired, please login again!");
+              return <Navigate to={"/"} />;
             } else setErrorMessage(error.response.data.message + "!");
           });
+      } else {
+        setAuthed(false);
+        setErrorMessage("Session expired, please login again!");
+        return <Navigate to={"/"} />;
       }
     };
 
     fetchNotifs().then(() => {});
 
-    ChatClientSocket.onNotificationEvent(fetchNotifs);
+    const notifHandler = () => {
+      setHasNotifs(true);
+    };
+
+    ChatClientSocket.onNotificationEvent(notifHandler);
+
+    return () => {
+      ChatClientSocket.offNotificationEvent(notifHandler);
+    }
   }, []);
 
-  if (token === null) {
-    setAuthToken(null);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+  const logo: string = hasNotifs ? notifsLogoOn : notifsLogo;
 
-  if (!notif)
-    return (
-      <img src={notifsLogo} alt={"logo notif"} width={45} height={45}></img>
-    );
   return (
-    <img src={notifsLogoOn} alt={"logo notif"} width={45} height={45}></img>
+    <img src={logo} alt={"logo notif"} width={45} height={45}/>
   );
 }
 
 export function Notification() {
+  const [hasNotifs, setHasNotifs] = useState(false);
+
   return (
-    <Link to={`/notifications`} className="notifs">
-      <BellNotif />
+    <Link to={`/notifications`} className="notifs" onClick={() => {setHasNotifs(false)}} >
+      <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
       Notifs
     </Link>
   );

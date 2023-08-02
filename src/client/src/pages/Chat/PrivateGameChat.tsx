@@ -19,13 +19,14 @@ export default function PrivateGameChat() {
   //Si user est bloque faire en sorte que rien ne marche dans le chat
 
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token!);
+  let payload: JwtPayload;
 
-  let decoded: JwtPayload | null = null;
-  try {
-    decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-    console.log(`Decode error ${e}`);
+  if (token) {
+    try {
+      payload = jwt_decode(token);
+    } catch (e) {
+      console.log(`Decode error ${e}`);
+    }
   }
 
   const handleMute = async () => {
@@ -99,7 +100,7 @@ export default function PrivateGameChat() {
                 canal ? messages.channel === canal : messages.channel === canal
               )
               .map((messages) =>
-                messages.emitter === decoded?.nickname ? (
+                messages.emitter === payload?.nickname ? (
                   <li className="Emt" key={messages.id}>
                     <div className="contain-emt">{messages.emitter}</div>
                     <div className="contain-msg">{messages.content}</div>

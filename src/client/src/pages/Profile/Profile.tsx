@@ -10,7 +10,6 @@ import {
 } from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
-import { AuthContext } from "../../components/Auth/dto";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { PopupContext } from "../../components/Modal/Popup.context";
@@ -19,6 +18,7 @@ import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
 import { MessageModal } from "../../components/Modal/MessageModal";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 enum relationStatus {
   NONE,
@@ -36,7 +36,7 @@ interface FriendRequestProps {
 }
 
 function BlockUser(props: FriendRequestProps) {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
@@ -53,14 +53,13 @@ function BlockUser(props: FriendRequestProps) {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
           error.response.status === 400
         ) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else {
           setErrorMessage(error.response.data.message + "!");
@@ -113,7 +112,7 @@ function BlockUser(props: FriendRequestProps) {
 }
 
 function FriendRequest(props: FriendRequestProps) {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
@@ -137,7 +136,7 @@ function FriendRequest(props: FriendRequestProps) {
           error.response.status === 400
         ) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else {
           setErrorMessage(error.response.data.message + "!");
@@ -295,20 +294,19 @@ function PaddleColor(props: { oldColor: RgbColor }) {
 
 export function Profile() {
   let data: UserInfo = useLoaderData() as UserInfo;
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(PopupContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
   const [customization, setCustomization] = useState(false);
 
-  const token = localStorage.getItem("token");
-
   useEffect(() => {
+    const token = localStorage.getItem("token");
     if (!token) return;
     const payload: JwtPayload | null = jwt_decode(token);
 
     function checkFriendStatus(meData: UserFriend) {
-      if (!payload) return;
-      if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
+    if (!payload) return;
+    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))
@@ -345,14 +343,13 @@ export function Profile() {
         })
         .catch((error) => {
           if (error.response === undefined) {
-            // localStorage.clear();
             setErrorMessage("Error unknown...");
           } else if (
             error.response.status === 403 ||
             error.response.status === 400
           ) {
-            // localStorage.clear();
-            setAuthToken(null);
+            localStorage.clear();
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else {
             setErrorMessage(error.response.data.message + "!");
@@ -363,13 +360,11 @@ export function Profile() {
 
     fetchData().then(() => {});
     ChatClientSocket.onNotificationEvent(fetchData);
-  }, []);
 
-  if (token === null) {
-    setAuthToken(null);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+    return () => {
+      ChatClientSocket.offNotificationEvent(fetchData);
+    }
+  }, []);
 
   const winrate: number = calculateWinrate(data);
   const oldColor: RgbColor = {

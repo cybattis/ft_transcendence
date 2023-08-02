@@ -1,14 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, {useContext, useState} from "react";
 import axios from "axios";
 import Logo from "../Logo/Logo";
-import InputForm from "../InputForm";
+import InputForm from "../InputForm/InputForm";
 import "./Auth.css";
 import validator from "validator";
-import { FormContext } from "./dto";
-import { apiBaseURL } from "../../utils/constant";
+import {apiBaseURL} from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
-import { MessageModal } from "../Modal/MessageModal";
-import { PopupContext } from "../Modal/Popup.context";
+import {MessageModal} from "../Modal/MessageModal";
+import {PopupContext} from "../Modal/Popup.context";
+import {FormContext, FormState} from "./form.context";
 
 interface UserCredential {
   nickname: string;
@@ -19,7 +19,7 @@ interface UserCredential {
 }
 
 export default function Signup() {
-  const { setSignupForm, setLoginForm, setCodeForm } = useContext(FormContext);
+  const { setFormState } = useContext(FormContext);
   const { setErrorMessage } = useContext(PopupContext);
   const [errorInput, setErrorInput] = useState("");
   const [message, setMessage] = useState("");
@@ -142,7 +142,7 @@ export default function Signup() {
           msg={message}
           onClose={() => {
             setMessage("");
-            setSignupForm(false);
+            setFormState(FormState.NONE);
           }}
         />
       ) : (
@@ -187,9 +187,7 @@ export default function Signup() {
             <button
               className="bottomLink"
               onClick={() => {
-                setSignupForm(false);
-                setLoginForm(true);
-                setCodeForm(false);
+                setFormState(FormState.LOGIN);
               }}
             >
               Sign in!

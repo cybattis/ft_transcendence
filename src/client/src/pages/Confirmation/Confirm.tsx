@@ -1,12 +1,12 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { AuthContext } from "../../components/Auth/dto";
 import { apiBaseURL } from "../../utils/constant";
 import { PopupContext } from "../../components/Modal/Popup.context";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 async function ValidateEmail() {
-  const { setAuthToken } = React.useContext(AuthContext);
+  const { setAuthed } = React.useContext(AuthContext);
   const { setErrorMessage } = React.useContext(PopupContext);
 
   const location = useLocation();
@@ -18,7 +18,7 @@ async function ValidateEmail() {
       console.log(res.data);
       const data = res.data;
       localStorage.setItem("token", data);
-      setAuthToken(data);
+      setAuthed(true);
     })
     .catch((error) => {
       if (error.response === undefined) {
@@ -26,7 +26,7 @@ async function ValidateEmail() {
         setErrorMessage("Error unknown...");
       } else if (error.response.status === 403) {
         localStorage.clear();
-        setAuthToken(null);
+        setAuthed(false);
         setErrorMessage("Session expired, please login again!");
       } else setErrorMessage(error.response.data.message + "!");
     });

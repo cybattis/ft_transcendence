@@ -5,7 +5,6 @@ import ChannelList from "./List/ChannelList";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
-import { NotifContext } from "../../components/Auth/dto";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
@@ -193,11 +192,11 @@ export default function ChatClient() {
   });
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload | null = null;
+  let payload: JwtPayload;
 
-  if (username === "") {
+  if (username === "" && token) {
     try {
-      payload = jwt_decode(token!);
+      payload = jwt_decode(token);
       if (payload?.nickname) username = payload.nickname;
     } catch (e) {
       console.log(`Decode error ${e}`);

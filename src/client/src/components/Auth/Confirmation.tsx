@@ -1,17 +1,17 @@
 import React, { useContext } from "react";
 import axios from "axios";
-import InputForm from "../InputForm";
+import InputForm from "../InputForm/InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import { Navigate } from "react-router-dom";
-import { AuthContext } from "./dto";
 import "./Auth.css";
 import { apiBaseURL } from "../../utils/constant";
+import { AuthContext } from "./auth.context";
 
 export default function ConfirmEmail() {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const inputs = {
     code: "",
   };
@@ -44,7 +44,7 @@ export default function ConfirmEmail() {
       .then((res) => {
         const data = res.data;
         localStorage.setItem("token", data.token);
-        setAuthToken(data.token);
+        setAuthed(true);
         return <Navigate to="/" />;
       })
       .catch((error) => {

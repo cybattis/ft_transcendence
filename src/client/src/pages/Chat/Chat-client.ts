@@ -324,4 +324,8 @@ export namespace ChatClientSocket {
   export function onNotificationEvent(callback: notificationEventCallback) {
     notificationEventCallbacks.push(callback);
   }
+
+  export function offNotificationEvent(callback: notificationEventCallback) {
+    notificationEventCallbacks = notificationEventCallbacks.filter((cb) => cb !== callback);
+  }
 }
