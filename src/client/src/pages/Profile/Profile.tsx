@@ -117,7 +117,6 @@ function FriendRequest(props: FriendRequestProps) {
   const token = localStorage.getItem("token");
 
   const handleAddFriend = async () => {
-    console.log("ADD FRIEND: ", props.data.id);
     await axios
       .put(apiBaseURL + `user/request/${props.data.id}`, null, {
         headers: {
@@ -306,7 +305,7 @@ export function Profile() {
 
     function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
-    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
+    if (payload.id === data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))

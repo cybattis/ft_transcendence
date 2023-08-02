@@ -18,6 +18,6 @@ import { AuthModule } from 'src/auth/auth.module';
     ],
     controllers: [ChannelController, UserController],
     providers: [ChannelService, UserService],
-    exports: [ChannelService, ChannelModule],
+    exports: [ChannelService,]
 })
 export class ChannelModule {}

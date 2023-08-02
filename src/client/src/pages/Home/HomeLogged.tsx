@@ -370,7 +370,6 @@ export function HomeLogged() {
       if (!token) return;
       const payload: JwtPayload = jwt_decode(token);
 
-      console.log(payload);
       await axios
         .get(apiBaseURL + "user/profile/" + payload.nickname, {
           headers: {

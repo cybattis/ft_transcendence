@@ -18,15 +18,12 @@ function MobileNavBar() {
   const { setFormState } = useContext(FormContext);
 
   let username: string = "";
-  let id: string = "";
 
   const token = localStorage.getItem("token");
   if (token) {
     const decoded: JwtPayload = jwt_decode(token);
     if (decoded) username = decoded.nickname;
     else username = "";
-    if (decoded) id = decoded.id;
-    else id = "";
   }
 
   function handleSidePanel() {

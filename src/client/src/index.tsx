@@ -60,6 +60,28 @@ const router = createBrowserRouter([
             },
           },
           {
+            path: "my-profile",
+            element: <Profile />,
+            errorElement: <Error404 />,
+            loader: async ({ request, params }) => {
+              const res = await fetch(
+                apiBaseURL + "user/my-profile",
+                {
+                  headers: {
+                    Authorization:
+                      "Bearer " + localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 400)
+                throw new Response("User not found", { status: 400 });
+              else if (res.status === 403) {
+                localStorage.clear();
+              }
+              return res.json();
+            },
+          },
+          {
             path: "notifications",
             element: <AuthedRoute component={<Notifications/>} />,
           },
