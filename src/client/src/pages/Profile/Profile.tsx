@@ -10,7 +10,6 @@ import {
 } from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
-import { AuthContext } from "../../components/Auth/dto";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
@@ -19,6 +18,7 @@ import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
 import { MessageModal } from "../../components/Modal/MessageModal";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 enum relationStatus {
   NONE,
@@ -26,6 +26,7 @@ enum relationStatus {
   FRIEND,
   REQUESTED,
   BLOCKED,
+  BLOCKEDBY,
 }
 
 interface FriendRequestProps {
@@ -35,7 +36,7 @@ interface FriendRequestProps {
 }
 
 function BlockUser(props: FriendRequestProps) {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
 
@@ -46,16 +47,19 @@ function BlockUser(props: FriendRequestProps) {
           Authorization: `Bearer ${token}`,
         },
       })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.NONE);
+      })
       .catch((error) => {
         if (error.response === undefined) {
-          localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
           error.response.status === 400
         ) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else {
           setErrorMessage(error.response.data.message + "!");
@@ -70,6 +74,10 @@ function BlockUser(props: FriendRequestProps) {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .then((res) => {
+        ChatClientSocket.notificationEvent(props.data.id);
+        props.setStatus(relationStatus.BLOCKED);
       })
       .catch((error) => {
         console.log(error);
@@ -104,12 +112,11 @@ function BlockUser(props: FriendRequestProps) {
 }
 
 function FriendRequest(props: FriendRequestProps) {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token = localStorage.getItem("token");
 
   const handleAddFriend = async () => {
-    console.log("ADD FRIEND: ", props.data.id);
     await axios
       .put(apiBaseURL + `user/request/${props.data.id}`, null, {
         headers: {
@@ -122,14 +129,13 @@ function FriendRequest(props: FriendRequestProps) {
       })
       .catch((error) => {
         if (error.response === undefined) {
-          // localStorage.clear();
           setErrorMessage("Error unknown...");
         } else if (
           error.response.status === 403 ||
           error.response.status === 400
         ) {
           localStorage.clear();
-          setAuthToken(null);
+          setAuthed(false);
           setErrorMessage("Session expired, please login again!");
         } else {
           setErrorMessage(error.response.data.message + "!");
@@ -175,6 +181,14 @@ function FriendRequest(props: FriendRequestProps) {
           onClick={handleRemoveButton}
         >
           REMOVE FRIEND
+        </button>
+      </>
+    );
+  } else if (props.status === relationStatus.BLOCKEDBY) {
+    return (
+      <>
+        <button className="friendButton" type="button">
+          YOU ARE BLOCKED
         </button>
       </>
     );
@@ -279,32 +293,42 @@ function PaddleColor(props: { oldColor: RgbColor }) {
 
 export function Profile() {
   let data: UserInfo = useLoaderData() as UserInfo;
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
   const [customization, setCustomization] = useState(false);
 
-  const token = localStorage.getItem("token");
-  let payload: JwtPayload | null = null;
-  if (token) payload = jwt_decode(token as string);
-
-  function checkFriendStatus(meData: UserFriend) {
-    if (!payload) return;
-
-    if (payload.id == data.id.toString()) setFriendStatus(relationStatus.ME);
-    else if (meData.friendsId && meData.friendsId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.FRIEND);
-    else if (
-      meData.requestedId &&
-      meData.requestedId.includes(Number(payload.id))
-    )
-      setFriendStatus(relationStatus.REQUESTED);
-    else if (meData.blockedId && meData.blockedId.includes(Number(payload.id)))
-      setFriendStatus(relationStatus.BLOCKED);
-    else setFriendStatus(relationStatus.NONE);
-  }
-
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const payload: JwtPayload | null = jwt_decode(token);
+
+    function checkFriendStatus(meData: UserFriend) {
+    if (!payload) return;
+    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
+      else if (
+        meData.friendsId &&
+        meData.friendsId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.FRIEND);
+      else if (
+        meData.requestedId &&
+        meData.requestedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.REQUESTED);
+      else if (
+        meData.blockedById &&
+        meData.blockedById.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKED);
+      else if (
+        meData.blockedId &&
+        meData.blockedId.includes(Number(payload.id))
+      )
+        setFriendStatus(relationStatus.BLOCKEDBY);
+      else setFriendStatus(relationStatus.NONE);
+    }
+
     async function fetchData() {
       if (data.id === undefined) return;
       axios
@@ -318,14 +342,13 @@ export function Profile() {
         })
         .catch((error) => {
           if (error.response === undefined) {
-            // localStorage.clear();
             setErrorMessage("Error unknown...");
           } else if (
             error.response.status === 403 ||
             error.response.status === 400
           ) {
-            // localStorage.clear();
-            setAuthToken(null);
+            localStorage.clear();
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else {
             setErrorMessage(error.response.data.message + "!");
@@ -336,13 +359,11 @@ export function Profile() {
 
     fetchData().then(() => {});
     ChatClientSocket.onNotificationEvent(fetchData);
-  }, [checkFriendStatus]);
 
-  if (token === null) {
-    setAuthToken(null);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+    return () => {
+      ChatClientSocket.offNotificationEvent(fetchData);
+    }
+  }, []);
 
   const winrate: number = calculateWinrate(data);
   const oldColor: RgbColor = {
@@ -364,11 +385,13 @@ export function Profile() {
           </div>
           {friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
-              <FriendRequest
-                data={data}
-                status={friendStatus}
-                setStatus={setFriendStatus}
-              />
+              {friendStatus !== relationStatus.BLOCKED ? (
+                <FriendRequest
+                  data={data}
+                  status={friendStatus}
+                  setStatus={setFriendStatus}
+                />
+              ) : null}
               <BlockUser
                 data={data}
                 status={friendStatus}

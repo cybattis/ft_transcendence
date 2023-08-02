@@ -875,7 +875,7 @@ export class ChannelService implements OnModuleInit {
     this.sendFriendRequest(server, find.id);
   }
 
-  async AcceptInvitationChannel(channel: string, target: string) {
+  async AcceptInvitationChannel(server: Server, channel: string, target: string) {
     const find = await this.usersRepository.findOne({
       where: { nickname: target },
     });
@@ -884,13 +884,16 @@ export class ChannelService implements OnModuleInit {
       if (channel === find.joinChannel[index]) {
         find.joinChannel.splice(index, 1);
         await this.channelRepository.save(find);
+        const targetId = this.getSocketById(find.id);
+        if (!targetId) return;
+        server.to(targetId).emit('join', channel)
       }
     }
     // Channel n'existe plus
   }
 
   addUserSocketToList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string | null = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;
@@ -906,7 +909,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   removeUserSocketFromList(socket: Socket) {
-    const token: string = socket.handshake.auth.token as string;
+    const token: string | null = socket.handshake.auth.token;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;

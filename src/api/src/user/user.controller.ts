@@ -11,7 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -49,7 +49,8 @@ export class UserController {
   /*
    * GET /user/profile/:nickname
    * @desc Get user public info from nickname for profile page
-  */
+   */
+  @UseGuards(TokenGuard)
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,
@@ -102,10 +103,11 @@ export class UserController {
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: TokenData = jwt_decode(
-            req.headers.authorization?.split(' ')[1] as string,
-          );
-          const path = `./avatar/${userId.id}`;
+          const token = req.headers.authorization?.split(' ')[1];
+          if (!token)
+            throw new ForbiddenException('Token invalid, please login again.');
+          const data: TokenData = jwt_decode(token);
+          const path = `./avatar/${data.id}`;
 
           fs.mkdirSync(path, { recursive: true });
 
@@ -210,9 +212,7 @@ export class UserController {
 
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(
-    @Headers('Authorization') header: Headers,
-  ) {
+  async getBlockedList(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
@@ -228,8 +228,10 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    const blockedUser: User | null = await this.userService.findByLogin(username);
-    if (!blockedUser) throw new ForbiddenException("User does not exist");
+    const blockedUser: User | null = await this.userService.findByLogin(
+      username,
+    );
+    if (!blockedUser) throw new ForbiddenException('User does not exist');
     return await this.userService.blockFriend(blockedUser.id, payload.id);
   }
 
@@ -239,9 +241,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.blockFriend(id, payload.id);
   }
 
@@ -251,9 +254,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.unblockFriend(id, payload.id);
   }
 
@@ -281,7 +285,7 @@ export class UserController {
       header.toString().split(' ')[1],
     ) as TokenData;
 
-    console.log('friend request accepted by: ', id, userID.id);
+    console.log('friend request declined by: ', id, userID.id);
     return await this.userService.declineFriendRequest(id, userID.id);
   }
 

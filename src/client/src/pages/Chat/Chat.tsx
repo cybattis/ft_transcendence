@@ -9,7 +9,7 @@ import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
 import { apiBaseURL } from "../../utils/constant";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
 import { ErrorModalChat } from "../../components/Modal/ErrorModal";
@@ -43,9 +43,17 @@ export default function ChatClient() {
   });
 
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
-  let decoded: JwtPayload | null = null;
-  let username = payload.nickname;
+  let payload: JwtPayload;
+  let username = "";
+  
+  if (username === "" && token) {
+    try {
+      payload = jwt_decode(token);
+      if (payload?.nickname) username = payload.nickname;
+    } catch (e) {
+      console.log(`Decode error ${e}`);
+    }
+  }
   
   function takeActiveCanal(): string {
     const canal = document.getElementById('canal');
@@ -192,15 +200,6 @@ export default function ChatClient() {
           {buttonParam && <AffParam />}
         </>
       );
-  }
-
-  if (username === "") {
-    try {
-      decoded = jwt_decode(localStorage.getItem("token")!);
-      if (decoded?.nickname) username = decoded.nickname;
-    } catch (e) {
-      console.log(`Decode error ${e}`);
-    }
   }
 
   const handleButton = async (user: string) => {
@@ -461,7 +460,7 @@ export default function ChatClient() {
 
       async function getOpeList() {
         let name = takeActiveCanal();
-        if (name === defaultChannelGen) return ;
+        if (name === defaultChannelGen) return;
         if (name[0] === "#") name = name.slice(1);
         await axios
           .get(apiBaseURL + "chat-controller/channelName/" + name, {
@@ -471,7 +470,7 @@ export default function ChatClient() {
           })
           .then((res) => {
             if (!res.data) return;
-            if (res.data.operator.includes(payload.nickname)) setIsOpe(true);
+            if (res.data.operator.includes(payload?.nickname)) setIsOpe(true);
             if (res.data.ban.includes(usr)) setIsBan(true);
             if (res.data.mute.includes(usr)) setIsMute(true);
           })
@@ -481,7 +480,7 @@ export default function ChatClient() {
       }
       getOpeList();
 
-      if (usr === payload.nickname) setMe(true);
+      if (usr === payload?.nickname) setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
@@ -538,36 +537,40 @@ export default function ChatClient() {
     const [channelName, setChannelName] = useState("");
 
     useEffect(() => {
-      
       async function actifCanal() {
         let channel = takeActiveCanal();
-        if (channel[0] !== '#') {
-          let addressInfo = apiBaseURL + "chat-controller/channel/private/" + channel + "/" + username;
-          await axios.get(addressInfo, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((response) => {
-            setChannelName(response.data)
-          });
-        }
-        else
-        setChannelName(channel);
+        if (channel[0] !== "#") {
+          let addressInfo =
+            apiBaseURL +
+            "chat-controller/channel/private/" +
+            channel +
+            "/" +
+            username;
+          await axios
+            .get(addressInfo, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+            .then((response) => {
+              setChannelName(response.data);
+            });
+        } else setChannelName(channel);
       }
       actifCanal();
 
-      if (channelName === defaultChannelGen && messages.length === 0)
+      if (channelName === defaultChannelGen && messages.length === 0){
         fetchMessage(channelName);
+      }
          
       function scrollbar(){
         const scr = document.getElementById("rcv-mess-container");
         if (scr) scr.scrollTop += scr.clientHeight;
       }
 
-      scrollbar()
-    },);
-    
+      scrollbar();
+    });
+
     return (
       <>
         <ul className="list-msg-container">
@@ -678,12 +681,13 @@ export default function ChatClient() {
             "chat-controller/channel/find/" +
             state.channel +
             "/" +
-            state.pwd
-            , {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+            state.pwd,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (
           exists.data.status === 404 &&
           exists.data.name === "NotFoundException"
@@ -696,12 +700,13 @@ export default function ChatClient() {
           setErrorInput("Password mismatch.");
       } else {
         const exists = await axios.get(
-          apiBaseURL + "chat-controller/channel/findName/" + state.channel
-          , {
+          apiBaseURL + "chat-controller/channel/findName/" + state.channel,
+          {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
+          }
+        );
         if (
           exists.data.status === 404 &&
           exists.data.name === "NotFoundException"
@@ -791,21 +796,21 @@ export default function ChatClient() {
     useEffect(() => {
       async function requUser() {
         const url = apiBaseURL + "user";
-        await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setUsersList(response.data);
-        });
+        await axios
+          .get(url, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((response) => {
+            setUsersList(response.data);
+          });
       }
       requUser();
     }, []);
 
     const handleInvite = (target: string) => {
-      decoded = jwt_decode(localStorage.getItem("token")!);  
-      const id = decoded?.id
+      const id = payload?.id;
       const sendInv = { channel: takeActiveCanal(), target: target, id:  id};
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
@@ -901,14 +906,15 @@ export default function ChatClient() {
     useEffect(() => {
       async function requUser() {
         const url = apiBaseURL + "user";
-        await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setUsersList(response.data);
-        });
+        await axios
+          .get(url, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((response) => {
+            setUsersList(response.data);
+          });
       }
       requUser();
     }, []);
@@ -992,35 +998,38 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-
-    const messageCallBack = async (data: { sender: string, msg: string, channel: string }) => {
+    const messageCallBack = async (data: {
+      sender: string;
+      msg: string;
+      channel: string;
+    }) => {
       await fetchMessage(takeActiveCanal());
-    }
+    };
 
-    ChatClientSocket.onMessageRecieve(messageCallBack)
+    ChatClientSocket.onMessageRecieve(messageCallBack);
     if (!channelList.includes(defaultChannelGen)) {
       const send = { username: username, channel: defaultChannelGen };
       ChatClientSocket.joinChatServer(send);
     }
 
     const joinCallBack = (room: string) => {
-      if (room[0] !== '#')
-        room.indexOf(username) === 0 ? room = room.substring(username.length) : room = room.substring(0, room.length - username.length);
+      if (room[0] !== "#")
+        room.indexOf(username) === 0
+          ? (room = room.substring(username.length))
+          : (room = room.substring(0, room.length - username.length));
       if (!channelList.includes(room)) {
         channelList.push(room);
         setRoomChange(room);
         const canal = document.getElementById("canal");
-        if (canal)
-          canal.innerHTML = room;
+        if (canal) canal.innerHTML = room;
       }
-    }
+    };
 
     ChatClientSocket.onJoinChan(joinCallBack);
 
     const blockedCallBack = (target: string) => {
-      if (!blocedList.includes(target))
-        blocedList.push(target);
-    }
+      if (!blocedList.includes(target)) blocedList.push(target);
+    };
 
     ChatClientSocket.addBlockCb(blockedCallBack);
 
@@ -1085,6 +1094,10 @@ export default function ChatClient() {
     };
   }, [roomChange]);
 
+  if (!token) {
+    return <Navigate to={"/"} />;
+  }
+
   function choiceCmd(input: string): string {
     if (input.indexOf("/") === 0) {
       if (input.indexOf(" ") !== -1)
@@ -1093,36 +1106,43 @@ export default function ChatClient() {
     }
     return "/msg";
   }
-  
-  async function fetchMessage(channelFetch : string){
-    if (channelFetch[0] !== '#') {
-      let addressInfo = apiBaseURL + "chat-controller/message/" + channelFetch + "/" + username;
-      await axios.get(addressInfo, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then(response => {
-          setMessages(response.data);
+
+  async function fetchMessage(channelFetch: string) {
+    if (channelFetch[0] !== "#") {
+      let addressInfo =
+        apiBaseURL + "chat-controller/message/" + channelFetch + "/" + username;
+      await axios
+        .get(addressInfo, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
-      }
-    else {
-      channelFetch = channelFetch.substring(1);
-      let addressInfo = apiBaseURL + "chat-controller/message/channel/" + channelFetch + "/" + username;
-      await axios.get(addressInfo , {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(response => {
-        setMessages(response.data);
+        .then((response) => {
+          setMessages(response.data);
         });
-      }
+    } else {
+      channelFetch = channelFetch.substring(1);
+      let addressInfo =
+        apiBaseURL +
+        "chat-controller/message/channel/" +
+        channelFetch +
+        "/" +
+        username;
+      await axios
+        .get(addressInfo, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((response) => {
+          setMessages(response.data);
+        });
     }
+  }
 
   async function doCmd(cmd: string, msg: string) {
     let channel = takeActiveCanal();
-    const send = { username: username, channel: channel, msg: msg }
+    const send = { username: username, channel: channel, msg: msg };
     ChatClientSocket.send(send);
     fetchMessage(channel);
   }
@@ -1131,7 +1151,7 @@ export default function ChatClient() {
     setRoomChange(newString);
     fetchMessage(takeActiveCanal());
   }
-    
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -1161,7 +1181,7 @@ export default function ChatClient() {
             <Param canal={takeActiveCanal()} />
             <Quit canal={takeActiveCanal()} />
           </div>
-          
+
           <div id="rcv-mess-container">
             <ChatMap messages={messages} />
           </div>

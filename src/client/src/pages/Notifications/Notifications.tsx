@@ -3,18 +3,15 @@ import axios from "axios";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
-import { NotifContext } from "../../components/Auth/dto";
 import { Navigate } from "react-router-dom";
 import { ErrorContext } from "../../components/Modal/modalContext";
-import { AuthContext } from "../../components/Auth/dto";
 import { ChatClientSocket } from "../Chat/Chat-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 export default function Notifications() {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const token: string | null = localStorage.getItem("token");
-  const { setNotif } = useContext(NotifContext);
-
   const [invits, setInvits] = useState([
     {
       nickname: "",
@@ -147,16 +144,15 @@ export default function Notifications() {
             setErrorMessage("Error unknown...");
           } else if (error.response.status === 403) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else setErrorMessage(error.response.data.message + "!");
         });
     }
 
     async function fetchInvChannel() {
-      const urlInv = apiBaseURL + "user/request/channel";
       await axios
-        .get(urlInv, {
+        .get(apiBaseURL + "user/request/channel", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -179,7 +175,7 @@ export default function Notifications() {
 
 
   if (token === null) {
-    setAuthToken(null);
+    setAuthed(false);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
@@ -223,7 +219,6 @@ export default function Notifications() {
 
   //Faire une map pour afficher toutes invites a la suite
   if (invits && invits[0] && invits[0].id > 0 && channelInvits.length > 0) {
-    setNotif(true);
     return (
       <>
         <FetchFriend/>
@@ -231,14 +226,13 @@ export default function Notifications() {
       </>
     );
   } else if (channelInvits.length > 0){
-    setNotif(true);
     return (
     <InviteChannel/>);
   } else if (invits && invits[0] && invits[0].id > 0){
     return (
     <FetchFriend/>);
   }
-  else setNotif(false);
+  else
   return (
     <div className="noNotifTitle">
       <h2>No Notifications</h2>
