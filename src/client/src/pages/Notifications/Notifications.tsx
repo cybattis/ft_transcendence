@@ -97,13 +97,12 @@ export default function Notifications() {
   }
 
   function InviteChannel(){
-    console.log("Channel Invit", channelInvits);
     return (<>
       {
-        channelInvits.map((info) => (
+
+        channelInvits.map((info, i) => (
           <div className="ctnr-notif-channel">
-            <div className="invits-channel">
-              <div key={info}>
+            <div className="invits-channel" key={i}>
                 <p className="text-channel">
                   You are invited to the channel {info}
                 </p>
@@ -121,7 +120,6 @@ export default function Notifications() {
                     <div className="tick-mark"></div>Accept
                   </button>
                 </div>
-              </div>
             </div>
           </div>
         ))
@@ -176,6 +174,7 @@ export default function Notifications() {
     fetchFriends().then(() => {});
 
     ChatClientSocket.onNotificationEvent(fetchFriends);
+    ChatClientSocket.onNotificationEvent(fetchInvChannel);
   }, []);
 
 
@@ -223,19 +222,23 @@ export default function Notifications() {
   }
 
   //Faire une map pour afficher toutes invites a la suite
-  if (invits && invits[0] && invits[0].id > 0) {
+  if (invits && invits[0] && invits[0].id > 0 && channelInvits.length > 0) {
     setNotif(true);
     return (
-      <FetchFriend/>
+      <>
+        <FetchFriend/>
+        <InviteChannel/>
+      </>
     );
   } else if (channelInvits.length > 0){
     setNotif(true);
     return (
-    <InviteChannel/>)
-
-  } 
+    <InviteChannel/>);
+  } else if (invits && invits[0] && invits[0].id > 0){
+    return (
+    <FetchFriend/>);
+  }
   else setNotif(false);
-  
   return (
     <div className="noNotifTitle">
       <h2>No Notifications</h2>

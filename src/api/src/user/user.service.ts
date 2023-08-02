@@ -433,9 +433,10 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         invites: true,
+        joinChannel: true
       },
     });
-    if ((user && user.requestedId && user.requestedId[0]) || (user && user.invites && user.invites[0])) return true;
+    if ((user && user.joinChannel[0]) || (user && user.requestedId && user.requestedId[0]) || (user && user.invites && user.invites[0])) return true;
     return null;
   }
 

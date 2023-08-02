@@ -80,6 +80,7 @@ function BellNotif() {
             headers: { Authorization: `Bearer ${JWTToken}` },
           })
           .then((res) => {
+            console.log("Fetch Notif", res.data)
             if (res.data) setNotif(true);
           })
           .catch((error) => {

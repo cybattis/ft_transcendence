@@ -5,7 +5,6 @@ import ChannelList from "./List/ChannelList";
 import { JwtPayload } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
-import { NotifContext } from "../../components/Auth/dto";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
@@ -18,9 +17,6 @@ import ParamLogo from "../../resource/param-logo.png";
 import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";
 import InvLogo from "../../resource/invite-logo.png";
-
-
-
 
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
@@ -812,6 +808,7 @@ export default function ChatClient() {
       const id = decoded?.id
       const sendInv = { channel: takeActiveCanal(), target: target, id:  id};
       ChatClientSocket.inviteToChannel(sendInv);
+      setButtonInvitation(false);
     };
 
     function ListUsers() {

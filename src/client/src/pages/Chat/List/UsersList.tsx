@@ -5,6 +5,7 @@ import { JwtPayload } from "../../../type/client.type";
 import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
+import { ChatClientSocket } from "../Chat-client";
 
 export default function UsersList(props: {
   channel: string;
@@ -44,8 +45,9 @@ export default function UsersList(props: {
 
   useEffect(() => {
     fecthLists();
-  }, [props.channel, props.messages]);
+  }, [props.channel]);
 
+  
   function ListBan() {
     if (banList) {
       return (
