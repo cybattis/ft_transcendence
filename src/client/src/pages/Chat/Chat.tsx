@@ -19,159 +19,13 @@ import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";
 import InvLogo from "../../resource/invite-logo.png";
 
-const defaultChannelGen: string = "#general";
-const channelList: string[] = [];
-let username = "";
 
-function takeActiveCanal(): string {
-  const canal = document.getElementById('canal');
-  return canal ? canal.innerHTML : defaultChannelGen;
-}
 
-function Quit(props: { canal: string }) {
-  const handleQuitButton = () => {
-    const sendQuit = { cmd: "quit", username: username, channel: props.canal };
-    ChatClientSocket.quit(sendQuit);
-  };
-
-  if (props.canal !== defaultChannelGen && props.canal[0] === "#") {
-    return (
-      <button className="button-chat" onClick={handleQuitButton}>
-        <img
-          className="logo-chat"
-          src={QuitLogo}
-          alt="Quit Channel"
-          title={"Quit channel"}
-        />
-      </button>
-    );
-  }
-  return <></>;
-}
-
-function Param(props: { canal: string }) {
-  const token = localStorage.getItem("token");
-  const [buttonParam, setButtonParam] = useState(false);
-  const [owner, setOwner] = useState(false);
-  const channel = takeActiveCanal();
-
-  function AffParam() {
-    const [inputParam, setInputForm] = useState({
-      pwd: "",
-      selectedOption: "public",
-    });
-
-    const handleSubmitParam = async (e: React.SyntheticEvent) => {
-      e.preventDefault();
-      const channel = takeActiveCanal();
-      const sendParam = {
-        channel: channel,
-        type: inputParam.selectedOption,
-        pwd: inputParam.pwd,
-        username: username,
-      };
-      ChatClientSocket.updateChannel(sendParam);
-      setButtonParam(false);
-    };
-
-    const handleParam = (event: any) => {
-      event.preventDefault();
-
-      const value = event.target.value;
-      setInputForm({
-        ...inputParam,
-        [event.target.name]: value,
-      });
-    };
-
-    const handleSelectParam = (event: any) => {
-      if (event) {
-        const value = event.value;
-        inputParam.selectedOption = value;
-      }
-    };
-
-    const options = [
-      { value: "public", label: "Public" },
-      { value: "private", label: "Private" },
-      { value: "protected", label: "Protected" },
-    ];
-
-    return (
-      <div className="ctnr-param">
-        <h4>Setting Channel</h4>
-        <form className="form-param" method="get" onSubmit={handleSubmitParam}>
-          <Select
-            defaultValue={options[0]}
-            onChange={handleSelectParam}
-            options={options}
-          />
-          <label>
-            Password
-            <br />
-            <input
-              type="password"
-              name="pwd"
-              className="input-join"
-              onChange={handleParam}
-              value={inputParam.pwd}
-            />
-          </label>
-          <button type="submit" className="submitButton">
-            Change
-          </button>
-        </form>
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    async function isOwner() {
-      if (props.canal[0] != "#") {
-        setOwner(false);
-        return;
-      }
-      const channelB = channel.substring(1);
-      const sendOwner =
-        apiBaseURL +
-        "chat-controller/channel/owner/" +
-        channelB +
-        "/" +
-        username;
-      const bool = await axios.get(sendOwner, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      bool.data ? setOwner(true) : setOwner(false);
-    }
-
-    isOwner();
-  });
-
-  const btnParam = () => {
-    buttonParam ? setButtonParam(false) : setButtonParam(true);
-  };
-
-  if (!owner) return <></>;
-  else
-    return (
-      <>
-        <button className="button-chat" onClick={btnParam}>
-          <img
-            className="logo-chat"
-            src={ParamLogo}
-            alt="Param"
-            title={"Channel Param"}
-          />
-        </button>
-        {buttonParam && <AffParam />}
-      </>
-    );
-}
 
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
+const defaultChannelGen: string = "#general";
+const channelList: string[] = [];
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -195,7 +49,155 @@ export default function ChatClient() {
   const token = localStorage.getItem("token");
   const payload: JwtPayload = jwt_decode(token as string);
   let decoded: JwtPayload | null = null;
+  let username = payload.nickname;
   
+  function takeActiveCanal(): string {
+    const canal = document.getElementById('canal');
+    return canal ? canal.innerHTML : defaultChannelGen;
+  }
+  
+  function Quit(props: { canal: string }) {
+    const handleQuitButton = () => {
+      const sendQuit = { cmd: "quit", username: username, channel: props.canal };
+      ChatClientSocket.quit(sendQuit);
+    };
+  
+    if (props.canal !== defaultChannelGen && props.canal[0] === "#") {
+      return (
+        <button className="button-chat" onClick={handleQuitButton}>
+          <img
+            className="logo-chat"
+            src={QuitLogo}
+            alt="Quit Channel"
+            title={"Quit channel"}
+          />
+        </button>
+      );
+    }
+    return <></>;
+  }
+  
+  function Param(props: { canal: string }) {
+    const token = localStorage.getItem("token");
+    const [buttonParam, setButtonParam] = useState(false);
+    const [owner, setOwner] = useState(false);
+    const channel = takeActiveCanal();
+  
+    function AffParam() {
+      const [inputParam, setInputForm] = useState({
+        pwd: "",
+        selectedOption: "public",
+      });
+  
+      const handleSubmitParam = async (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        const channel = takeActiveCanal();
+        const sendParam = {
+          channel: channel,
+          type: inputParam.selectedOption,
+          pwd: inputParam.pwd,
+          username: username,
+        };
+        ChatClientSocket.updateChannel(sendParam);
+        setButtonParam(false);
+      };
+  
+      const handleParam = (event: any) => {
+        event.preventDefault();
+  
+        const value = event.target.value;
+        setInputForm({
+          ...inputParam,
+          [event.target.name]: value,
+        });
+      };
+  
+      const handleSelectParam = (event: any) => {
+        if (event) {
+          const value = event.value;
+          inputParam.selectedOption = value;
+        }
+      };
+  
+      const options = [
+        { value: "public", label: "Public" },
+        { value: "private", label: "Private" },
+        { value: "protected", label: "Protected" },
+      ];
+  
+      return (
+        <div className="ctnr-param">
+          <h4>Setting Channel</h4>
+          <form className="form-param" method="get" onSubmit={handleSubmitParam}>
+            <Select
+              defaultValue={options[0]}
+              onChange={handleSelectParam}
+              options={options}
+            />
+            <label>
+              Password
+              <br />
+              <input
+                type="password"
+                name="pwd"
+                className="input-join"
+                onChange={handleParam}
+                value={inputParam.pwd}
+              />
+            </label>
+            <button type="submit" className="submitButton">
+              Change
+            </button>
+          </form>
+        </div>
+      );
+    }
+  
+    useEffect(() => {
+      async function isOwner() {
+        if (props.canal[0] != "#") {
+          setOwner(false);
+          return;
+        }
+        const channelB = channel.substring(1);
+        const sendOwner =
+          apiBaseURL +
+          "chat-controller/channel/owner/" +
+          channelB +
+          "/" +
+          username;
+        const bool = await axios.get(sendOwner, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        bool.data ? setOwner(true) : setOwner(false);
+      }
+  
+      isOwner();
+    });
+  
+    const btnParam = () => {
+      buttonParam ? setButtonParam(false) : setButtonParam(true);
+    };
+  
+    if (!owner) return <></>;
+    else
+      return (
+        <>
+          <button className="button-chat" onClick={btnParam}>
+            <img
+              className="logo-chat"
+              src={ParamLogo}
+              alt="Param"
+              title={"Channel Param"}
+            />
+          </button>
+          {buttonParam && <AffParam />}
+        </>
+      );
+  }
+
   if (username === "") {
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
@@ -559,6 +561,9 @@ export default function ChatClient() {
       }
       actifCanal();
 
+      if (channelName === defaultChannelGen && messages.length === 0)
+        fetchMessage(channelName);
+         
       function scrollbar(){
         const scr = document.getElementById("rcv-mess-container");
         if (scr) scr.scrollTop += scr.clientHeight;
@@ -803,7 +808,9 @@ export default function ChatClient() {
     }, []);
 
     const handleInvite = (target: string) => {
-      const sendInv = { channel: takeActiveCanal(), target: target };
+      decoded = jwt_decode(localStorage.getItem("token")!);  
+      const id = decoded?.id
+      const sendInv = { channel: takeActiveCanal(), target: target, id:  id};
       ChatClientSocket.inviteToChannel(sendInv);
     };
 
@@ -831,7 +838,7 @@ export default function ChatClient() {
         </div>
       );
     }
-    if (props.canal[0] !== "#") {
+    if (props.canal[0] !== "#" || props.canal === "#general") {
       return <></>;
     } else {
       return (
@@ -1050,7 +1057,7 @@ export default function ChatClient() {
           channelList.push(data.username);
           setRoomChange(data.username);
           const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = data.username;
+          //if (canal) canal.innerHTML = data.username;
         }
       }
       if (data.username === username) {

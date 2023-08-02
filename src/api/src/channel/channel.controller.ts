@@ -1,4 +1,4 @@
-import {Controller, Get, Param, Delete, UseGuards, Headers} from '@nestjs/common';
+import {Controller, Put, Get, Param, Delete, UseGuards, Headers} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { GameChat } from './entity/GameChat.entity';
 import { Channel } from './entity/Channel.entity';
@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
+import { TokenData } from 'src/type/jwt.type';
 
 @UseGuards(TokenGuard)
 @Controller('chat-controller')
@@ -46,7 +47,6 @@ export class ChannelController {
         const payload: any = this.jwtService.decode(header.toString().split(' ')[1]);
         channel = "#" + channel;
         const listBlocked : string[] = await this.userService.getBlockedList(payload.id);
-        console.log("List Blocked", listBlocked);
         return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked]))} }));
     }
 
@@ -166,10 +166,34 @@ export class ChannelController {
     return false;
   }
 
-  @Get('gameChat/:channel')
+  @Get('/gameChat/:channel')
   async getGameChat(@Param('channel') channel: string) {
     return await this.gameChatRepository.findOne({
       where: { channel: channel },
     });
+  }
+  
+  @Put('request/:channel')
+  async acceptChannelRequest(
+    @Param('channel') channel:  string,
+    @Headers('Authorization') header: Headers,
+  )
+  {
+    const userID = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    ) as TokenData;
+    await this.channelService.acceptChannelRequest('#' + channel, userID.id);
+  }
+
+  @Put('decline/:channel')
+  async declineChannelRequest(
+    @Param('channel') channel:  string,
+    @Headers('Authorization') header: Headers,
+  )
+  {
+    const userID = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    ) as TokenData;
+    await this.channelService.declineChannelRequest('#' + channel, userID.id);
   }
 }

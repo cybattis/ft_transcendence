@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
 import { apiBaseURL } from '../utils/constant';
 import { TokenData } from '../type/jwt.type';
+import { Channel } from 'src/channel/entity/Channel.entity';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -99,6 +100,7 @@ export class UserService implements OnModuleInit {
         blockedById: true,
         websocket: true,
         paddleColor: true,
+        joinChannel: true,
       },
       where: {
         nickname: username,
@@ -527,4 +529,12 @@ export class UserService implements OnModuleInit {
 
     return user.paddleColor;
   }
+
+  async fetchInvChannel(id : string): Promise <string[] | null>{
+    const user =  await this.usersRepository.findOneBy({id :Number(id)});
+    if (user && user.joinChannel)
+      return user.joinChannel;
+    return null
+  }
+
 }
