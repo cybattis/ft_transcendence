@@ -40,7 +40,7 @@ function Logged() {
   return (
     <>
       <Notification />
-      <NavButton content={"Profile"} link={`/profile/${UserData.getNickname()}`} />
+      <NavButton content={"Profile"} link={"/my-profile"} />
       <NavButton content={"Settings"} link={"/settings"} />
       <DisconnectButton />
     </>
