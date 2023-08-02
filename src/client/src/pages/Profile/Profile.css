@@ -354,3 +354,9 @@
 
     cursor: pointer;
 }
+
+.customization-button-box {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
