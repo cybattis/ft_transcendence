@@ -267,9 +267,6 @@ export class ChannelService implements OnModuleInit {
   getSocketById(id: number): string | null {
     const user = this.userService.findByID(id);
     if (!user) return null;
-
-    console.log('User: ', user);
-
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (id === this.usersSocketList[index].id)
         return this.usersSocketList[index].socket;
@@ -378,8 +375,6 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: any,
   ) {
-    console.log('Join Channel: ', channel);
-
     if (channel === '#general') {
       const channelToUpdate = await this.channelRepository.findOne({
         where: { channel: channel },
@@ -570,8 +565,7 @@ export class ChannelService implements OnModuleInit {
     });
     if (chan && chan.mute.includes(sender)) return;
     const send = { sender, msg, channel, blockedChat };
-    const emiter = await this.userService.findByLogin(sender);
-    if (!emiter) return;
+    const emiter: any = await this.userService.findByLogin(sender);
     if (channel[0] === '#') {
       await this.chatRepository.save({
         channel: channel,
@@ -580,7 +574,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: emiter.id,
       });
       socket.broadcast.emit('rcv', send);
-      server.to(socket.id).emit('rcv', send);
+      server.to(socket.id).emit('rcv', send)
     } else {
       const target = this.getSocketByUsername(channel);
       const prv = { sender, msg, channel };
@@ -864,17 +858,24 @@ export class ChannelService implements OnModuleInit {
     await this.channelRepository.save(channelToUpdate);
   }
 
-  async JoinWithInvitation(channel: string, target: string) {
-    console.log('Inside Join Invit', channel, target);
-    const find = await this.usersRepository.findOne({
-      where: { nickname: target },
-    });
+  async JoinWithInvitation(server: Server, channel: string, target: string, id: number) {
+    const find = await this.usersRepository.findOneBy({ nickname: target });
     if (!find) return;
+    if (find.joinChannel.includes(channel))
+      return ;
+    const channetToJoin = await this.channelRepository.findOneBy({ channel: channel});
+    if (!channetToJoin)
+      return; // Channel inexistant
+    if (channetToJoin.ban.includes(target))
+      return; // Target is Ban
+    if (channetToJoin.users.includes(target))
+      return; // Is already present
     find.joinChannel.push(channel);
-    await this.channelRepository.save(find);
+    await this.usersRepository.save(find);
+    this.sendFriendRequest(server, find.id);
   }
 
-  async AcceptInvitationChannel(channel: string, target: string) {
+  async AcceptInvitationChannel(server: Server, channel: string, target: string) {
     const find = await this.usersRepository.findOne({
       where: { nickname: target },
     });
@@ -883,6 +884,9 @@ export class ChannelService implements OnModuleInit {
       if (channel === find.joinChannel[index]) {
         find.joinChannel.splice(index, 1);
         await this.channelRepository.save(find);
+        const targetId = this.getSocketById(find.id);
+        if (!targetId) return;
+        server.to(targetId).emit('join', channel)
       }
     }
     // Channel n'existe plus
@@ -902,7 +906,6 @@ export class ChannelService implements OnModuleInit {
     this.usersSocketList.push(
       new UsersSocketStructure(data.nickname, socket.id, data.id),
     );
-    console.log('SOCKET: ', this.usersSocketList);
   }
 
   removeUserSocketFromList(socket: Socket) {
@@ -913,8 +916,38 @@ export class ChannelService implements OnModuleInit {
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (data.nickname === this.usersSocketList[index].username) {
         this.usersSocketList.splice(index, 1);
-        console.log('SOCKET: ', this.usersSocketList);
         return;
+      }
+    }
+  }
+
+  async acceptChannelRequest(channel: string, id: number){
+    const user = await this.usersRepository.findOneBy( {id: id} )
+    if (user){
+      if(user.joinChannel.includes(channel)){
+        const channelToUpdate =  await this.channelRepository.findOneBy({channel: channel});
+        if (channelToUpdate)
+        {
+          channelToUpdate.users.push(user.nickname);
+          const pos: number = user.joinChannel.indexOf(channel);
+          user.joinChannel.splice(pos, 1);
+          await this.channelRepository.update(channelToUpdate.id, channelToUpdate);
+          await this.usersRepository.save(user);
+        }
+      }
+    }
+  }
+
+  async declineChannelRequest(channel: string, id: number){
+    const user = await this.usersRepository.findOneBy( {id: id} )
+    if (user){
+      if(user.joinChannel.includes(channel)){
+        const channelToUpdate =  await this.channelRepository.findOneBy({channel: channel});
+        if (channelToUpdate) {
+          const pos: number = user.joinChannel.indexOf(channel);
+          user.joinChannel.splice(pos, 1);
+          await this.usersRepository.save(user);
+        }
       }
     }
   }
