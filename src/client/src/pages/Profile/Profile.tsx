@@ -306,7 +306,7 @@ export function Profile() {
 
     function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
-    if (payload.id === data.id.toString()) setFriendStatus(relationStatus.ME);
+    if (payload.id === data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))
