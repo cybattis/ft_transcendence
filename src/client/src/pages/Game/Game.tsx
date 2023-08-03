@@ -39,7 +39,7 @@ export function Game() {
         console.log(error);
       });
 
-      await axios.get(apiBaseURL + "user/myProfile", {
+      await axios.get(apiBaseURL + "user/my-profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

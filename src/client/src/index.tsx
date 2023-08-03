@@ -1,8 +1,8 @@
-import React from "react";
+import React, {useContext} from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
@@ -11,11 +11,12 @@ import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
 import { Profile } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
-import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
+import {Leaderboard, LeaderboardLoader} from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 import { apiBaseURL } from "./utils/constant";
 import About from "./pages/About/About";
+import {AuthedRoute} from "./components/Auth/AuthedRoute";
 
 const router = createBrowserRouter([
   {
@@ -52,41 +53,45 @@ const router = createBrowserRouter([
               );
               if (res.status === 400)
                 throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) localStorage.clear();
+              else if (res.status === 403) {
+                localStorage.clear();
+              }
+              return res.json();
+            },
+          },
+          {
+            path: "my-profile",
+            element: <Profile />,
+            errorElement: <Error404 />,
+            loader: async ({ request, params }) => {
+              const res = await fetch(
+                apiBaseURL + "user/my-profile",
+                {
+                  headers: {
+                    Authorization:
+                      "Bearer " + localStorage.getItem("token") || "",
+                  },
+                }
+              );
+              if (res.status === 400)
+                throw new Response("User not found", { status: 400 });
+              else if (res.status === 403) {
+                localStorage.clear();
+              }
               return res.json();
             },
           },
           {
             path: "notifications",
-            element: <Notifications />,
+            element: <AuthedRoute component={<Notifications/>} />,
           },
           {
             path: "leaderboard",
-            element: <Leaderboard />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(apiBaseURL + "user/leaderboard", {
-                headers: {
-                  Authorization:
-                    "Bearer " + localStorage.getItem("token") || "",
-                },
-              });
-              if (res.status === 403) localStorage.clear();
-              return res.json();
-            },
+            element: <AuthedRoute component={<LeaderboardLoader/>} />,
           },
           {
             path: "settings",
-            element: <Settings />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(apiBaseURL + "user/settings/", {
-                headers: {
-                  Authorization:
-                    "Bearer " + localStorage.getItem("token") || "",
-                },
-              });
-              if (res.status === 403) localStorage.clear();
-              return res.json();
-            },
+            element: <AuthedRoute component={<Settings/>} />,
           },
           {
             path: "game",

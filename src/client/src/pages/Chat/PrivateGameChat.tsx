@@ -20,7 +20,7 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   //Si user est bloque faire en sorte que rien ne marche dans le chat
 
   const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
+  let payload: JwtPayload;
 
   let decoded: JwtPayload | null = null;
   try {

@@ -22,6 +22,6 @@ import { CacheModule } from '@nestjs/cache-manager';
   ],
   controllers: [AuthController, UserController],
   providers: [AuthService, UserService],
-  exports: [AuthService, AuthModule, JwtModule],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

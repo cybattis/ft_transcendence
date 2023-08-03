@@ -85,7 +85,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     !data.username ? (username = '') : (username = data.username);
     !data.password ? (pass = '') : (pass = data.password);
     !data.type ? (type = '') : (type = data.type);
-
+    if (username === '')
+      return;
     await this.channelService.joinOldChannel(socket, username);
 
     const blockedUsers = await this.userService.findByLogin(data.username);
@@ -131,7 +132,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: { username: string; target: string },
   ) {
-    console.log('Private :', data.username, data.target);
     await this.channelService.sendPrvMess(
       this.server,
       socket,
@@ -194,7 +194,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: any,
   ) {
-    console.log(`Quit : ${data.channel}`);
     await this.channelService.quitChannel(
       data.cmd,
       data.username,
@@ -255,7 +254,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         data.channel,
       )
     ) {
-      console.log(`Bien le sur ${data.target}`);
       const target = this.channelService.getSocketByUsername(data.target);
       if (target) {
         this.server.to(target).emit('quit', data.channel);
@@ -285,7 +283,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() targetID: number,
   ) {
-    console.log(`server send Friend request`);
     this.channelService.sendFriendRequest(this.server, targetID);
   }
 
@@ -294,23 +291,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() target: number,
   ) {
-    console.log(`notify event`);
     const targetSocket = this.channelService.getSocketById(target);
     if (!targetSocket) {
       console.log(`socket not found`);
       return;
     }
-
-    console.log(`server send notification to ${targetSocket}`);
     this.server.to(targetSocket).emit('notification');
   }
 
   @SubscribeMessage('inv')
   async handleInvitation(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { channel: string; target: string },
+    @MessageBody() data: { channel: string; target: string, id: number },
   ) {
-    await this.channelService.JoinWithInvitation(data.channel, data.target);
+    await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, data.id);
   }
 
   @SubscribeMessage('acc')
@@ -319,6 +313,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { channel: string; target: string },
   ) {
     await this.channelService.AcceptInvitationChannel(
+      this.server,
       data.channel,
       data.target,
     );

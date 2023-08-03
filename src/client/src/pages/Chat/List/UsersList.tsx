@@ -5,6 +5,7 @@ import { JwtPayload } from "../../../type/client.type";
 import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
+import { ChatClientSocket } from "../Chat-client";
 
 export default function UsersList(props: {
   channel: string;
@@ -15,37 +16,37 @@ export default function UsersList(props: {
   const [muteList, setMuteList] = useState([]);
   const [isOpe, setIsOpe] = useState(false);
 
-  const token = localStorage.getItem("token");
-  const payload: JwtPayload = jwt_decode(token as string);
-
-  async function fecthLists() {
-    if (!props.channel || !props.channel[0]) return;
-    setIsOpe(false);
-    let canal = props.channel;
-    if (canal[0] === "#") canal = canal.slice(1);
-    else return <></>;
-
-    await axios
-      .get(apiBaseURL + "chat-controller/channelName/" + canal, {
-        headers: {
-          token: token,
-        },
-      })
-      .then((res) => {
-        if (res.data.operator.includes(payload.nickname)) setIsOpe(true);
-        setUsersList(res.data.users);
-        setBanList(res.data.ban);
-        setMuteList(res.data.mute);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
   useEffect(() => {
-    fecthLists();
-  }, [props.channel, props.messages]);
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const payload: JwtPayload = jwt_decode(token);
+    async function fecthLists() {
+      if (!props.channel || !props.channel[0]) return;
+      setIsOpe(false);
+      let canal = props.channel;
+      if (canal[0] === "#") canal = canal.slice(1);
+      else return <></>;
 
+      await axios
+        .get(apiBaseURL + "chat-controller/channelName/" + canal, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then((res) => {
+          if (res.data.operator.includes(payload.nickname)) setIsOpe(true);
+          setUsersList(res.data.users);
+          setBanList(res.data.ban);
+          setMuteList(res.data.mute);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+    fecthLists();
+  }, [props.channel]);
+
+  
   function ListBan() {
     if (banList) {
       return (

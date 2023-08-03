@@ -6,29 +6,37 @@
     display: flex;
     flex-direction: column;
     height: auto;
-    width: auto;
     margin: 20px;
     align-items: center;
+}
+
+.invites-elements {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
 }
 
 .list {
     display: flex;
     align-items: center;
     flex-direction: column;
-    overflow-y: auto;
-    width: 100%;
 }
 
 .notifTitle {
     display: flex;
     justify-content: center;
     align-items: center;
+    text-align: center;
 }
 
 .noNotifTitle {
     display: flex;
     align-items: center;
     justify-content: center;
+    text-align: center;
     height: var(--vp-size);
 }
 
@@ -36,10 +44,10 @@
     box-sizing: border-box;
     display: flex;
     
-    width: 100%;
     height: 15%;
     flex-direction: row;
-    padding: 5px 10px 5px 20px;
+    gap: 10px;
+    padding: 5px 5px 5px 20px;
 
     align-items: center;
     justify-content: center;
@@ -55,7 +63,6 @@
     align-items: center;
     justify-content: center;
     font-size: auto;
-    width: 100%;
 }
 
 .buttons {
@@ -158,4 +165,63 @@
     width: 4px;
     background-color: white;
     transform: rotate(-45deg);
+}
+
+.visible {
+    width: 100px;
+    height: 100px;
+    background-color: red;
+}
+
+.ctnr-notif-channel{ 
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: auto;
+    margin: 20px;
+    align-items: center;
+}
+
+.invits-channel{
+    box-sizing: border-box;
+    display: flex;
+    
+    width: 80%;
+    flex-direction: row;
+    padding: 5px 10px 5px 20px;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+    border: 2px solid var(--dark-grey);
+    background-color: var(--black);
+}
+
+.text-channel {
+    margin : 20px;
+}
+
+@media screen and (width < 800px) {
+    .invits {
+        width: 450px;
+    }
+}
+
+@media screen and (width >= 800px) and (width < 1200px) {
+    .invits {
+        width: 800px;
+    }
+}
+
+@media screen and (width >= 1200px) and (width < 1800px) {
+    .invits {
+        width: 1100px;
+    }
+}
+
+@media screen and (width >= 1800px) {
+    .invits {
+        width: 1500px;
+    }
 }

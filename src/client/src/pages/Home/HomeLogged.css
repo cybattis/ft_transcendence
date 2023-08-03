@@ -82,6 +82,7 @@
     justify-content: center;
     margin: 0;
     padding: 0;
+    font-size: max(1vw, 60px);
 }
 
 .game-mode {
@@ -102,26 +103,111 @@
 .game-mode-button {
     box-sizing: border-box;
 
+    display: flex;
+    flex-direction: column;
     flex: auto;
 
     width: 100%;
 
-    background-color: var(--grey);
+    align-items: stretch;
+    justify-content: center;
+
+    gap: 15px;
+}
+
+.practice {
+    display: flex;
+    flex: auto;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    background-color: darkgrey;
     border-radius: 8px;
 
-    font-size: 100%;
     font-weight: bold;
     font-family: "Space Mono", monospace;
     white-space: nowrap;
 
     cursor: pointer;
+
+    background-image: url("../../resource/ia.png");
+    background-size: contain;
+    background-position: 50%;
+    background-repeat: no-repeat;
+}
+
+.casual {
+    display: flex;
+    flex: auto;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    background-color: darkgrey;
+    border-radius: 8px;
+
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    background-image: url("../../resource/casual.png");
+    background-size: contain;
+    background-position: 50%;
+    background-repeat: no-repeat;
+}
+
+.ranked {
+    display: flex;
+    flex: auto;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    background-color: darkgrey;
+    border-radius: 8px;
+
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    background-image: url("../../resource/ranked.png");
+    background-size: contain;
+    background-position: 50%;
+    background-repeat: no-repeat;
+}
+
+.casual:hover {
+    background-color: #3e3c3c;
+}
+
+.ranked:hover {
+    background-color: #3e3c3c;
+}
+
+.practice:hover {
+    background-color: #3e3c3c;
+}
+
+.titleMode {
+    font-size: max(0.5vw, 20px);
+    position: absolute;
+    bottom: 2%;
+    width: fit-content;
 }
 
 .matchmaking-button {
     flex: auto;
     width: 100%;
     height: 100%;
-    background-color: #ff0000;
+    background-color: var(--purple-dark);
     border-radius: 8px;
     animation: pulse 1s infinite;
 
@@ -135,7 +221,7 @@
     flex: auto;
     width: 100%;
     height: 100%;
-    background-color: #00ff00;
+    background-color: var(--purple-wave);
     border-radius: 8px;
     animation: pulse 1s infinite;
 
@@ -149,7 +235,7 @@
     flex: auto;
     width: 100%;
     height: 100%;
-    background-color: #ffff00;
+    background-color: #ca26c4;
     border-radius: 8px;
     animation: pulse 1s infinite;
 
@@ -173,16 +259,12 @@
     }
 }
 
-.game-mode-button:hover {
-    background-color: var(--dark-grey);
-}
-
 .matchmaking-button:hover {
-    background-color: #770000;
+    background-color: var(--purple-darker);
 }
 
 .matchmaking-button-found:hover {
-    background-color: #007700;
+    background-color: rgb(115, 6, 161);
 }
 
 /* User Info */

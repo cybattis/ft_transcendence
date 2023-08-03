@@ -1,5 +1,7 @@
 import "./NavBar.css";
 import { NavButton, PlayButton } from "./NavButton";
+import { AuthContext } from "../Auth/auth.context";
+import { useContext } from "react";
 
 function Unlogged() {
   return <NavButton content={"About"} link={"/about"} />;
@@ -16,11 +18,13 @@ function Logged() {
 }
 
 export default function LeftMenu() {
-  const token = localStorage.getItem("token");
+  const { authed } = useContext(AuthContext);
 
   return (
     <div className={"leftMenu"}>
-      <div className={"leftButtons"}>{!token ? <Unlogged /> : <Logged />}</div>
+      <div className={"leftButtons"}>
+        {authed ? <Logged /> : <Unlogged />}
+      </div>
     </div>
   );
 }

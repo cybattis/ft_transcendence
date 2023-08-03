@@ -1,22 +1,21 @@
 import React, { useContext } from "react";
 import "./Home.css";
 import { HomeLogged } from "./HomeLogged";
-import { AuthContext } from "../../components/Auth/dto";
 import { PracticePong } from "../../game/components/PracticePong";
 import { RgbColor, stringToRGB } from "../../utils/colors";
+import { AuthContext } from "../../components/Auth/auth.context";
 
 export default function Home() {
   const { authed } = useContext(AuthContext);
-  const token = localStorage.getItem("token");
 
   return (
     <div className="full">
-      {!authed || !token ? <HomeUnlogged /> : <HomeLogged />}
+      {!authed  ? <HomeUnlogged /> : <HomeLogged />}
     </div>
   );
 }
 
-function HomeUnlogged() {
+export function HomeUnlogged() {
   const paddleColor: RgbColor = stringToRGB("ffffff");
 
   return (

@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
 import { apiBaseURL } from '../utils/constant';
 import { TokenData } from '../type/jwt.type';
+import { Channel } from 'src/channel/entity/Channel.entity';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -99,6 +100,7 @@ export class UserService implements OnModuleInit {
         blockedById: true,
         websocket: true,
         paddleColor: true,
+        joinChannel: true,
       },
       where: {
         nickname: username,
@@ -273,27 +275,32 @@ export class UserService implements OnModuleInit {
 
   async blockFriend(friendId: number, myId: number) {
     await this.removeFriend(friendId, myId);
-    const me: any = await this.usersRepository.findOne({
+    const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         blockedId: true,
-        blockedById: true,
+        blockedChat: true,
       },
     });
-    const friend: any = await this.usersRepository.findOne({
+    const friend: User | null = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
         id: true,
-        blockedId: true,
+        blockedById: true,
+        blockedChat: true,
       },
     });
+
+    if (!me || !friend)
+      throw new BadRequestException('One user does not exist');
+
     me.blockedId.push(friend.id);
     me.blockedChat.push(friend.nickname);
     friend.blockedById.push(me.id);
     friend.blockedChat.push(me.nickname);
     await this.usersRepository.save(friend);
-    return await this.usersRepository.save(me);
+    await this.usersRepository.save(me);
   }
 
   async blockFriendUsr(friendName: string, myId: number) {
@@ -310,22 +317,27 @@ export class UserService implements OnModuleInit {
   }
 
   async unblockFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({
+    const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         blockedId: true,
         blockedById: true,
+        blockedChat: true,
       },
     });
-    const friend: any = await this.usersRepository.findOne({
+    const friend: User | null = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
         id: true,
         blockedId: true,
         blockedById: true,
+        blockedChat: true,
       },
     });
+
+    if (!me || !friend) throw new BadRequestException('User does not exist');
+
     if (me.blockedId) {
       for (let i = 0; me.blockedId[i]; i++) {
         if (me.blockedId[i] === friend.id) {
@@ -346,6 +358,7 @@ export class UserService implements OnModuleInit {
         }
       }
     }
+
     if (me.blockedChat) {
       for (let i = 0; me.blockedChat[i]; i++) {
         if (me.blockedChat[i] === friend.nickname) {
@@ -357,6 +370,7 @@ export class UserService implements OnModuleInit {
         }
       }
     }
+
     if (friend.blockedChat) {
       for (let i = 0; friend.blockedChat[i]; i++) {
         if (friend.blockedChat[i] === me.nickname) {
@@ -459,9 +473,13 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         invites: true,
+        joinChannel: true
       },
     });
-    if ((user && user.requestedId && user.requestedId[0]) || (user && user.invites && user.invites[0])) return true;
+    if ((user && user.joinChannel[0]) 
+      || (user && user.requestedId && user.requestedId[0])
+      || (user && user.invites && user.invites[0])) 
+      return true;
     return null;
   }
 
@@ -521,11 +539,9 @@ export class UserService implements OnModuleInit {
   }
 
   async addInvite(channel: string, id: number) {
-    const user = await this.usersRepository.findOne({where: {id: id}});
-    if (user)
-    {
-      if (!user.invites.includes(channel))
-      {
+    const user = await this.usersRepository.findOne({ where: { id: id } });
+    if (user) {
+      if (!user.invites.includes(channel)) {
         user.invites.push(channel);
         return await this.usersRepository.save(user);
       }
@@ -555,4 +571,28 @@ export class UserService implements OnModuleInit {
 
     return user.paddleColor;
   }
+
+  async fetchInvChannel(id : string) {
+    const user =  await this.usersRepository.findOne({where: {id :Number(id)}, select: {id: true, joinChannel: true, invitesId: true}});
+    if (user && user.joinChannel && user.invitesId)
+    {
+      const result = [];
+      for (let i = 0; user.joinChannel[i]; i++) {
+        const sender: any = await this.usersRepository.findOne({
+          select: ['nickname', 'avatarUrl', 'id'],
+          where: { id: user.invitesId[i] },
+        });
+        const temp = {
+          id: i,
+          joinChannel: user.joinChannel[i],
+          invitedByAvatar: sender.avatarUrl,
+          invitedByUsername: sender.nickname,
+        };
+        result.push(temp);
+      }
+      return result;
+    }
+    return null
+  }
+
 }

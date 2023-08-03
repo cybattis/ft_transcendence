@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
@@ -24,6 +25,8 @@ import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
 import { TokenData } from '../type/jwt.type';
+import {TypeCheckers} from "../utils/type-checkers";
+import { channel } from 'diagnostics_channel';
 
 @Controller('user')
 export class UserController {
@@ -59,14 +62,19 @@ export class UserController {
   }
 
   @UseGuards(TokenGuard)
-  @Get('myProfile')
-  async getUserInfo(
-    @Headers('Authorization') header: Headers,
+  @Get('my-profile')
+  async myProfile(
+    @Headers('Authorization') header: Headers
   ): Promise<UserInfo | any> {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return this.userService.myInfo(payload.id);
+    const tokens = header.toString().split(' ');
+    if (tokens.length !== 2)
+      throw new BadRequestException();
+
+    const decoded = this.jwtService.decode(tokens[1]);
+    if (!TypeCheckers.isTokenData(decoded))
+      throw new BadRequestException();
+
+    return this.userService.findByID(decoded.id);
   }
 
   @Get('check/login/:input')
@@ -112,10 +120,11 @@ export class UserController {
       },
       storage: diskStorage({
         destination: (req, file, callback) => {
-          const userId: TokenData = jwt_decode(
-            req.headers.authorization?.split(' ')[1] as string,
-          );
-          const path = `./avatar/${userId.id}`;
+          const token = req.headers.authorization?.split(' ')[1];
+          if (!token)
+            throw new ForbiddenException('Token invalid, please login again.');
+          const data: TokenData = jwt_decode(token);
+          const path = `./avatar/${data.id}`;
 
           fs.mkdirSync(path, { recursive: true });
 
@@ -220,9 +229,7 @@ export class UserController {
 
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(
-    @Headers('Authorization') header: Headers,
-  ) {
+  async getBlockedList(@Headers('Authorization') header: Headers) {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
@@ -238,7 +245,11 @@ export class UserController {
     const payload: any = this.jwtService.decode(
       header.toString().split(' ')[1],
     );
-    return await this.userService.blockFriendUsr(username, payload.id);
+    const blockedUser: User | null = await this.userService.findByLogin(
+      username,
+    );
+    if (!blockedUser) throw new ForbiddenException('User does not exist');
+    return await this.userService.blockFriend(blockedUser.id, payload.id);
   }
 
   @UseGuards(TokenGuard)
@@ -247,9 +258,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.blockFriend(id, payload.id);
   }
 
@@ -259,9 +271,10 @@ export class UserController {
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
   ) {
-    const payload: any = this.jwtService.decode(
+    const payload = this.jwtService.decode(
       header.toString().split(' ')[1],
-    );
+    ) as TokenData | null;
+    if (!payload) return;
     return await this.userService.unblockFriend(id, payload.id);
   }
 
@@ -289,7 +302,7 @@ export class UserController {
       header.toString().split(' ')[1],
     ) as TokenData;
 
-    console.log('friend request accepted by: ', id, userID.id);
+    console.log('friend request declined by: ', id, userID.id);
     return await this.userService.declineFriendRequest(id, userID.id);
   }
 
@@ -332,5 +345,16 @@ export class UserController {
   @Get('customization/paddleColor/:id')
   async getPaddleColor(@Param('id') id: number): Promise<string> {
     return await this.userService.getPaddleColor(id);
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('request/channel')
+  async fetchInvChannel(
+    @Headers('Authorization') header: Headers,
+  ){
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return await this.userService.fetchInvChannel(payload.id);
   }
 }

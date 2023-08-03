@@ -230,7 +230,7 @@ export class AuthService {
     }
 
     try {
-      const payload: TokenData = this.jwtService.verify<TokenData>(token, {});
+      const payload: TokenData = this.jwtService.verify<TokenData>(token);
       if (!payload) {
         const index = AuthService.invalidToken.indexOf(token, 0);
         if (index > -1) {

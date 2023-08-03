@@ -8,36 +8,35 @@ import { DisconnectButton, NavButton } from "./NavButton";
 import jwt_decode from "jwt-decode";
 import { JwtPayload } from "../../type/client.type";
 import { Notification } from "./NavButton";
-import { AuthContext, FormContext } from "../Auth/dto";
 import logo from "../../resource/signin-logo.svg";
+import {AuthContext} from "../Auth/auth.context";
+import {FormContext, FormState} from "../Auth/form.context";
 
 function MobileNavBar() {
   const [sidePanel, setSidePanel] = useState(false);
   const { authed } = useContext(AuthContext);
-  const { setLoginForm, setSignupForm } = useContext(FormContext);
+  const { setFormState } = useContext(FormContext);
 
   let username: string = "";
-  let id: string = "";
 
-  try {
-    const decoded: JwtPayload = jwt_decode(localStorage.getItem("token")!);
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded: JwtPayload = jwt_decode(token);
     if (decoded) username = decoded.nickname;
     else username = "";
-    if (decoded) id = decoded.id;
-    else id = "";
-  } catch (e) {}
+  }
 
   function handleSidePanel() {
     setSidePanel(!sidePanel);
   }
 
   function toggleLoginForm() {
-    setLoginForm(true);
+    setFormState(FormState.LOGIN);
     setSidePanel(!sidePanel);
   }
 
   function toggleSignupForm() {
-    setSignupForm(true);
+    setFormState(FormState.SIGNUP);
     setSidePanel(!sidePanel);
   }
 

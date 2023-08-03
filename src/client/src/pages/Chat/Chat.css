@@ -33,7 +33,7 @@
     width: 100%;
 }
 
-.rcv-mess-container{
+#rcv-mess-container{
     flex: 1;
     flex-grow: 2;
     display: flex;
@@ -413,4 +413,8 @@
     background-color: var(--bg);
     border: 2px solid var(--purple-darker);
     border-radius: 20px;
+}
+
+.selectName {
+    color: black;
 }

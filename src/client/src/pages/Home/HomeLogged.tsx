@@ -9,7 +9,6 @@ import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
-import { AuthContext } from "../../components/Auth/dto";
 import { Friends } from "../../components/Friends/Friends";
 import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
@@ -19,6 +18,7 @@ import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import {AuthContext} from "../../components/Auth/auth.context";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -156,18 +156,32 @@ function MultiplayerGameMode(props: {
     props.setSearching(true);
   };
 
+  if (props.gameType.toString() === "Casual")
+  {
+    return (
+      <div className="game-mode-button">
+      <button className="casual" onClick={handleClick}>
+        <h2 className="titleMode">Casual</h2>
+      </button>
+    </div>
+    );
+  }
   return (
-    <button onClick={handleClick} className="game-mode-button">
-      <div>{props.gameType.toString()}</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="ranked" onClick={handleClick}>
+        <h2 className="titleMode">Ranked</h2>
+      </button>
+    </div>
   );
 }
 
 function PracticeGameMode() {
   return (
-    <button className="game-mode-button">
-      <div>Practice</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="practice">
+        <h2 className="titleMode">Practice</h2>
+      </button>
+    </div>
   );
 }
 
@@ -179,7 +193,7 @@ function GameLauncher() {
     <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
-          <h4 className="game-mode-title">Game mode</h4>
+          <h1 className="game-mode-title">Game modes</h1>
           <div className="game-mode">
             <PracticeGameMode />
             <MultiplayerGameMode
@@ -341,7 +355,7 @@ function UserProfile(props: { data: UserInfo }) {
 }
 
 export function HomeLogged() {
-  const { setAuthToken } = useContext(AuthContext);
+  const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
 
   const token = localStorage.getItem("token");
@@ -366,9 +380,9 @@ export function HomeLogged() {
     MultiplayerClient.connect();
 
     async function fetchData() {
-      const payload: JwtPayload = jwt_decode(token as string);
+      if (!token) return;
+      const payload: JwtPayload = jwt_decode(token);
 
-      console.log(payload);
       await axios
         .get(apiBaseURL + "user/profile/" + payload.nickname, {
           headers: {
@@ -390,7 +404,7 @@ export function HomeLogged() {
             error.response.status === 400
           ) {
             localStorage.clear();
-            setAuthToken(null);
+            setAuthed(false);
             setErrorMessage("Session expired, please login again!");
           } else {
             setErrorMessage(error.response.data.message + "!");
@@ -409,7 +423,7 @@ export function HomeLogged() {
   }, []);
 
   if (token === null) {
-    setAuthToken(null);
+    setAuthed(false);
     setErrorMessage("Session expired, please login again!");
     return <Navigate to={"/"} />;
   }
