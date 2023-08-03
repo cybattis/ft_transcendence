@@ -18,7 +18,7 @@ import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
 import { MessageModal } from "../../components/Modal/MessageModal";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { AuthContext } from "../../components/Auth/auth.context";
 
 enum relationStatus {
   NONE,
@@ -304,8 +304,8 @@ export function Profile() {
     const payload: JwtPayload | null = jwt_decode(token);
 
     function checkFriendStatus(meData: UserFriend) {
-    if (!payload) return;
-    if (payload.id === data.id) setFriendStatus(relationStatus.ME);
+      if (!payload) return;
+      if (payload.id === data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))
@@ -362,8 +362,8 @@ export function Profile() {
 
     return () => {
       ChatClientSocket.offNotificationEvent(fetchData);
-    }
-  }, []);
+    };
+  }, [data.id]);
 
   const winrate: number = calculateWinrate(data);
   const oldColor: RgbColor = {
