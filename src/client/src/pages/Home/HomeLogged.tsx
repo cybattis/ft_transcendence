@@ -52,7 +52,6 @@ function MatchmakingButton(props: {
     };
 
     const handleGameStarted = () => {
-      console.log("REDIRECTION TO GAMEU");
       setState(MatchmakingAcceptButtonState.GAME_STARTED);
     };
 
@@ -157,14 +156,13 @@ function MultiplayerGameMode(props: {
     props.setSearching(true);
   };
 
-  if (props.gameType.toString() === "Casual")
-  {
+  if (props.gameType.toString() === "Casual") {
     return (
       <div className="game-mode-button">
-      <button className="casual" onClick={handleClick}>
-        <h2 className="titleMode">Casual</h2>
-      </button>
-    </div>
+        <button className="casual" onClick={handleClick}>
+          <h2 className="titleMode">Casual</h2>
+        </button>
+      </div>
     );
   }
   return (

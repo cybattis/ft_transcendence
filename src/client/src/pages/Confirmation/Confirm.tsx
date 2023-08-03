@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { apiBaseURL } from "../../utils/constant";
 import { PopupContext } from "../../components/Modal/Popup.context";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { AuthContext } from "../../components/Auth/auth.context";
 
 async function ValidateEmail() {
   const { setAuthed } = React.useContext(AuthContext);
@@ -15,7 +15,6 @@ async function ValidateEmail() {
   axios
     .put(apiBaseURL + "auth/" + id, true)
     .then((res) => {
-      console.log(res.data);
       const data = res.data;
       localStorage.setItem("token", data);
       setAuthed(true);
