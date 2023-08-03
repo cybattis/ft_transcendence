@@ -408,7 +408,7 @@ export function Profile() {
     return () => {
       ChatClientSocket.offNotificationEvent(fetchData);
     };
-  }, []);
+  }, [data.id]);
 
   return (
     <div className={"profile-page"}>

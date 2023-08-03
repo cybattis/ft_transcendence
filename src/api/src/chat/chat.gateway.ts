@@ -59,13 +59,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: any,
   ) {
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    let blockedUsers: any = await this.userService.findByLogin(data.username);
+    if (!blockedUsers)
+      blockedUsers = [];
     await this.channelService.sendGameMessage(
       this.server,
       socket,
       data.channel,
       data.msg,
       data.username,
+      data.opponent,
       blockedUsers.blockedChat,
     );
   }
@@ -101,16 +104,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('joinGame')
   async joinGameChat(
     @ConnectedSocket() socket: Socket,
-    @MessageBody() data: { username: string; canal: string },
+    @MessageBody() data: { canal: string },
   ) {
     if (!data) return;
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.joinGameChannel(
-      this.server,
       socket,
-      data.username,
       data.canal,
-      blockedUsers,
     );
   }
 

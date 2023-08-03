@@ -321,7 +321,7 @@ export class MultiplayerService {
    *
    * @param client The client that disconnected
    */
-  public async disconnectPlayerFromGame(client: AuthedSocket): Promise<void> {
+  /*public async disconnectPlayerFromGame(client: AuthedSocket): Promise<void> {
     // Remove the player from the game
     const game: GameRoom | undefined = this.getRoomByPlayerId(client.userId);
     if (game) {
@@ -344,7 +344,7 @@ export class MultiplayerService {
       // If the game is not finished, end it
       await this.endGame(game);
     }
-  }
+  }*/
 
   public isPlayerInGame(playerId: number): boolean {
     const game: GameRoom | undefined = this.getRoomByPlayerId(playerId);

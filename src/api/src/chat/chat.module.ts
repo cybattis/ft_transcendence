@@ -7,10 +7,9 @@ import { UserModule } from 'src/user/user.module';
 import { Chat } from '../channel/entity/Chat.entity';
 import { Channel } from 'src/channel/entity/Channel.entity';
 import { User } from 'src/user/entity/Users.entity';
-import { GameChat } from 'src/channel/entity/GameChat.entity';
 
 @Module({
-  imports: [UserModule, TypeOrmModule.forFeature([Chat, GameChat, User, Channel])],
+  imports: [UserModule, TypeOrmModule.forFeature([Chat, User, Channel])],
   providers: [ChatGateway, ChannelService, UserService],
 })
 export class ChatModule {}

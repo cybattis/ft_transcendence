@@ -1,175 +1,75 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ChatInterface } from "./Interface/chat.interface";
-import { JwtPayload } from "../../type/client.type";
-import jwt_decode from "jwt-decode";
-import axios from "axios";
+import { GameChatInterface } from "./Interface/gamechat.interface";
 import { ChatClientSocket } from "./Chat-client";
-import { apiBaseURL } from "../../utils/constant";
-import UsersList from "./List/UsersList";
-import { ErrorModalChat } from "../../components/Modal/PopUpModal";
+import muteLogo from "../../resource/muted-logo.png";
+import unmuteLogo from "../../resource/unmuted-logo.png";
+import "./PrivateGameChat.css";
+const allMessages: any = [];
 
-export default function PrivateGameChat() {
+export default function PrivateGameChat(props: {playerOne: string, playerTwo: string, canal: string, myUsername: string}) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [messages, setMessages] = useState<ChatInterface[]>([]);
+  const [all, setAll] = useState<GameChatInterface[]>([]);
   const [isMute, setIsMute] = useState(false);
-  const [canal, setCanal] = useState("");
-  const [playerOne, setPlayerOne] = useState("");
-  const [playerTwo, setPlayerTwo] = useState("");
-
-  //Si user est bloque faire en sorte que rien ne marche dans le chat
-
-  const token = localStorage.getItem("token");
-  let payload: JwtPayload;
-
-  if (token) {
-    try {
-      payload = jwt_decode(token);
-    } catch (e) {
-      console.log(`Decode error ${e}`);
-    }
-  }
+  const [me, setMe] = useState('');
+  const [other, setOther] = useState('');
+  const [msgNum, setMsgNum] = useState(0);
 
   const handleMute = async () => {
-    let sendMute;
-    if (playerOne === payload.nickname) {
-      sendMute = {
-        cmd: "mute",
-        username: playerOne,
-        target: playerTwo,
-        channel: canal,
-      };
-    } else {
-      sendMute = {
-        cmd: "mute",
-        username: playerTwo,
-        target: playerOne,
-        channel: canal,
-      };
-    }
-    ChatClientSocket.mute(sendMute);
-  };
-
-  const handleUnMute = async () => {
-    let sendMute;
-    if (playerOne === payload.nickname) {
-      sendMute = {
-        cmd: "mute",
-        username: playerOne,
-        target: playerTwo,
-        channel: canal,
-      };
-    } else {
-      sendMute = {
-        cmd: "mute",
-        username: playerTwo,
-        target: playerOne,
-        channel: canal,
-      };
-    }
-    ChatClientSocket.unMute(sendMute);
-  };
-
-  function Buttons() {
-    //Mettre icone en haut a droit du channel pour mute
-    return <></>;
-    return (
-      <div className="buttons-form">
-        <div className="ctn-btn-action">
-          {!isMute && (
-            <button className="chat-buttons" onClick={handleMute}>
-              Mute
-            </button>
-          )}
-          {isMute && (
-            <button className="chat-buttons" onClick={handleUnMute}>
-              UnMute
-            </button>
-          )}
-        </div>
-      </div>
-    );
+    setIsMute(!isMute);
   }
 
-  function ChatMap({ messages }: { messages: ChatInterface[] }) {
+  function Buttons() {
+
+    return <>
+        <div className="ctn-btn-action">
+            {!isMute && <img src={unmuteLogo} width={50} height={50} onClick={handleMute}></img>}
+            {isMute && <img src={muteLogo} width={50} height={50} onClick={handleMute}></img>}
+        </div>
+    </>
+  }
+
+  function ChatMap({ messages }: { messages: GameChatInterface[] }) {
+
+    useEffect(() => {
+      function scrollbar(){
+        const scr = document.getElementById("list-gamemsg-container");
+        if (scr) scr.scrollTop += scr.clientHeight;
+        console.log(scr?.clientHeight);
+      }
+
+      scrollbar();
+    }, [messages]);
+
     return (
       <>
-        <ul className="list-msg-container">
-          {messages &&
-            messages
-              .filter((messages) =>
-                canal ? messages.channel === canal : messages.channel === canal
+        <ul id="list-gamemsg-container" className="list-gamemsg-container">
+          {messages
+            .filter((messages) => props.canal ? messages.channel === props.canal : null)
+            .map((messages) =>
+              messages.sender === props.myUsername ? (
+                <li className="GameEmt" key={messages.id}>
+                  <div className="contain-game-emt">{messages.sender}</div>
+                  <div className="contain-game-msg">{messages.msg}</div>
+                </li>
+              ) : (
+                <li className="GameRcv" key={messages.id}>
+                  <div className="contain-game-emt">{messages.sender}</div>
+                  <div className="contain-game-msg">{messages.msg}</div>
+                </li>
               )
-              .map((messages) =>
-                messages.emitter === payload?.nickname ? (
-                  <li className="Emt" key={messages.id}>
-                    <div className="contain-emt">{messages.emitter}</div>
-                    <div className="contain-msg">{messages.content}</div>
-                  </li>
-                ) : (
-                  <li className="Rcv" key={messages.id}>
-                    <div className="contain-emt">{messages.emitter}</div>
-                    <div className="contain-msg">{messages.content}</div>
-                  </li>
-                )
-              )}
+            )}
         </ul>
       </>
     );
   }
 
   const sendMessage = () => {
-    if (
-      inputRef.current &&
-      inputRef.current.value &&
-      inputRef.current.value[0]
-    ) {
-      const cmd = choiceCmd(inputRef.current.value);
-      doCmd(cmd, inputRef.current.value);
+    if (inputRef.current && inputRef.current.value && inputRef.current.value[0]) {
+      const send = { username: me, opponent: other, channel: props.canal, msg: inputRef.current.value }
+      ChatClientSocket.sendGameChat(send);
       inputRef.current.value = "";
     }
   };
-
-  useEffect(() => {
-    if (!token) return;
-    setPlayerOne("A");
-    setPlayerTwo("B");
-    setCanal("dcvfdbgfhlioj"); // METTRE UN ID comme nom de canal
-
-    console.log("p1: ", playerOne, " | p2: ", playerTwo, " | canal: ", canal);
-
-    const messageCallBack = async (data: {
-      sender: string;
-      msg: string;
-      channel: string;
-    }) => {
-      let addressInfo = apiBaseURL + "chat-controller/gameChat/" + data.channel;
-      await axios.get(addressInfo).then((res) => {
-        console.log("LA: ", res.data);
-        setMessages(res.data);
-      });
-    };
-
-    ChatClientSocket.onMessageRecieve(messageCallBack);
-    ChatClientSocket.joinGameChat({ username: payload.nickname, canal: canal });
-
-    return () => {
-      ChatClientSocket.offMessageRecieve(messageCallBack);
-    };
-  }, [playerOne, playerTwo, canal]);
-
-  function choiceCmd(input: string): string {
-    if (input.indexOf("/") === 0) {
-      if (input.indexOf(" ") !== -1)
-        return input.substring(0, input.indexOf(" "));
-      return input;
-    }
-    return "/msg";
-  }
-
-  function doCmd(cmd: string, msg: string) {
-    const send = { username: payload.nickname, channel: canal, msg: msg };
-    ChatClientSocket.sendGameChat(send);
-  }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -178,30 +78,61 @@ export default function PrivateGameChat() {
     }
   };
 
+  useEffect(() => {
+    const fetchgameInfo = async () => {
+        if (props.playerOne === props.myUsername)
+        {
+          setMe(props.playerOne);
+          setOther(props.playerTwo)
+        }
+        else {
+          setOther(props.playerOne);
+          setMe(props.playerTwo)
+        }
+    }
+
+    fetchgameInfo();
+
+    ChatClientSocket.joinGameChat({ canal: props.canal});
+
+    const gameMessageCallBack = async (data: { sender: string, opponent: string, msg: string, channel: string, blockedUsers: any }) => {
+      const newObj = {
+        id: msgNum,
+        sender: data.sender,
+        opponent: data.opponent,
+        msg: data.msg,
+        channel: data.channel,
+        blockedUsers: data.blockedUsers,
+      };
+      if (!isMute || (isMute && data.sender == me))
+        allMessages.push(newObj);
+      const newData: GameChatInterface[] = [];
+      for (let i = 0; allMessages[i]; i++)
+        newData.push(allMessages[i]);
+      setAll(newData);
+      if (!isMute || (isMute && data.sender == me))
+        setMsgNum(msgNum + 1);
+    }
+
+    ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
+
+    return () => {
+      ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
+    }
+  }, [msgNum, me, other, props, isMute]);
+
   return (
-    <div className="chat-div">
-      <h1>Game Chat</h1>
-      <div className="chat">
-        <div className="chat-container">
-          <Buttons />
-          <div className="rcv-mess-container">
-            <ChatMap messages={messages} />
+    <div className="gamechat-div">
+      <div className='gamechat'>
+        <div className='gamechat-container'>
+          <div className="rcv-gamemess-container" id="rcv-gamemess-container">
+            <ChatMap messages={all} />
           </div>
-          <div className="send-mess-container">
-            <input
-              className="input-chat-principal"
-              id="focus-principal-chat"
-              ref={inputRef}
-              onKeyDown={handleKeyDown}
-              type="text"
-            />
-            <button className="btn-chat-principal" onClick={sendMessage}>
-              Send
-            </button>
+          <div className='send-gamemess-container'>
+            <input className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
+            <button className="btn-gamechat-principal" onClick={sendMessage}>Send</button>
+            <Buttons />
           </div>
-        </div>
-        <div className="user-lists">
-          <UsersList messages={messages} channel={canal} />
         </div>
       </div>
     </div>

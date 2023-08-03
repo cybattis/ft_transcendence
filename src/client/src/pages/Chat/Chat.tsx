@@ -733,6 +733,7 @@ export default function ChatClient() {
           <div className="test">
             {errorInput && <p className="error"> {errorInput} </p>}
             <Select
+              className="selectName"
               defaultValue={options[0]}
               onChange={handleSelect}
               options={options}
