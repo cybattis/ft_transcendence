@@ -119,8 +119,21 @@ export class ChannelService implements OnModuleInit {
     const timeBan: number = this.valideTime(time);
     console.log(`time : ${timeBan}`);
     if (cmd === '+b') await this.actBan(channelToUpdate, target, timeBan);
-    else if (cmd === '-b') await this.actUnban(channelToUpdate, target);
-    else return `Not cmd`;
+    await this.deleteChannel(channelToUpdate);
+  }
+
+  async unbanChannel(
+    cmd: string,
+    username: string,
+    target: string,
+    channel: string,
+  ) {
+    const channelToUpdate: Channel | null =
+      await this.channelRepository.findOneBy({ channel: channel });
+    if (!channelToUpdate) return;
+    if (!this.checkUserIsHere(channelToUpdate.ban, target))
+      return `Ban : ${username} isn't banned.`;
+    if (cmd === '-b') await this.actUnban(channelToUpdate, target);
     await this.deleteChannel(channelToUpdate);
   }
 

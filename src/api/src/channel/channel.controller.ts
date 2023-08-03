@@ -10,7 +10,7 @@ import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
 
-@UseGuards(TokenGuard)
+//@UseGuards(TokenGuard)
 @Controller('chat-controller')
 export class ChannelController {
     constructor(

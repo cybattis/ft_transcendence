@@ -13,7 +13,7 @@ function Online(data: any) {
   return (
     <div className="online">
       <div className="status">
-        {data.inGame === true ? "In game" : "In menu"}
+        {(data.inGame && data.inGame[0] && data.inGame !== "Finished" && data.ingame !== "Player disconnected" ) ? "In game" : "In menu"}
       </div>
     </div>
   );

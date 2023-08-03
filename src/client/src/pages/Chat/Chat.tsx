@@ -1200,7 +1200,7 @@ export default function ChatClient() {
           </div>
         </div>
         <div className="user-lists">
-          <UsersList messages={messages} channel={takeActiveCanal()} />
+          <UsersList messages={messages} channel={takeActiveCanal()} handleButton={handleButton}/>
         </div>
         <ErrorModalChat
           msg={errorMessage}

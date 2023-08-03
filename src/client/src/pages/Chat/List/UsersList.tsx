@@ -5,11 +5,11 @@ import { JwtPayload } from "../../../type/client.type";
 import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
-import { ChatClientSocket } from "../Chat-client";
 
 export default function UsersList(props: {
   channel: string;
   messages: ChatInterface[];
+  handleButton: (target: string) => void;
 }) {
   const [usersList, setUsersList] = useState([]);
   const [banList, setBanList] = useState([]);
@@ -53,7 +53,7 @@ export default function UsersList(props: {
         <>
           <h4>Ban</h4>
           {banList.map((username) => (
-            <button className="user-list" key={username} value={username}>
+            <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
               {username}
             </button>
           ))}
@@ -74,7 +74,7 @@ export default function UsersList(props: {
           <h4>Mute</h4>
           {muteList &&
             muteList.map((username) => (
-              <button className="user-list" key={username} value={username}>
+              <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
                 {username}
               </button>
             ))}
@@ -93,7 +93,7 @@ export default function UsersList(props: {
       <h4>Users</h4>
       {usersList &&
         usersList.map((username) => (
-          <button className="user-list" key={username} value={username}>
+          <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
             {username}
           </button>
         ))}
