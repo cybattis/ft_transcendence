@@ -83,7 +83,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(token: string, username: string): Promise<UserInfo | any> {
+  async userInfo(username: string): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -473,12 +473,14 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         invites: true,
-        joinChannel: true
+        joinChannel: true,
       },
     });
-    if ((user && user.joinChannel[0]) 
-      || (user && user.requestedId && user.requestedId[0])
-      || (user && user.invites && user.invites[0])) 
+    if (
+      (user && user.joinChannel[0]) ||
+      (user && user.requestedId && user.requestedId[0]) ||
+      (user && user.invites && user.invites[0])
+    )
       return true;
     return null;
   }
@@ -572,10 +574,12 @@ export class UserService implements OnModuleInit {
     return user.paddleColor;
   }
 
-  async fetchInvChannel(id : string) {
-    const user =  await this.usersRepository.findOne({where: {id :Number(id)}, select: {id: true, joinChannel: true, invitesId: true}});
-    if (user && user.joinChannel && user.invitesId)
-    {
+  async fetchInvChannel(id: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id: Number(id) },
+      select: { id: true, joinChannel: true, invitesId: true },
+    });
+    if (user && user.joinChannel && user.invitesId) {
       const result = [];
       for (let i = 0; user.joinChannel[i]; i++) {
         const sender: any = await this.usersRepository.findOne({
@@ -592,7 +596,6 @@ export class UserService implements OnModuleInit {
       }
       return result;
     }
-    return null
+    return null;
   }
-
 }
