@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game } from './entity/Game.entity';
 import { GameBodyDto } from '../type/game.type';
@@ -15,5 +15,10 @@ export class GameController {
   @Post('create')
   async createGame(@Body() body: GameBodyDto): Promise<Game> {
     return this.gameService.createGame(body);
+  }
+
+  @Get('info/:id')
+  async infoGame(@Param('id') id: number) {
+    return await this.gameService.getInfoGame(id);
   }
 }

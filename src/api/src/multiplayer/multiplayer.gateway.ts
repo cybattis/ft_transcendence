@@ -51,7 +51,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   async handleDisconnect(client: AuthedSocket): Promise<void> {
     console.log("A user disconnected from the multiplayer server");
-    await this.multiplayerService.disconnectPlayerFromGame(client);
+    //await this.multiplayerService.disconnectPlayerFromGame(client);
   }
 
   @Public()
@@ -62,7 +62,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('quit')
   async handleQuit(@ConnectedSocket() client: AuthedSocket): Promise<void> {
-    await this.multiplayerService.disconnectPlayerFromGame(client);
+    //await this.multiplayerService.disconnectPlayerFromGame(client);
   }
 
   @SubscribeMessage('ready')
@@ -84,5 +84,4 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   async handleGoal(@ConnectedSocket() client: AuthedSocket): Promise<void> {
     await this.multiplayerService.processGoal(client);
   }
-
 }

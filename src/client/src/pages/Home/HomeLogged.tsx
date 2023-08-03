@@ -156,18 +156,32 @@ function MultiplayerGameMode(props: {
     props.setSearching(true);
   };
 
+  if (props.gameType.toString() === "Casual")
+  {
+    return (
+      <div className="game-mode-button">
+      <button className="casual" onClick={handleClick}>
+        <h2 className="titleMode">Casual</h2>
+      </button>
+    </div>
+    );
+  }
   return (
-    <button onClick={handleClick} className="game-mode-button">
-      <div>{props.gameType.toString()}</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="ranked" onClick={handleClick}>
+        <h2 className="titleMode">Ranked</h2>
+      </button>
+    </div>
   );
 }
 
 function PracticeGameMode() {
   return (
-    <button className="game-mode-button">
-      <div>Practice</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="practice">
+        <h2 className="titleMode">Practice</h2>
+      </button>
+    </div>
   );
 }
 
@@ -179,7 +193,7 @@ function GameLauncher() {
     <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
-          <h4 className="game-mode-title">Game mode</h4>
+          <h1 className="game-mode-title">Game modes</h1>
           <div className="game-mode">
             <PracticeGameMode />
             <MultiplayerGameMode

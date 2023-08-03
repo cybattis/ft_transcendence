@@ -83,7 +83,7 @@ export class UserService implements OnModuleInit {
     });
   }
 
-  async userInfo(token: string, username: string): Promise<UserInfo | any> {
+  async userInfo(username: string): Promise<UserInfo | any> {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -104,6 +104,34 @@ export class UserService implements OnModuleInit {
       },
       where: {
         nickname: username,
+      },
+    });
+
+    if (!user) throw new BadRequestException('User does not exist');
+    user.games = await this.gameService.fetchUserGames(user);
+    return user;
+  }
+
+  async myInfo(token: number): Promise<UserInfo | any> {
+    const user: User | null = await this.usersRepository.findOne({
+      select: {
+        id: true,
+        nickname: true,
+        level: true,
+        ranking: true,
+        avatarUrl: true,
+        totalGameWon: true,
+        xp: true,
+        games: true,
+        friendsId: true,
+        requestedId: true,
+        blockedId: true,
+        blockedById: true,
+        websocket: true,
+        paddleColor: true,
+      },
+      where: {
+        id: token,
       },
     });
 
@@ -445,12 +473,14 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         invites: true,
-        joinChannel: true
+        joinChannel: true,
       },
     });
-    if ((user && user.joinChannel[0]) 
-      || (user && user.requestedId && user.requestedId[0])
-      || (user && user.invites && user.invites[0])) 
+    if (
+      (user && user.joinChannel[0]) ||
+      (user && user.requestedId && user.requestedId[0]) ||
+      (user && user.invites && user.invites[0])
+    )
       return true;
     return null;
   }
@@ -544,11 +574,28 @@ export class UserService implements OnModuleInit {
     return user.paddleColor;
   }
 
-  async fetchInvChannel(id : string): Promise <string[] | null>{
-    const user =  await this.usersRepository.findOneBy({id :Number(id)});
-    if (user && user.joinChannel)
-      return user.joinChannel;
-    return null
+  async fetchInvChannel(id: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id: Number(id) },
+      select: { id: true, joinChannel: true, invitesId: true },
+    });
+    if (user && user.joinChannel && user.invitesId) {
+      const result = [];
+      for (let i = 0; user.joinChannel[i]; i++) {
+        const sender: any = await this.usersRepository.findOne({
+          select: ['nickname', 'avatarUrl', 'id'],
+          where: { id: user.invitesId[i] },
+        });
+        const temp = {
+          id: i,
+          joinChannel: user.joinChannel[i],
+          invitedByAvatar: sender.avatarUrl,
+          invitedByUsername: sender.nickname,
+        };
+        result.push(temp);
+      }
+      return result;
+    }
+    return null;
   }
-
 }

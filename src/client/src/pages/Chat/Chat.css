@@ -414,3 +414,7 @@
     border: 2px solid var(--purple-darker);
     border-radius: 20px;
 }
+
+.selectName {
+    color: black;
+}
