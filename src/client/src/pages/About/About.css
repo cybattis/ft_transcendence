@@ -9,7 +9,7 @@
     overflow-y: auto;
 }
 
-.first-title {
+.about-main-title {
     display: flex;
 
     align-items: center;
@@ -19,107 +19,109 @@
     width: 100%;
 }
 
-.title {
+.about-title {
     display: flex;
 
     align-items: center;
     text-align: center;
     justify-content: center;
+    text-justify: auto;
 
     width: 100%;
+    padding-bottom: 20px;
+
 }
 
-@media screen and (width < 800px) {
-    .img {
-        display: flex;
-    
-        border-radius: 50%;
+.about-img {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.about-left {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+.about-right {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+}
+
+.about-dev-title {
+    text-align: center;
+    font-size: max(1vw, 25px);
+}
+
+.about-description {
+    display: flex;
+
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    overflow-wrap: break-word;
+    font-size: max(0.6vw, 15px);
+
+    text-justify: distribute;
+}
+
+@media screen and (width <= 800px) {
+    .about-img {
         width: 200px;
         height: 200px;
     }
 
-    .left {
-        display: flex;
-            
-        flex-direction: row;
-        justify-content: left;
-    }
-
-    .right {
-        display: flex;
-    
-        flex-direction: row;
-        justify-content: right;
-    }
-    
-    .description {
-        display: flex;
-    
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-        overflow-wrap: break-word;
-        font-size: max(0.6vw, 15px);
-    }
-
-    .first-title {
+    .about-main-title {
         font-size: max(1vw, 25px);
     }
 
-    .title {
+    .about-title {
         font-size: max(1vw, 20px);
+        max-width: 400px;
+    }
+
+    .about-left {
+        padding-top: 25px;
+    }
+
+    .about-right {
+        padding-top: 25px;
+        gap: 5px;
+    }
+
+    .about-description {
+        max-width: 215px;
+        gap: 5px;
     }
 }
 
 @media screen and (width > 800px) {
-    .img {
-        display: flex;
-    
-        border-radius: 50%;
+    .about-img {
         width: 250px;
         height: 250px;
     }
 
-    .left {
-        display: flex;
-        
-        flex-direction: row;
-        justify-content: left;
-    }
-    
-    .right {
-        display: flex;
-    
-        flex-direction: row;
-        justify-content: right;
-    }
-    
-    .description {
-        display: flex;
-    
-        flex-direction: column;
-        justify-content: center;
-        text-align: center;
-        overflow-wrap: break-word;
-        font-size: max(0.6vw, 15px);
-        max-width: 400px;
+    .about-description {
+        max-width: 500px;
     }
 
-    .first-title {
+    .about-main-title {
         font-size: max(1vw, 35px);
     }
 
-    .title {
+    .about-title {
         font-size: max(1vw, 25px);
+        max-width: 1000px;
     }
-}
 
-.r-title {
-    text-align: center;
-    font-size: max(1vw, 25px);
-}
+    .about-left {
+        padding-top: 15px;
+        gap: 10px;
+    }
 
-.l-title {
-    text-align: center;
-    font-size: max(1vw, 25px);
+    .about-right {
+        padding-top: 15px;
+        gap: 10px;
+    }
 }
