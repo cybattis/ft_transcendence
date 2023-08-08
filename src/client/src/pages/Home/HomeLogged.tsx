@@ -14,11 +14,12 @@ import { JwtPayload } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { AuthContext } from "../../components/Auth/auth.context";
+import { PopupContext } from "../../components/Modal/Popup.context";
+import getNickname = UserData.getNickname;
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -51,7 +52,6 @@ function MatchmakingButton(props: {
     };
 
     const handleGameStarted = () => {
-      console.log("REDIRECTION TO GAMEU");
       setState(MatchmakingAcceptButtonState.GAME_STARTED);
     };
 
@@ -156,14 +156,13 @@ function MultiplayerGameMode(props: {
     props.setSearching(true);
   };
 
-  if (props.gameType.toString() === "Casual")
-  {
+  if (props.gameType.toString() === "Casual") {
     return (
       <div className="game-mode-button">
-      <button className="casual" onClick={handleClick}>
-        <h2 className="titleMode">Casual</h2>
-      </button>
-    </div>
+        <button className="casual" onClick={handleClick}>
+          <h2 className="titleMode">Casual</h2>
+        </button>
+      </div>
     );
   }
   return (
@@ -356,7 +355,7 @@ function UserProfile(props: { data: UserInfo }) {
 
 export function HomeLogged() {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
 
   const token = localStorage.getItem("token");
   const [data, setData] = useState<UserInfo>({

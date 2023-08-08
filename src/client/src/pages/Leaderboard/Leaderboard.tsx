@@ -1,13 +1,13 @@
 import "./Leaderboard.css";
-import { Navigate, useLoaderData } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
 import { useContext } from "react";
-import { ErrorContext } from "../../components/Modal/modalContext";
 import {AuthContext} from "../../components/Auth/auth.context";
 import { useData } from "../../hooks/UseData";
 import { LoadingPage } from "../Loading/LoadingPage";
 import { ErrorPage } from "../Error/ErrorPage";
+import { PopupContext } from "../../components/Modal/Popup.context";
 
 function TableHeader() {
   return (
@@ -30,7 +30,7 @@ export function LeaderboardLoader() {
 export function Leaderboard(props: { data: UserInfo[] }) {
   const token = localStorage.getItem("token");
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
 
   if (token === null) {
     setAuthed(false);

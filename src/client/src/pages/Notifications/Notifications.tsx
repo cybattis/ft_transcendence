@@ -4,13 +4,13 @@ import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
 import { Navigate } from "react-router-dom";
-import { ErrorContext } from "../../components/Modal/modalContext";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import {AuthContext} from "../../components/Auth/auth.context";
 
 export default function Notifications() {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token: string | null = localStorage.getItem("token");
   const [invits, setInvits] = useState([
     {

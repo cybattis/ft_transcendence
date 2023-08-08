@@ -7,7 +7,7 @@ import validator from "validator";
 import {apiBaseURL} from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
 import {MessageModal} from "../Modal/MessageModal";
-import {ErrorContext} from "../Modal/modalContext";
+import {PopupContext} from "../Modal/Popup.context";
 import {FormContext, FormState} from "./form.context";
 
 interface UserCredential {
@@ -20,7 +20,7 @@ interface UserCredential {
 
 export default function Signup() {
   const { setFormState } = useContext(FormContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const [errorInput, setErrorInput] = useState("");
   const [message, setMessage] = useState("");
 

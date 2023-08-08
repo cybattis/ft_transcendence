@@ -12,10 +12,9 @@ import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStatsDto } from "../../type/game.type";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { JwtPayload } from "../../type/client.type";
-import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
-import { MessageModal } from "../../components/Modal/MessageModal";
+import { RgbColor, hslToRgb, RGBToHSL, HslColor } from "../../utils/colors";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { AuthContext } from "../../components/Auth/auth.context";
@@ -37,7 +36,7 @@ interface FriendRequestProps {
 
 function BlockUser(props: FriendRequestProps) {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
   const handleUnblockButton = async () => {
@@ -113,7 +112,7 @@ function BlockUser(props: FriendRequestProps) {
 
 function FriendRequest(props: FriendRequestProps) {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token = localStorage.getItem("token");
 
   const handleAddFriend = async () => {
@@ -201,13 +200,17 @@ function FriendRequest(props: FriendRequestProps) {
   }
 }
 
-function PaddleColor(props: { oldColor: RgbColor }) {
-  const [hue, setHue] = useState(RGBToHSL(props.oldColor).h);
-  const { setErrorMessage } = useContext(ErrorContext);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const color: RgbColor = hslToRgb({ h: hue, s: 100, l: 50 });
-
-  console.log("hue: ", hue);
+function PaddleColor(props: {
+  oldColor: RgbColor;
+  setOldColor: (value: RgbColor) => void;
+}) {
+  const { setErrorMessage, setInfoMessage } = useContext(PopupContext);
+  const [hue, setHue] = useState<HslColor>({
+    h: RGBToHSL(props.oldColor).h,
+    s: 100,
+    l: RGBToHSL(props.oldColor).l,
+  });
+  const color: RgbColor = hslToRgb(hue);
 
   const style = {
     width: "20px",
@@ -238,7 +241,8 @@ function PaddleColor(props: { oldColor: RgbColor }) {
       )
       .then((res): void => {
         UserData.updatePaddleColor(colorString);
-        setShowSuccess(true);
+        props.setOldColor(hslToRgb(hue));
+        setInfoMessage("Color updated successfully!");
       })
       .catch((err): void => {
         const response = err.response?.data;
@@ -249,7 +253,38 @@ function PaddleColor(props: { oldColor: RgbColor }) {
           g: parseInt(response?.paddleColor.substring(2, 4), 16),
           b: parseInt(response?.paddleColor.substring(4, 6), 16),
         };
-        setHue(RGBToHSL(actualColor).h);
+        setHue(RGBToHSL(actualColor));
+      });
+  }
+
+  function resetPaddleColor(): void {
+    axios
+      .put(
+        apiBaseURL + "user/customization/paddleColor",
+        { color: "ffffff" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      .then((res): void => {
+        UserData.updatePaddleColor("ffffff");
+        setInfoMessage("Color reset successfully!");
+        props.setOldColor({ r: 255, g: 255, b: 255 });
+        setHue({ h: 0, s: 100, l: 100 });
+      })
+      .catch((err): void => {
+        const response = err.response?.data;
+        setErrorMessage(response?.message);
+
+        const actualColor: RgbColor = {
+          r: parseInt(response?.paddleColor.substring(0, 2), 16),
+          g: parseInt(response?.paddleColor.substring(2, 4), 16),
+          b: parseInt(response?.paddleColor.substring(4, 6), 16),
+        };
+        setHue(RGBToHSL(actualColor));
       });
   }
 
@@ -266,27 +301,31 @@ function PaddleColor(props: { oldColor: RgbColor }) {
               max="360"
               className="slider"
               id="myRange"
-              value={hue}
-              onChange={(e) => setHue(parseInt(e.target.value))}
+              value={hue.h}
+              onChange={(e) =>
+                setHue({ h: parseInt(e.target.value), s: 100, l: 50 })
+              }
             ></input>
-            <button
-              className={"update-color-button"}
-              onClick={updatePaddleColor}
-            >
-              Update color
-            </button>
+            <div className={"customization-button-box"}>
+              <button
+                className={"update-color-button"}
+                onClick={updatePaddleColor}
+              >
+                Update color
+              </button>
+              <button
+                className={"update-color-button"}
+                onClick={resetPaddleColor}
+              >
+                Reset color
+              </button>
+            </div>
           </div>
           <div className={"paddle-container"}>
             <div style={style}></div>
           </div>
         </div>
       </div>
-      {showSuccess ? (
-        <MessageModal
-          msg={"Color updated successfully!"}
-          onClose={() => setShowSuccess(false)}
-        />
-      ) : null}
     </>
   );
 }
@@ -294,9 +333,15 @@ function PaddleColor(props: { oldColor: RgbColor }) {
 export function Profile() {
   let data: UserInfo = useLoaderData() as UserInfo;
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
   const [customization, setCustomization] = useState(false);
+  const winrate: number = calculateWinrate(data);
+  const [oldColor, setOldColor] = useState<RgbColor>({
+    r: data.paddleColor ? parseInt(data.paddleColor.substring(0, 2), 16) : 255,
+    g: data.paddleColor ? parseInt(data.paddleColor.substring(2, 4), 16) : 255,
+    b: data.paddleColor ? parseInt(data.paddleColor.substring(4, 6), 16) : 255,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -365,14 +410,6 @@ export function Profile() {
     };
   }, [data.id]);
 
-  const winrate: number = calculateWinrate(data);
-  const oldColor: RgbColor = {
-    // change to color from db
-    r: data.paddleColor ? parseInt(data.paddleColor.substring(0, 2), 16) : 255,
-    g: data.paddleColor ? parseInt(data.paddleColor.substring(2, 4), 16) : 255,
-    b: data.paddleColor ? parseInt(data.paddleColor.substring(4, 6), 16) : 255,
-  };
-
   return (
     <div className={"profile-page"}>
       <div className={"profile-infobox-background"}>
@@ -408,7 +445,9 @@ export function Profile() {
           )}
         </div>
       </div>
-      {customization ? <PaddleColor oldColor={oldColor} /> : null}
+      {customization ? (
+        <PaddleColor oldColor={oldColor} setOldColor={setOldColor} />
+      ) : null}
       <div className={"profile-stats"}>
         <div id={"level"}>
           <div>Level</div>

@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { GameChatInterface } from "./Interface/gamechat.interface";
-import { JwtPayload } from "../../type/client.type";
-import jwt_decode from "jwt-decode";
 import { ChatClientSocket } from "./Chat-client";
 import muteLogo from "../../resource/muted-logo.png";
 import unmuteLogo from "../../resource/unmuted-logo.png";
 import "./PrivateGameChat.css";
-
 const allMessages: any = [];
 
 export default function PrivateGameChat(props: {playerOne: string, playerTwo: string, canal: string, myUsername: string}) {
@@ -16,25 +13,13 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   const [me, setMe] = useState('');
   const [other, setOther] = useState('');
   const [msgNum, setMsgNum] = useState(0);
-  
-  //Si user est bloque faire en sorte que rien ne marche dans le chat
-
-  const token = localStorage.getItem("token");
-  let payload: JwtPayload;
-
-  let decoded: JwtPayload | null = null;
-  try {
-      decoded = jwt_decode(localStorage.getItem("token")!);
-  } catch (e) {
-      console.log(`Decode error ${e}`);
-  }
 
   const handleMute = async () => {
     setIsMute(!isMute);
   }
 
   function Buttons() {
-    
+
     return <>
         <div className="ctn-btn-action">
             {!isMute && <img src={unmuteLogo} width={50} height={50} onClick={handleMute}></img>}
@@ -92,7 +77,7 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
       sendMessage();
     }
   };
-  
+
   useEffect(() => {
     const fetchgameInfo = async () => {
         if (props.playerOne === props.myUsername)
@@ -128,7 +113,7 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
       if (!isMute || (isMute && data.sender == me))
         setMsgNum(msgNum + 1);
     }
-        
+
     ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
 
     return () => {

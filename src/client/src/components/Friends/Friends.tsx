@@ -4,7 +4,7 @@ import "./Friends.css";
 import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../Modal/modalContext";
+import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import {AuthContext} from "../Auth/auth.context";
 
@@ -24,7 +24,7 @@ function Offline() {
 }
 
 function FriendsList() {
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const { setAuthed } = useContext(AuthContext);
 
   const token = localStorage.getItem("token");
