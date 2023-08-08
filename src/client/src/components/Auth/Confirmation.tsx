@@ -52,7 +52,6 @@ export default function ConfirmEmail() {
           setErrorMessage(error.response.data.message);
         } else {
           setErrorMessage("Server busy... try again");
-          console.log(error);
         }
       });
   };

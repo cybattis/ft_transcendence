@@ -2,12 +2,12 @@ import { Link, Navigate } from "react-router-dom";
 import "./NavButton.css";
 import { apiBaseURL } from "../../utils/constant";
 import axios from "axios";
-import {useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState } from "react";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
-import { ErrorContext } from "../Modal/modalContext";
+import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
-import {AuthContext} from "../Auth/auth.context";
+import { AuthContext } from "../Auth/auth.context";
 
 export function NavButton(props: {
   link: string;
@@ -31,6 +31,7 @@ export function PlayButton(props: { text: string; link: string }) {
 
 export function DisconnectButton(props: { callback?: () => void }) {
   const { setAuthed } = useContext(AuthContext);
+  const { setErrorMessage } = useContext(PopupContext);
 
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
@@ -57,7 +58,7 @@ export function DisconnectButton(props: { callback?: () => void }) {
         return <Navigate to={"/"} />;
       })
       .catch((err) => {
-        console.log(err);
+        setErrorMessage("Error when disconnecting...");
       });
   };
 
@@ -73,9 +74,15 @@ export function DisconnectButton(props: { callback?: () => void }) {
   );
 }
 
-function BellNotif({hasNotifs, setHasNotifs}: { hasNotifs: boolean, setHasNotifs: (value: boolean) => void}) {
+function BellNotif({
+  hasNotifs,
+  setHasNotifs,
+}: {
+  hasNotifs: boolean;
+  setHasNotifs: (value: boolean) => void;
+}) {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
 
   useEffect(() => {
     const fetchNotifs = async () => {
@@ -115,22 +122,26 @@ function BellNotif({hasNotifs, setHasNotifs}: { hasNotifs: boolean, setHasNotifs
 
     return () => {
       ChatClientSocket.offNotificationEvent(notifHandler);
-    }
+    };
   }, []);
 
   const logo: string = hasNotifs ? notifsLogoOn : notifsLogo;
 
-  return (
-    <img src={logo} alt={"logo notif"} width={45} height={45}/>
-  );
+  return <img src={logo} alt={"logo notif"} width={45} height={45} />;
 }
 
 export function Notification() {
   const [hasNotifs, setHasNotifs] = useState(false);
 
   return (
-    <Link to={`/notifications`} className="notifs" onClick={() => {setHasNotifs(false)}} >
-      <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
+    <Link
+      to={`/notifications`}
+      className="notifs"
+      onClick={() => {
+        setHasNotifs(false);
+      }}
+    >
+      <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs} />
       Notifs
     </Link>
   );
