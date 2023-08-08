@@ -17,7 +17,10 @@ import { Settings } from "./pages/Settings/Settings";
 import { apiBaseURL } from "./utils/constant";
 import About from "./pages/About/About";
 import {AuthedRoute} from "./components/Auth/AuthedRoute";
+import { IAGame } from "./pages/Game/IAGame";
+import { AIDifficulty } from "./game/logic/PongAi";
 
+const mode: AIDifficulty = this as any;
 const router = createBrowserRouter([
   {
     path: "/",
@@ -96,6 +99,10 @@ const router = createBrowserRouter([
           {
             path: "game",
             element: <Game />,
+          },
+          {
+            path: "iagame",
+            element: <IAGame />,
           },
           {
             path: "loading",

@@ -559,9 +559,7 @@ export default function ChatClient() {
       }
       actifCanal();
 
-      if (channelName === defaultChannelGen && messages.length === 0){
-        fetchMessage(channelName);
-      }
+      //fetchMessage(channelName);
          
       function scrollbar(){
         const scr = document.getElementById("rcv-mess-container");
@@ -1085,6 +1083,8 @@ export default function ChatClient() {
 
     ChatClientSocket.addErr(errCallBack);
 
+    fetchMessage(takeActiveCanal());
+
     return () => {
       ChatClientSocket.offJoinChan(joinCallBack);
       ChatClientSocket.offBlock(blockedCallBack);
@@ -1119,6 +1119,7 @@ export default function ChatClient() {
           },
         })
         .then((response) => {
+          console.log("HERE: ", response.data);
           setMessages(response.data);
         });
     } else {

@@ -44,7 +44,7 @@ export default function UsersList(props: {
         });
     }
     fecthLists();
-  }, [props.channel]);
+  }, [props.messages, props.channel]);
 
   
   function ListBan() {

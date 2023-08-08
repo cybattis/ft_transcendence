@@ -17,8 +17,6 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   const [other, setOther] = useState('');
   const [msgNum, setMsgNum] = useState(0);
   
-  //Si user est bloque faire en sorte que rien ne marche dans le chat
-
   const token = localStorage.getItem("token");
   let payload: JwtPayload;
 

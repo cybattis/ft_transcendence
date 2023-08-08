@@ -300,7 +300,6 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: any,
   ) {
-    console.log('Inside');
     const channelToJoin = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -393,10 +392,10 @@ export class ChannelService implements OnModuleInit {
       if (this.checkUserIsHere(channelToUpdate.users, username)) return;
       channelToUpdate.users.push(username);
       await this.channelRepository.save(channelToUpdate);
-      socket.join(channel);
-      socket.emit('join', channel);
+      await socket.join(channel);
+      await socket.emit('join', channel);
       const sender = 'announce';
-      const msg = username + ' just joined the Server!';
+      const msg = username + ' just joined the FCKING Server!';
       const send = { sender, msg, channel, blockedChat };
       await this.chatRepository.save({
         channel: channel,
@@ -404,7 +403,7 @@ export class ChannelService implements OnModuleInit {
         emitter: sender,
         emitterId: 0,
       });
-      socket.broadcast.emit('rcv', send);
+      await socket.broadcast.emit('rcv', send);
     } else {
       const channelToJoin = await this.channelRepository.findOne({
         where: { channel: channel },
@@ -432,7 +431,7 @@ export class ChannelService implements OnModuleInit {
           mute: [],
           password: hash,
         });
-        socket.emit('join', channel);
+        await socket.emit('join', channel);
         const sender = 'announce';
         const msg =
           username + ' just joined the channel. Welcome him/her nicely.';
@@ -443,7 +442,7 @@ export class ChannelService implements OnModuleInit {
           emitter: sender,
           emitterId: 0,
         });
-        socket.broadcast.emit('rcv', send);
+        await socket.broadcast.emit('rcv', send);
       }
     }
   }

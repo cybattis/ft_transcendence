@@ -27,8 +27,8 @@ export function HomeUnlogged() {
       <div className={"homeGame"}>
         <PracticePong
           name={"Home game"}
-          width={1000}
-          height={500}
+          width={800}
+          height={400}
           aiDifficulty={"Medium"}
           paddleColor={paddleColor}
         />
