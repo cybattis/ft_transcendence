@@ -9,7 +9,7 @@ import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
-import { Profile } from "./pages/Profile/Profile";
+import {ProfileLoader} from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import {Leaderboard, LeaderboardLoader} from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
@@ -39,47 +39,11 @@ const router = createBrowserRouter([
           },
           {
             path: "profile/:username",
-            element: <Profile />,
-            errorElement: <Error404 />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(
-                apiBaseURL + `user/profile/${params.username}`,
-                {
-                  headers: {
-                    Authorization:
-                      "Bearer " + localStorage.getItem("token") || "",
-                  },
-                }
-              );
-              if (res.status === 400)
-                throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) {
-                localStorage.clear();
-              }
-              return res.json();
-            },
+            element: <ProfileLoader/>,
           },
           {
             path: "my-profile",
-            element: <Profile />,
-            errorElement: <Error404 />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(
-                apiBaseURL + "user/my-profile",
-                {
-                  headers: {
-                    Authorization:
-                      "Bearer " + localStorage.getItem("token") || "",
-                  },
-                }
-              );
-              if (res.status === 400)
-                throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) {
-                localStorage.clear();
-              }
-              return res.json();
-            },
+            element: <ProfileLoader myProfile={true}/>,
           },
           {
             path: "notifications",

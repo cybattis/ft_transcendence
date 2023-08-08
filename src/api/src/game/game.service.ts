@@ -1,6 +1,6 @@
 import {
   Injectable,
-  InternalServerErrorException,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,6 +11,8 @@ import { UserService } from '../user/user.service';
 import { GameBodyDto, GameStatus, GameType } from '../type/game.type';
 import { ModuleRef } from '@nestjs/core';
 import { ScoreUpdate } from '../multiplayer/types/multiplayer.types';
+import {APIError} from "../utils/errors";
+import {Result, success} from "../utils/Error";
 
 @Injectable()
 export class GameService implements OnModuleInit {
@@ -41,19 +43,19 @@ export class GameService implements OnModuleInit {
     return user.games;
   }
 
-  async createGame(body: GameBodyDto): Promise<Game> {
+  async createGame(body: GameBodyDto): Promise<Result<Game, typeof APIError.UserNotFound>> {
     const game: Game = new Game();
 
     game.mode = body.mode;
     game.type = body.type;
 
     const user1 = await this.userService.findByID(body.ids[0]);
-    if (!user1) throw new InternalServerErrorException('User not found');
+    if (user1.isErr()) throw new NotFoundException('User not found');
 
     const user2 = await this.userService.findByID(body.ids[1]);
-    if (!user2) throw new InternalServerErrorException('User not found');
+    if (user2.isErr()) throw new NotFoundException('User not found');
 
-    game.players = [user1, user2];
+    game.players = [user1.value, user2.value];
 
     game.ids = body.ids;
 
@@ -61,8 +63,8 @@ export class GameService implements OnModuleInit {
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
 
-    await this.gameRepository.save(game);
-    return game;
+    const updated = await this.gameRepository.save(game);
+    return success(updated);
   }
 
   async updateUserStats(
@@ -75,7 +77,6 @@ export class GameService implements OnModuleInit {
       .createQueryBuilder()
       .update(User)
       .set({
-        totalGameWon: user1.totalGameWon + 1,
         xp: user1.xp + 200 + 50 + score.u1 * 5,
       })
       .where('id = :id', { id: user1.id })
@@ -122,6 +123,7 @@ export class GameService implements OnModuleInit {
         .createQueryBuilder()
         .update(User)
         .set({
+          totalGameWon: user1.totalGameWon + 1,
           ranking: user1.ranking + 10,
         })
         .where('id = :id', { id: user1.id })

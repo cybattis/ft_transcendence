@@ -1,17 +1,18 @@
-import { Injectable } from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {
   CasualMatchmakingPlayer,
   PendingCasualGame,
   PendingRankedGame,
   RankedMatchmakingPlayer
 } from "./types/matchmaking.type";
-import { GameService } from "../game/game.service";
-import { GameBodyDto, GameMode, GameStatus, GameType } from "../type/game.type";
-import { UserService } from "../user/user.service";
-import { User } from "../user/entity/Users.entity";
-import { Socket } from "socket.io";
-import { Game } from "../game/entity/Game.entity";
-import { MultiplayerService } from "../multiplayer/multiplayer.service";
+import {GameService} from "../game/game.service";
+import {GameBodyDto, GameMode, GameStatus, GameType} from "../type/game.type";
+import {UserService} from "../user/user.service";
+import {User} from "../user/entity/Users.entity";
+import {Socket} from "socket.io";
+import {MultiplayerService} from "../multiplayer/multiplayer.service";
+import {APIError} from "src/utils/errors";
+import {failure, Result, success} from "../utils/Error";
 
 @Injectable()
 export class MatchmakingService {
@@ -41,10 +42,10 @@ export class MatchmakingService {
   public async joinMatchmakingCasual(socket: Socket, playerId: number): Promise<boolean> {
 
     // Find the player in the database
-    const user: User | null = await this.getUserFromDb(playerId);
+    const user = await this.getUserFromDb(playerId);
 
     // If the player was not found, return
-    if (!user) return false;
+    if (user.isErr()) return false;
 
     // Check if the user is already in game
     if (this.multiplayerService.isPlayerInGame(playerId)) return false;
@@ -85,16 +86,16 @@ export class MatchmakingService {
   public async joinMatchmakingRanked(socket: Socket, playerId: number): Promise<boolean> {
 
     // Find the player in the database
-    const user: User | null = await this.getUserFromDb(playerId);
+    const user = await this.getUserFromDb(playerId);
 
     // If the player was not found, return
-    if (!user) return false;
+    if (user.isErr()) return false;
 
     // Check if the user is already in game
     if (this.multiplayerService.isPlayerInGame(playerId)) return false;
 
     // Create a new player object
-    const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.ranking};
+    const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.value.ranking};
 
     // Check if the user is already in matchmaking
     if (this.isPlayerInRankedMatchmaking(player)) return false;
@@ -153,22 +154,22 @@ export class MatchmakingService {
       // If both players are ready, create the game
       if (pendingCasualGame.player1Ready && pendingCasualGame.player2Ready) {
         // Retreiving the players from the database
-        const player1: User | null = await this.getUserFromDb(pendingCasualGame.player1.id);
-        const player2: User | null = await this.getUserFromDb(pendingCasualGame.player2.id);
+        const player1 = await this.getUserFromDb(pendingCasualGame.player1.id);
+        const player2 = await this.getUserFromDb(pendingCasualGame.player2.id);
 
-        if (!player1 || !player2)
+        if (player1.isErr() || player2.isErr())
           return;
 
         const player1Infos = {
-          id: player1.id,
-          nickname: player1.nickname,
-          paddleColor: player1.paddleColor,
+          id: player1.value.id,
+          nickname: player1.value.nickname,
+          paddleColor: player1.value.paddleColor,
         };
 
         const player2Infos = {
-          id: player2.id,
-          nickname: player2.nickname,
-          paddleColor: player2.paddleColor,
+          id: player2.value.id,
+          nickname: player2.value.nickname,
+          paddleColor: player2.value.paddleColor,
         };
 
         // Sending the game start event to the players
@@ -190,22 +191,22 @@ export class MatchmakingService {
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
         // Retreiving the players from the database
-        const player1: User | null = await this.getUserFromDb(pendingRankedGame.player1.id);
-        const player2: User | null = await this.getUserFromDb(pendingRankedGame.player2.id);
+        const player1 = await this.getUserFromDb(pendingRankedGame.player1.id);
+        const player2 = await this.getUserFromDb(pendingRankedGame.player2.id);
 
-        if (!player1 || !player2)
+        if (player1.isErr() || player2.isErr())
           return;
 
         const player1Infos = {
-          id: player1.id,
-          nickname: player1.nickname,
-          paddleColor: player1.paddleColor,
+          id: player1.value.id,
+          nickname: player1.value.nickname,
+          paddleColor: player1.value.paddleColor,
         };
 
         const player2Infos = {
-          id: player2.id,
-          nickname: player2.nickname,
-          paddleColor: player2.paddleColor,
+          id: player2.value.id,
+          nickname: player2.value.nickname,
+          paddleColor: player2.value.paddleColor,
         };
 
         pendingRankedGame.player1.socket.emit("game-started", player2Infos);
@@ -339,8 +340,10 @@ export class MatchmakingService {
     };
 
     try {
-      const newGame: Game = await this.gameService.createGame(gameDto);
-      this.multiplayerService.createRoom(newGame, player1.id, player2.id);
+      const newGame = await this.gameService.createGame(gameDto);
+      if (newGame.isErr())
+        return false;
+      this.multiplayerService.createRoom(newGame.value, player1.id, player2.id);
       console.log("Casual game created");
       return true;
     } catch (e) {
@@ -360,8 +363,10 @@ export class MatchmakingService {
     };
 
     try {
-      const newGame: Game = await this.gameService.createGame(gameDto);
-      this.multiplayerService.createRoom(newGame, player1.id, player2.id);
+      const newGame = await this.gameService.createGame(gameDto);
+      if (newGame.isErr())
+        return false;
+      this.multiplayerService.createRoom(newGame.value, player1.id, player2.id);
       console.log("Ranked game created");
       return true;
     } catch (e) {
@@ -385,7 +390,9 @@ export class MatchmakingService {
     return this.rankedMatchmakingQueue.find((p) => p.id === playerId);
   }
 
-  private async getUserFromDb(playerId: number): Promise<User | null> {
-    return await this.userService.findByID(playerId);
+  private async getUserFromDb(playerId: number): Promise<Result<User, typeof APIError.UserNotFound>> {
+    const result = await this.userService.findByID(playerId);
+    if (result.isErr()) return failure(APIError.UserNotFound);
+    return success(result.value);
   }
 }

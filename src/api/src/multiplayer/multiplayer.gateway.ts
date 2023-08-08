@@ -6,14 +6,16 @@ import {
   WebSocketGateway,
   WebSocketServer, WsException
 } from "@nestjs/websockets";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { AuthedSocket } from "../auth/types/auth.types";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
-import { JwtService } from "@nestjs/jwt";
 import { Public } from "../auth/guards/PublicDecorator";
 import { MultiplayerService } from "./multiplayer.service";
 import { BallUpdate, MovementUpdate } from "./types/multiplayer.types";
+import { UseGuards } from "@nestjs/common";
+import { AuthService } from "../auth/auth.service";
 
+@UseGuards(WsAuthGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -26,7 +28,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly jwtService: JwtService,
+  constructor(private readonly authService: AuthService,
               private readonly multiplayerService: MultiplayerService) {}
 
   afterInit(server: Server) {
@@ -34,7 +36,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
     this.multiplayerService.setServer(server);
 
     this.server.use((socket: AuthedSocket, next) => {
-      if (WsAuthGuard.validateSocketToken(socket, this.jwtService)) {
+      if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
         console.log("An authorized user connected to the multiplayer server");
         next();
       } else {

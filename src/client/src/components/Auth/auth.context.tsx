@@ -35,8 +35,6 @@ export function AuthContextProvider({children}: {children: ReactNode}) {
   const token = localStorage.getItem("token");
 
   function setAuthedFunction(authed: boolean) {
-    console.log("setting authed to :", authed);
-    console.trace("setAuthedFunction");
     setIsAuthing(false);
     setAuthed(authed);
   }

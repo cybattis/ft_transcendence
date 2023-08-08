@@ -1,4 +1,4 @@
-export interface JwtPayload {
+export interface TokenData {
   id: number;
   email: string;
   nickname: string;

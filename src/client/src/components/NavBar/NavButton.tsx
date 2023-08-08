@@ -8,6 +8,9 @@ import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { ErrorContext } from "../Modal/modalContext";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import {AuthContext} from "../Auth/auth.context";
+import {MatchmakingClient} from "../../game/networking/matchmaking-client";
+import {MultiplayerClient} from "../../game/networking/multiplayer-client";
+import {removeMultiplayerGame} from "../../game/PongManager";
 
 export function NavButton(props: {
   link: string;
@@ -21,9 +24,9 @@ export function NavButton(props: {
   );
 }
 
-export function PlayButton(props: { text: string; link: string }) {
+export function PlayButton(props: { text: string; link: string; callback?: () => void;}) {
   return (
-    <Link to={props.link} className="playButton">
+    <Link to={props.link} className="playButton" onClick={props.callback}>
       {props.text}
     </Link>
   );
@@ -37,28 +40,12 @@ export function DisconnectButton(props: { callback?: () => void }) {
 
     setAuthed(false);
     ChatClientSocket.disconnect();
-
-    const token: string | null = localStorage.getItem("token");
-    if (!token) {
-      await axios.put(apiBaseURL + "user/disconnect").then(() => {
-        return <Navigate to={"/"} />;
-      });
-    }
-
+    MultiplayerClient.disconnect();
+    MatchmakingClient.disconnect();
+    removeMultiplayerGame();
+    MultiplayerClient.quitGame();
     localStorage.clear();
-
-    await axios
-      .put(apiBaseURL + "auth/disconnect", null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(() => {
-        return <Navigate to={"/"} />;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    return <Navigate to={'/'} />;
   };
 
   return (
@@ -129,7 +116,11 @@ export function Notification() {
   const [hasNotifs, setHasNotifs] = useState(false);
 
   return (
-    <Link to={`/notifications`} className="notifs" onClick={() => {setHasNotifs(false)}} >
+    <Link to={`/notifications`} className="notifs" onClick={() => {
+      setHasNotifs(false)
+      removeMultiplayerGame();
+      MultiplayerClient.quitGame();
+    }} >
       <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
       Notifs
     </Link>

@@ -23,7 +23,7 @@ export class MailService {
     });
   }
 
-  async sendCodeConfirmation(email: string) {
+  async sendCodeConfirmation(email: string): Promise<string> {
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     const emails = GlobalService.emails;
     let find = false;
@@ -41,7 +41,7 @@ export class MailService {
       GlobalService.codes[i] = code;
     }
 
-    return await this.mailerService.sendMail({
+    await this.mailerService.sendMail({
       to: email,
       from: process.env.EMAIL_USR,
       subject: 'Code confirmation for the login',
@@ -50,5 +50,7 @@ export class MailService {
         code,
       },
     });
+
+    return code;
   }
 }

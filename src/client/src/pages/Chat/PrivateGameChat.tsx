@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChatInterface } from "./Interface/chat.interface";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
@@ -19,7 +19,7 @@ export default function PrivateGameChat() {
   //Si user est bloque faire en sorte que rien ne marche dans le chat
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload;
+  let payload: TokenData;
 
   if (token) {
     try {

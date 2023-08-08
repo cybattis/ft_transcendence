@@ -1,24 +1,21 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
 import ChatClient from "../Chat/Chat";
-import { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { UserInfo } from "../../type/user.type";
 import { Navigate } from "react-router-dom";
 import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
-import { calculateWinrate } from "../../utils/calculateWinrate";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { Friends } from "../../components/Friends/Friends";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
-import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
 import { UserData } from "../Profile/user-data";
-import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { calculateWinrate } from "../../utils/calculateWinrate";
+import {useData} from "../../hooks/UseData";
+import {useProfileData} from "../../hooks/UseProfileData";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -93,7 +90,7 @@ function MatchmakingButton(props: {
   }, [timeLeft, state, props]);
 
   const handleClick = () => {
-    let decoded: JwtPayload | null = null;
+    let decoded: TokenData | null = null;
     try {
       decoded = jwt_decode(localStorage.getItem("token")!);
     } catch (e) {}
@@ -211,7 +208,7 @@ function GameLauncher() {
 
 function Result(props: { game: GameStatsDto; userId: number }) {
   const isWin =
-    (props.game.players[0].id == props.userId &&
+    (props.game.ids[0] == props.userId &&
       props.game.scoreP1 > props.game.scoreP2) ||
     (props.game.ids[1] == props.userId &&
       props.game.scoreP1 < props.game.scoreP2);
@@ -266,7 +263,7 @@ function LastMatch(props: { data: UserInfo }) {
 }
 
 function Winrate(props: { data: UserInfo }) {
-  const winrate: number = calculateWinrate(props.data);
+  const winrate = calculateWinrate(props.data);
 
   return (
     <div className={"home-stat-box"}>
@@ -284,7 +281,11 @@ function HomeStatContainerDesktop(props: { data: UserInfo }) {
       <div className={"home-stat-box"}>
         <h5>Matches</h5>
         <hr className={"user-profile-hr"} />
-        <div>{props.data.games?.length}</div>
+        <div>{props.data.games?.filter(
+          (game) => game.type === GameType.RANKED &&
+            (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+        ).length}
+        </div>
       </div>
       <Winrate data={props.data} />
       <div className={"home-stat-box"}>
@@ -304,7 +305,11 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
         <div className={"home-stat-box"}>
           <h5>Matches</h5>
           <hr className={"user-profile-hr"} />
-          <div>{props.data.games?.length}</div>
+          <div>{props.data.games?.filter(
+            (game) => game.type === GameType.RANKED &&
+              (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+          ).length}
+          </div>
         </div>
       </div>
       <div id={"hmc-g2"}>
@@ -319,100 +324,50 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
   );
 }
 
-function UserProfile(props: { data: UserInfo }) {
+function UserProfile(props: { data: UserInfo | null }) {
+  let xp = 0;
   const data = props.data;
-  const xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
+
+  if (data)
+    xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
 
   return (
     <div id={"HomeUserInfo"} className="userProfile_container">
       <div className="infobox">
-        <Avatar size={200} img={data.avatarUrl} />
+        <Avatar size={200} img={data?.avatarUrl} />
         <div className="info">
-          <h5>{data.nickname}</h5>
-          <p>LVL {data.level}</p>
+          <h5>{data?.nickname}</h5>
+          <p>LVL {data?.level}</p>
           <p>{xp} XP</p>
-          <XPBar xp={data.xp} lvl={data.level} />
+          {data ? <XPBar xp={xp} lvl={data.level} /> : null}
         </div>
       </div>
-      <HomeStatContainerDesktop data={data} />
-      <HomeStatContainerMobile data={data} />
+      {data ?
+        <>
+          <HomeStatContainerDesktop data={data} />
+          <HomeStatContainerMobile data={data} />
+        </>
+        : null}
     </div>
   );
 }
 
 export function HomeLogged() {
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
-
-  const token = localStorage.getItem("token");
-  const [data, setData] = useState<UserInfo>({
-    id: 0,
-    nickname: "",
-    avatarUrl: "",
-    level: 0,
-    xp: 0,
-    ranking: 0,
-    games: [],
-    friendsId: [],
-    requestedId: [],
-    blockedId: [],
-    blockedById: [],
-    joinChannel: [],
-    paddleColor: "ffffff",
-  });
+  const { data } = useProfileData();
 
   useEffect(() => {
     MatchmakingClient.connect();
     MultiplayerClient.connect();
 
-    async function fetchData() {
-      if (!token) return;
-      const payload: JwtPayload = jwt_decode(token);
-
-      await axios
-        .get(apiBaseURL + "user/profile/" + payload.nickname, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          UserData.updatePaddleColor(res.data.paddleColor);
-          UserData.updateNickname(res.data.nickname);
-          setData(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            localStorage.clear();
-            setErrorMessage("Error unknown...");
-          } else if (
-            error.response.status === 403 ||
-            error.response.status === 400
-          ) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else {
-            setErrorMessage(error.response.data.message + "!");
-          }
-          return <Navigate to={"/"} />;
-        });
+    if (data) {
+      UserData.updatePaddleColor(data.paddleColor);
+      UserData.updateNickname(data.nickname);
     }
-
-    fetchData().then(() => {});
-
-    ChatClientSocket.onNotificationEvent(fetchData);
 
     return () => {
       MatchmakingClient.leaveMatchmaking();
     };
-  }, []);
-
-  if (token === null) {
-    setAuthed(false);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+  }, [data]);
 
   return (
     <div className={"home"}>

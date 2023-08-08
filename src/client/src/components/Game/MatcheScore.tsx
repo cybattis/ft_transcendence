@@ -3,7 +3,7 @@ import "./GameStatsItem.css";
 
 export function MatcheScore(props: { game: GameStatsDto; userId: number }) {
   const score = () => {
-    if (props.game.players[0].id === props.userId) {
+    if (props.game.ids[0] === props.userId) {
       return (
         <div>
           {props.game.scoreP1}-{props.game.scoreP2}

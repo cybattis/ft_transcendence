@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./Profile.css";
 import axios from "axios";
-import { Navigate, useLoaderData } from "react-router-dom";
+import {Navigate, useLoaderData, useParams} from "react-router-dom";
 import { UserFriend, UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import {
@@ -9,16 +9,20 @@ import {
   GameStatsItem,
 } from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
-import { GameStatsDto } from "../../type/game.type";
+import {GameStatsDto, GameStatus, GameType} from "../../type/game.type";
 import jwt_decode from "jwt-decode";
 import { apiBaseURL } from "../../utils/constant";
 import { ErrorContext } from "../../components/Modal/modalContext";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import { RgbColor, hslToRgb, RGBToHSL } from "../../utils/colors";
 import { MessageModal } from "../../components/Modal/MessageModal";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import {AuthContext} from "../../components/Auth/auth.context";
+import {isRequestError, useData} from "../../hooks/UseData";
+import {ErrorPage} from "../Error/ErrorPage";
+import {LoadingPage} from "../Loading/LoadingPage";
+import Error404 from "../Error404";
 
 enum relationStatus {
   NONE,
@@ -70,7 +74,7 @@ function BlockUser(props: FriendRequestProps) {
 
   const handleBlockButton = async () => {
     await axios
-      .put(apiBaseURL + `user/block/${props.data.id}`, null, {
+      .put(apiBaseURL + `user/block-user/${props.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,13 +122,12 @@ function FriendRequest(props: FriendRequestProps) {
 
   const handleAddFriend = async () => {
     await axios
-      .put(apiBaseURL + `user/request/${props.data.id}`, null, {
+      .put(apiBaseURL + `user/friend-request/${props.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-      .then((res) => {
-        ChatClientSocket.sendFriendRequest(props.data.id);
+      .then(() => {
         props.setStatus(relationStatus.REQUESTED);
       })
       .catch((error) => {
@@ -146,13 +149,12 @@ function FriendRequest(props: FriendRequestProps) {
 
   const handleRemoveButton = async () => {
     await axios
-      .put(apiBaseURL + `user/remove/${props.data.id}`, null, {
+      .put(apiBaseURL + `user/remove-friend/${props.data.id}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-      .then((res) => {
-        ChatClientSocket.notificationEvent(props.data.id);
+      .then(() => {
         props.setStatus(relationStatus.NONE);
       })
       .catch((error) => {
@@ -291,8 +293,19 @@ function PaddleColor(props: { oldColor: RgbColor }) {
   );
 }
 
-export function Profile() {
-  let data: UserInfo = useLoaderData() as UserInfo;
+export function ProfileLoader(props: {myProfile?: true}) {
+  const params = useParams();
+  const url = props.myProfile ? "user/my-profile" : `user/profile/${params.username}`;
+  const { data, error } = useData<UserInfo>(url);
+
+  return data ? <Profile data={data}/> : error ? (
+      isRequestError(error) && error.code === 404 ?
+        <Error404/>
+        : <ErrorPage/> )
+    : <LoadingPage/>;
+}
+
+export function Profile(props: {data: UserInfo}) {
   const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(ErrorContext);
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
@@ -301,11 +314,11 @@ export function Profile() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const payload: JwtPayload | null = jwt_decode(token);
+    const payload: TokenData | null = jwt_decode(token);
 
     function checkFriendStatus(meData: UserFriend) {
     if (!payload) return;
-    if (payload.id === data.id) setFriendStatus(relationStatus.ME);
+    if (payload.id === props.data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))
@@ -330,9 +343,9 @@ export function Profile() {
     }
 
     async function fetchData() {
-      if (data.id === undefined) return;
+      if (props.data.id === undefined) return;
       axios
-        .get(apiBaseURL + `user/friends-data/${data.id}`, {
+        .get(apiBaseURL + `user/friends-data/${props.data.id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -365,35 +378,35 @@ export function Profile() {
     }
   }, []);
 
-  const winrate: number = calculateWinrate(data);
+  const winrate: number = calculateWinrate(props.data);
   const oldColor: RgbColor = {
     // change to color from db
-    r: data.paddleColor ? parseInt(data.paddleColor.substring(0, 2), 16) : 255,
-    g: data.paddleColor ? parseInt(data.paddleColor.substring(2, 4), 16) : 255,
-    b: data.paddleColor ? parseInt(data.paddleColor.substring(4, 6), 16) : 255,
+    r: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(0, 2), 16) : 255,
+    g: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(2, 4), 16) : 255,
+    b: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(4, 6), 16) : 255,
   };
 
   return (
     <div className={"profile-page"}>
       <div className={"profile-infobox-background"}>
         <div className={"profile-infobox"}>
-          <Avatar size="200px" img={data.avatarUrl} />
+          <Avatar size="200px" img={props.data.avatarUrl} />
           <div id="info">
             <div id="header">
-              <h1 id={"nickname"}>{data.nickname}</h1>
+              <h1 id={"nickname"}>{props.data.nickname}</h1>
             </div>
           </div>
           {friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
               {friendStatus !== relationStatus.BLOCKED ? (
                 <FriendRequest
-                  data={data}
+                  data={props.data}
                   status={friendStatus}
                   setStatus={setFriendStatus}
                 />
               ) : null}
               <BlockUser
-                data={data}
+                data={props.data}
                 status={friendStatus}
                 setStatus={setFriendStatus}
               />
@@ -412,19 +425,22 @@ export function Profile() {
       <div className={"profile-stats"}>
         <div id={"level"}>
           <div>Level</div>
-          <div>{data.level}</div>
+          <div>{props.data.level}</div>
         </div>
         <div id={"xp"}>
           <div>XP</div>
-          <div>{data.xp}</div>
+          <div>{props.data.xp}</div>
         </div>
         <div id={"elo"}>
           <div>ELO</div>
-          <div>{data.ranking}</div>
+          <div>{props.data.ranking}</div>
         </div>
         <div id={"game-played"}>
           <div>Matches</div>
-          <div>{data.games?.length}</div>
+          <div>{props.data.games?.filter(
+            (game) => game.type === GameType.RANKED &&
+              (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+          ).length}</div>
         </div>
         <div id={"winrate"}>
           <div>Winrate</div>
@@ -436,9 +452,9 @@ export function Profile() {
         <hr id={"games-stats-hrbar"} />
         <GameStatsHeader />
         <div className={"matches-table"}>
-          {data.games?.map((game: GameStatsDto, index) => (
+          {props.data.games?.map((game: GameStatsDto, index) => (
             <div key={index}>
-              <GameStatsItem game={game} id={data!.id} />
+              <GameStatsItem game={game} id={props.data!.id} />
             </div>
           ))}
         </div>

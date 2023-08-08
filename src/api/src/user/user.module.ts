@@ -11,6 +11,7 @@ import { MailService } from '../mail/mail.service';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelModule } from 'src/channel/channel.module';
 import { Channel } from 'src/channel/entity/Channel.entity';
+import {ChannelService} from "../channel/channel.service";
 
 
 @Module({
@@ -18,9 +19,10 @@ import { Channel } from 'src/channel/entity/Channel.entity';
     AuthModule,
     TypeOrmModule.forFeature([User, Game, Channel]),
     MulterModule.register({ dest: './avatar' }),
+    ChannelModule
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService, JwtService],
-  exports: [UserService,]
+  exports: [UserService]
 })
 export class UserModule {}

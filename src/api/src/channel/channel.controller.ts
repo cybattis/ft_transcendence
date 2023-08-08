@@ -46,8 +46,10 @@ export class ChannelController {
     async findMessageChatWBlocked(@Param('channel') channel : string, @Headers('Authorization') header: Headers): Promise<Chat[]>{
         const payload: any = this.jwtService.decode(header.toString().split(' ')[1]);
         channel = "#" + channel;
-        const listBlocked : string[] = await this.userService.getBlockedList(payload.id);
-        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked]))} }));
+        const listBlocked = await this.userService.getBlockedList(payload.id);
+        if (listBlocked.isErr())
+          return [];
+        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
     }
 
   @Get('/message/:channel/:username')

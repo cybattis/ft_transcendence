@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, UseGuards} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -6,12 +6,18 @@ import {
   WebSocketServer,
   SubscribeMessage,
   OnGatewayConnection,
-  OnGatewayDisconnect,
+  OnGatewayDisconnect, OnGatewayInit, WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ChannelService } from '../channel/channel.service';
 import { UserService } from '../user/user.service';
+import {WsAuthGuard} from "../auth/guards/ws.auth.guard";
+import {JwtService} from "@nestjs/jwt";
+import { AuthedSocket } from "../auth/types/auth.types";
+import {AuthService} from "../auth/auth.service";
 
+
+@UseGuards(WsAuthGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',
@@ -20,27 +26,51 @@ import { UserService } from '../user/user.service';
   path: '/chat',
 })
 @Injectable()
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  private server: Server;
 
   constructor(
+    private readonly jwtService: JwtService,
     private readonly channelService: ChannelService,
     private readonly userService: UserService,
+    private readonly authService: AuthService,
   ) {}
-  handleConnection(socket: Socket) {
-    console.log(`Client connected: ${socket.id}`);
-    this.channelService.addUserSocketToList(socket);
+
+  afterInit(server: Server) {
+    this.server = server;
+    this.channelService.setServer(server);
+
+    this.server.use((socket: AuthedSocket, next) => {
+      if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
+        console.log("An authorized user connected to the multiplayer server");
+        next();
+      } else {
+        console.log("An unauthorized user tried to connect to the multiplayer server");
+        socket.emit('unauthorized');
+        next(new WsException("Unauthorized"));
+      }
+    });
   }
 
-  handleDisconnect(socket: Socket) {
+  async handleConnection(socket: AuthedSocket) {
+    console.log(`Client connected: ${socket.id}`);
+    this.channelService.addUserSocketToList(socket);
+    await this.userService.changeOnlineStatus(socket.userId, true);
+  }
+
+  async handleDisconnect(socket: AuthedSocket) {
+    const auth = socket.handshake?.auth?.token;
+    const authHeaders = socket.handshake?.headers?.authorization;
+    const token = auth ? auth : authHeaders;
+    await this.userService.changeOnlineStatus(socket.userId, false);
     console.log(`Client disconnected: ${socket.id}`);
     this.channelService.removeUserSocketFromList(socket);
   }
 
   @SubscribeMessage('send')
   async handleMessage(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
@@ -56,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('sendGame')
   async handleGameMessage(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
@@ -72,7 +102,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('join')
   async handlePass(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody()
     data: { username: string; channel: string; password: string; type: string },
   ) {
@@ -100,7 +130,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('joinGame')
   async joinGameChat(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: { username: string; canal: string },
   ) {
     if (!data) return;
@@ -116,7 +146,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('change')
   async handleChange(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody()
     data: { channel: string; type: string; pwd: string; username: string },
   ) {
@@ -130,7 +160,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('prv')
   async handlePrv(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: { username: string; target: string },
   ) {
     await this.channelService.sendPrvMess(
@@ -143,7 +173,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('blocked')
   async handleBlocked(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: { target: string },
   ) {
     await this.channelService.blockedUser(this.server, socket, data.target);
@@ -151,7 +181,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('mute')
   async handleMute(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
@@ -166,7 +196,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('unmute')
   async handleUnMute(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     const blockedUsers: any = await this.userService.findByLogin(data.username);
@@ -180,7 +210,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('op')
-  async handleOpe(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+  async handleOpe(@ConnectedSocket() socket: AuthedSocket, @MessageBody() data: any) {
     await this.channelService.opChannel(
       socket,
       data.channel,
@@ -192,7 +222,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('quit')
   async handleQuit(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     await this.channelService.quitChannel(
@@ -243,7 +273,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('kick')
   async handleBKick(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
     if (
@@ -274,25 +304,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('ping')
-  handlePing(socket: Socket) {
-    console.log(`Received ping`);
+  handlePing() {
+    console.log(`Ping`);
     this.server.emit('pong');
   }
 
-  @SubscribeMessage('friend-request')
-  notifyFriendRequest(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() targetID: number,
-  ) {
-    this.channelService.sendFriendRequest(this.server, targetID);
-  }
-
   @SubscribeMessage('notif-event')
-  notifyEvent(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() target: number,
-  ) {
-    const targetSocket = this.channelService.getSocketById(target);
+  async notifyEvent(@MessageBody() target: number) {
+    const targetSocket = await this.channelService.getSocketById(target);
     if (!targetSocket) {
       console.log(`socket not found`);
       return;
@@ -302,7 +321,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('inv')
   async handleInvitation(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: { channel: string; target: string, id: number },
   ) {
     await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, data.id);
@@ -310,7 +329,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('acc')
   async AcceptInvitationChannel(
-    @ConnectedSocket() socket: Socket,
+    @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: { channel: string; target: string },
   ) {
     await this.channelService.AcceptInvitationChannel(

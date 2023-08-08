@@ -11,13 +11,16 @@ import {
   UseInterceptors,
   Headers,
   UseGuards,
-  ForbiddenException,
+  ForbiddenException, NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
-import { GameService } from '../game/game.service';
-import { ModuleRef } from '@nestjs/core';
-import { UserInfo, UserSettings } from '../type/user.type';
+import {
+  UserFriend,
+  UserFriendsData,
+  UserInfo,
+  UserSettings
+} from '../type/user.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
@@ -26,70 +29,71 @@ import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
 import { TokenData } from '../type/jwt.type';
 import {TypeCheckers} from "../utils/type-checkers";
-import { channel } from 'diagnostics_channel';
+import {APIError} from "../utils/errors";
+import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
+import {TypeConverters} from "../utils/type-converters";
 
 @Controller('user')
-export class UserController {
-  private gameService: GameService;
-
+export class UserController{
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private moduleRef: ModuleRef,
   ) {}
-
-  onModuleInit() {
-    this.gameService = this.moduleRef.get(GameService, { strict: false });
-  }
 
   @Get()
   async findAll(): Promise<User[]> {
-    return this.userService.findAll();
+    return await this.userService.findAll();
   }
 
   /*
    * GET /user/profile/:nickname
-   * @desc Get user public info from nickname for profile page
+   * Get user public info from nickname for profile page
    */
   @UseGuards(TokenGuard)
   @Get('profile/:username')
   async userInfo(
     @Param('username') username: string,
-    @Headers('Authorization') header: Headers,
-  ): Promise<UserInfo | any> {
-    const token = header.toString().split(' ')[1];
-    return this.userService.userInfo(token, username);
+  ): Promise<UserInfo> {
+    const result = await this.userService.userInfo(username);
+
+    if (result.isErr())
+      throw new NotFoundException();
+    return result.value;
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('profile/id/:id')
+  async userInfoId(
+    @Param('id') id: number,
+  ): Promise<UserInfo> {
+    const result = await this.userService.userInfoByID(id);
+
+    if (result.isErr())
+      throw new NotFoundException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('my-profile')
   async myProfile(
     @Headers('Authorization') header: Headers
-  ): Promise<UserInfo | any> {
-    const tokens = header.toString().split(' ');
-    if (tokens.length !== 2)
-      throw new BadRequestException();
+  ): Promise<UserInfo> {
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
 
-    const decoded = this.jwtService.decode(tokens[1]);
-    if (!TypeCheckers.isTokenData(decoded))
-      throw new BadRequestException();
-
-    return this.userService.findByID(decoded.id);
+    const result = await this.userService.findByID(decoded.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return TypeConverters.fromUserToUserInfo(result.value);
   }
 
   @Get('check/login/:input')
-  async checkNicknameInUse(@Param('input') input: string) {
-    return await this.userService.findByLogin(input);
+  async checkNicknameInUse(@Param('input') input: string): Promise<boolean> {
+    return (await this.userService.findByLogin(input)).isOk();
   }
 
   @Get('check/email/:input')
-  async checkEmailInUse(@Param('input') input: string) {
-    return await this.userService.findByEmail(input);
-  }
-
-  @Put('disconnect')
-  async disconnectUser(@Body() body: number) {
-    return await this.userService.changeOnlineStatus(body, false);
+  async checkEmailInUse(@Param('input') input: string): Promise<boolean> {
+    return (await this.userService.findByEmail(input)).isOk();
   }
 
   @UseGuards(TokenGuard)
@@ -102,9 +106,13 @@ export class UserController {
   @Get('settings')
   async userSettings(
     @Headers('Authorization') header: Headers,
-  ): Promise<User | null> {
-    const token = header.toString().split(' ')[1];
-    return await this.userService.userSettings(token);
+  ): Promise<UserSettings> {
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
+
+    const result = await this.userService.userSettings(decoded);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -124,6 +132,8 @@ export class UserController {
           if (!token)
             throw new ForbiddenException('Token invalid, please login again.');
           const data: TokenData = jwt_decode(token);
+          if (!TypeCheckers.isTokenData(data))
+            throw new ForbiddenException('Token invalid, please login again.');
           const path = `./avatar/${data.id}`;
 
           fs.mkdirSync(path, { recursive: true });
@@ -143,17 +153,20 @@ export class UserController {
       }),
     }),
   )
-  uploadFile(
+  async uploadFile(
     @UploadedFile()
-    file: Express.Multer.File,
+      file: Express.Multer.File,
     @Headers('Authorization') header: Headers,
     @Req() req: any,
-  ) {
+  ): Promise<string> {
     if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
-    const token = header.toString().split(' ')[1];
-    return this.userService.updateAvatar(file.path, token);
+    const token = getTokenOrThrow(header);
+    const result = await this.userService.updateAvatar(file.path, token);
+    if (result.isErr())
+        throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -161,108 +174,121 @@ export class UserController {
   async updateSettings(
     @Body() body: UserSettings,
     @Headers('Authorization') header: Headers,
-  ) {
-    const token = header.toString().split(' ')[1];
-    try {
-      return await this.userService.updateUserSettings(body, token);
-    } catch (e) {
-      throw new BadRequestException(e.message);
+  ): Promise<UserSettings> {
+    const token = getTokenOrThrow(header);
+    const result = await this.userService.updateUserSettings(body, token);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+        case APIError.InvalidToken:
+          throw new ForbiddenException();
+        case APIError.InvalidNickname:
+          throw new BadRequestException('Invalid nickname');
+        case APIError.NicknameAlreadyTaken:
+          throw new BadRequestException('Nickname already taken');
+      }
     }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('friends-data/:id')
-  async getFriends(@Param('id') id: number) {
-    return await this.userService.getFriends(id);
+  async getFriends(@Param('id') id: number): Promise<UserFriendsData> {
+    const result = await this.userService.getFriendData(id);
+    if (result.isErr())
+      throw new NotFoundException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('notifs')
-  async getNotifs(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    if (payload) return await this.userService.getNotifs(payload.id);
+  async getNotifs(@Headers('Authorization') header: Headers): Promise<boolean> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.hasNotifs(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
-  @Get('friends/online')
-  async getOnlineFriendsList(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.getOnlineFriendsList(payload.id);
+  @Get('friends/status')
+  async getFriendsStatus(@Headers('Authorization') header: Headers): Promise<UserFriend[]> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.getFriendsListStatus(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
-  @Get('friends/offline')
-  async getOfflineFriendsList(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.getOfflineFriendsList(payload.id);
-  }
-
-  @UseGuards(TokenGuard)
-  @Put('request/:id')
+  @Put('friend-request/:id')
   async requestFriend(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.requestFriend(id, payload.id);
+  ): Promise<void> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.requestFriend(Number(id), payload.id);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound:
+          throw new NotFoundException();
+      }
+    }
   }
 
   @UseGuards(TokenGuard)
-  @Put('remove/:id')
+  @Put('remove-friend/:id')
   async removeFriend(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.removeFriend(id, payload.id);
+  ): Promise<UserFriendsData> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.removeFriend(id, payload.id);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound:
+          throw new NotFoundException();
+      }
+    }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('blockedList')
-  async getBlockedList(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.getBlockedList(payload.id);
+  async getBlockedList(@Headers('Authorization') header: Headers)
+  : Promise<number[]> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.getBlockedList(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
-  @Put('blockUsr/:username')
+  @Put('block-user/:id')
   async blockFriendUsr(
-    @Param('username') username: string,
-    @Headers('Authorization') header: Headers,
-  ) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    const blockedUser: User | null = await this.userService.findByLogin(
-      username,
-    );
-    if (!blockedUser) throw new ForbiddenException('User does not exist');
-    return await this.userService.blockFriend(blockedUser.id, payload.id);
-  }
-
-  @UseGuards(TokenGuard)
-  @Put('block/:id')
-  async blockFriend(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const payload = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData | null;
-    if (!payload) return;
-    return await this.userService.blockFriend(id, payload.id);
+  ): Promise<UserFriendsData> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.blockFriend(id, payload.id);
+
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound:
+          throw new NotFoundException();
+      }
+    }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -270,12 +296,20 @@ export class UserController {
   async unblockFriend(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const payload = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData | null;
-    if (!payload) return;
-    return await this.userService.unblockFriend(id, payload.id);
+  ): Promise<UserFriendsData> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result =  await this.userService.unblockFriend(id, payload.id);
+
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound:
+          throw new NotFoundException();
+      }
+    }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -283,13 +317,22 @@ export class UserController {
   async acceptFriendRequest(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
+  ): Promise<UserFriendsData> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request accepted by: ', id, userID.id);
-    return await this.userService.acceptFriendRequest(id, userID.id);
+    console.log('friend request accepted by: ', id, payload.id);
+    const result = await this.userService.acceptFriendRequest(id, payload.id);
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound :
+        case APIError.FriendRequestNotFound:
+          throw new NotFoundException();
+      }
+    }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -297,22 +340,32 @@ export class UserController {
   async declineFriendRequest(
     @Param('id') id: number,
     @Headers('Authorization') header: Headers,
-  ) {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
+  ): Promise<UserFriendsData> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request declined by: ', id, userID.id);
-    return await this.userService.declineFriendRequest(id, userID.id);
+    console.log('friend request declined by: ', id, payload.id);
+    const result = await this.userService.declineFriendRequest(id, payload.id);
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.OtherUserNotFound:
+        case APIError.FriendRequestNotFound:
+          throw new NotFoundException();
+      }
+    }
+
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('requested')
-  async requests(@Headers('Authorization') header: Headers) {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.requests(payload.id);
+  async requests(@Headers('Authorization') header: Headers): Promise<UserFriend[]> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.requests(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
@@ -321,40 +374,47 @@ export class UserController {
     @Body() body: { color: string },
     @Headers('Authorization') header: Headers,
   ): Promise<void> {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-
+    const payload = decodeTokenOrThrow(header, this.jwtService);
     const clientId = payload.id;
 
-    const result: boolean = await this.userService.updatePaddleColor(
+    const result = await this.userService.updatePaddleColor(
       clientId,
       body.color,
     );
 
-    if (!result) {
-      const actualPaddleColor = await this.userService.getPaddleColor(clientId);
-      throw new BadRequestException({
-        message: 'Invalid color',
-        paddleColor: actualPaddleColor,
-      });
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.InvalidColor: {
+          const actualPaddleColor = await this.userService.getPaddleColor(clientId);
+          throw new BadRequestException({
+            message: 'Invalid color',
+            paddleColor: actualPaddleColor,
+          });
+        }
+      }
     }
   }
 
   @UseGuards(TokenGuard)
   @Get('customization/paddleColor/:id')
   async getPaddleColor(@Param('id') id: number): Promise<string> {
-    return await this.userService.getPaddleColor(id);
+    const result = await this.userService.getPaddleColor(id);
+    if (result.isErr())
+      throw new NotFoundException();
+    return result.value;
   }
 
   @UseGuards(TokenGuard)
   @Get('request/channel')
   async fetchInvChannel(
     @Headers('Authorization') header: Headers,
-  ){
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    return await this.userService.fetchInvChannel(payload.id);
+  ) : Promise<string[]> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.fetchInvChannel(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
   }
 }

@@ -9,7 +9,6 @@ export function Game() {
   return (
     <div>
       <MultiplayerPong
-        name={"BESTBESTBEST"}
         width={800}
         height={400}
         paddleColor={rgb}

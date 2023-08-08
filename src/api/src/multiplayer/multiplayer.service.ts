@@ -11,7 +11,6 @@ import { Game } from '../game/entity/Game.entity';
 import { AuthedSocket } from '../auth/types/auth.types';
 import { GameStatus } from '../type/game.type';
 import { Server } from 'socket.io';
-import { User } from '../user/entity/Users.entity';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -296,19 +295,22 @@ export class MultiplayerService {
     await this.gameService.updateGameStatus(game.id, game.status);
 
     // Update the stats of the players
-    const user1: User | null = await this.userService.findByID(game.player1Id);
-    const user2: User | null = await this.userService.findByID(game.player2Id);
+    const user1 = await this.userService.findByID(game.player1Id);
+    const user2 = await this.userService.findByID(game.player2Id);
+
     const score = { u1: game.player1Score, u2: game.player2Score };
 
-    if (user1 && user2) {
+    if (user1.isOk() && user2.isOk()) {
+      const u1 = user1.value;
+      const u2 = user2.value;
       if (game.player1Disconnected)
-        await this.gameService.updateUserStats(user2, user1, game.type, score);
+        await this.gameService.updateUserStats(u2, u1, game.type, score);
       else if (game.player2Disconnected)
-        await this.gameService.updateUserStats(user1, user2, game.type, score);
+        await this.gameService.updateUserStats(u1, u2, game.type, score);
       else if (game.player1Score > game.player2Score)
-        await this.gameService.updateUserStats(user1, user2, game.type, score);
+        await this.gameService.updateUserStats(u1, u2, game.type, score);
       else
-        await this.gameService.updateUserStats(user2, user1, game.type, score);
+        await this.gameService.updateUserStats(u2, u1, game.type, score);
     }
 
     // Remove the game from the list

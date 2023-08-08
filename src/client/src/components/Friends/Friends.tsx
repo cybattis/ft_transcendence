@@ -29,36 +29,26 @@ function FriendsList() {
 
   const token = localStorage.getItem("token");
 
-  const [dataOnline, setDataOnline] = useState([
+  const [friendsStatus, setFriendsStatus] = useState([
     {
+      id: 0,
       nickname: "",
       avatarUrl: "",
       online: false,
       inGame: false,
-      id: 0,
-    },
-  ]);
-
-  const [dataOffline, setDataOffline] = useState([
-    {
-      nickname: "",
-      avatarUrl: "",
-      online: false,
-      inGame: false,
-      id: 0,
     },
   ]);
 
   useEffect(() => {
-    async function fetchDataOnline() {
+    async function fetchFriendsStatus() {
       await axios
-        .get(apiBaseURL + "user/friends/online", {
+        .get(apiBaseURL + "user/friends/status", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
         .then((res) => {
-          setDataOnline(res.data);
+          setFriendsStatus(res.data);
         })
         .catch((error) => {
           if (error.response === undefined) {
@@ -71,70 +61,30 @@ function FriendsList() {
           } else setErrorMessage(error.response.data.message + "!");
         });
     }
-    async function fetchDataOffline() {
-      await axios
-        .get(apiBaseURL + "user/friends/offline", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setDataOffline(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
-    }
-    fetchDataOnline().then();
-    fetchDataOffline().then();
+    fetchFriendsStatus().then();
 
-    ChatClientSocket.onNotificationEvent(fetchDataOffline);
-    ChatClientSocket.onNotificationEvent(fetchDataOnline);
+    ChatClientSocket.onNotificationEvent(fetchFriendsStatus);
   }, []);
 
-  if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
+  if (friendsStatus && friendsStatus[0]) {
     return (
       <>
         <h4>Friends</h4>
         <>
-          {dataOnline.map((dataOnline) => {
+          {friendsStatus.map((friendData) => {
             return (
-              <div className="friends" key={dataOnline.nickname}>
+              <div className="friends" key={friendData.nickname}>
                 <Link
-                  to={`/profile/${dataOnline.nickname}`}
+                  to={`/profile/${friendData.nickname}`}
                   className="friendLink"
                 >
                   <div>
                     <p className="friendsImg">
-                      <Avatar size="50px" img={dataOnline.avatarUrl} />
+                      <Avatar size="50px" img={friendData.avatarUrl} />
                     </p>
-                    {<Online inGame={dataOnline.inGame} />}
+                    {friendData.online ? <Online inGame={friendData.inGame} /> : <Offline />}
                   </div>
-                  <p className="nickname">{dataOnline.nickname}</p>
-                </Link>
-              </div>
-            );
-          })}
-          {dataOffline.map((dataOffline) => {
-            return (
-              <div className="friends" key={dataOffline.nickname}>
-                <Link
-                  to={`/profile/${dataOffline.nickname}`}
-                  className="friendLink"
-                >
-                  <div>
-                    <p className="friendsImg">
-                      <Avatar size="50px" img={dataOffline.avatarUrl} />
-                    </p>
-                    {<Offline />}
-                  </div>
-                  <p className="nickname">{dataOffline.nickname}</p>
+                  <p className="nickname">{friendData.nickname}</p>
                 </Link>
               </div>
             );

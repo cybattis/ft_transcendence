@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { apiBaseURL } from "../../../utils/constant";
-import { JwtPayload } from "../../../type/client.type";
+import { TokenData } from "../../../type/client.type";
 import { ChatInterface } from "../Interface/chat.interface";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
@@ -19,7 +19,7 @@ export default function UsersList(props: {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const payload: JwtPayload = jwt_decode(token);
+    const payload: TokenData = jwt_decode(token);
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;
       setIsOpe(false);

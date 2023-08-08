@@ -27,7 +27,6 @@ export interface GameBodyDto {
   status: GameStatus;
 }
 
-export interface GameStatsDto extends GameBodyDto {
+export interface GameStats extends GameBodyDto {
   creationDate: string;
-  players: UserInfo[];
 }

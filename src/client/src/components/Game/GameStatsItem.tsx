@@ -3,6 +3,8 @@ import "./GameStatsItem.css";
 import { Link } from "react-router-dom";
 import { Avatar } from "../Avatar";
 import { MatcheScore } from "./MatcheScore";
+import {useData} from "../../hooks/UseData";
+import {UserInfo} from "../../type/user.type";
 
 export function GameStatsHeader() {
   return (
@@ -15,27 +17,43 @@ export function GameStatsHeader() {
   );
 }
 
-export function GameStatsItem(props: { game: GameStatsDto; id: number }) {
-  const date = new Date(props.game.creationDate);
-  function OpponentName() {
-    let name: string;
-    let opponentId: number;
-    let opponentAvatar: string | undefined;
+export function GameStatsItem(props: {game: GameStatsDto, id: number}) {
+  const player1 = useData<UserInfo>(`user/profile/id/${props.game.ids[0]}`);
+  const player2 = useData<UserInfo>(`user/profile/id/${props.game.ids[1]}`);
 
-    if (props.game.players[0].id === props.id) {
-      name = props.game.players[1].nickname;
-      opponentId = props.game.players[1].id;
-      opponentAvatar = props.game.players[1].avatarUrl;
+  if (player1.data && player2.data)
+    return <GameStatsItemLoaded game={props.game} id={props.id} player1={player1.data} player2={player2.data} />;
+  else if (player1.error || player2.error)
+    return <div>error</div>;
+  else
+    return <div>loading</div>;
+}
+
+function GameStatsItemLoaded(props: { game: GameStatsDto; id: number; player1: UserInfo; player2: UserInfo}) {
+  const date = new Date(props.game.creationDate);
+
+  function OpponentName() {
+    console.log("ids", props.game.ids[0]);
+    console.log("my id: ", props.id);
+    console.log(props.game.ids[0] === props.id);
+    let name: string;
+    let opponentAvatar: string | undefined;
+    if (props.game.ids[0] === props.id) {
+      name = props.player2.nickname;
+      opponentAvatar = props.player2.avatarUrl;
+      console.log("HEY");
     } else {
-      name = props.game.players[0].nickname;
-      opponentId = props.game.players[0].id;
-      opponentAvatar = props.game.players[0].avatarUrl;
+      name = props.player1.nickname;
+      opponentAvatar = props.player1.avatarUrl;
+      console.log("HOY");
     }
+
+    console.log("name", name);
 
     return (
       <Link to={`/profile/${name}`} className={"opponent-profile"}>
         <div id={"opponent-name"}>
-          <Avatar size={"30px"} img={opponentAvatar} />
+          <Avatar size={"30px"} img={opponentAvatar}/>
           <div id={"gi-name"}>{name}</div>
         </div>
       </Link>

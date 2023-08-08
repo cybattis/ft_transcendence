@@ -87,7 +87,7 @@ export default function FaCode() {
           setFormState(FormState.NONE);
           setTfaActivated(true);
           const data = res.data;
-          localStorage.setItem("token", data.token);
+          localStorage.setItem("token", data);
           setAuthed(true);
           localStorage.removeItem("email");
           return <Navigate to="/" />;

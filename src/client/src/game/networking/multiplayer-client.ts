@@ -91,7 +91,7 @@ export namespace MultiplayerClient {
     return true;
   }
 
-  function disconnect(): void {
+  export function disconnect(): void {
     if (socket && socket.connected)
       socket.disconnect();
   }

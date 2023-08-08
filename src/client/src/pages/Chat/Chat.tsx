@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useContext } from "react";
 import "./Chat.css";
 import { ChatInterface } from "./Interface/chat.interface";
 import ChannelList from "./List/ChannelList";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
 import axios from "axios";
@@ -43,7 +43,7 @@ export default function ChatClient() {
   });
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload;
+  let payload: TokenData;
   let username = "";
   
   if (username === "" && token) {
@@ -227,7 +227,7 @@ export default function ChatClient() {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
     await axios
-      .put(apiBaseURL + `user/blockUsr/${usr}`, null, {
+      .put(apiBaseURL + `user/block-user/${usr}`, null, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

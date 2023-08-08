@@ -18,6 +18,40 @@ interface IStockError extends IErrorBase {
   type: 'stock-error';
 }
 
+interface IFetchError  {
+  type: "Transport" | "Server" | "Request",
+  message: string,
+}
+
+interface ITransportFetchError extends IFetchError {
+  type: "Transport",
+  message: string,
+}
+
+interface IServerFetchError extends IFetchError {
+  type: "Server",
+  message: string,
+  code: number,
+}
+
+interface IRequestFetchError extends IFetchError {
+  type: "Request",
+  message: string,
+  code: number,
+}
+
+export function isTransportError(fetchError: IFetchError): fetchError is ITransportFetchError {
+  return fetchError.type === "Transport";
+}
+
+export function isServerError(fetchError: IFetchError): fetchError is IServerFetchError {
+  return fetchError.type === "Server";
+}
+
+export function isRequestError(fetchError: IFetchError): fetchError is IRequestFetchError {
+  return fetchError.type === "Request";
+}
+
 export function axiosErrorHandler(
   callback: (err: IAxiosError | IStockError) => void
 ) {
@@ -49,7 +83,7 @@ export function axiosErrorHandler(
  */
 export function useData<T>(path?: string, publicData?: true) {
   const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<IFetchError | null>(null);
   const terminateSession = useTokenSession();
   const navigate = useNavigate();
 
@@ -57,21 +91,45 @@ export function useData<T>(path?: string, publicData?: true) {
     if (res.type === 'axios-error') {
       const code = res.error.response?.status;
       const data = res.error.response?.data as any;
+
       if (code !== undefined) {
-        if (code === 401 || code === 403)
-          terminateSession();
-        else if (data?.message && data?.message !== "")
-          setError(data.message);
-        else if (code === 404)
-          setError("Resource not found");
-        else if (code >= 500)
-          setError("Internal server error");
-        else
-          setError("Bad request");
+        if (code === 401 || code === 403) // Error with authentication
+          return terminateSession();
+        if (code >= 400 && code < 500) { // Request error
+
+          // Create the error as a BadRequestError
+          const requestError: IRequestFetchError = {
+            type: "Request",
+            message: "Bad request",
+            code: code,
+          }
+
+          if (data?.message && data?.message !== "") // If a message was provided, use it
+            requestError.message = data.message;
+          else if (code === 404) // Provide a message for 404 errors
+            requestError.message = "Resource not found";
+
+          setError(requestError);
+          return;
+        } else if (code >= 500 && code < 600) { // Server error
+
+          // Create the error as an InternalServerError
+          const serverError: IServerFetchError = {
+            type: "Server",
+            message: "Internal server error",
+            code: code,
+          }
+
+          if (data?.message && data?.message !== "") // If a message was provided, use it
+            serverError.message = data.message;
+
+          setError(serverError);
+          return;
+        }
       }
-    } else {
-      setError(res.error.message);
+      // If no code was provided, treat it as a transport error
     }
+    setError({type: "Transport", message: res.error.message});
   });
 
   function fetchData(thePath: string) {

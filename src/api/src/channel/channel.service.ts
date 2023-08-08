@@ -23,7 +23,9 @@ import { User } from 'src/user/entity/Users.entity';
 @Injectable()
 export class ChannelService implements OnModuleInit {
   private jwtService: JwtService;
+  private userService: UserService;
 
+  private server: Server;
   private channelStruct: ChannelStructure[];
   private usersSocketList: UsersSocketStructure[];
 
@@ -34,7 +36,6 @@ export class ChannelService implements OnModuleInit {
     private gameChatRepository: Repository<GameChat>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private userService: UserService,
     @InjectRepository(Channel)
     private channelRepository: Repository<Channel>,
     private moduleRef: ModuleRef,
@@ -45,6 +46,7 @@ export class ChannelService implements OnModuleInit {
 
   async onModuleInit() {
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
+    this.userService = this.moduleRef.get(UserService, { strict: false });
     const rowCount = await this.channelRepository.count();
     if (rowCount == 0)
       await this.channelRepository.save({
@@ -58,6 +60,19 @@ export class ChannelService implements OnModuleInit {
         password: '',
       });
   }
+
+  /*
+   * == API ==
+  */
+
+  /*
+   * Set the server
+   *
+   * @param server The server
+   */
+    public setServer(server: Server): void {
+      this.server = server;
+    }
 
   listUsersChannel(channel: string) {
     for (let index = 0; index < this.channelStruct.length; index++) {
@@ -264,9 +279,9 @@ export class ChannelService implements OnModuleInit {
     return null;
   }
 
-  getSocketById(id: number): string | null {
-    const user = this.userService.findByID(id);
-    if (!user) return null;
+  async getSocketById(id: number): Promise<string | null> {
+    const user = await this.userService.findByID(id);
+    if (user.isErr()) return null;
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (id === this.usersSocketList[index].id)
         return this.usersSocketList[index].socket;
@@ -524,13 +539,13 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  sendFriendRequest(server: Server, targetID: number) {
-    const dest: string | null = this.getSocketById(targetID);
+  async sendNotificationEvent(targetID: number) {
+    const dest = await this.getSocketById(targetID);
     if (!dest) {
       console.log('User not connected');
       return;
     }
-    server.to(dest).emit('notification');
+    this.server.to(dest).emit('notification');
   }
 
   channelPosition(channel: string): number {
@@ -565,13 +580,16 @@ export class ChannelService implements OnModuleInit {
     });
     if (chan && chan.mute.includes(sender)) return;
     const send = { sender, msg, channel, blockedChat };
-    const emiter: any = await this.userService.findByLogin(sender);
+    const emiter = await this.userService.findByLogin(sender);
+    if (emiter.isErr())
+      throw new NotFoundException();
+
     if (channel[0] === '#') {
       await this.chatRepository.save({
         channel: channel,
         content: msg,
         emitter: sender,
-        emitterId: emiter.id,
+        emitterId: emiter.value.id,
       });
       socket.broadcast.emit('rcv', send);
       server.to(socket.id).emit('rcv', send)
@@ -590,7 +608,7 @@ export class ChannelService implements OnModuleInit {
             channel: find[index].channel,
             content: msg,
             emitter: sender,
-            emitterId: emiter.id,
+            emitterId: emiter.value.id,
           });
           if (target) {
             server.to(target).emit('rcv', prv);
@@ -872,7 +890,7 @@ export class ChannelService implements OnModuleInit {
       return; // Is already present
     find.joinChannel.push(channel);
     await this.usersRepository.save(find);
-    this.sendFriendRequest(server, find.id);
+    await this.sendNotificationEvent(find.id);
   }
 
   async AcceptInvitationChannel(server: Server, channel: string, target: string) {
@@ -884,7 +902,7 @@ export class ChannelService implements OnModuleInit {
       if (channel === find.joinChannel[index]) {
         find.joinChannel.splice(index, 1);
         await this.channelRepository.save(find);
-        const targetId = this.getSocketById(find.id);
+        const targetId = await this.getSocketById(find.id);
         if (!targetId) return;
         server.to(targetId).emit('join', channel)
       }

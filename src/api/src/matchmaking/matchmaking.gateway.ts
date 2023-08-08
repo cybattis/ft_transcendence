@@ -7,15 +7,14 @@ import {
   WebSocketGateway,
   WebSocketServer, WsException
 } from "@nestjs/websockets";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { MatchmakingService } from "./matchmaking.service";
 import { UserService } from "../user/user.service";
-import { CasualMatchmakingPlayer, RankedMatchmakingPlayer } from "./types/matchmaking.type";
 import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
 import { UseGuards } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { AuthedSocket } from "../auth/types/auth.types";
 import { Public } from "../auth/guards/PublicDecorator";
+import { AuthService } from "../auth/auth.service";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({cors: {origin: '*', methods: ["GET", "POST"]}, path: '/matchmaking'})
@@ -25,13 +24,13 @@ export class MatchmakingGateway implements OnGatewayInit, OnGatewayConnection, O
 
   constructor(private matchmakingService: MatchmakingService,
               private userService: UserService,
-              private jwtService: JwtService) {}
+              private authService: AuthService) {}
 
   afterInit(server: Server) {
     this.server = server;
 
     this.server.use((socket: AuthedSocket, next) => {
-      if (WsAuthGuard.validateSocketToken(socket, this.jwtService)) {
+      if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
         console.log("An authorized user connected to the matchmaking server");
         next();
       } else {
