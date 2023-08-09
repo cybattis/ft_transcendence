@@ -24,7 +24,6 @@ export class UserService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private mailService: MailService,
     private moduleRef: ModuleRef,
   ) {}
 
@@ -464,11 +463,11 @@ export class UserService implements OnModuleInit {
   async getBlockedList(myId: number) {
     const me: any = await this.usersRepository.findOne({ where: { id: myId } });
     const blockedusr: string[] = [];
-    for (let  i = 0; me.blockedId[i]; i ++)
-    {
-      const newUsr: User | null = await this.usersRepository.findOne({where: { id: me.blockedId[i]}});
-      if (newUsr)
-        blockedusr.push(newUsr.nickname);
+    for (let i = 0; me.blockedId[i]; i++) {
+      const newUsr: User | null = await this.usersRepository.findOne({
+        where: { id: me.blockedId[i] },
+      });
+      if (newUsr) blockedusr.push(newUsr.nickname);
     }
     return blockedusr;
   }
@@ -604,5 +603,10 @@ export class UserService implements OnModuleInit {
       return result;
     }
     return null;
+  }
+
+  async updateUserGameStatus(user: User) {
+    user.inGame = false;
+    await this.usersRepository.save(user);
   }
 }

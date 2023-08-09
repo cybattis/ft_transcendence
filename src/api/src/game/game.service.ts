@@ -61,6 +61,11 @@ export class GameService implements OnModuleInit {
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
 
+    user1.inGame = true;
+    user2.inGame = true;
+    await this.userRepository.save(user1);
+    await this.userRepository.save(user2);
+
     await this.gameRepository.save(game);
     return game;
   }
@@ -192,17 +197,20 @@ export class GameService implements OnModuleInit {
 
   async getInfoGame(id: number) {
     const games: any = await this.findUserGames(id);
-    if (games)
-    {
-      for (let i = 0; games[i]; i ++)
-      {
-        if (games[i].status !== "Finished" && games[i].status !== "Player disconnected")
-        {
+    if (games) {
+      for (let i = 0; games[i]; i++) {
+        if (
+          games[i].status !== 'Finished' &&
+          games[i].status !== 'Player disconnected'
+        ) {
           const actualGame: Game = games[i];
-          const playerOne: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[0]}});
-          const playerTwo: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[1]}});
-          if (playerOne && playerTwo)
-          {
+          const playerOne: User | null = await this.userRepository.findOne({
+            where: { id: actualGame.ids[0] },
+          });
+          const playerTwo: User | null = await this.userRepository.findOne({
+            where: { id: actualGame.ids[1] },
+          });
+          if (playerOne && playerTwo) {
             const result = {
               id: actualGame.id,
               playerOne: {
@@ -217,12 +225,12 @@ export class GameService implements OnModuleInit {
               },
               mode: actualGame.mode,
               type: actualGame.type,
-            }
+            };
             return result;
           }
         }
       }
     }
-    return ;
+    return;
   }
 }
