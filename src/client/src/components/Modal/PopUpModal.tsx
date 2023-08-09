@@ -1,6 +1,7 @@
 import "./PopUpModal.css";
 import { MouseEvent, useContext, useRef } from "react";
 import { PopupContext } from "./Popup.context";
+import { Link, Navigate } from "react-router-dom";
 
 export function ErrorModal(props: { onClose: () => void }) {
   const { errorMessage } = useContext(PopupContext);
@@ -82,6 +83,36 @@ export function ErrorModalChat(props: {
           </form>
         </dialog>
       ) : null}
+    </div>
+  );
+}
+
+export function EndGamePopup(props: { hasWin: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  return (
+    <div
+      className={"end-game-modal"}
+      ref={ref}
+      onClick={(event: MouseEvent) => {
+        if (event.target === ref.current) {
+          props.onClose();
+        }
+      }}
+    >
+      <dialog id={"win-game-popup"} open>
+        {props.hasWin ? <div>YOU WIN!</div> : <div>YOU LOOSE!</div>}
+        <form method="dialog">
+          <Link
+            to={"/"}
+            id="close"
+            onClick={props.onClose}
+            className={"go-home-button"}
+          >
+            Go home
+          </Link>
+        </form>
+      </dialog>
     </div>
   );
 }

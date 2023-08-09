@@ -274,7 +274,7 @@ export class MultiplayerService {
     else game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
-    this.server.to(game.serverRoomId).emit('game-end');
+    this.server.to(game.serverRoomId).emit('game-ended');
 
     // Remove all players from the room
     this.server.socketsLeave(game.serverRoomId);
