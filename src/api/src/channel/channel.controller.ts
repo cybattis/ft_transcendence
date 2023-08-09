@@ -1,6 +1,5 @@
 import {Controller, Put, Get, Param, Delete, UseGuards, Headers} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
-import { GameChat } from './entity/GameChat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Not, In } from 'typeorm';
@@ -22,8 +21,6 @@ export class ChannelController {
         private channelRepository: Repository<Channel>,
         @InjectRepository(User)
         private usersRepository: Repository<User>,
-        @InjectRepository(GameChat)
-        private gameChatRepository: Repository<GameChat>,
         private channelService: ChannelService,
         private jwtService: JwtService,
     ) {}
@@ -168,13 +165,6 @@ export class ChannelController {
     return false;
   }
 
-  @Get('/gameChat/:channel')
-  async getGameChat(@Param('channel') channel: string) {
-    return await this.gameChatRepository.findOne({
-      where: { channel: channel },
-    });
-  }
-  
   @Put('request/:channel')
   async acceptChannelRequest(
     @Param('channel') channel:  string,

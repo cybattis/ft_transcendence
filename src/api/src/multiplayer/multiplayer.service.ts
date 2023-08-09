@@ -19,7 +19,7 @@ export class MultiplayerService {
   private server: Server;
 
   // Game constants
-  private readonly BALL_SPEED: number = 0.4; // Traveling half of the board in 1 second
+  private readonly BALL_SPEED: number = 0.5; // Traveling half of the board in 1 second
   private readonly BALL_SERVING_SPEED: number = this.BALL_SPEED / 2; // 50% of the normal speed
 
   constructor(
@@ -80,7 +80,7 @@ export class MultiplayerService {
    *
    * @param client The client that sent the ready event
    */
-  public setClientReady(client: AuthedSocket): void {
+  public async setClientReady(client: AuthedSocket): Promise<void> {
     const room = this.getRoomByPlayerId(client.userId);
     if (room) {
       if (room.player1Id === client.userId) {
@@ -98,7 +98,7 @@ export class MultiplayerService {
       console.log('[MULTIPLAYER] Player ' + client.userId + ' is ready.');
 
       if (room.player1Ready && room.player2Ready) {
-        this.startGame(room);
+        await this.startGame(room);
       }
     } else {
       console.log('NO ROOM FOUND FOR PLAYER ' + client.userId);
@@ -111,8 +111,9 @@ export class MultiplayerService {
    *
    * @param game The game to start
    */
-  public startGame(game: GameRoom): void {
+  public async startGame(game: GameRoom): Promise<void> {
     game.status = GameStatus.IN_PROGRESS;
+    await this.gameService.updateGameStatus(game.id, GameStatus.IN_PROGRESS);
 
     const ballUpdate: BallUpdate = {
       x: 0.5,

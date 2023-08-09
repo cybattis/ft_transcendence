@@ -73,14 +73,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.sendMessage(
       this.server,
       socket,
       data.channel,
       data.msg,
       data.username,
-      blockedUsers.blockedChat,
+      blockedUsers.value.blockedChat,
     );
   }
 
@@ -89,14 +92,18 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    let blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.sendGameMessage(
       this.server,
       socket,
       data.channel,
       data.msg,
       data.username,
-      blockedUsers.blockedChat,
+      data.opponent,
+      blockedUsers.value.blockedChat,
     );
   }
 
@@ -117,6 +124,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     await this.channelService.joinOldChannel(socket, username);
 
     const blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.joinChannel(
       this.server,
       socket,
@@ -124,23 +134,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       username,
       channel,
       pass,
-      blockedUsers,
+      blockedUsers.value.blockedChat,
     );
   }
 
   @SubscribeMessage('joinGame')
   async joinGameChat(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { username: string; canal: string },
+    @MessageBody() data: { canal: string },
   ) {
     if (!data) return;
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
     await this.channelService.joinGameChannel(
-      this.server,
       socket,
-      data.username,
       data.canal,
-      blockedUsers,
     );
   }
 
@@ -184,13 +190,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.muteUser(
       socket,
       data.username,
       data.target,
       data.channel,
-      blockedUsers,
+      blockedUsers.value.blockedChat,
     );
   }
 
@@ -199,13 +208,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @ConnectedSocket() socket: AuthedSocket,
     @MessageBody() data: any,
   ) {
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.unmuteUser(
       socket,
       data.username,
       data.target,
       data.channel,
-      blockedUsers,
+      blockedUsers.value.blockedChat,
     );
   }
 
@@ -232,13 +244,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     );
     const channel = data.channel;
     this.server.to(socket.id).emit('quit', channel);
-    const blockedUsers: any = await this.userService.findByLogin(data.username);
+    const blockedUsers = await this.userService.findByLogin(data.username);
+    if (blockedUsers.isErr())
+      return;
+
     await this.channelService.announce(
       socket,
       'QUIT',
       data.username,
       data.channel,
-      blockedUsers,
+      blockedUsers.value.blockedChat,
     );
   }
 
@@ -257,15 +272,18 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const channel = data.channel;
     if (targetSocket) {
       this.server.to(targetSocket).emit('quit', channel);
-      const blockedUsers: any = await this.userService.findByLogin(
+      const blockedUsers = await this.userService.findByLogin(
         data.username,
       );
+      if (blockedUsers.isErr())
+        return;
+
       await this.channelService.channelAnnoucement(
         socket,
         data.channel,
         'banned',
         data.username,
-        blockedUsers.blockedChat,
+        blockedUsers.value.blockedChat,
         data.target,
       );
     }
@@ -288,15 +306,18 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       const target = this.channelService.getSocketByUsername(data.target);
       if (target) {
         this.server.to(target).emit('quit', data.channel);
-        const blockedUsers: any = await this.userService.findByLogin(
+        const blockedUsers = await this.userService.findByLogin(
           data.username,
         );
+        if (blockedUsers.isErr())
+          return;
+
         await this.channelService.channelAnnoucement(
           socket,
           data.channel,
           'kicked',
           data.username,
-          blockedUsers.blockedChat,
+          blockedUsers.value.blockedChat,
           data.target,
         );
       }

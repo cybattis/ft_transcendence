@@ -2,13 +2,13 @@ export type RgbColor = {
   r: number;
   g: number;
   b: number;
-}
+};
 
 export type HslColor = {
   h: number;
   s: number;
   l: number;
-}
+};
 
 export function hslToRgb(hsl: HslColor): RgbColor {
   const { h, s, l } = hsl;
@@ -20,7 +20,11 @@ export function hslToRgb(hsl: HslColor): RgbColor {
   let r, g, b;
 
   if (s === 0) {
-    return { r: Math.round(lDecimal), g: Math.round(lDecimal), b: Math.round(lDecimal) };
+    return {
+      r: Math.round(lDecimal),
+      g: Math.round(lDecimal),
+      b: Math.round(lDecimal),
+    };
   }
 
   const HueToRGB = (p: number, q: number, t: number) => {
@@ -42,7 +46,11 @@ export function hslToRgb(hsl: HslColor): RgbColor {
   g = HueToRGB(p, q, hDecimal);
   b = HueToRGB(p, q, hDecimal - 1 / 3);
 
-  return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
 }
 
 export function RGBToHSL(rgb: RgbColor): HslColor {
@@ -61,7 +69,7 @@ export function RGBToHSL(rgb: RgbColor): HslColor {
 
   if (max === min) {
     // Achromatic
-    return { h: 0, s: 0, l };
+    return { h: 0, s: 0, l: l * 100 };
   }
 
   const d = max - min;
@@ -91,5 +99,5 @@ export function stringToRGB(colorStr: string) {
     r: parseInt(colorStr.substring(0, 2), 16),
     g: parseInt(colorStr.substring(2, 4), 16),
     b: parseInt(colorStr.substring(4, 6), 16),
-  }
+  };
 }

@@ -4,13 +4,13 @@ import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { apiBaseURL } from "../../utils/constant";
 import { Navigate } from "react-router-dom";
-import { ErrorContext } from "../../components/Modal/modalContext";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import {AuthContext} from "../../components/Auth/auth.context";
 
 export default function Notifications() {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const token: string | null = localStorage.getItem("token");
   const [invits, setInvits] = useState([
     {
@@ -19,8 +19,15 @@ export default function Notifications() {
       id: 0,
     },
   ]);
+  const [channelInvits, setChannelInvits] = useState([
+    {
+      id: 0,
+      joinChannel: "",
+      invitedByAvatar: "",
+      invitedByUsername: "",
+    },
+  ]);
 
-  const [channelInvits, setChannelInvits] = useState([]);
 
   async function handleAccept(id: number) {
     if (!id) return;
@@ -61,9 +68,9 @@ export default function Notifications() {
   }
 
   async function handleAcceptChannel(channel: string){
+    const oldChannel = channel;
     if (channel[0] === '#')
       channel = channel.substring(1);
-    console.log(channel);
     const addr = apiBaseURL + "chat-controller/request/" + channel;
     await axios
     .put(addr, null,  {
@@ -72,15 +79,15 @@ export default function Notifications() {
       },
     })
     .then((res) => {
-      const newInvits: any = channelInvits.filter((invits :string) => invits !== invits);
+      const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
       setChannelInvits(newInvits);
     });
   }
 
   async function handleDeclineChannel(channel: string) {
+    const oldChannel = channel;
     if (channel[0] === '#')
       channel = channel.substring(1);
-    console.log(channel);
     const addr = apiBaseURL + "chat-controller/decline/" + channel;
     await axios.put(addr, null, {
       headers: {
@@ -88,31 +95,31 @@ export default function Notifications() {
       },
     })
     .then((res) =>{
-      const newInvits: any = channelInvits.filter((invits :string) => invits !== invits);
+      const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
       setChannelInvits(newInvits);
     });
   }
 
   function InviteChannel(){
-    return (<>
+    return (<div className="list">
       {
-
-        channelInvits.map((info, i) => (
-          <div className="ctnr-notif-channel">
-            <div className="invits-channel" key={i}>
-                <p className="text-channel">
-                  You are invited to the channel {info}
+        channelInvits.map((channelInvits, index) => (
+          <div className="notifsElements">
+            <div className="invits" key={index}>
+                <Avatar size="50px" img={channelInvits.invitedByAvatar} />
+                <p className="notifText">
+                  {channelInvits.invitedByUsername} invited you to the channel {channelInvits.joinChannel}
                 </p>
                 <div className="buttons">
                   <button
                     className="refuse"
-                    onClick={() => handleDeclineChannel(info)}
+                    onClick={() => handleDeclineChannel(channelInvits.joinChannel)}
                   >
                     <div className="cross"></div>Decline
                   </button>
                   <button
                     className="accept"
-                    onClick={() => handleAcceptChannel(info)}
+                    onClick={() => handleAcceptChannel(channelInvits.joinChannel)}
                   >
                     <div className="tick-mark"></div>Accept
                   </button>
@@ -121,7 +128,7 @@ export default function Notifications() {
           </div>
         ))
       }
-    </>)
+    </div>)
   }
 
   useEffect(() => {
@@ -134,9 +141,7 @@ export default function Notifications() {
           },
         })
         .then((res) => {
-          console.log(res.data);
           setInvits(res.data);
-          console.log("VALUE: ", invits);
         })
         .catch((error) => {
           if (error.response === undefined) {
@@ -159,7 +164,6 @@ export default function Notifications() {
         })
         .then((res) => {
           setChannelInvits(res.data);
-          console.log("Channel to join", res.data);
         })
         .catch((error) => {
           console.log(error);
@@ -182,8 +186,6 @@ export default function Notifications() {
 
   function FetchFriend () {
     return  (     
-    <div className="notifPage">
-    <h2 className="notifTitle">Notifications</h2>
     <div className="list">
       {invits.map((invits) => {
         return (
@@ -213,24 +215,38 @@ export default function Notifications() {
           </div>
         );
       })}
-    </div>
-  </div>);
+    </div>);
   }
 
   //Faire une map pour afficher toutes invites a la suite
-  if (invits && invits[0] && invits[0].id > 0 && channelInvits.length > 0) {
+  if (invits && invits[0] && invits[0].id > 0 && channelInvits && channelInvits[0] && channelInvits[0].invitedByUsername !== "") {
     return (
       <>
-        <FetchFriend/>
-        <InviteChannel/>
+        <div className="notifPage">
+          <h2 className="notifTitle">Notifications</h2>
+          <div className= "invites-elements">
+            <FetchFriend/>
+            <InviteChannel/>
+          </div>
+        </div>
       </>
     );
-  } else if (channelInvits.length > 0){
+  } else if (channelInvits && channelInvits[0] && channelInvits[0].invitedByUsername !== ""){
     return (
-    <InviteChannel/>);
+      <div className="notifPage">
+      <h2 className="notifTitle">Notifications</h2>
+        <div className= "invites-elements">
+          <InviteChannel/>
+        </div>
+      </div>);
   } else if (invits && invits[0] && invits[0].id > 0){
     return (
-    <FetchFriend/>);
+    <div className="notifPage">
+    <h2 className="notifTitle">Notifications</h2>
+      <div className= "invites-elements">
+        <FetchFriend/>
+      </div>
+    </div>)
   }
   else
   return (

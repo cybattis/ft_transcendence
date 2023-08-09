@@ -10,6 +10,16 @@ export type newMessagesCallBack = {
   }): void;
 };
 
+export type newGameMessageCallBack = {
+  (data: {
+    sender: string;
+    opponent: string,
+    msg: string;
+    channel: string;
+    blockedUsers: any;
+  }): void;
+};
+
 export type newChannelCallBack = {
   (room: string): void;
 };
@@ -39,6 +49,7 @@ export namespace ChatClientSocket {
   import ManagedSocket = SocketManager.ManagedSocket;
   let socket: ManagedSocket;
   let newMessageCallBack: newMessagesCallBack[] = [];
+  let newGameMessageCallBack: newGameMessageCallBack[] = [];
   let newJoinChannel: newChannelCallBack[] = [];
   let newBlockedCallBack: newBlockedCallBack[] = [];
   let newQuitCallBack: newQuitCallBack[] = [];
@@ -76,6 +87,19 @@ export namespace ChatClientSocket {
         blockedChat: any;
       }) => {
         newMessageCallBack.forEach((callback) => callback(data));
+      }
+    );
+
+    socket.on(
+      "rcvgame",
+      (data: {
+        sender: string;
+        opponent: string;
+        msg: string;
+        channel: string;
+        blockedUsers: any;
+      }) => {
+        newGameMessageCallBack.forEach((callback) => callback(data));
       }
     );
 
@@ -252,6 +276,7 @@ export namespace ChatClientSocket {
 
   export function sendGameChat(send: {
     username: string;
+    opponent: string;
     channel: string;
     msg: string;
   }) {
@@ -260,9 +285,9 @@ export namespace ChatClientSocket {
     socket.emit("sendGame", send);
   }
 
-  export function joinGameChat(joinGame: { username: string; canal: string }) {
+  export function joinGameChat(joinGame: { canal: string }) {
     if (!checkChatConnection()) return;
-    console.log(`Join dert ${joinGame.username} ${joinGame.canal}`);
+    console.log("GAME: ", joinGame);
     socket.emit("joinGame", joinGame);
   }
 
@@ -270,6 +295,10 @@ export namespace ChatClientSocket {
   // ========================================================================
   export function onMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack.push(callback);
+  }
+
+  export function onGameMessageRecieve(callback: newGameMessageCallBack) {
+    newGameMessageCallBack.push(callback);
   }
 
   export function onJoinChan(callback: newChannelCallBack) {
@@ -294,6 +323,10 @@ export namespace ChatClientSocket {
 
   export function offMessageRecieve(callback: newMessagesCallBack) {
     newMessageCallBack = newMessageCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offGameMessageRecieve(callback: newGameMessageCallBack) {
+    newGameMessageCallBack = newGameMessageCallBack.filter((cb) => cb !== callback);
   }
 
   export function offJoinChan(callback: newChannelCallBack) {

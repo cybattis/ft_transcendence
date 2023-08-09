@@ -28,7 +28,7 @@ import jwt_decode from 'jwt-decode';
 import * as fs from 'fs';
 import { TokenGuard } from '../guard/token.guard';
 import { TokenData } from '../type/jwt.type';
-import {TypeCheckers} from "../utils/type-checkers";
+import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
@@ -410,7 +410,7 @@ export class UserController{
   @Get('request/channel')
   async fetchInvChannel(
     @Headers('Authorization') header: Headers,
-  ) : Promise<string[]> {
+  ) : Promise<{joinChannel: string, invitedByAvatar?: string, invitedByUsername: string}[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
     if (result.isErr())

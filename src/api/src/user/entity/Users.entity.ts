@@ -102,6 +102,9 @@ export class User {
   @Column('text', { array: true, default: [] })
   joinChannel: string[];
 
+  @Column('int', { array: true, default: [] })
+  invitesId: number[];
+
   // Customisation
   // ============================================================
   @Column({ type: 'varchar', length: 6, default: 'ffffff' })

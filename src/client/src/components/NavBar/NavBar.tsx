@@ -46,7 +46,10 @@ function MobileNavBar() {
 
   return (
     <nav className={"nav-style-mobile"}>
-      <Link to="/">
+      <Link to="/" onClick={() => {
+        removeMultiplayerGame();
+        MultiplayerClient.quitGame();
+      }}>
         <Logo />
       </Link>
       <div className={"navbar-mobile-div"}></div>

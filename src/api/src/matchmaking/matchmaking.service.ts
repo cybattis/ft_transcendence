@@ -329,7 +329,6 @@ export class MatchmakingService {
   }
 
   private async createCasualGame(player1: CasualMatchmakingPlayer, player2: CasualMatchmakingPlayer): Promise<boolean> {
-    // TODO: do this in the MatchService
     const gameDto: GameBodyDto = {
       type: GameType.CASUAL,
       mode: GameMode.V1,
@@ -352,7 +351,6 @@ export class MatchmakingService {
   }
 
   private async createRankedGame(player1: RankedMatchmakingPlayer, player2: RankedMatchmakingPlayer): Promise<boolean> {
-    // TODO: do this in the MatchService
     const gameDto: GameBodyDto = {
       type: GameType.RANKED,
       mode: GameMode.V1,

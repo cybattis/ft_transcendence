@@ -69,7 +69,7 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
   @SubscribeMessage('ready')
   async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
-    this.multiplayerService.setClientReady(client);
+    await this.multiplayerService.setClientReady(client);
   }
 
   @SubscribeMessage('update-movement')
@@ -86,5 +86,4 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   async handleGoal(@ConnectedSocket() client: AuthedSocket): Promise<void> {
     await this.multiplayerService.processGoal(client);
   }
-
 }

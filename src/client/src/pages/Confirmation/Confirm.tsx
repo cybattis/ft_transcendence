@@ -2,12 +2,12 @@ import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { apiBaseURL } from "../../utils/constant";
-import { ErrorContext } from "../../components/Modal/modalContext";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { PopupContext } from "../../components/Modal/Popup.context";
+import { AuthContext } from "../../components/Auth/auth.context";
 
 async function ValidateEmail() {
   const { setAuthed } = React.useContext(AuthContext);
-  const { setErrorMessage } = React.useContext(ErrorContext);
+  const { setErrorMessage } = React.useContext(PopupContext);
 
   const location = useLocation();
   const id = location.search.substring(1);
@@ -15,7 +15,6 @@ async function ValidateEmail() {
   axios
     .put(apiBaseURL + "auth/" + id, true)
     .then((res) => {
-      console.log(res.data);
       const data = res.data;
       localStorage.setItem("token", data);
       setAuthed(true);
@@ -56,8 +55,8 @@ export default function Confirmation() {
     <div style={home}>
       <h3>Email Confirmed!</h3>
       <h4 style={title}>
-        Thanks for joining us! You can now return to the game by clicking on the play button.
-        You can close the other page.
+        Thanks for joining us! You can now return to the game by clicking on the
+        play button. You can close the other page.
       </h4>
     </div>
   );

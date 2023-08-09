@@ -1,19 +1,18 @@
 import "./Settings.css";
 import {Avatar} from "../../components/Avatar";
 import axios from "axios";
-import {ChangeEvent, FormEvent, useContext, useEffect, useState} from "react";
+import {ChangeEvent, FormEvent, useContext, useState} from "react";
 import InputForm from "../../components/InputForm/InputForm";
 import {UserSettings} from "../../type/user.type";
 import {Navigate} from "react-router-dom";
-import {MessageModal} from "../../components/Modal/MessageModal";
 import {apiBaseURL} from "../../utils/constant";
-import {ErrorContext} from "../../components/Modal/modalContext";
 import {ErrorResponse} from "../../type/client.type";
 import {UserData} from "../Profile/user-data";
 import {AuthContext} from "../../components/Auth/auth.context";
 import {FormContext, FormState} from "../../components/Auth/form.context";
 import {LoadingPage} from "../Loading/LoadingPage";
 import {useData} from "../../hooks/UseData";
+import { PopupContext } from "../../components/Modal/Popup.context";
 
 export function Settings() {
   const { data, error} = useData<UserSettings>("user/settings");
@@ -26,14 +25,12 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
 
   const { setAuthed, tfaActivated } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage, setInfoMessage } = useContext(PopupContext);
 
   const [nickname, setNickname] = useState(data.nickname);
   const [firstName, setFirstName] = useState(data.firstname);
   const [lastName, setLastName] = useState(data.lastname);
   const [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
-
-  const [message, setMessage] = useState("");
 
   if (token === null) {
     setAuthed(false);
@@ -64,7 +61,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
         },
       })
       .then((res) => {
-        setMessage("Avatar updated!");
+        setInfoMessage("Avatar updated!");
         setAvatarUrl(res.data);
       })
       .catch((error: ErrorResponse) => {
@@ -112,7 +109,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       })
       .then(() => {
         UserData.updateNickname(user.nickname);
-        setMessage("Update successful!");
+        setInfoMessage("Update successful!");
       })
       .catch((error) => {
         if (error.response === undefined) {
@@ -161,7 +158,6 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
 
   return (
     <div className={"settingPage"}>
-      <MessageModal msg={message} onClose={() => setMessage("")} />
       <div className={"settingPage_title"}>Settings</div>
       <div className={"settingPage_container"}>
         <div className={"settingPage_avatar"}>

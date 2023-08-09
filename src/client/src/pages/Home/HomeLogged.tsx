@@ -11,11 +11,14 @@ import { Friends } from "../../components/Friends/Friends";
 import { TokenData } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import jwt_decode from "jwt-decode";
+import { apiBaseURL } from "../../utils/constant";
 import { UserData } from "../Profile/user-data";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { calculateWinrate } from "../../utils/calculateWinrate";
-import {useData} from "../../hooks/UseData";
+import {useData } from "../../hooks/UseData";
 import {useProfileData} from "../../hooks/UseProfileData";
+import { PopupContext } from "../../components/Modal/Popup.context";
+import getNickname = UserData.getNickname;
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -48,7 +51,6 @@ function MatchmakingButton(props: {
     };
 
     const handleGameStarted = () => {
-      console.log("REDIRECTION TO GAMEU");
       setState(MatchmakingAcceptButtonState.GAME_STARTED);
     };
 
@@ -90,27 +92,20 @@ function MatchmakingButton(props: {
   }, [timeLeft, state, props]);
 
   const handleClick = () => {
-    let decoded: TokenData | null = null;
-    try {
-      decoded = jwt_decode(localStorage.getItem("token")!);
-    } catch (e) {}
-
-    if (decoded) {
-      if (state === MatchmakingAcceptButtonState.SEARCHING) {
-        switch (props.gameType) {
-          case GameType.CASUAL:
-            MatchmakingClient.leaveMatchmakingCasual();
-            break;
-          case GameType.RANKED:
-            MatchmakingClient.leaveMatchmakingRanked();
-            break;
-        }
-
-        props.setSearching(false);
-      } else if (state === MatchmakingAcceptButtonState.MATCH_FOUND) {
-        MatchmakingClient.joinFoundMatch();
-        setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
+    if (state === MatchmakingAcceptButtonState.SEARCHING) {
+      switch (props.gameType) {
+        case GameType.CASUAL:
+          MatchmakingClient.leaveMatchmakingCasual();
+          break;
+        case GameType.RANKED:
+          MatchmakingClient.leaveMatchmakingRanked();
+          break;
       }
+
+      props.setSearching(false);
+    } else if (state === MatchmakingAcceptButtonState.MATCH_FOUND) {
+      MatchmakingClient.joinFoundMatch();
+      setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
     }
   };
 
@@ -153,18 +148,31 @@ function MultiplayerGameMode(props: {
     props.setSearching(true);
   };
 
+  if (props.gameType.toString() === "Casual") {
+    return (
+      <div className="game-mode-button">
+        <button className="casual" onClick={handleClick}>
+          <h2 className="titleMode">Casual</h2>
+        </button>
+      </div>
+    );
+  }
   return (
-    <button onClick={handleClick} className="game-mode-button">
-      <div>{props.gameType.toString()}</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="ranked" onClick={handleClick}>
+        <h2 className="titleMode">Ranked</h2>
+      </button>
+    </div>
   );
 }
 
 function PracticeGameMode() {
   return (
-    <button className="game-mode-button">
-      <div>Practice</div>
-    </button>
+    <div className="game-mode-button">
+      <button className="practice">
+        <h2 className="titleMode">Practice</h2>
+      </button>
+    </div>
   );
 }
 
@@ -176,7 +184,7 @@ function GameLauncher() {
     <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
-          <h4 className="game-mode-title">Game mode</h4>
+          <h1 className="game-mode-title">Game modes</h1>
           <div className="game-mode">
             <PracticeGameMode />
             <MultiplayerGameMode

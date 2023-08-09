@@ -497,7 +497,7 @@ export class UserService implements OnModuleInit {
     if (!me)
       return failure(APIError.UserNotFound);
 
-    const friend: any = await this.usersRepository.findOneBy({ id: idFriend });
+    const friend = await this.usersRepository.findOneBy({ id: idFriend });
     if (!friend)
       return failure(APIError.OtherUserNotFound);
 
@@ -564,7 +564,7 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         invites: true,
-        joinChannel: true
+        joinChannel: true,
       },
     });
     if (!user)
@@ -681,10 +681,29 @@ export class UserService implements OnModuleInit {
   }
 
   async fetchInvChannel(id : number)
-    : Promise<Result<string[], typeof APIError.UserNotFound>>
+    : Promise<Result<{joinChannel: string, invitedByAvatar?: string, invitedByUsername: string}[], typeof APIError.UserNotFound>>
   {
     const user =  await this.usersRepository.findOneBy({id :Number(id)});
-    return user !== null ? success(user.joinChannel) : failure(APIError.UserNotFound);
-  }
+    if (!user)
+      return failure(APIError.UserNotFound);
 
+    const result = [];
+    for (let i = 0; user.invites.length; i++) {
+      const sender = await this.usersRepository.findOne({
+        select: ['nickname', 'avatarUrl', 'id'],
+        where: { id: user.invitesId[i] },
+      });
+      if (!sender)
+        continue;
+
+      const temp = {
+        joinChannel: user.invites[i],
+        invitedByAvatar: sender.avatarUrl,
+        invitedByUsername: sender.nickname,
+      };
+
+      result.push(temp);
+    }
+    return success(result);
+  }
 }

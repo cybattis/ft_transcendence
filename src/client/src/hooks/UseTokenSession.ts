@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { AuthContext } from "../components/Auth/auth.context";
-import { ErrorContext } from "../components/Modal/modalContext";
 import { useNavigate } from "react-router-dom";
+import { PopupContext } from "../components/Modal/Popup.context";
 
 export interface TerminateSessionFunction {
   (): void;
@@ -9,7 +9,7 @@ export interface TerminateSessionFunction {
 
 export function useTokenSession(): TerminateSessionFunction {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(ErrorContext);
+  const { setErrorMessage } = useContext(PopupContext);
   const navigate = useNavigate();
 
   function terminateSession(): void {
