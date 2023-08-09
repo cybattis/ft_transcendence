@@ -6,32 +6,51 @@ import unmuteLogo from "../../resource/unmuted-logo.png";
 import "./PrivateGameChat.css";
 const allMessages: any = [];
 
-export default function PrivateGameChat(props: {playerOne: string, playerTwo: string, canal: string, myUsername: string}) {
+export default function PrivateGameChat(props: {
+  playerOne: string;
+  playerTwo: string;
+  canal: string;
+  myUsername: string;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [all, setAll] = useState<GameChatInterface[]>([]);
   const [isMute, setIsMute] = useState(false);
-  const [me, setMe] = useState('');
-  const [other, setOther] = useState('');
+  const [me, setMe] = useState("");
+  const [other, setOther] = useState("");
   const [msgNum, setMsgNum] = useState(0);
 
   const handleMute = async () => {
     setIsMute(!isMute);
-  }
+  };
 
   function Buttons() {
-
-    return <>
+    return (
+      <>
         <div className="ctn-btn-action">
-            {!isMute && <img src={unmuteLogo} width={50} height={50} onClick={handleMute}></img>}
-            {isMute && <img src={muteLogo} width={50} height={50} onClick={handleMute}></img>}
+          {!isMute && (
+            <img
+              src={unmuteLogo}
+              width={50}
+              height={50}
+              onClick={handleMute}
+            ></img>
+          )}
+          {isMute && (
+            <img
+              src={muteLogo}
+              width={50}
+              height={50}
+              onClick={handleMute}
+            ></img>
+          )}
         </div>
-    </>
+      </>
+    );
   }
 
   function ChatMap({ messages }: { messages: GameChatInterface[] }) {
-
     useEffect(() => {
-      function scrollbar(){
+      function scrollbar() {
         const scr = document.getElementById("list-gamemsg-container");
         if (scr) scr.scrollTop += scr.clientHeight;
         console.log(scr?.clientHeight);
@@ -44,7 +63,9 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
       <>
         <ul id="list-gamemsg-container" className="list-gamemsg-container">
           {messages
-            .filter((messages) => props.canal ? messages.channel === props.canal : null)
+            .filter((messages) =>
+              props.canal ? messages.channel === props.canal : null
+            )
             .map((messages) =>
               messages.sender === props.myUsername ? (
                 <li className="GameEmt" key={messages.id}>
@@ -64,8 +85,17 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
   }
 
   const sendMessage = () => {
-    if (inputRef.current && inputRef.current.value && inputRef.current.value[0]) {
-      const send = { username: me, opponent: other, channel: props.canal, msg: inputRef.current.value }
+    if (
+      inputRef.current &&
+      inputRef.current.value &&
+      inputRef.current.value[0]
+    ) {
+      const send = {
+        username: me,
+        opponent: other,
+        channel: props.canal,
+        msg: inputRef.current.value,
+      };
       ChatClientSocket.sendGameChat(send);
       inputRef.current.value = "";
     }
@@ -80,22 +110,26 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
 
   useEffect(() => {
     const fetchgameInfo = async () => {
-        if (props.playerOne === props.myUsername)
-        {
-          setMe(props.playerOne);
-          setOther(props.playerTwo)
-        }
-        else {
-          setOther(props.playerOne);
-          setMe(props.playerTwo)
-        }
-    }
+      if (props.playerOne === props.myUsername) {
+        setMe(props.playerOne);
+        setOther(props.playerTwo);
+      } else {
+        setOther(props.playerOne);
+        setMe(props.playerTwo);
+      }
+    };
 
     fetchgameInfo();
 
-    ChatClientSocket.joinGameChat({ canal: props.canal});
+    ChatClientSocket.joinGameChat({ canal: props.canal });
 
-    const gameMessageCallBack = async (data: { sender: string, opponent: string, msg: string, channel: string, blockedUsers: any }) => {
+    const gameMessageCallBack = async (data: {
+      sender: string;
+      opponent: string;
+      msg: string;
+      channel: string;
+      blockedUsers: any;
+    }) => {
       const newObj = {
         id: msgNum,
         sender: data.sender,
@@ -104,33 +138,38 @@ export default function PrivateGameChat(props: {playerOne: string, playerTwo: st
         channel: data.channel,
         blockedUsers: data.blockedUsers,
       };
-      if (!isMute || (isMute && data.sender == me))
-        allMessages.push(newObj);
+      if (!isMute || (isMute && data.sender === me)) allMessages.push(newObj);
       const newData: GameChatInterface[] = [];
-      for (let i = 0; allMessages[i]; i++)
-        newData.push(allMessages[i]);
+      for (let i = 0; allMessages[i]; i++) newData.push(allMessages[i]);
       setAll(newData);
-      if (!isMute || (isMute && data.sender == me))
-        setMsgNum(msgNum + 1);
-    }
+      if (!isMute || (isMute && data.sender === me)) setMsgNum(msgNum + 1);
+    };
 
     ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
 
     return () => {
       ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
-    }
+    };
   }, [msgNum, me, other, props, isMute]);
 
   return (
     <div className="gamechat-div">
-      <div className='gamechat'>
-        <div className='gamechat-container'>
+      <div className="gamechat">
+        <div className="gamechat-container">
           <div className="rcv-gamemess-container" id="rcv-gamemess-container">
             <ChatMap messages={all} />
           </div>
-          <div className='send-gamemess-container'>
-            <input className="input-chat-principal" id="focus-principal-chat" ref={inputRef} onKeyDown={handleKeyDown} type="text" />
-            <button className="btn-gamechat-principal" onClick={sendMessage}>Send</button>
+          <div className="send-gamemess-container">
+            <input
+              className="input-chat-principal"
+              id="focus-principal-chat"
+              ref={inputRef}
+              onKeyDown={handleKeyDown}
+              type="text"
+            />
+            <button className="btn-gamechat-principal" onClick={sendMessage}>
+              Send
+            </button>
             <Buttons />
           </div>
         </div>

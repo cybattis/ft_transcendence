@@ -6,15 +6,14 @@ import { Link } from "react-router-dom";
 import { apiBaseURL } from "../../utils/constant";
 import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
-import {AuthContext} from "../Auth/auth.context";
+import { AuthContext } from "../Auth/auth.context";
 
 //Mettre un useState refresh automatique
-function Online(data: any) {
+function Online(props: { inGame: boolean }) {
+  console.log("inGame: ", props.inGame);
   return (
     <div className="online">
-      <div className="status">
-        {(data.inGame && data.inGame[0] && data.inGame !== "Finished" && data.ingame !== "Player disconnected" ) ? "In game" : "In menu"}
-      </div>
+      <div className="status">{props.inGame ? "In game" : "In menu"}</div>
     </div>
   );
 }
