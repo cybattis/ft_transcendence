@@ -36,6 +36,7 @@ export default function ChatClient() {
   const [isOpe, setIsOpe] = useState(false);
   const [isBan, setIsBan] = useState(false);
   const [isMute, setIsMute] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
   const [errorMessage, setErrorMessage] = useState({
     channel: "",
@@ -231,6 +232,27 @@ export default function ChatClient() {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handleUnBlock = async () => {
+    const sendBlock = { target: usr };
+    ChatClientSocket.blocked(sendBlock);
+    await axios
+      .put(apiBaseURL + `user/unblockUsr/${usr}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        for (let i = 0; blocedList[i]; i ++)
+        {
+          if (blocedList[i] === usr)
+            blocedList.splice(i, 1);
+        }
       })
       .catch((error) => {
         console.log(error);
@@ -480,6 +502,25 @@ export default function ChatClient() {
       }
       getOpeList();
 
+      async function getBlockedUsrs() {
+        await axios
+          .get(apiBaseURL + "user/blockedList", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((res) => {
+            console.log(res.data);
+            setBlocked(false);
+            if (res.data.includes(usr))
+              setBlocked(true);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      getBlockedUsrs();
+
       if (usr === payload?.nickname) setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
@@ -492,7 +533,7 @@ export default function ChatClient() {
             Choose your action <br /> on {usr}
           </h4>
           <div className="ctn-btn-action">
-            {isHere && !me && (
+            {isHere && !me && !blocked && (
               <button className="chat-buttons" onClick={handleBlock}>
                 Block
               </button>
@@ -520,6 +561,11 @@ export default function ChatClient() {
             {!isHere && !me && isOpe && isBan && (
               <button className="chat-buttons" onClick={handleUnBan}>
                 UnBan
+              </button>
+            )}
+            {isHere && !me && blocked && (
+              <button className="chat-buttons" onClick={handleUnBlock}>
+                UnBlock
               </button>
             )}
             <Link to={`/profile/${usr}`}>
@@ -574,6 +620,10 @@ export default function ChatClient() {
         <ul className="list-msg-container">
           {messages
             .filter((messages) =>
+              blocedList
+               ? !blocedList.includes(messages.emitter)
+               : !isMute
+              &&
               channelName
                 ? messages.channel === channelName
                 : messages.channel === takeActiveCanal()
@@ -655,7 +705,6 @@ export default function ChatClient() {
         type: type,
       };
       ChatClientSocket.joinChannel(sendJoin);
-      const msg = "test";
       setJoinForm(false);
     };
 

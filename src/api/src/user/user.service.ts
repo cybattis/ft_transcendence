@@ -463,7 +463,14 @@ export class UserService implements OnModuleInit {
 
   async getBlockedList(myId: number) {
     const me: any = await this.usersRepository.findOne({ where: { id: myId } });
-    return me.blockedChat;
+    const blockedusr: string[] = [];
+    for (let  i = 0; me.blockedId[i]; i ++)
+    {
+      const newUsr: User | null = await this.usersRepository.findOne({where: { id: me.blockedId[i]}});
+      if (newUsr)
+        blockedusr.push(newUsr.nickname);
+    }
+    return blockedusr;
   }
 
   async getNotifs(myId: number) {

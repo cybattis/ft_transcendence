@@ -251,6 +251,22 @@ export class UserController {
   }
 
   @UseGuards(TokenGuard)
+  @Put('unblockUsr/:username')
+  async unblockFriendUsr(
+    @Param('username') username: string,
+    @Headers('Authorization') header: Headers,
+  ) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    const blockedUser: User | null = await this.userService.findByLogin(
+      username,
+    );
+    if (!blockedUser) throw new ForbiddenException('User does not exist');
+    return await this.userService.unblockFriend(blockedUser.id, payload.id);
+  }
+
+  @UseGuards(TokenGuard)
   @Put('block/:id')
   async blockFriend(
     @Param('id') id: number,
