@@ -5,7 +5,6 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ChannelStructure } from './channel.structure';
-import { banStructure } from './channel.structure';
 import { Socket, Server } from 'socket.io';
 import * as bcrypt from 'bcrypt';
 import { Chat } from './entity/Chat.entity';
@@ -23,7 +22,7 @@ import { User } from 'src/user/entity/Users.entity';
 export class ChannelService implements OnModuleInit {
   private jwtService: JwtService;
 
-  private channelStruct: ChannelStructure[];
+  private readonly channelStruct: ChannelStructure[];
   private usersSocketList: UsersSocketStructure[];
 
   constructor(
@@ -119,8 +118,21 @@ export class ChannelService implements OnModuleInit {
     const timeBan: number = this.valideTime(time);
     console.log(`time : ${timeBan}`);
     if (cmd === '+b') await this.actBan(channelToUpdate, target, timeBan);
-    else if (cmd === '-b') await this.actUnban(channelToUpdate, target);
-    else return `Not cmd`;
+    await this.deleteChannel(channelToUpdate);
+  }
+
+  async unbanChannel(
+    cmd: string,
+    username: string,
+    target: string,
+    channel: string,
+  ) {
+    const channelToUpdate: Channel | null =
+      await this.channelRepository.findOneBy({ channel: channel });
+    if (!channelToUpdate) return;
+    if (!this.checkUserIsHere(channelToUpdate.ban, target))
+      return `Ban : ${username} isn't banned.`;
+    if (cmd === '-b') await this.actUnban(channelToUpdate, target);
     await this.deleteChannel(channelToUpdate);
   }
 
@@ -287,7 +299,6 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: any,
   ) {
-    console.log('Inside');
     const channelToJoin = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -380,7 +391,7 @@ export class ChannelService implements OnModuleInit {
       if (this.checkUserIsHere(channelToUpdate.users, username)) return;
       channelToUpdate.users.push(username);
       await this.channelRepository.save(channelToUpdate);
-      socket.join(channel);
+      await socket.join(channel);
       socket.emit('join', channel);
       const sender = 'announce';
       const msg = username + ' just joined the Server!';
@@ -435,12 +446,9 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  async joinGameChannel(
-    socket: Socket,
-    canal: string,
-  ) {
-      socket.emit('join', canal);
-    }
+  async joinGameChannel(socket: Socket, canal: string) {
+    socket.emit('join', canal);
+  }
 
   async joinOldChannel(socket: Socket, username: string) {
     const allChannel: Channel[] = await this.channelRepository.find();
@@ -533,7 +541,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: emiter.id,
       });
       socket.broadcast.emit('rcv', send);
-      server.to(socket.id).emit('rcv', send)
+      server.to(socket.id).emit('rcv', send);
     } else {
       const target = this.getSocketByUsername(channel);
       const prv = { sender, msg, channel };
@@ -570,12 +578,11 @@ export class ChannelService implements OnModuleInit {
     opponent: string,
     blockedUsers: any,
   ) {
-      const prv = { sender, opponent, msg, channel, blockedUsers };
-      const target = this.getSocketByUsername(opponent);
-      if (target)
-        server.to(target).emit('rcvgame', prv);
-      server.to(socket.id).emit('rcvgame', prv);
-    }
+    const prv = { sender, opponent, msg, channel, blockedUsers };
+    const target = this.getSocketByUsername(opponent);
+    if (target) server.to(target).emit('rcvgame', prv);
+    server.to(socket.id).emit('rcvgame', prv);
+  }
 
   async findChannel(channel: string, pwd: string) {
     if (!pwd) pwd = '';
@@ -803,25 +810,32 @@ export class ChannelService implements OnModuleInit {
     await this.channelRepository.save(channelToUpdate);
   }
 
-  async JoinWithInvitation(server: Server, channel: string, target: string, id: number) {
+  async JoinWithInvitation(
+    server: Server,
+    channel: string,
+    target: string,
+    id: number,
+  ) {
     const find = await this.usersRepository.findOneBy({ nickname: target });
     if (!find) return;
-    if (find.joinChannel.includes(channel))
-      return ;
-    const channetToJoin = await this.channelRepository.findOneBy({ channel: channel});
-    if (!channetToJoin)
-      return; // Channel inexistant
-    if (channetToJoin.ban.includes(target))
-      return; // Target is Ban
-    if (channetToJoin.users.includes(target))
-      return; // Is already present
+    if (find.joinChannel.includes(channel)) return;
+    const channetToJoin = await this.channelRepository.findOneBy({
+      channel: channel,
+    });
+    if (!channetToJoin) return; // Channel inexistant
+    if (channetToJoin.ban.includes(target)) return; // Target is Ban
+    if (channetToJoin.users.includes(target)) return; // Is already present
     find.joinChannel.push(channel);
     find.invitesId.push(id);
     await this.usersRepository.save(find);
     this.sendFriendRequest(server, find.id);
   }
 
-  async AcceptInvitationChannel(server: Server, channel: string, target: string) {
+  async AcceptInvitationChannel(
+    server: Server,
+    channel: string,
+    target: string,
+  ) {
     const find = await this.usersRepository.findOne({
       where: { nickname: target },
     });
@@ -833,7 +847,7 @@ export class ChannelService implements OnModuleInit {
         await this.channelRepository.save(find);
         const targetId = this.getSocketById(find.id);
         if (!targetId) return;
-        server.to(targetId).emit('join', channel)
+        server.to(targetId).emit('join', channel);
       }
     }
     // Channel n'existe plus
@@ -868,28 +882,34 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  async acceptChannelRequest(channel: string, id: number){
-    const user = await this.usersRepository.findOneBy( {id: id} )
-    if (user){
-      if(user.joinChannel.includes(channel)){
-        const channelToUpdate =  await this.channelRepository.findOneBy({channel: channel});
-        if (channelToUpdate)
-        {
+  async acceptChannelRequest(channel: string, id: number) {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    if (user) {
+      if (user.joinChannel.includes(channel)) {
+        const channelToUpdate = await this.channelRepository.findOneBy({
+          channel: channel,
+        });
+        if (channelToUpdate) {
           channelToUpdate.users.push(user.nickname);
           const pos: number = user.joinChannel.indexOf(channel);
           user.joinChannel.splice(pos, 1);
-          await this.channelRepository.update(channelToUpdate.id, channelToUpdate);
+          await this.channelRepository.update(
+            channelToUpdate.id,
+            channelToUpdate,
+          );
           await this.usersRepository.save(user);
         }
       }
     }
   }
 
-  async declineChannelRequest(channel: string, id: number){
-    const user = await this.usersRepository.findOneBy( {id: id} )
-    if (user){
-      if(user.joinChannel.includes(channel)){
-        const channelToUpdate =  await this.channelRepository.findOneBy({channel: channel});
+  async declineChannelRequest(channel: string, id: number) {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    if (user) {
+      if (user.joinChannel.includes(channel)) {
+        const channelToUpdate = await this.channelRepository.findOneBy({
+          channel: channel,
+        });
         if (channelToUpdate) {
           const pos: number = user.joinChannel.indexOf(channel);
           user.joinChannel.splice(pos, 1);

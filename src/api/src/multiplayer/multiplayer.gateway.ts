@@ -1,33 +1,41 @@
 import {
-  ConnectedSocket, MessageBody,
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit, SubscribeMessage,
+  OnGatewayInit,
+  SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer, WsException
-} from "@nestjs/websockets";
-import { Server, Socket } from "socket.io";
-import { AuthedSocket } from "../auth/types/auth.types";
-import { WsAuthGuard } from "../auth/guards/ws.auth.guard";
-import { JwtService } from "@nestjs/jwt";
-import { Public } from "../auth/guards/PublicDecorator";
-import { MultiplayerService } from "./multiplayer.service";
-import { BallUpdate, MovementUpdate } from "./types/multiplayer.types";
+  WebSocketServer,
+  WsException,
+} from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { AuthedSocket } from '../auth/types/auth.types';
+import { WsAuthGuard } from '../auth/guards/ws.auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { Public } from '../auth/guards/PublicDecorator';
+import { MultiplayerService } from './multiplayer.service';
+import { BallUpdate, MovementUpdate } from './types/multiplayer.types';
+import { UserService } from '../user/user.service';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
-    methods: ["GET", "POST"]
+    methods: ['GET', 'POST'],
   },
-  path: "/multiplayer"
+  path: '/multiplayer',
 })
-export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-
+export class MultiplayerGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly jwtService: JwtService,
-              private readonly multiplayerService: MultiplayerService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly multiplayerService: MultiplayerService,
+    private userService: UserService,
+  ) {}
 
   afterInit(server: Server) {
     this.server = server;
@@ -35,28 +43,38 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.jwtService)) {
-        console.log("An authorized user connected to the multiplayer server");
+        console.log('An authorized user connected to the multiplayer server');
         next();
       } else {
-        console.log("An unauthorized user tried to connect to the multiplayer server");
+        console.log(
+          'An unauthorized user tried to connect to the multiplayer server',
+        );
         socket.emit('unauthorized');
-        next(new WsException("Unauthorized"));
+        next(new WsException('Unauthorized'));
       }
     });
   }
 
   handleConnection(client: AuthedSocket): void {
-    console.log("A user connected to the multiplayer server");
+    console.log('A user connected to the multiplayer server');
   }
 
   async handleDisconnect(client: AuthedSocket): Promise<void> {
-    console.log("A user disconnected from the multiplayer server");
+    console.log('A user disconnected from the multiplayer server');
+    const user = await this.userService.findByID(client.userId);
+    if (!user) return;
+
+    await this.userService.updateUserGameStatus(user);
+
     //await this.multiplayerService.disconnectPlayerFromGame(client);
   }
 
   @Public()
   @SubscribeMessage('authorization')
-  async handleAuthorization(@ConnectedSocket() client: AuthedSocket, @MessageBody() token: string): Promise<void> {
+  async handleAuthorization(
+    @ConnectedSocket() client: AuthedSocket,
+    @MessageBody() token: string,
+  ): Promise<void> {
     client.handshake.auth.token = token;
   }
 
@@ -71,12 +89,18 @@ export class MultiplayerGateway implements OnGatewayInit, OnGatewayConnection, O
   }
 
   @SubscribeMessage('update-movement')
-  async handleUpdateMovement(@ConnectedSocket() client: AuthedSocket, @MessageBody() data: MovementUpdate): Promise<void> {
+  async handleUpdateMovement(
+    @ConnectedSocket() client: AuthedSocket,
+    @MessageBody() data: MovementUpdate,
+  ): Promise<void> {
     this.multiplayerService.processMovementUpdate(client, data);
   }
 
   @SubscribeMessage('update-ball')
-  async handleUpdateBall(@ConnectedSocket() client: AuthedSocket, @MessageBody() data: BallUpdate): Promise<void> {
+  async handleUpdateBall(
+    @ConnectedSocket() client: AuthedSocket,
+    @MessageBody() data: BallUpdate,
+  ): Promise<void> {
     this.multiplayerService.processBallUpdate(client, data);
   }
 

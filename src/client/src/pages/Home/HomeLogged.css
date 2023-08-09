@@ -128,6 +128,7 @@
 
     font-weight: bold;
     font-family: "Space Mono", monospace;
+    color: black;
     white-space: nowrap;
 
     cursor: pointer;
@@ -151,6 +152,7 @@
 
     font-weight: bold;
     font-family: "Space Mono", monospace;
+    color: black;
     white-space: nowrap;
 
     cursor: pointer;
@@ -174,6 +176,7 @@
 
     font-weight: bold;
     font-family: "Space Mono", monospace;
+    color: black;
     white-space: nowrap;
 
     cursor: pointer;
@@ -182,6 +185,43 @@
     background-size: contain;
     background-position: 50%;
     background-repeat: no-repeat;
+}
+
+.mode {
+    display: flex;
+    flex: auto;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+
+    background-color: darkgrey;
+    border-radius: 8px;
+
+    font-weight: bold;
+    font-family: "Space Mono", monospace;
+    color: black;
+    white-space: nowrap;
+
+    cursor: pointer;
+}
+
+.mode:hover {
+    background-color: #3e3c3c;
+}
+
+.game-mode-ia-title {
+    font-size: max(0.7vw, 25px);
+    position: absolute;
+    width: fit-content;
+}
+
+.choose-game-mode-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: max(0.8vw, 45px);
 }
 
 .casual:hover {

@@ -4,7 +4,7 @@ import ChatClient from "../Chat/Chat";
 import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserInfo } from "../../type/user.type";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { calculateWinrate } from "../../utils/calculateWinrate";
@@ -17,6 +17,7 @@ import { apiBaseURL } from "../../utils/constant";
 import { UserData } from "../Profile/user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import { AIDifficulty } from "../../game/logic/PongAi";
 import { AuthContext } from "../../components/Auth/auth.context";
 import { PopupContext } from "../../components/Modal/Popup.context";
 import getNickname = UserData.getNickname;
@@ -175,9 +176,11 @@ function MultiplayerGameMode(props: {
 }
 
 function PracticeGameMode() {
+  const navigate = useNavigate();
+
   return (
     <div className="game-mode-button">
-      <button className="practice">
+      <button className="practice" onClick={() => navigate("/iagame")}>
         <h2 className="titleMode">Practice</h2>
       </button>
     </div>
@@ -189,36 +192,36 @@ function GameLauncher() {
   const [searchingRanked, setSearchingRanked] = useState(false);
 
   return (
-    <div className="game-launcher">
+      <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
-          <h1 className="game-mode-title">Game modes</h1>
-          <div className="game-mode">
-            <PracticeGameMode />
-            <MultiplayerGameMode
-              gameType={GameType.CASUAL}
-              setSearching={setSearchingCasual}
-            />
-            <MultiplayerGameMode
-              gameType={GameType.RANKED}
-              setSearching={setSearchingRanked}
-            />
-          </div>
+        <h1 className="game-mode-title">Game modes</h1>
+        <div className="game-mode">
+        <PracticeGameMode />
+        <MultiplayerGameMode
+        gameType={GameType.CASUAL}
+        setSearching={setSearchingCasual}
+        />
+        <MultiplayerGameMode
+        gameType={GameType.RANKED}
+        setSearching={setSearchingRanked}
+        />
+        </div>
         </>
       )}
       {searchingCasual && (
-        <MatchmakingButton
+          <MatchmakingButton
           gameType={GameType.CASUAL}
           setSearching={setSearchingCasual}
-        />
-      )}
-      {searchingRanked && (
-        <MatchmakingButton
-          gameType={GameType.RANKED}
-          setSearching={setSearchingRanked}
-        />
-      )}
-    </div>
+          />
+        )}
+        {searchingRanked && (
+            <MatchmakingButton
+            gameType={GameType.RANKED}
+            setSearching={setSearchingRanked}
+            />
+        )}
+      </div>
   );
 }
 

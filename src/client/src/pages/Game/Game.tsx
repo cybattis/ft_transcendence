@@ -66,10 +66,10 @@ export function Game() {
       <div className="gameScreen">
         <MultiplayerPong
           name={"BESTBESTBEST"}
-          width={800}
-          height={400}
+          width={1000}
+          height={800}
           paddleColor={rgb}
-          />
+      />
       </div>
       <div className="players">
         <PlayerList playerOne={playerOne} playerTwo={playerTwo}/>
