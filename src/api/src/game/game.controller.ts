@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game } from './entity/Game.entity';
-import { GameBodyDto } from '../type/game.type';
+import { GameBodyDto, GameInfos } from '../type/game.type';
 
 @Controller('game')
 export class GameController {
@@ -18,7 +18,7 @@ export class GameController {
   }
 
   @Get('info/:id')
-  async infoGame(@Param('id') id: number) {
+  async infoGame(@Param('id') id: number): Promise<GameInfos | null> {
     return await this.gameService.getInfoGame(id);
   }
 }
