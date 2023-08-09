@@ -11,20 +11,17 @@ import {
   Put,
   Headers,
   UseGuards,
-  ForbiddenException, NotFoundException,
+  ForbiddenException, NotFoundException, InternalServerErrorException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { SigninDto, SignupDto } from './dto/auth.dto';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
-import {APIError} from "../utils/errors";
-import {TypeCheckers} from "../utils/type-checkers";
-import {getTokenOrThrow} from "../utils/tokenUtils";
+import { APIError } from "../utils/errors";
+import { decodeTokenOrThrow, getTokenOrThrow } from "../utils/tokenUtils";
 
 @Controller('auth')
 export class AuthController {
@@ -32,10 +29,33 @@ export class AuthController {
   private readonly authService: AuthService;
   @Inject(UserService)
   private readonly userService: UserService;
-  @Inject(CACHE_MANAGER)
-  private cacheManager: Cache;
   @Inject(JwtService)
   private readonly jwtService: JwtService;
+
+  @Get('error400')
+  async error400(): Promise<void> {
+    throw new BadRequestException('This is a 400 HTTP error');
+  }
+
+  @Get('error401')
+  async error401(): Promise<void> {
+    throw new ForbiddenException('This is a 401 HTTP error');
+  }
+
+  @Get('error403')
+  async error403(): Promise<void> {
+    throw new ForbiddenException('This is a 403 HTTP error');
+  }
+
+  @Get('error404')
+  async error404(): Promise<void> {
+      throw new NotFoundException('this is a 404 HTTP error');
+  }
+
+  @Get('error500')
+  async error500(): Promise<void> {
+    throw new InternalServerErrorException('This is a 500 HTTP error');
+  }
 
   @Get('42')
   async redirectToAppSignup(
@@ -115,9 +135,7 @@ export class AuthController {
     @Headers('Authorization') header: Headers,
   ): Promise<true> {
     const token = getTokenOrThrow(header);
-    const decoded = this.jwtService.decode(token);
-    if (!TypeCheckers.isTokenData(decoded))
-      throw new ForbiddenException();
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
 
     await this.authService.checkCode(body.code, decoded.email);
     const result = await this.userService.updateUser2FAstatus(token);
@@ -129,30 +147,30 @@ export class AuthController {
   @UseGuards(TokenGuard)
   @Put('2fa/update')
   async enable2fa(@Headers('Authorization') header: Headers)
-  : Promise<boolean> {
-    const token = getTokenOrThrow(header);
-    const decoded = this.jwtService.decode(token);
-    if (!TypeCheckers.isTokenData(decoded))
-      throw new ForbiddenException();
+  : Promise<void>
+  {
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
 
-    return !!(await this.authService.update2fa(decoded.id));
-
+    const result = await this.authService.update2fa(decoded.id);
+    if (result.isErr())
+      throw new NotFoundException();
   }
 
-  @Put(':id')
+  @Put('get-token/:id')
   async update(@Param('id') id: number): Promise<string> {
     console.log(id);
     const token = await this.authService.generateToken(id);
     if (token.isErr())
       throw new NotFoundException();
 
-    if (await this.userService.updateUserVerifiedStatus(id))
+    const result = await this.userService.updateUserVerifiedStatus(id);
+    if (result.isErr())
       throw new NotFoundException();
     return token.value;
   }
 
   @Get('token-validation')
-  async tokenValidation(@Headers('Authorization') header: Headers): Promise<boolean> {
+  async tokenValidation(@Headers('Authorization') header: Headers): Promise<true> {
     const token = getTokenOrThrow(header);
     try {
       this.jwtService.verify(token);

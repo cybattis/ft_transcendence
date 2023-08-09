@@ -4,21 +4,15 @@ import ChatClient from "../Chat/Chat";
 import { useEffect, useState } from "react";
 import { UserInfo } from "../../type/user.type";
 import { Navigate } from "react-router-dom";
-import { GameStatsDto, GameStatus, GameType } from "../../type/game.type";
+import { GameStats, GameStatus, GameType } from "../../type/game.type";
 import { XPBar } from "../../components/XPBar/XPBar";
 import { MatcheScore } from "../../components/Game/MatcheScore";
 import { Friends } from "../../components/Friends/Friends";
-import { TokenData } from "../../type/client.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
-import jwt_decode from "jwt-decode";
-import { apiBaseURL } from "../../utils/constant";
 import { UserData } from "../Profile/user-data";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { calculateWinrate } from "../../utils/calculateWinrate";
-import {useData } from "../../hooks/UseData";
 import {useProfileData} from "../../hooks/UseProfileData";
-import { PopupContext } from "../../components/Modal/Popup.context";
-import getNickname = UserData.getNickname;
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -214,11 +208,11 @@ function GameLauncher() {
   );
 }
 
-function Result(props: { game: GameStatsDto; userId: number }) {
+function Result(props: { game: GameStats; userId: number }) {
   const isWin =
-    (props.game.ids[0] == props.userId &&
+    (props.game.ids[0] === props.userId &&
       props.game.scoreP1 > props.game.scoreP2) ||
-    (props.game.ids[1] == props.userId &&
+    (props.game.ids[1] === props.userId &&
       props.game.scoreP1 < props.game.scoreP2);
 
   return (

@@ -1,17 +1,17 @@
 import React, {useContext, useState} from "react";
-import axios from "axios";
 import InputForm from "../InputForm/InputForm";
 import Logo from "../Logo/Logo";
-import {Navigate} from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import "./Auth.css";
-import {apiBaseURL} from "../../utils/constant";
 import {AuthContext} from "./auth.context";
 import {FormContext, FormState} from "./form.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 export default function FaCode() {
   const [errorMessage, setErrorMessage] = useState("");
   const { tfaActivated, setAuthed, setTfaActivated } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
+  const { post, showErrorInModal } = useFetcher();
 
   const inputs = {
     code: "",
@@ -56,50 +56,22 @@ export default function FaCode() {
     };
 
     if (token) {
-      await axios
-        .post(apiBaseURL + "auth/2fa/validate", inputs, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setFormState(FormState.NONE);
-          setTfaActivated(!tfaActivated);
-          return;
-        })
-        .catch((error) => {
-          if (error.response && error.response.status === 401) {
-            setErrorMessage(error.response.data.message);
-          } else {
-            setErrorMessage("An error occured, please try again.");
-            setFormState(FormState.NONE);
-          }
-        });
+      await post<true>("auth/2fa/validate", inputs, "application/json")
+        .then(() => setTfaActivated(!tfaActivated))
+        .catch(showErrorInModal);
+        setFormState(FormState.NONE);
     } else {
-      await axios
-        .post(apiBaseURL + "auth/2fa", loggin, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-        .then((res) => {
-          setFormState(FormState.NONE);
+      await post<string>("auth/2fa", loggin, "application/json")
+        .then(newToken => {
           setTfaActivated(true);
-          const data = res.data;
-          localStorage.setItem("token", data);
           setAuthed(true);
+          setFormState(FormState.NONE);
+          localStorage.setItem("token", newToken);
           localStorage.removeItem("email");
           return <Navigate to="/" />;
         })
-        .catch((error) => {
-          if (error.response && error.response.status === 401) {
-            setErrorMessage(error.response.data.message);
-          } else {
-            setErrorMessage("An error occured, please try again.");
-            setFormState(FormState.NONE);
-          }
-        });
+        .catch(showErrorInModal);
+        setFormState(FormState.NONE);
     }
   };
 

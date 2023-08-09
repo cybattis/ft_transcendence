@@ -42,7 +42,6 @@ export namespace TypeConverters {
 
   export function fromUserToUserSettings(user: User): UserSettings {
     return {
-      id: user.id,
       nickname: user.nickname,
       avatarUrl: user.avatarUrl,
       firstname: user.firstname,

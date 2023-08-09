@@ -15,4 +15,5 @@ export enum APIError {
   InvalidPassword,
   UserNotVerified,
   CodeSend,
+  ChannelNotFound,
 }

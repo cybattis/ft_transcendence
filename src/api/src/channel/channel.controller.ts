@@ -1,4 +1,14 @@
-import {Controller, Put, Get, Param, Delete, UseGuards, Headers} from '@nestjs/common';
+import {
+  Controller,
+  Put,
+  Get,
+  Param,
+  Delete,
+  UseGuards,
+  Headers,
+  BadRequestException,
+  NotFoundException
+} from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
 import { InjectRepository } from '@nestjs/typeorm'
@@ -9,6 +19,8 @@ import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
+import { decodeTokenOrThrow } from "../utils/tokenUtils";
+import { APIError } from "../utils/errors";
 
 @UseGuards(TokenGuard)
 @Controller('chat-controller')
@@ -53,7 +65,7 @@ export class ChannelController {
   async findPrivateMessage(
     @Param('channel') channel: string,
     @Param('username') username: string,
-  ): Promise<Chat[] | null> {
+  ): Promise<Chat[]> {
     const find: Channel[] = await this.channelRepository.find({
       where: { status: 'message' },
     });
@@ -68,7 +80,7 @@ export class ChannelController {
         return mess;
       }
     }
-    return null;
+    return [];
   }
 
   @Delete('/delete-chat/:channel')
@@ -95,7 +107,7 @@ export class ChannelController {
   async findChannelInfo(
     @Param('name') name: string,
     @Headers('token') header: Headers,
-  ) {
+  ): Promise<Channel | null> {
     const decodedName = '#' + name;
     return await this.channelRepository.findOne({
       where: { channel: decodedName },
@@ -123,9 +135,19 @@ export class ChannelController {
   async findChannelPsw(
     @Param('channel') channel: string,
     @Param('pwd') pwd: string,
-  ) {
+  ): Promise<true> {
     const decodedName = decodeURIComponent(channel);
-    return await this.channelService.findChannel(decodedName, pwd);
+    const result = await this.channelService.findChannel(decodedName, pwd);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.InvalidPassword:
+          throw new BadRequestException('Invalid password');
+        case APIError.ChannelNotFound:
+          throw new NotFoundException('Channel not found');
+      }
+    }
+
+    return result.value;
   }
 
   @Get('/channel/findName/:channel')
@@ -169,23 +191,19 @@ export class ChannelController {
   async acceptChannelRequest(
     @Param('channel') channel:  string,
     @Headers('Authorization') header: Headers,
-  )
+  ): Promise<void>
   {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
-    await this.channelService.acceptChannelRequest('#' + channel, userID.id);
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
+    await this.channelService.acceptChannelRequest('#' + channel, decoded.id);
   }
 
   @Put('decline/:channel')
   async declineChannelRequest(
     @Param('channel') channel:  string,
     @Headers('Authorization') header: Headers,
-  )
+  ): Promise<void>
   {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
-    await this.channelService.declineChannelRequest('#' + channel, userID.id);
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
+    await this.channelService.declineChannelRequest('#' + channel, decoded.id);
   }
 }

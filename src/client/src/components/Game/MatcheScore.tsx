@@ -1,7 +1,7 @@
-import { GameStatsDto, GameStatus } from "../../type/game.type";
+import { GameStats, GameStatus } from "../../type/game.type";
 import "./GameStatsItem.css";
 
-export function MatcheScore(props: { game: GameStatsDto; userId: number }) {
+export function MatcheScore(props: { game: GameStats; userId: number }) {
   const score = () => {
     if (props.game.ids[0] === props.userId) {
       return (

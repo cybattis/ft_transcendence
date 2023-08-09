@@ -5,6 +5,7 @@ import {User} from './entity/Users.entity';
 import {GameService} from '../game/game.service';
 import {ModuleRef} from '@nestjs/core';
 import {
+  ChannelInvite,
   UserCredentials,
   UserFriend,
   UserFriendsData,
@@ -681,13 +682,13 @@ export class UserService implements OnModuleInit {
   }
 
   async fetchInvChannel(id : number)
-    : Promise<Result<{joinChannel: string, invitedByAvatar?: string, invitedByUsername: string}[], typeof APIError.UserNotFound>>
+    : Promise<Result<ChannelInvite[], typeof APIError.UserNotFound>>
   {
     const user =  await this.usersRepository.findOneBy({id :Number(id)});
     if (!user)
       return failure(APIError.UserNotFound);
 
-    const result = [];
+    const result: ChannelInvite[] = [];
     for (let i = 0; user.invites.length; i++) {
       const sender = await this.usersRepository.findOne({
         select: ['nickname', 'avatarUrl', 'id'],
@@ -696,7 +697,7 @@ export class UserService implements OnModuleInit {
       if (!sender)
         continue;
 
-      const temp = {
+      const temp: ChannelInvite = {
         joinChannel: user.invites[i],
         invitedByAvatar: sender.avatarUrl,
         invitedByUsername: sender.nickname,

@@ -1,10 +1,10 @@
-import { GameStatsDto, GameType } from "../../type/game.type";
+import { GameStats, GameType } from "../../type/game.type";
 import "./GameStatsItem.css";
 import { Link } from "react-router-dom";
 import { Avatar } from "../Avatar";
 import { MatcheScore } from "./MatcheScore";
-import {useData} from "../../hooks/UseData";
-import {UserInfo} from "../../type/user.type";
+import { useData } from "../../hooks/UseData";
+import { UserInfo } from "../../type/user.type";
 
 export function GameStatsHeader() {
   return (
@@ -17,7 +17,7 @@ export function GameStatsHeader() {
   );
 }
 
-export function GameStatsItem(props: {game: GameStatsDto, id: number}) {
+export function GameStatsItem(props: {game: GameStats, id: number}) {
   const player1 = useData<UserInfo>(`user/profile/id/${props.game.ids[0]}`);
   const player2 = useData<UserInfo>(`user/profile/id/${props.game.ids[1]}`);
 
@@ -29,7 +29,7 @@ export function GameStatsItem(props: {game: GameStatsDto, id: number}) {
     return <div>loading</div>;
 }
 
-function GameStatsItemLoaded(props: { game: GameStatsDto; id: number; player1: UserInfo; player2: UserInfo}) {
+function GameStatsItemLoaded(props: { game: GameStats; id: number; player1: UserInfo; player2: UserInfo}) {
   const date = new Date(props.game.creationDate);
 
   function OpponentName() {

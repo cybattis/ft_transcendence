@@ -17,7 +17,6 @@ export interface UserInfo {
 }
 
 export interface UserSettings {
-  id: number;
   nickname: string;
   firstname: string;
   lastname: string;
@@ -50,6 +49,12 @@ export interface UserCredentials {
   password: string,
   isIntra: boolean,
   isVerified: boolean,
+}
+
+export interface ChannelInvite {
+  joinChannel: string,
+  invitedByAvatar?: string,
+  invitedByUsername: string,
 }
 
 export interface UserSocketInfo {

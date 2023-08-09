@@ -9,14 +9,14 @@ import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
-import {ProfileLoader} from "./pages/Profile/Profile";
+import { ProfileLoader } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
-import {Leaderboard, LeaderboardLoader} from "./pages/Leaderboard/Leaderboard";
+import { LeaderboardLoader } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
-import { apiBaseURL } from "./utils/constant";
 import About from "./pages/About/About";
-import {AuthedRoute} from "./components/Auth/AuthedRoute";
+import { AuthedRoute } from "./components/Auth/AuthedRoute";
+import {Error400Page, Error404Page, Error500Page, ErrorInternetPage} from "./pages/Error/ErrorPage";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +28,22 @@ const router = createBrowserRouter([
           {
             path: "*",
             element: <Error404 />,
+          },
+          {
+            path: "bad-request/:path",
+            element: <Error400Page />,
+          },
+          {
+            path: "not-found/:path",
+            element: <Error404Page />,
+          },
+          {
+            path: "server-busy/:path",
+            element: <Error500Page />,
+          },
+          {
+            path: "no-internet/:path",
+            element: <ErrorInternetPage />,
           },
           {
             path: "",

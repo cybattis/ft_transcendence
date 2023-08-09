@@ -1,6 +1,7 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {Controller, Get, NotFoundException, Param} from '@nestjs/common';
 import { GameService } from './game.service';
 import { Game } from './entity/Game.entity';
+import {GameInfos} from "../type/game.type";
 
 @Controller('game')
 export class GameController {
@@ -12,7 +13,11 @@ export class GameController {
   }
 
   @Get('info/:id')
-  async infoGame(@Param('id') id: number) {
-    return await this.gameService.getInfoGame(id);
+  async infoGame(@Param('id') id: number): Promise<GameInfos> {
+    const game = await this.gameService.getInfoGame(id);
+    if (!game)
+      throw new NotFoundException('Game not found');
+
+    return game;
   }
 }

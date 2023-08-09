@@ -1,14 +1,11 @@
-import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import "./Friends.css";
 import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
-import { apiBaseURL } from "../../utils/constant";
-import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
-import {AuthContext} from "../Auth/auth.context";
+import { UserFriend } from "../../type/user.type";
+import { useFetcher } from "../../hooks/UseFetcher";
 
-//Mettre un useState refresh automatique
 function Online(data: any) {
   return (
     <div className="online">
@@ -24,46 +21,22 @@ function Offline() {
 }
 
 function FriendsList() {
-  const { setErrorMessage } = useContext(PopupContext);
-  const { setAuthed } = useContext(AuthContext);
-
-  const token = localStorage.getItem("token");
-
-  const [friendsStatus, setFriendsStatus] = useState([
-    {
-      id: 0,
-      nickname: "",
-      avatarUrl: "",
-      online: false,
-      inGame: false,
-    },
-  ]);
+  const [friendsStatus, setFriendsStatus] = useState<UserFriend[]>([]);
+  const { get } = useFetcher();
 
   useEffect(() => {
     async function fetchFriendsStatus() {
-      await axios
-        .get(apiBaseURL + "user/friends/status", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setFriendsStatus(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            localStorage.clear();
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
+      await get<UserFriend[]>("user/friends/status")
+        .then(friends => setFriendsStatus(friends))
+        .catch(() => {});
     }
-    fetchFriendsStatus().then();
+    fetchFriendsStatus();
 
     ChatClientSocket.onNotificationEvent(fetchFriendsStatus);
+
+    return () => {
+      ChatClientSocket.offNotificationEvent(fetchFriendsStatus);
+    }
   }, []);
 
   if (friendsStatus && friendsStatus[0]) {

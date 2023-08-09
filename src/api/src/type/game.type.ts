@@ -30,3 +30,25 @@ export interface GameBodyDto {
 export interface GameStats extends GameBodyDto {
   creationDate: string;
 }
+
+export interface GameInfos {
+  id: number,
+  playerOne: {
+    username: string,
+    avatar?: string,
+    elo: number,
+  },
+  playerTwo: {
+    username: string,
+    avatar?: string,
+    elo: number,
+  },
+  mode: GameMode,
+  type: GameType,
+}
+
+export interface PlayerInterface {
+  username: string;
+  avatar?: string;
+  elo: number;
+}

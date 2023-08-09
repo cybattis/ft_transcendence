@@ -4,64 +4,76 @@ import { RgbColor, stringToRGB } from "../../utils/colors";
 import { UserData } from "../Profile/user-data";
 import PrivateGameChat from "../Chat/PrivateGameChat";
 import PlayerList from "./PlayerList";
-import axios from "axios";
-import { apiBaseURL } from "../../utils/constant";
 import jwt_decode from "jwt-decode";
 import "./Game.css"
 import { TokenData } from "../../type/client.type";
+import { useFetcher } from "../../hooks/UseFetcher";
+import { GameInfos } from "../../type/game.type";
+import { LoadingPage } from "../Loading/LoadingPage";
+import { TypeCheckers } from "../../utils/type-checkers";
+import { useTokenSession } from "../../hooks/UseTokenSession";
+import { UserInfo } from "../../type/user.type";
 
 export interface PlayerInterface{
   username: string;
-  avatar: string;
-  elo: string;
+  avatar?: string;
+  elo: number;
+}
+
+export interface GameProps {
+  playerOne: PlayerInterface,
+  playerTwo: PlayerInterface,
+  canal: string,
+  myUsername: string
 }
 
 export function Game() {
-  const [myUsername, setMyUsername] = useState('');
-  const [canal, setCanal] = useState('');
-  const [playerOne, setPlayerOne] = useState<PlayerInterface>();
-  const [playerTwo, setPlayerTwo] = useState<PlayerInterface>();
-
-  const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
+  const [gameProps, setGameProps] = useState<GameProps | null>(null);
+  const { get, redirectWithError } = useFetcher();
+  const terminateSession = useTokenSession();
 
   useEffect(() => {
     const fetchBothPlayerInfos = async () => {
       const token = localStorage.getItem("token");
-      if (!token)
+      if (!token) {
+        terminateSession();
         return;
+      }
+
       const payload: TokenData = jwt_decode(token);
+      if (!TypeCheckers.isTokenData(payload)) {
+        terminateSession();
+        return;
+      }
 
-      await axios.get(apiBaseURL + "game/info/" + payload.id)
-      .then((res) => {
-        setPlayerOne(res.data.playerOne);
-        setPlayerTwo(res.data.playerTwo);
-        setCanal(res.data.id + res.data.mode + res.data.type);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+      try {
+        const gameInfos = await get<GameInfos>("game/info/" + payload.id);
+        const profileInfos = await get<UserInfo>("user/my-profile");
 
-      await axios.get(apiBaseURL + "user/my-profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        setMyUsername(res.data.nickname);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        const props: GameProps = {
+          playerOne: gameInfos.playerOne,
+          playerTwo: gameInfos.playerTwo,
+          canal: gameInfos.id + gameInfos.mode + gameInfos.type,
+          myUsername: profileInfos.nickname
+        }
+
+        setGameProps(props);
+      } catch (error) {
+        redirectWithError(error);
+      }
     }
 
     fetchBothPlayerInfos();
   }, []);
 
-  let p1: any, p2: any;
-  if (playerOne)
-    p1 = playerOne.username;
-  if (playerTwo)
-    p2 = playerTwo.username;
+  return (
+    gameProps === null ? <LoadingPage /> :
+      <GameLoaded playerOne={gameProps.playerOne} playerTwo={gameProps.playerTwo} canal={gameProps.canal} myUsername={gameProps.myUsername}/>
+  );
+}
+
+function GameLoaded(props: {playerOne: PlayerInterface, playerTwo: PlayerInterface, canal: string, myUsername: string}) {
+  const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
 
   return (
     <div className="gamePage">
@@ -70,13 +82,18 @@ export function Game() {
           width={800}
           height={400}
           paddleColor={rgb}
-          />
+        />
       </div>
       <div className="players">
-        <PlayerList playerOne={playerOne} playerTwo={playerTwo}/>
+        <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo}/>
       </div>
       <div className="chatBox">
-        <PrivateGameChat playerOne={p1} playerTwo={p2} canal={canal} myUsername={myUsername}/>
+        <PrivateGameChat
+          playerOne={props.playerOne.username}
+          playerTwo={props.playerTwo.username}
+          canal={props.canal}
+          myUsername={props.myUsername}
+        />
       </div>
     </div>
   );

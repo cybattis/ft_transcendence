@@ -16,6 +16,7 @@ import {
 import { UserService } from './user.service';
 import { User } from './entity/Users.entity';
 import {
+  ChannelInvite,
   UserFriend,
   UserFriendsData,
   UserInfo,
@@ -41,8 +42,13 @@ export class UserController{
   ) {}
 
   @Get()
-  async findAll(): Promise<User[]> {
-    return await this.userService.findAll();
+  async findAll(): Promise<UserInfo[]> {
+    const result = await this.userService.findAll();
+    const infos: UserInfo[] = [];
+    result.forEach((user) => {
+      infos.push(TypeConverters.fromUserToUserInfo(user));
+    });
+    return infos;
   }
 
   /*
@@ -387,11 +393,7 @@ export class UserController{
         case APIError.UserNotFound:
           throw new ForbiddenException();
         case APIError.InvalidColor: {
-          const actualPaddleColor = await this.userService.getPaddleColor(clientId);
-          throw new BadRequestException({
-            message: 'Invalid color',
-            paddleColor: actualPaddleColor,
-          });
+          throw new BadRequestException('Invalid color');
         }
       }
     }
@@ -410,7 +412,7 @@ export class UserController{
   @Get('request/channel')
   async fetchInvChannel(
     @Headers('Authorization') header: Headers,
-  ) : Promise<{joinChannel: string, invitedByAvatar?: string, invitedByUsername: string}[]> {
+  ) : Promise<ChannelInvite[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
     if (result.isErr())

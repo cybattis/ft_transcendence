@@ -1,16 +1,12 @@
-import {
-  Injectable,
-  NotFoundException,
-  OnModuleInit,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Game } from './entity/Game.entity';
-import { Repository } from 'typeorm';
-import { User } from '../user/entity/Users.entity';
-import { UserService } from '../user/user.service';
-import { GameBodyDto, GameStatus, GameType } from '../type/game.type';
-import { ModuleRef } from '@nestjs/core';
-import { ScoreUpdate } from '../multiplayer/types/multiplayer.types';
+import {Injectable, NotFoundException, OnModuleInit,} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Game} from './entity/Game.entity';
+import {Repository} from 'typeorm';
+import {User} from '../user/entity/Users.entity';
+import {UserService} from '../user/user.service';
+import {GameBodyDto, GameInfos, GameStatus, GameType} from '../type/game.type';
+import {ModuleRef} from '@nestjs/core';
+import {ScoreUpdate} from '../multiplayer/types/multiplayer.types';
 import {APIError} from "../utils/errors";
 import {Result, success} from "../utils/Error";
 
@@ -33,13 +29,14 @@ export class GameService implements OnModuleInit {
     return this.gameRepository.find();
   }
 
-  async findUserGames(userId: number): Promise<Game[] | string> {
+  async findUserGames(userId: number): Promise<Game[]> {
     const user: User | null = await this.userRepository.findOne({
       relations: ['games'],
       where: { id: userId },
     });
 
-    if (!user) return 'No games found';
+    if (!user)
+      return [];
     return user.games;
   }
 
@@ -192,39 +189,37 @@ export class GameService implements OnModuleInit {
       .execute();
   }
 
-  async getInfoGame(id: number) {
-    const games: any = await this.findUserGames(id);
-    if (games)
+  async getInfoGame(id: number): Promise<GameInfos | null> {
+    const games = await this.findUserGames(id);
+
+    for (let i = 0; i < games.length; i ++)
     {
-      for (let i = 0; games[i]; i ++)
+      if (games[i].status !== "Finished" && games[i].status !== "Player disconnected")
       {
-        if (games[i].status !== "Finished" && games[i].status !== "Player disconnected")
+        const actualGame: Game = games[i];
+        const playerOne: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[0]}});
+        const playerTwo: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[1]}});
+        if (playerOne && playerTwo)
         {
-          const actualGame: Game = games[i];
-          const playerOne: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[0]}});
-          const playerTwo: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[1]}});
-          if (playerOne && playerTwo)
-          {
-            const result = {
-              id: actualGame.id,
-              playerOne: {
-                username: playerOne.nickname,
-                avatar: playerOne.avatarUrl,
-                elo: playerOne.ranking,
-              },
-              playerTwo: {
-                username: playerTwo.nickname,
-                avatar: playerTwo.avatarUrl,
-                elo: playerTwo.ranking,
-              },
-              mode: actualGame.mode,
-              type: actualGame.type,
-            }
-            return result;
-          }
+          return {
+            id: actualGame.id,
+            playerOne: {
+              username: playerOne.nickname,
+              avatar: playerOne.avatarUrl,
+              elo: playerOne.ranking,
+            },
+            playerTwo: {
+              username: playerTwo.nickname,
+              avatar: playerTwo.avatarUrl,
+              elo: playerTwo.ranking,
+            },
+            mode: actualGame.mode,
+            type: actualGame.type,
+          };
         }
       }
     }
-    return ;
+
+    return null;
   }
 }

@@ -18,6 +18,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ModuleRef } from '@nestjs/core';
 import { UsersSocketStructure } from './usersSocket.structure';
 import { User } from 'src/user/entity/Users.entity';
+import { APIError } from "../utils/errors";
+import { failure, Result, success } from "../utils/Error";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -601,7 +603,9 @@ export class ChannelService implements OnModuleInit {
       server.to(socket.id).emit('rcvgame', prv);
     }
 
-  async findChannel(channel: string, pwd: string) {
+  async findChannel(channel: string, pwd: string)
+  : Promise<Result<true, typeof APIError.InvalidPassword | typeof APIError.ChannelNotFound>>
+  {
     if (!pwd) pwd = '';
     if (channel.indexOf('#') === -1) channel = '#' + channel;
     for (let i = 0; this.channelStruct[i]; i++) {
@@ -609,14 +613,14 @@ export class ChannelService implements OnModuleInit {
         channel === this.channelStruct[i].name &&
         pwd === this.channelStruct[i].pswd
       )
-        return 1;
+        return success(true);
       else if (
         channel === this.channelStruct[i].name &&
         pwd !== this.channelStruct[i].pswd
       )
-        return new UnauthorizedException('Password mismatch');
+        return failure(APIError.InvalidPassword);
     }
-    return new NotFoundException("Channel doesn't exists");
+    return failure(APIError.ChannelNotFound);
   }
 
   async findChannelName(channel: string) {

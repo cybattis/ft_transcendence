@@ -1,6 +1,7 @@
-import axios, {AxiosError} from "axios/index";
+import axios, { AxiosError } from "axios";
+import {apiBaseURL} from "./constant";
 
-export namespace Backend {
+export namespace Fetching {
 
   interface IFetchError {
     type: "Transport" | "Server" | "Request" | "Auth",
@@ -117,6 +118,7 @@ export namespace Backend {
   }
 
   export type FetchError = TransportError | ServerError | RequestError | AuthError;
+  export type NonAuthFetchError = TransportError | ServerError | RequestError;
 
   export function axiosErrorHandler(error: Error | AxiosError): FetchError {
     if (axios.isAxiosError(error)) {
@@ -153,33 +155,61 @@ export namespace Backend {
     return new TransportError(error.message);
   }
 
-  async function get<T>(path: string): Promise<T> {
+  export async function get<T>(path: string, contentType?: string): Promise<T> {
     const token = localStorage.getItem("token");
+    const headers = contentType ?
+      { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" }
+      : { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
 
-    return axios.get(path, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : undefined,
-      }
+    return axios.get<T>(apiBaseURL + path, {
+      headers: headers
+    }).then(response => {
+      return response.data;
+    }).catch(axiosError => {
+      throw axiosErrorHandler(axiosError);
     });
   }
 
-  async function post<T>(path: string, data: any): Promise<T> {
+  export async function post<T>(path: string, data: any, contentType?: string): Promise<T> {
     const token = localStorage.getItem("token");
+    const headers = contentType ?
+      { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" }
+      : { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
 
-    return axios.post(path, data, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : undefined,
-      }
+    return axios.post(apiBaseURL + path, data, {
+      headers: headers
+    }).then(response => {
+      return response.data;
+    }).catch(axiosError => {
+      throw axiosErrorHandler(axiosError);
     });
   }
 
-  async function put<T>(path: string, data: any): Promise<T> {
+  export async function put<T>(path: string, data: any, contentType?: string): Promise<T> {
     const token = localStorage.getItem("token");
+    const headers = contentType ?
+      { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" }
+      : { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*" };
 
-    return axios.put(path, data, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : undefined,
-      }
+    return axios.put(apiBaseURL + path, data, {
+      headers: headers
+    }).then(response => {
+      return response.data;
+    }).catch(axiosError => {
+      throw axiosErrorHandler(axiosError);
     });
+  }
+
+  export function isFetchingError(error: any): error is FetchError {
+    return error instanceof TransportError
+      || error instanceof ServerError
+      || error instanceof RequestError
+      || error instanceof AuthError;
   }
 }
