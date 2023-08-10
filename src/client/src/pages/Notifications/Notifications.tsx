@@ -89,19 +89,6 @@ export default function Notifications() {
     ChatClientSocket.AcceptInvitationChannel(data);
     const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== channel);
     setChannelInvits(newInvits);
-    // if (channel[0] === '#')
-    //   channel = channel.substring(1);
-    // const addr = apiBaseURL + "chat-controller/request/" + channel;
-    // await axios
-    // .put(addr, null,  {
-    //   headers: {
-    //     Authorization: `Bearer ${token}`,
-    //   },
-    // })
-    // .then((res) => {
-    //   const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
-    //   setChannelInvits(newInvits);
-    // });
   }
 
   async function handleDeclineChannel(channel: string) {

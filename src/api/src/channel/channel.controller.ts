@@ -178,17 +178,6 @@ export class ChannelController {
     return find.owner === username;
   }
 
-  @Put('request/:channel')
-  async acceptChannelRequest(
-    @Param('channel') channel: string,
-    @Headers('Authorization') header: Headers,
-  ) {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
-    await this.channelService.acceptChannelRequest('#' + channel, userID.id);
-  }
-
   @Put('decline/:channel')
   async declineChannelRequest(
     @Param('channel') channel: string,

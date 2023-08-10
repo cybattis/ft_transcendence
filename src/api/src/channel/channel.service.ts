@@ -907,28 +907,6 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  async acceptChannelRequest(channel: string, id: number) {
-    console.log("Acc request");
-    const user = await this.usersRepository.findOneBy({ id: id });
-    if (user) {
-      if (user.joinChannel.includes(channel)) {
-        const channelToUpdate = await this.channelRepository.findOneBy({
-          channel: channel,
-        });
-        if (channelToUpdate) {
-          channelToUpdate.users.push(user.nickname);
-          const pos: number = user.joinChannel.indexOf(channel);
-          user.joinChannel.splice(pos, 1);
-          await this.channelRepository.update(
-            channelToUpdate.id,
-            channelToUpdate,
-          );
-          await this.usersRepository.save(user);
-        }
-      }
-    }
-  }
-
   async declineChannelRequest(channel: string, id: number) {
     const user = await this.usersRepository.findOneBy({ id: id });
     if (user) {
