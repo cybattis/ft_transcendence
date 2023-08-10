@@ -11,7 +11,7 @@ import jwt_decode from "jwt-decode";
 import "./Game.css";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { EndGamePopup } from "../../components/Modal/PopUpModal";
-import { Navigate } from "react-router-dom";
+import { GameStatus } from "../../type/game.type";
 
 export interface PlayerInterface {
   username: string;
@@ -39,8 +39,10 @@ export function Game() {
           setPlayerOne(res.data.playerOne);
           setPlayerTwo(res.data.playerTwo);
           setCanal(res.data.id + res.data.mode + res.data.type);
-          if (res.data.playerOne.me) setHasWin(res.data.playerOne.hasWin);
-          else setHasWin(res.data.playerTwo.hasWin);
+          if (res.data.status === GameStatus.FINISHED) {
+            if (res.data.playerOne.me) setHasWin(res.data.playerOne.hasWin);
+            else setHasWin(res.data.playerTwo.hasWin);
+          }
         })
         .catch((error) => {
           console.log(error);
@@ -63,16 +65,19 @@ export function Game() {
     fetchBothPlayerInfos();
 
     MultiplayerClient.onGameEnded(() => {
-      setEndGame(true);
-      fetchBothPlayerInfos();
+      fetchBothPlayerInfos().then(() => {
+        setEndGame(true);
+      });
     });
 
     return () => {
       MultiplayerClient.offGameEnded(() => {
-        setEndGame(true);
+        fetchBothPlayerInfos().then(() => {
+          setEndGame(true);
+        });
       });
     };
-  }, [endGame]);
+  }, [endGame, hasWin]);
 
   let p1: any, p2: any;
   if (playerOne) p1 = playerOne.username;

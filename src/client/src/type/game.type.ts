@@ -50,4 +50,5 @@ export interface GameInfos {
   };
   mode: GameMode;
   type: GameType;
+  status: GameStatus;
 }
