@@ -2,6 +2,7 @@ NAME		=	ft_transcendance
 
 VOLUME_PATH	=
 COMPOSE 	=	docker compose -f ./src/Docker-compose.yml
+PRODUCTION 	=	docker compose -f ./src/Docker-compose-prod.yml
 
 API			=	api
 CLIENT		=	client
@@ -10,6 +11,8 @@ POSTGRES	=	postgres
 # Recipe
 ################################
 start: get_ip _start
+
+prod: get_ip _prod
 
 stop: _stop
 
@@ -41,7 +44,7 @@ update-npm:
 get_ip:
 	@./src/script/get_ip.sh
 
-.PHONY: start stop build clean fclean restart show log create_dir list help get_ip
+.PHONY: start stop build clean fclean restart show log create_dir list help get_ip prod
 
 # ===============================================
 
@@ -66,6 +69,11 @@ else
 	@echo 'building all'
 	$(BUILD)
 endif
+
+.PHONY: _prod
+_prod:
+	@echo 'starting all in production mode'
+	$(PRODUCTION) up -d
 
 START	=	$(COMPOSE) up -d
 .PHONY: _start
