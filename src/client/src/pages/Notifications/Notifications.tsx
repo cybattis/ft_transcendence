@@ -7,11 +7,13 @@ import { Navigate } from "react-router-dom";
 import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import {AuthContext} from "../../components/Auth/auth.context";
+import { JwtPayload } from "../../type/client.type";
+import jwt_decode from "jwt-decode";
+
 
 export default function Notifications() {
   const { setAuthed } = useContext(AuthContext);
   const { setErrorMessage } = useContext(PopupContext);
-  const token: string | null = localStorage.getItem("token");
   const [invits, setInvits] = useState([
     {
       nickname: "",
@@ -28,6 +30,18 @@ export default function Notifications() {
     },
   ]);
 
+  const token = localStorage.getItem("token");
+  let payload: JwtPayload;
+  let username = "";
+
+  if (username === "" && token) {
+    try {
+      payload = jwt_decode(token);
+      if (payload?.nickname) username = payload.nickname;
+    } catch (e) {
+      console.log(`Decode error ${e}`);
+    }
+  }
 
   async function handleAccept(id: number) {
     if (!id) return;
@@ -68,20 +82,26 @@ export default function Notifications() {
   }
 
   async function handleAcceptChannel(channel: string){
-    const oldChannel = channel;
-    if (channel[0] === '#')
-      channel = channel.substring(1);
-    const addr = apiBaseURL + "chat-controller/request/" + channel;
-    await axios
-    .put(addr, null,  {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((res) => {
-      const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
-      setChannelInvits(newInvits);
-    });
+    const data = {
+      channel: channel,
+      target: username,
+    }
+    ChatClientSocket.AcceptInvitationChannel(data);
+    const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== channel);
+    setChannelInvits(newInvits);
+    // if (channel[0] === '#')
+    //   channel = channel.substring(1);
+    // const addr = apiBaseURL + "chat-controller/request/" + channel;
+    // await axios
+    // .put(addr, null,  {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // })
+    // .then((res) => {
+    //   const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
+    //   setChannelInvits(newInvits);
+    // });
   }
 
   async function handleDeclineChannel(channel: string) {

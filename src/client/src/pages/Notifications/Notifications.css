@@ -111,6 +111,10 @@
     cursor: pointer;
 }
 
+.accept:hover {
+    background-color: rgb(50, 148, 50);
+}
+
 .tick-mark {
     position: relative;
     display: flex;

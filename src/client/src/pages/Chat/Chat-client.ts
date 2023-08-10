@@ -75,6 +75,7 @@ export namespace ChatClientSocket {
     console.log("Client connect to chat server");
 
     socket.on("join", (room: string) => {
+      console.log("JOinn ");
       newJoinChannel.forEach((callback) => callback(room));
     });
 
@@ -277,6 +278,15 @@ export namespace ChatClientSocket {
     if (!checkChatConnection()) return;
     console.log(`Client send notification event to ${target}`);
     socket.emit("notif-event", target);
+  }
+
+  export function AcceptInvitationChannel(data: {
+    channel: string;
+    target: string;
+  }) {
+    if (!checkChatConnection()) return;
+    console.log(`Accept Channel invit`, data);
+    socket.emit("acc", data);
   }
 
   export function sendGameChat(send: {

@@ -341,6 +341,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { channel: string; target: string },
   ) {
     await this.channelService.AcceptInvitationChannel(
+      socket,
       this.server,
       data.channel,
       data.target,

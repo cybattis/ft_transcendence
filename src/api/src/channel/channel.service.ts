@@ -451,6 +451,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async joinOldChannel(socket: Socket, username: string) {
+    console.log('old');
     const allChannel: Channel[] = await this.channelRepository.find();
     if (allChannel) {
       for (let index = 0; allChannel[index]; index++) {
@@ -832,24 +833,48 @@ export class ChannelService implements OnModuleInit {
   }
 
   async AcceptInvitationChannel(
+    socket: Socket,
     server: Server,
     channel: string,
     target: string,
   ) {
+    console.log("Acc invi", channel, target);
     const find = await this.usersRepository.findOne({
       where: { nickname: target },
     });
-    if (!find) return;
-    for (let index = 0; find.joinChannel[index]; index++) {
-      if (channel === find.joinChannel[index]) {
-        find.joinChannel.splice(index, 1);
-        find.invitesId.splice(index, 1);
-        await this.channelRepository.save(find);
-        const targetId = this.getSocketById(find.id);
-        if (!targetId) return;
-        server.to(targetId).emit('join', channel);
-      }
+    if (!find) return; // User n'existe plus
+    if (find.joinChannel.includes(channel)) {
+      const channelToUpdate = await this.channelRepository.findOneBy({
+        channel: channel,
+      });
+      if (!channelToUpdate) return; // Channel n'existe pas
+      if (channelToUpdate.users.includes(target)) return; // Deja present
+      if (channelToUpdate.ban.includes(target)) return; // Il est banni
+      channelToUpdate.users.push(find.nickname);
+      const pos: number = find.joinChannel.indexOf(channel);
+      find.joinChannel.splice(pos, 1);
+      await this.channelRepository.update(
+        channelToUpdate.id,
+        channelToUpdate,
+      );
+      await this.usersRepository.save(find);
+      await this.channelRepository.save(channelToUpdate);
+      const socketTarget = this.getSocketById(find.id);
+      if (socketTarget)
+        server.to(socketTarget).emit('join', channel);
+      const sender = 'announce';
+      const msg = target + ' just joined the channel. Welcome him/her nicely.';
+      const send = { sender, msg, channel };
+      await this.chatRepository.save({
+        channel: channel,
+        content: msg,
+        emitter: sender,
+        emitterId: 0,
+      });
+      socket.broadcast.emit('rcv', send);
+      //Envoyer un message dans le chat pour dire qu'il a rejoint
     }
+
     // Channel n'existe plus
   }
 
@@ -883,6 +908,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async acceptChannelRequest(channel: string, id: number) {
+    console.log("Acc request");
     const user = await this.usersRepository.findOneBy({ id: id });
     if (user) {
       if (user.joinChannel.includes(channel)) {

@@ -1069,6 +1069,7 @@ export default function ChatClient() {
     }
 
     const joinCallBack = (room: string) => {
+      console.log("Information", room);
       if (room[0] !== "#")
         room.indexOf(username) === 0
           ? (room = room.substring(username.length))
