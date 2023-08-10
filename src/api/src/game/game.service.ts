@@ -203,47 +203,40 @@ export class GameService implements OnModuleInit {
   async getInfoGame(id: number): Promise<GameInfos | null> {
     const games = await this.findUserGames(id);
 
-    for (let i = 0; i < games.length; i++) {
-      if (
-        games[i].status !== 'Finished' &&
-        games[i].status !== 'Player disconnected'
-      ) {
-        const actualGame: Game = games[i];
-        const playerOne: User | null = await this.userRepository.findOne({
-          where: { id: actualGame.ids[0] },
-        });
-        const playerTwo: User | null = await this.userRepository.findOne({
-          where: { id: actualGame.ids[1] },
-        });
-        if (playerOne && playerTwo) {
-          const isPlayerOne = actualGame.ids[0] === id;
-          const isPlayerTwo = actualGame.ids[1] === id;
+    const actualGame: Game = games[games.length - 1];
+    const playerOne: User | null = await this.userRepository.findOne({
+      where: { id: actualGame.ids[0] },
+    });
+    const playerTwo: User | null = await this.userRepository.findOne({
+      where: { id: actualGame.ids[1] },
+    });
+    if (playerOne && playerTwo) {
+      const isPlayerOne = actualGame.ids[0] === id;
+      const isPlayerTwo = actualGame.ids[1] === id;
 
-          return {
-            id: actualGame.id,
-            playerOne: {
-              me: isPlayerOne,
-              hasWin: actualGame.scoreP1 > actualGame.scoreP2,
-              username: playerOne.nickname,
-              avatar: playerOne.avatarUrl,
-              elo: playerOne.ranking,
-              scoreP1: actualGame.scoreP1,
-            },
-            playerTwo: {
-              me: isPlayerTwo,
-              hasWin: actualGame.scoreP2 > actualGame.scoreP1,
-              username: playerTwo.nickname,
-              avatar: playerTwo.avatarUrl,
-              elo: playerTwo.ranking,
-              scoreP2: actualGame.scoreP2,
-            },
-            mode: actualGame.mode,
-            type: actualGame.type,
-          };
-        }
-      }
+      return {
+        id: actualGame.id,
+        playerOne: {
+          me: isPlayerOne,
+          hasWin: actualGame.scoreP1 > actualGame.scoreP2,
+          username: playerOne.nickname,
+          avatar: playerOne.avatarUrl,
+          elo: playerOne.ranking,
+          scoreP1: actualGame.scoreP1,
+        },
+        playerTwo: {
+          me: isPlayerTwo,
+          hasWin: actualGame.scoreP2 > actualGame.scoreP1,
+          username: playerTwo.nickname,
+          avatar: playerTwo.avatarUrl,
+          elo: playerTwo.ranking,
+          scoreP2: actualGame.scoreP2,
+        },
+        mode: actualGame.mode,
+        type: actualGame.type,
+        status: actualGame.status,
+      };
     }
-
     return null;
   }
 }

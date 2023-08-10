@@ -1,8 +1,5 @@
 import { useEffect, useRef } from "react";
-import {
-  createNewMultiplayerGame,
-  removeMultiplayerGame,
-} from "../PongManager";
+import { createNewMultiplayerGame } from "../PongManager";
 import MultiplayerPongState from "../states/MultiplayerPongState";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { PlayerInfos } from "../networking/types";

@@ -227,8 +227,8 @@ export class MultiplayerService {
 
     // Check if the game is finished
     if (
-      (game.player1Score >= 11 && game.player1Score - game.player2Score >= 2) ||
-      (game.player2Score >= 11 && game.player2Score - game.player1Score >= 2)
+      (game.player1Score >= 1 && game.player1Score - game.player2Score >= 0) ||
+      (game.player2Score >= 1 && game.player2Score - game.player1Score >= 0)
     ) {
       await this.endGame(game);
       return;
