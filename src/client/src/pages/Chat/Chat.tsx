@@ -537,8 +537,8 @@ export default function ChatClient() {
     return (
       <div className="buttons-form">
         <form method="get" onSubmit={handleButtonForm}>
-          <h4>
-            Choose your action <br /> on {usr}
+          <h4 className="title-form-chat">
+            Choose your action on {usr}
           </h4>
           <div className="ctn-btn-action">
             {isHere && !me && !blocked && (
@@ -579,7 +579,7 @@ export default function ChatClient() {
             <Link to={`/profile/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
-            <OpeBtn />
+            {isOpe && <OpeBtn />}
             {banForm && <Ban />}
           </div>
         </form>
@@ -783,7 +783,7 @@ export default function ChatClient() {
 
     return (
       <div className="join-form">
-        <form method="get" onSubmit={handleSubmitJoin}>
+        <form method="get" className="join-form-form" onSubmit={handleSubmitJoin}>
           <h4>Join a Channel</h4>
           <div className="test">
             {errorInput && <p className="error"> {errorInput} </p>}

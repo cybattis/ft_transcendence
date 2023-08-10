@@ -57,3 +57,7 @@ dialog[open] {
 dialog[close] {
     animation: toggle-modal 0.2s ease-in-out;
 }
+
+#close {
+    cursor: pointer;
+}

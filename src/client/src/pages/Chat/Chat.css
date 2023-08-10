@@ -217,33 +217,25 @@
     flex-direction: column;
 
     top: 20%;
-    min-width: max-content;
+    left: 1%;
+    max-width: fit-content;
 
     align-items: center;
     justify-items: center;
 
-    padding: 1em 2em 1em 2em;
+    padding: 1em 1em 1em 1em;
 
     background-color: var(--bg);
     border: 2px solid var(--purple-darker);
     border-radius: 20px;
 }
 
-.join-form {
-    position: absolute;
+.join-form-form {
     display: flex;
     flex-direction: column;
 
-    min-width: max-content;
-
     align-items: center;
     justify-items: center;
-
-    padding: 1em 2em 1em 2em;
-
-    background-color: var(--bg);
-    border: 2px solid var(--purple-darker);
-    border-radius: 20px;
 }
 
 .input-join {
@@ -257,9 +249,11 @@
     z-index: 99;
 
     top: 20%;
-    min-width: max-content;
+    max-width: 250px;
+    overflow-x: auto;
 
     align-items: center;
+    text-align: center;
     justify-items: center;
 
     padding: 1em 2em 1em 2em;
@@ -269,15 +263,24 @@
     border-radius: 20px;
 }
 
+.title-form-chat {
+    display: flex;
+    max-width: 280px;;
+
+    text-align: center;
+    font-size: max(0.7vw, 20px);
+    overflow-wrap: break-word;
+}
+
 .logo-chnl {
     height: 50px;
 }
 
 .ctn-btn-action {
     display: flex;
+    max-width: 250px;
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
+    overflow-x: auto;
 }
 
 .chat-buttons{
@@ -339,7 +342,8 @@
     z-index: 90;
 
     top: 20%;
-    min-width: max-content;
+    max-width: 500px;
+    overflow-x: auto;
 
     align-items: center;
     justify-items: center;
@@ -349,6 +353,44 @@
     background-color: var(--bg);
     border: 2px solid var(--purple-darker);
     border-radius: 20px;
+}
+
+@media screen and (width < 1200px) {
+    .pop-private {
+        left: 1%;
+    }
+
+    .pop-invite {
+        left: 1%;
+    }
+}
+
+@media screen and (width >= 1200px) {
+    .join-form {
+        left: 5%;
+    }
+    
+    .pop-private {
+        left: 5%;
+    }
+
+    .pop-invite {
+        left: 5%;
+    }
+}
+
+@media screen and (width >= 1500px) {
+    .join-form {
+        left: 10%;
+    }
+
+    .pop-private {
+        left: 10%;
+    }
+
+    .pop-invite {
+        left: 10%;
+    }
 }
 
 .user-lists {
@@ -403,7 +445,8 @@
     z-index: 90;
 
     top: 20%;
-    min-width: max-content;
+    max-width: 500px;
+    overflow-x: auto;
 
     align-items: center;
     justify-items: center;
@@ -415,6 +458,11 @@
     border-radius: 20px;
 }
 
+.test {
+    width: 100%;
+}
+
 .selectName {
+    width: 100%;
     color: black;
 }

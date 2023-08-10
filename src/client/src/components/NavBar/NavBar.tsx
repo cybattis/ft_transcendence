@@ -4,7 +4,7 @@ import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../Logo/Logo";
 import navbarIcon from "../../resource/menu.png";
-import { DisconnectButton, NavButton } from "./NavButton";
+import { DisconnectButton, NavButton, PlayButton } from "./NavButton";
 import jwt_decode from "jwt-decode";
 import { JwtPayload } from "../../type/client.type";
 import { Notification } from "./NavButton";
@@ -59,6 +59,11 @@ function MobileNavBar() {
           <NavButton
             content={"About"}
             link={"/about"}
+            callback={handleSidePanel}
+          />
+          <NavButton
+            content={"Play"}
+            link={"/"}
             callback={handleSidePanel}
           />
           <NavButton
