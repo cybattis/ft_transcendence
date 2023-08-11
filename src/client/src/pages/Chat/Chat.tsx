@@ -36,6 +36,7 @@ export default function ChatClient() {
   const [isOpe, setIsOpe] = useState(false);
   const [isBan, setIsBan] = useState(false);
   const [isMute, setIsMute] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
   const [errorMessage, setErrorMessage] = useState({
     channel: "",
@@ -46,7 +47,7 @@ export default function ChatClient() {
   const token = localStorage.getItem("token");
   let payload: TokenData;
   let username = "";
-  
+
   if (username === "" && token) {
     try {
       payload = jwt_decode(token);
@@ -55,18 +56,22 @@ export default function ChatClient() {
       console.log(`Decode error ${e}`);
     }
   }
-  
+
   function takeActiveCanal(): string {
-    const canal = document.getElementById('canal');
+    const canal = document.getElementById("canal");
     return canal ? canal.innerHTML : defaultChannelGen;
   }
-  
+
   function Quit(props: { canal: string }) {
     const handleQuitButton = () => {
-      const sendQuit = { cmd: "quit", username: username, channel: props.canal };
+      const sendQuit = {
+        cmd: "quit",
+        username: username,
+        channel: props.canal,
+      };
       ChatClientSocket.quit(sendQuit);
     };
-  
+
     if (props.canal !== defaultChannelGen && props.canal[0] === "#") {
       return (
         <button className="button-chat" onClick={handleQuitButton}>
@@ -81,19 +86,19 @@ export default function ChatClient() {
     }
     return <></>;
   }
-  
+
   function Param(props: { canal: string }) {
     const [buttonParam, setButtonParam] = useState(false);
     const [owner, setOwner] = useState(false);
     const { get } = useFetcher();
     const channel = takeActiveCanal();
-  
+
     function AffParam() {
       const [inputParam, setInputForm] = useState({
         pwd: "",
         selectedOption: "public",
       });
-  
+
       const handleSubmitParam = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         const channel = takeActiveCanal();
@@ -106,34 +111,38 @@ export default function ChatClient() {
         ChatClientSocket.updateChannel(sendParam);
         setButtonParam(false);
       };
-  
+
       const handleParam = (event: any) => {
         event.preventDefault();
-  
+
         const value = event.target.value;
         setInputForm({
           ...inputParam,
           [event.target.name]: value,
         });
       };
-  
+
       const handleSelectParam = (event: any) => {
         if (event) {
           const value = event.value;
           inputParam.selectedOption = value;
         }
       };
-  
+
       const options = [
         { value: "public", label: "Public" },
         { value: "private", label: "Private" },
         { value: "protected", label: "Protected" },
       ];
-  
+
       return (
         <div className="ctnr-param">
           <h4>Setting Channel</h4>
-          <form className="form-param" method="get" onSubmit={handleSubmitParam}>
+          <form
+            className="form-param"
+            method="get"
+            onSubmit={handleSubmitParam}
+          >
             <Select
               defaultValue={options[0]}
               onChange={handleSelectParam}
@@ -157,7 +166,7 @@ export default function ChatClient() {
         </div>
       );
     }
-  
+
     useEffect(() => {
       async function isOwner() {
         if (props.canal[0] != "#") {
@@ -175,14 +184,14 @@ export default function ChatClient() {
           bool ? setOwner(true) : setOwner(false);
         } catch (error) {} // Silently fail
       }
-  
+
       isOwner();
     });
-  
+
     const btnParam = () => {
       buttonParam ? setButtonParam(false) : setButtonParam(true);
     };
-  
+
     if (!owner) return <></>;
     else
       return (
@@ -225,6 +234,19 @@ export default function ChatClient() {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
     put<UserFriendsData>(`user/block-user/${usr}`, {})
+      .catch(showErrorInModal);
+  };
+
+  const handleUnBlock = async () => {
+    const sendBlock = { target: usr };
+    ChatClientSocket.blocked(sendBlock);
+    put<UserFriendsData>(`user/unblockUsr/${usr}`, {})
+      .then(res => {
+        for (let i = 0; blocedList[i]; i ++) {
+          if (blocedList[i] === usr)
+            blocedList.splice(i, 1);
+        }
+      })
       .catch(showErrorInModal);
   };
 
@@ -452,6 +474,19 @@ export default function ChatClient() {
       }
       getOpeList();
 
+      async function getBlockedUsrs() {
+          get<string[]>("user/blockedList")
+          .then((res) => {
+            setBlocked(false);
+            if (res.includes(usr))
+              setBlocked(true);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      getBlockedUsrs();
+
       if (usr === payload?.nickname) setMe(true);
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
@@ -464,7 +499,7 @@ export default function ChatClient() {
             Choose your action <br /> on {usr}
           </h4>
           <div className="ctn-btn-action">
-            {isHere && !me && (
+            {isHere && !me && !blocked && (
               <button className="chat-buttons" onClick={handleBlock}>
                 Block
               </button>
@@ -492,6 +527,11 @@ export default function ChatClient() {
             {!isHere && !me && isOpe && isBan && (
               <button className="chat-buttons" onClick={handleUnBan}>
                 UnBan
+              </button>
+            )}
+            {isHere && !me && blocked && (
+              <button className="chat-buttons" onClick={handleUnBlock}>
+                UnBlock
               </button>
             )}
             <Link to={`/profile/${usr}`}>
@@ -527,11 +567,9 @@ export default function ChatClient() {
       }
       actifCanal();
 
-      if (channelName === defaultChannelGen && messages.length === 0){
-        fetchMessage(channelName);
-      }
-         
-      function scrollbar(){
+      //fetchMessage(channelName);
+
+      function scrollbar() {
         const scr = document.getElementById("rcv-mess-container");
         if (scr) scr.scrollTop += scr.clientHeight;
       }
@@ -544,6 +582,10 @@ export default function ChatClient() {
         <ul className="list-msg-container">
           {messages
             .filter((messages) =>
+              blocedList
+               ? !blocedList.includes(messages.emitter)
+               : !isMute
+              &&
               channelName
                 ? messages.channel === channelName
                 : messages.channel === takeActiveCanal()
@@ -625,7 +667,6 @@ export default function ChatClient() {
         type: type,
       };
       ChatClientSocket.joinChannel(sendJoin);
-      const msg = "test";
       setJoinForm(false);
     };
 
@@ -772,7 +813,7 @@ export default function ChatClient() {
 
     const handleInvite = (target: string) => {
       const id = payload?.id;
-      const sendInv = { channel: takeActiveCanal(), target: target, id:  id};
+      const sendInv = { channel: takeActiveCanal(), target: target, id: id };
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
     };
@@ -1038,6 +1079,8 @@ export default function ChatClient() {
 
     ChatClientSocket.addErr(errCallBack);
 
+    fetchMessage(takeActiveCanal());
+
     return () => {
       ChatClientSocket.offJoinChan(joinCallBack);
       ChatClientSocket.offBlock(blockedCallBack);
@@ -1141,7 +1184,11 @@ export default function ChatClient() {
           </div>
         </div>
         <div className="user-lists">
-          <UsersList messages={messages} channel={takeActiveCanal()} />
+          <UsersList
+            messages={messages}
+            channel={takeActiveCanal()}
+            handleButton={handleButton}
+          />
         </div>
         <ErrorModalChat
           msg={errorMessage}

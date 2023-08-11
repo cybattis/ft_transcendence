@@ -172,10 +172,12 @@ export class MatchmakingService {
           paddleColor: player2.value.paddleColor,
         };
 
+        await this.createCasualGame(pendingCasualGame.player1, pendingCasualGame.player2);
+
         // Sending the game start event to the players
         pendingCasualGame.player1.socket.emit("game-started", player2Infos);
         pendingCasualGame.player2.socket.emit("game-started", player1Infos);
-        await this.createCasualGame(pendingCasualGame.player1, pendingCasualGame.player2);
+
         this.removePendingCasualGame(pendingCasualGame);
       }
     } else if (pendingRankedGame) {
@@ -209,9 +211,12 @@ export class MatchmakingService {
           paddleColor: player2.value.paddleColor,
         };
 
+        await this.createRankedGame(pendingRankedGame.player1, pendingRankedGame.player2);
+
+        // Sending the game start event to the players
         pendingRankedGame.player1.socket.emit("game-started", player2Infos);
         pendingRankedGame.player2.socket.emit("game-started", player1Infos);
-        await this.createRankedGame(pendingRankedGame.player1, pendingRankedGame.player2);
+
         this.removePendingRankedGame(pendingRankedGame);
       }
     }

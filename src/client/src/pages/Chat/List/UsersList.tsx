@@ -8,6 +8,7 @@ import { useFetcher } from "../../../hooks/UseFetcher";
 export default function UsersList(props: {
   channel: string;
   messages: Chat[];
+  handleButton: (target: string) => void;
 }) {
   const [usersList, setUsersList] = useState<string[]>([]);
   const [banList, setBanList] = useState<string[]>([]);
@@ -37,7 +38,7 @@ export default function UsersList(props: {
         .catch(() => {});
     }
     fecthLists();
-  }, [props.channel]);
+  }, [props.messages, props.channel]);
 
   
   function ListBan() {
@@ -46,7 +47,7 @@ export default function UsersList(props: {
         <>
           <h4>Ban</h4>
           {banList.map((username) => (
-            <button className="user-list" key={username} value={username}>
+            <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
               {username}
             </button>
           ))}
@@ -67,7 +68,7 @@ export default function UsersList(props: {
           <h4>Mute</h4>
           {muteList &&
             muteList.map((username) => (
-              <button className="user-list" key={username} value={username}>
+              <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
                 {username}
               </button>
             ))}
@@ -86,7 +87,7 @@ export default function UsersList(props: {
       <h4>Users</h4>
       {usersList &&
         usersList.map((username) => (
-          <button className="user-list" key={username} value={username}>
+          <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
             {username}
           </button>
         ))}

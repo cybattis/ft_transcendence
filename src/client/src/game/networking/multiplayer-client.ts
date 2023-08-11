@@ -8,22 +8,34 @@ import {
   MultiplayerServeCallback,
   BallUpdate,
   MovementUpdate,
-  ScoreUpdate, ServeUpdate
+  ScoreUpdate,
+  ServeUpdate,
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
 
 export namespace MultiplayerClient {
-
   import SocketParameters = SocketManager.SocketParameters;
   import ManagedSocket = SocketManager.ManagedSocket;
   let socket: ManagedSocket;
-  let gameStartedCallback: MultiplayerGameStartedCallback = (serveUpdate: ServeUpdate): void => {};
-  let gameEndedCallback: MultiplayerGameEndedCallback = (): void => {};
-  let movementUpdateCallback: MultiplayerMovementUpdateCallback = (movementUpdate: MovementUpdate): void => {};
-  let ballUpdateCallback: MultiplayerBallUpdateCallback = (ballUpdate: BallUpdate): void => {};
-  let serveCallback: MultiplayerServeCallback = (serveUpdate: ServeUpdate): void => {};
-  let scoreUpdateCallback: MultiplayerScoreUpdateCallback = (scoreUpdate: ScoreUpdate): void => {};
-  let readyAckCallback: MultiplayerReadyAckCallback = (playerNUmber: number): void => {};
+  let gameStartedCallback: MultiplayerGameStartedCallback = (
+    serveUpdate: ServeUpdate
+  ): void => {};
+  let gameEndedCallback: MultiplayerGameEndedCallback[] = [];
+  let movementUpdateCallback: MultiplayerMovementUpdateCallback = (
+    movementUpdate: MovementUpdate
+  ): void => {};
+  let ballUpdateCallback: MultiplayerBallUpdateCallback = (
+    ballUpdate: BallUpdate
+  ): void => {};
+  let serveCallback: MultiplayerServeCallback = (
+    serveUpdate: ServeUpdate
+  ): void => {};
+  let scoreUpdateCallback: MultiplayerScoreUpdateCallback = (
+    scoreUpdate: ScoreUpdate
+  ): void => {};
+  let readyAckCallback: MultiplayerReadyAckCallback = (
+    playerNUmber: number
+  ): void => {};
 
   export function checkConnection(): boolean {
     if (socket && !socket.needsToConnect()) return true;
@@ -42,11 +54,12 @@ export namespace MultiplayerClient {
       reconnectionAttempts: 3,
       reconnectionDelay: 3000,
       timeout: 10000,
-      auth: token ? {token} : {},
-      path: '/multiplayer',
+      auth: token ? { token } : {},
+      path: "/multiplayer",
     };
 
-    const endpoint: string = "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
+    const endpoint: string =
+      "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
@@ -74,7 +87,7 @@ export namespace MultiplayerClient {
 
     socket.on("game-ended", () => {
       console.log("game ended");
-      gameEndedCallback();
+      gameEndedCallback.forEach((callback) => callback());
     });
 
     socket.on("ready-ack", (playerNumber: number) => {
@@ -85,31 +98,40 @@ export namespace MultiplayerClient {
     socket.on("unauthorized", () => {
       console.log("unauthorized");
       const token = localStorage.getItem("token");
-      socket.emit("authorization", token ? {token} : {});
+      socket.emit("authorization", token ? { token } : {});
     });
 
     return true;
   }
 
   export function disconnect(): void {
-    if (socket && socket.connected)
-      socket.disconnect();
+    if (socket && socket.connected) socket.disconnect();
   }
 
   // Callback setup functions
-  export function onScoreUpdate(callback: MultiplayerScoreUpdateCallback): void {
+  export function onScoreUpdate(
+    callback: MultiplayerScoreUpdateCallback
+  ): void {
     scoreUpdateCallback = callback;
   }
 
-  export function onGameStarted(callback: MultiplayerGameStartedCallback): void {
+  export function onGameStarted(
+    callback: MultiplayerGameStartedCallback
+  ): void {
     gameStartedCallback = callback;
   }
 
   export function onGameEnded(callback: MultiplayerGameEndedCallback): void {
-    gameEndedCallback = callback;
+    gameEndedCallback.push(callback);
   }
 
-  export function onMovementUpdate(callback: MultiplayerMovementUpdateCallback) {
+  export function offGameEnded(callback: MultiplayerGameEndedCallback): void {
+    gameEndedCallback = gameEndedCallback.filter((cb) => cb !== callback);
+  }
+
+  export function onMovementUpdate(
+    callback: MultiplayerMovementUpdateCallback
+  ) {
     movementUpdateCallback = callback;
   }
 
@@ -127,7 +149,7 @@ export namespace MultiplayerClient {
 
   export function removeCallbacks(): void {
     gameStartedCallback = (serveUpdate: ServeUpdate): void => {};
-    gameEndedCallback = (): void => {};
+    gameEndedCallback = [];
     movementUpdateCallback = (movementUpdate: MovementUpdate): void => {};
     ballUpdateCallback = (ballUpdate: BallUpdate): void => {};
     serveCallback = (serveUpdate: ServeUpdate): void => {};

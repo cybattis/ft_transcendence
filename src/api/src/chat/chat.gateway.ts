@@ -289,6 +289,34 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
   }
 
+  @SubscribeMessage('unban')
+  async handleUnBan(@ConnectedSocket() socket: Socket, @MessageBody() data: any) {
+    await this.channelService.unbanChannel(
+      data.cmd,
+      data.username,
+      data.target,
+      data.channel,
+    );
+    const targetSocket = await this.channelService.getSocketByUsername(
+      data.target,
+    );
+    const channel = data.channel;
+    if (targetSocket) {
+      this.server.to(targetSocket).emit('unban', channel);
+      const blockedUsers: any = await this.userService.findByLogin(
+        data.username,
+      );
+      await this.channelService.channelAnnoucement(
+        socket,
+        data.channel,
+        'unbanned',
+        data.username,
+        blockedUsers.blockedChat,
+        data.target,
+      );
+    }
+  }
+
   @SubscribeMessage('kick')
   async handleBKick(
     @ConnectedSocket() socket: AuthedSocket,

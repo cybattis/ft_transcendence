@@ -31,24 +31,30 @@ export interface GameStats extends GameBodyDto {
   creationDate: string;
 }
 
-export interface GameInfos {
-  id: number,
-  playerOne: {
-    username: string,
-    avatar?: string,
-    elo: number,
-  },
-  playerTwo: {
-    username: string,
-    avatar?: string,
-    elo: number,
-  },
-  mode: GameMode,
-  type: GameType,
-}
-
 export interface PlayerInterface {
   username: string;
   avatar?: string;
   elo: number;
+}
+export interface GameInfos {
+  id: number;
+  playerOne: {
+    me: boolean;
+    hasWin: boolean;
+    username: string;
+    avatar?: string;
+    elo: number;
+    scoreP1: number;
+  };
+  playerTwo: {
+    me: boolean;
+    hasWin: boolean;
+    username: string;
+    avatar?: string;
+    elo: number;
+    scoreP2: number;
+  };
+  mode: GameMode;
+  type: GameType;
+  status: GameStatus;
 }

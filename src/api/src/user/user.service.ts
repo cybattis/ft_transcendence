@@ -547,13 +547,28 @@ export class UserService implements OnModuleInit {
   }
 
   async getBlockedList(myId: number)
-    : Promise<Result<number[], typeof APIError.UserNotFound>>
+    : Promise<Result<string[], typeof APIError.UserNotFound>>
   {
     const me: User | null = await this.usersRepository.findOneBy({ id: myId });
     if (!me)
       return failure(APIError.UserNotFound);
 
-    return success(me.blockedId);
+    let blockedUsernames: string[] = [];
+    for (const id of me.blockedId) {
+      const user: User | null = await this.usersRepository.findOne({
+        where: { id: id },
+        select: ['nickname'],
+      });
+      if (!user) {
+        me.blockedId = me.blockedId.filter((id) => id !== id);
+        await this.usersRepository.save(me);
+        continue;
+      }
+
+      blockedUsernames.push(user.nickname);
+    }
+
+    return success(blockedUsernames);
   }
 
   async hasNotifs(myId: number)
@@ -706,5 +721,10 @@ export class UserService implements OnModuleInit {
       result.push(temp);
     }
     return success(result);
+  }
+
+  async updateUserGameStatus(user: User) {
+    user.inGame = false;
+    await this.usersRepository.save(user);
   }
 }

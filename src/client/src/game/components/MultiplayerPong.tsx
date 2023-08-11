@@ -1,19 +1,19 @@
-import {useEffect, useRef} from "react";
-import {createNewMultiplayerGame, removeMultiplayerGame} from "../PongManager";
+import { useEffect, useRef } from "react";
+import { createNewMultiplayerGame } from "../PongManager";
 import MultiplayerPongState from "../states/MultiplayerPongState";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { PlayerInfos } from "../networking/types";
 import { MatchmakingClient } from "../networking/matchmaking-client";
-import { MultiplayerClient } from "../networking/multiplayer-client";
 
 export type MultiplayerPongProps = {
   width: number;
   height: number;
   paddleColor: RgbColor;
-}
+};
 
-export function MultiplayerPong({width, height, paddleColor}: MultiplayerPongProps) {
-
+export function MultiplayerPong({
+  width, height, paddleColor,
+}: MultiplayerPongProps) {
   let canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -26,6 +26,8 @@ export function MultiplayerPong({width, height, paddleColor}: MultiplayerPongPro
   }, [width, height, paddleColor]);
 
   return (
-    <canvas ref={canvasRef} width={width} height={height}>A multiplayer pong game</canvas>
+    <canvas ref={canvasRef} width={width} height={height}>
+      A multiplayer pong game
+    </canvas>
   );
 }

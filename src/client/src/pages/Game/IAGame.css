@@ -1,0 +1,101 @@
+.button-choice {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ia-difficulty {
+    display: flex;
+    text-align: center;
+
+    font-size: max(0.7vw, 35px);
+}
+
+.description {
+    font-size: large;
+}
+
+.buttons-ia-menu {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+}
+
+.mod-button {
+    border-radius: 15px;
+}
+
+.mod-button:hover {
+    background-color: #3e3c3c;
+}
+
+.game-page-ia {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    gap: 10px;
+
+    text-align: center;
+    flex-direction: column;
+}
+
+.game-title-ia {
+    display: flex;
+    text-align: center;
+
+    font-size: max(1vw, 50px);
+}
+
+.game-screen-ia {
+    display: flex;
+    box-sizing: border-box;
+
+    aspect-ratio: 16 / 9;
+}
+
+@media screen and (width < 800px) {
+    .buttons-ia-menu {
+        flex-direction: column;
+    }
+
+    .game-page-ia {
+        align-items: center;
+    }
+}
+
+@media screen and (width >= 800px) and (width < 1600px) {
+    .buttons-ia-menu {
+        flex-direction: row;
+    }
+
+    .game-page-ia {
+        height: var(--vp-size);
+        align-items: center;
+    }
+
+    .game-screen-ia {
+        width: 90%;
+        max-height: 500px;
+        justify-content: center;
+    }
+}
+
+@media screen and (width >= 1600px) {
+    .buttons-ia-menu {
+        flex-direction: row;
+    }
+
+    .game-page-ia {
+        min-width: 1600px;
+        align-items: center;
+    }
+
+    .game-screen-ia {
+        width: 70%;
+        height: 70%;
+        justify-content: center;
+    }
+}

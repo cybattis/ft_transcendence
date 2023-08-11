@@ -27,9 +27,27 @@
     max-width: 1000px;
     max-height: 500px;
 
-    width: 1000px;
-    height: 500px;
-
     box-shadow: inset 0 0 16px 22px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
+}
+
+@media screen and (width < 800px) {
+    .gameScreen {
+        width: 700px;
+        height: 300px;
+    }
+}
+
+@media screen and (width >= 800px) and (width < 1600px) {
+    .gameScreen {
+        width: 800px;
+        height: 500px;
+    }
+}
+
+@media screen and (width >= 1600px) {
+    .gameScreen {
+        width: 1000px;
+        height: 500px;
+    }
 }

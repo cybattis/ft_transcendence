@@ -143,9 +143,7 @@ export class MultiplayerService {
       ballUpdate: ballUpdate,
     };
 
-    this.server
-      .to(game.serverRoomId)
-      .emit('game-start', serveUpdate);
+    this.server.to(game.serverRoomId).emit('game-start', serveUpdate);
 
     console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' started.');
   }
@@ -174,9 +172,7 @@ export class MultiplayerService {
     const game: GameRoom | undefined = this.getRoomByPlayerId(client.userId);
     if (!game) return;
 
-    client.broadcast
-      .to(game.serverRoomId)
-      .emit('update-movement', update);
+    client.broadcast.to(game.serverRoomId).emit('update-movement', update);
   }
 
   /*
@@ -190,9 +186,7 @@ export class MultiplayerService {
     if (!game) return;
 
     // Send the update to all players and spectators
-    client.broadcast
-      .to(game.serverRoomId)
-      .emit('update-ball', update);
+    client.broadcast.to(game.serverRoomId).emit('update-ball', update);
   }
 
   /*
@@ -215,9 +209,7 @@ export class MultiplayerService {
     };
 
     // Send the updated score to all players and spectators
-    this.server
-      .to(game.serverRoomId)
-      .emit('update-score', scoreUpdate);
+    this.server.to(game.serverRoomId).emit('update-score', scoreUpdate);
     console.log('[MULTIPLAYER] Score updated for game ' + game.id.toString());
 
     // Reset the ball position
@@ -228,17 +220,15 @@ export class MultiplayerService {
       velY: 0,
     };
 
-    this.server
-      .to(game.serverRoomId)
-      .emit('update-ball', ballUpdate);
+    this.server.to(game.serverRoomId).emit('update-ball', ballUpdate);
 
     // Update the game in the database
     await this.gameService.updateGameScore(game.id, scoreUpdate);
 
     // Check if the game is finished
     if (
-      (game.player1Score >= 11 && game.player1Score - game.player2Score >= 2) ||
-      (game.player2Score >= 11 && game.player2Score - game.player1Score >= 2)
+      (game.player1Score >= 1 && game.player1Score - game.player2Score >= 0) ||
+      (game.player2Score >= 1 && game.player2Score - game.player1Score >= 0)
     ) {
       await this.endGame(game);
       return;
@@ -281,8 +271,7 @@ export class MultiplayerService {
     // Update the game status
     if (game.player1Disconnected || game.player2Disconnected)
       game.status = GameStatus.PLAYER_DISCONNECTED;
-    else
-      game.status = GameStatus.FINISHED;
+    else game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
     this.server.to(game.serverRoomId).emit('game-ended');
@@ -314,6 +303,12 @@ export class MultiplayerService {
         await this.gameService.updateUserStats(u2, u1, game.type, score);
     }
 
+    if (user1.isOk())
+      await this.userService.updateUserGameStatus(user1.value);
+
+    if (user2.isOk())
+      await this.userService.updateUserGameStatus(user2.value);
+
     // Remove the game from the list
     const index: number = this.rooms.indexOf(game);
     if (index !== -1) this.rooms.splice(index, 1);
@@ -332,10 +327,8 @@ export class MultiplayerService {
       if (game.status === GameStatus.FINISHED) return;
 
       // Update the game
-      if (game.player1Id === client.userId)
-        game.player1Disconnected = true;
-      else
-        game.player2Disconnected = true;
+      if (game.player1Id === client.userId) game.player1Disconnected = true;
+      else game.player2Disconnected = true;
 
       console.log(
         '[MULTIPLAYER] Player ' +

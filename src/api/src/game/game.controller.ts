@@ -13,8 +13,8 @@ export class GameController {
   }
 
   @Get('info/:id')
-  async infoGame(@Param('id') id: number): Promise<GameInfos> {
-    const game = await this.gameService.getInfoGame(id);
+  async infoGame(@Param('id') id: string): Promise<GameInfos> {
+    const game = await this.gameService.getInfoGame(Number(id));
     if (!game)
       throw new NotFoundException('Game not found');
 

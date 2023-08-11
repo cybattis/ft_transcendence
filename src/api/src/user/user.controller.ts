@@ -268,7 +268,7 @@ export class UserController{
   @UseGuards(TokenGuard)
   @Get('blockedList')
   async getBlockedList(@Headers('Authorization') header: Headers)
-  : Promise<number[]> {
+  : Promise<string[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.getBlockedList(payload.id);
     if (result.isErr())

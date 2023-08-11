@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
-import { InjectRepository } from '@nestjs/typeorm'
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
 import { ChannelService } from './channel.service';
 import { JwtService } from '@nestjs/jwt';
@@ -25,30 +25,30 @@ import { APIError } from "../utils/errors";
 @UseGuards(TokenGuard)
 @Controller('chat-controller')
 export class ChannelController {
-    constructor(
-        private userService: UserService,
-        @InjectRepository(Chat)
-        private chatRepository: Repository<Chat>,
-        @InjectRepository(Channel)
-        private channelRepository: Repository<Channel>,
-        @InjectRepository(User)
-        private usersRepository: Repository<User>,
-        private channelService: ChannelService,
-        private jwtService: JwtService,
-    ) {}
+  constructor(
+    private userService: UserService,
+    @InjectRepository(Chat)
+    private chatRepository: Repository<Chat>,
+    @InjectRepository(Channel)
+    private channelRepository: Repository<Channel>,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    private channelService: ChannelService,
+    private jwtService: JwtService,
+  ) {}
 
-    // Chat
-    @Get('/message')
-    findAllChat(): Promise<Chat[]>{
-        console.log("fetch all chat");
-        return (this.chatRepository.find());
-    }
+  // Chat
+  @Get('/message')
+  findAllChat(): Promise<Chat[]> {
+    console.log('fetch all chat');
+    return this.chatRepository.find();
+  }
 
-    @Get('/message/:channel')
-    async findChat(@Param('channel') channel : string): Promise<Chat[]>{
-        channel = "#" + channel;
-        return (await this.chatRepository.find({where : {channel : channel}}));
-    }
+  @Get('/message/:channel')
+  async findChat(@Param('channel') channel: string): Promise<Chat[]> {
+    channel = '#' + channel;
+    return await this.chatRepository.find({ where: { channel: channel } });
+  }
 
     
     @Get('/message/channel/:channel/:username')
@@ -192,13 +192,12 @@ export class ChannelController {
       where: { channel: channel },
     });
     if (!find) return false;
-    if (find.owner === username) return true;
-    return false;
+    return find.owner === username;
   }
 
   @Put('request/:channel')
   async acceptChannelRequest(
-    @Param('channel') channel:  string,
+    @Param('channel') channel: string,
     @Headers('Authorization') header: Headers,
   ): Promise<void>
   {
@@ -208,7 +207,7 @@ export class ChannelController {
 
   @Put('decline/:channel')
   async declineChannelRequest(
-    @Param('channel') channel:  string,
+    @Param('channel') channel: string,
     @Headers('Authorization') header: Headers,
   ): Promise<void>
   {

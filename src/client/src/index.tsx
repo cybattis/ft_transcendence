@@ -1,8 +1,8 @@
-import React, {useContext} from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import {createBrowserRouter, Navigate, RouterProvider} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Error404 from "./pages/Error404";
 import Home from "./pages/Home/Home";
 import Confirmation from "./pages/Confirmation/Confirm";
@@ -17,6 +17,7 @@ import { Settings } from "./pages/Settings/Settings";
 import About from "./pages/About/About";
 import { AuthedRoute } from "./components/Auth/AuthedRoute";
 import {Error400Page, Error404Page, Error500Page, ErrorInternetPage} from "./pages/Error/ErrorPage";
+import { IAGame } from "./pages/Game/IAGame";
 
 const router = createBrowserRouter([
   {
@@ -63,19 +64,23 @@ const router = createBrowserRouter([
           },
           {
             path: "notifications",
-            element: <AuthedRoute component={<Notifications/>} />,
+            element: <AuthedRoute component={<Notifications />} />,
           },
           {
             path: "leaderboard",
-            element: <AuthedRoute component={<LeaderboardLoader/>} />,
+            element: <AuthedRoute component={<LeaderboardLoader />} />,
           },
           {
             path: "settings",
-            element: <AuthedRoute component={<Settings/>} />,
+            element: <AuthedRoute component={<Settings />} />,
           },
           {
             path: "game",
             element: <Game />,
+          },
+          {
+            path: "iagame",
+            element: <IAGame />,
           },
           {
             path: "loading",

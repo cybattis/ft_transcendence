@@ -4,7 +4,7 @@ import {Game} from './entity/Game.entity';
 import {Repository} from 'typeorm';
 import {User} from '../user/entity/Users.entity';
 import {UserService} from '../user/user.service';
-import {GameBodyDto, GameInfos, GameStatus, GameType} from '../type/game.type';
+import {GameBodyDto, GameInfos, GameStatus, GameType,} from '../type/game.type';
 import {ModuleRef} from '@nestjs/core';
 import {ScoreUpdate} from '../multiplayer/types/multiplayer.types';
 import {APIError} from "../utils/errors";
@@ -21,8 +21,16 @@ export class GameService implements OnModuleInit {
     private moduleRef: ModuleRef,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     this.userService = this.moduleRef.get(UserService, { strict: false });
+
+    const allGames = await this.gameRepository.find();
+    for (const game of allGames) {
+      if (game.status === GameStatus.WAITING_FOR_PLAYERS || game.status === GameStatus.IN_PROGRESS) {
+        game.status = GameStatus.FINISHED;
+        await this.gameRepository.save(game);
+      }
+    }
   }
 
   async findAll(): Promise<Game[]> {
@@ -60,6 +68,11 @@ export class GameService implements OnModuleInit {
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
 
+    user1.value.inGame = true;
+    user2.value.inGame = true;
+    await this.userRepository.save(user1.value);
+    await this.userRepository.save(user2.value);
+
     const updated = await this.gameRepository.save(game);
     return success(updated);
   }
@@ -70,6 +83,7 @@ export class GameService implements OnModuleInit {
     ranked: GameType,
     score: { u1: number; u2: number },
   ): Promise<void> {
+
     await this.userRepository
       .createQueryBuilder()
       .update(User)
@@ -78,6 +92,7 @@ export class GameService implements OnModuleInit {
       })
       .where('id = :id', { id: user1.id })
       .execute();
+
     await this.userRepository
       .createQueryBuilder()
       .update(User)
@@ -116,6 +131,7 @@ export class GameService implements OnModuleInit {
     }
 
     if (ranked === GameType.RANKED) {
+      console.log("COUCOU");
       await this.userRepository
         .createQueryBuilder()
         .update(User)
@@ -143,7 +159,9 @@ export class GameService implements OnModuleInit {
         relations: { players: true },
         where: { id: user.games[i].id },
       });
-      games[i] = game as Game;
+      if (game === null)
+        continue;
+      games[i] = game;
     }
     return games;
   }
@@ -190,34 +208,44 @@ export class GameService implements OnModuleInit {
   }
 
   async getInfoGame(id: number): Promise<GameInfos | null> {
-    const games = await this.findUserGames(id);
+    const userID = Number(id);
+    const games = await this.findUserGames(userID);
+    if (games.length === 0)
+      return null;
 
-    for (let i = 0; i < games.length; i ++)
-    {
-      if (games[i].status !== "Finished" && games[i].status !== "Player disconnected")
-      {
-        const actualGame: Game = games[i];
-        const playerOne: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[0]}});
-        const playerTwo: User | null = await this.userRepository.findOne({where: {id: actualGame.ids[1]}});
-        if (playerOne && playerTwo)
-        {
-          return {
-            id: actualGame.id,
-            playerOne: {
-              username: playerOne.nickname,
-              avatar: playerOne.avatarUrl,
-              elo: playerOne.ranking,
-            },
-            playerTwo: {
-              username: playerTwo.nickname,
-              avatar: playerTwo.avatarUrl,
-              elo: playerTwo.ranking,
-            },
-            mode: actualGame.mode,
-            type: actualGame.type,
-          };
-        }
-      }
+    const actualGame: Game = games[games.length - 1];
+    const playerOne: User | null = await this.userRepository.findOne({
+      where: { id: actualGame.ids[0] },
+    });
+    const playerTwo: User | null = await this.userRepository.findOne({
+      where: { id: actualGame.ids[1] },
+    });
+    if (playerOne && playerTwo) {
+      const isPlayerOne = actualGame.ids[0] === userID;
+      const isPlayerTwo = actualGame.ids[1] === userID;
+
+      return {
+        id: actualGame.id,
+        playerOne: {
+          me: isPlayerOne,
+          hasWin: actualGame.scoreP1 > actualGame.scoreP2,
+          username: playerOne.nickname,
+          avatar: playerOne.avatarUrl,
+          elo: playerOne.ranking,
+          scoreP1: actualGame.scoreP1,
+        },
+        playerTwo: {
+          me: isPlayerTwo,
+          hasWin: actualGame.scoreP2 > actualGame.scoreP1,
+          username: playerTwo.nickname,
+          avatar: playerTwo.avatarUrl,
+          elo: playerTwo.ranking,
+          scoreP2: actualGame.scoreP2,
+        },
+        mode: actualGame.mode,
+        type: actualGame.type,
+        status: actualGame.status,
+      };
     }
 
     return null;

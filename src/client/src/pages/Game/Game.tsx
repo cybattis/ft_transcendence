@@ -13,8 +13,12 @@ import { LoadingPage } from "../Loading/LoadingPage";
 import { TypeCheckers } from "../../utils/type-checkers";
 import { useTokenSession } from "../../hooks/UseTokenSession";
 import { UserInfo } from "../../type/user.type";
+import "./Game.css";
+import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import { EndGamePopup } from "../../components/Modal/PopUpModal";
+import { GameStatus } from "../../type/game.type";
 
-export interface PlayerInterface{
+export interface PlayerInterface {
   username: string;
   avatar?: string;
   elo: number;
@@ -31,8 +35,11 @@ export function Game() {
   const [gameProps, setGameProps] = useState<GameProps | null>(null);
   const { get, redirectWithError } = useFetcher();
   const terminateSession = useTokenSession();
+  const [endGame, setEndGame] = useState(false);
+  const [hasWin, setHasWin] = useState(false);
 
   useEffect(() => {
+    console.log("Game Page use effect");
     const fetchBothPlayerInfos = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -57,35 +64,62 @@ export function Game() {
           myUsername: profileInfos.nickname
         }
 
+        if (gameInfos.status === GameStatus.FINISHED) {
+          if (gameInfos.playerOne.me) setHasWin(gameInfos.playerOne.hasWin);
+          else setHasWin(gameInfos.playerTwo.hasWin);
+        }
+
         setGameProps(props);
       } catch (error) {
         redirectWithError(error);
       }
+    };
+
+    function gameEndedCallback() {
+      console.log("gameEndedCallback");
+      fetchBothPlayerInfos().then(() => {
+        setEndGame(true);
+      });
     }
 
     fetchBothPlayerInfos();
+    MultiplayerClient.onGameEnded(gameEndedCallback);
+
+    return () => {
+      MultiplayerClient.offGameEnded(gameEndedCallback);
+    };
   }, []);
 
   return (
     gameProps === null ? <LoadingPage /> :
-      <GameLoaded playerOne={gameProps.playerOne} playerTwo={gameProps.playerTwo} canal={gameProps.canal} myUsername={gameProps.myUsername}/>
+      <GameLoaded
+        playerOne={gameProps.playerOne}
+        playerTwo={gameProps.playerTwo}
+        canal={gameProps.canal}
+        myUsername={gameProps.myUsername}
+        endGame={endGame}
+        hasWin={hasWin}
+      />
   );
 }
 
-function GameLoaded(props: {playerOne: PlayerInterface, playerTwo: PlayerInterface, canal: string, myUsername: string}) {
+function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
   const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
 
   return (
     <div className="gamePage">
+      {props.endGame ? (
+        <EndGamePopup hasWin={props.hasWin}/>
+      ) : null}
       <div className="gameScreen">
         <MultiplayerPong
-          width={800}
-          height={400}
+          width={1000}
+          height={800}
           paddleColor={rgb}
         />
       </div>
       <div className="players">
-        <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo}/>
+        <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo} />
       </div>
       <div className="chatBox">
         <PrivateGameChat

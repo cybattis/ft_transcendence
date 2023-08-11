@@ -6,12 +6,11 @@ import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { UserFriend } from "../../type/user.type";
 import { useFetcher } from "../../hooks/UseFetcher";
 
-function Online(data: any) {
+function Online(props: { inGame: boolean }) {
+  console.log("inGame: ", props.inGame);
   return (
     <div className="online">
-      <div className="status">
-        {data.inGame === true ? "In game" : "In menu"}
-      </div>
+      <div className="status">{props.inGame ? "In game" : "In menu"}</div>
     </div>
   );
 }
