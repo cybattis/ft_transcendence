@@ -11,8 +11,6 @@ import { MailService } from '../mail/mail.service';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelModule } from 'src/channel/channel.module';
 import { Channel } from 'src/channel/entity/Channel.entity';
-import {ChannelService} from "../channel/channel.service";
-
 
 @Module({
   imports: [

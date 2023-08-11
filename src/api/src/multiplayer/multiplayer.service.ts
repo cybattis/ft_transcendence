@@ -227,8 +227,8 @@ export class MultiplayerService {
 
     // Check if the game is finished
     if (
-      (game.player1Score >= 1 && game.player1Score - game.player2Score >= 0) ||
-      (game.player2Score >= 1 && game.player2Score - game.player1Score >= 0)
+      (game.player1Score >= 7 && game.player1Score - game.player2Score >= 2) ||
+      (game.player2Score >= 7 && game.player2Score - game.player1Score >= 2)
     ) {
       await this.endGame(game);
       return;
@@ -269,9 +269,12 @@ export class MultiplayerService {
     if (game.status === GameStatus.FINISHED) return;
 
     // Update the game status
-    if (game.player1Disconnected || game.player2Disconnected)
-      game.status = GameStatus.PLAYER_DISCONNECTED;
-    else game.status = GameStatus.FINISHED;
+    if (game.player1Disconnected)
+      game.status = GameStatus.PLAYER1_DISCONNECTED;
+    else if (game.player2Disconnected)
+      game.status = GameStatus.PLAYER2_DISCONNECTED;
+    else
+      game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
     this.server.to(game.serverRoomId).emit('game-ended');

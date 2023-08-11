@@ -18,8 +18,9 @@ export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
       <div id={"ldi-winrate"}>{winrate.toFixed(0)}%</div>
       <div id={"ldi-game-played"}>{props.data.games?.filter(
         (game) => game.type === GameType.RANKED &&
-          (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
-      ).length}
+          (game.status === GameStatus.FINISHED
+            || game.status === GameStatus.PLAYER1_DISCONNECTED
+            || game.status === GameStatus.PLAYER2_DISCONNECTED)).length}
       </div>
       <div id={"ldi-elo"}>{props.data.ranking}</div>
     </div>

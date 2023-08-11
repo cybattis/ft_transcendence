@@ -1,14 +1,14 @@
-import {Injectable, NotFoundException, OnModuleInit,} from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Game} from './entity/Game.entity';
-import {Repository} from 'typeorm';
-import {User} from '../user/entity/Users.entity';
-import {UserService} from '../user/user.service';
-import {GameBodyDto, GameInfos, GameStatus, GameType,} from '../type/game.type';
-import {ModuleRef} from '@nestjs/core';
-import {ScoreUpdate} from '../multiplayer/types/multiplayer.types';
-import {APIError} from "../utils/errors";
-import {Result, success} from "../utils/Error";
+import { Injectable, NotFoundException, OnModuleInit, } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Game } from './entity/Game.entity';
+import { Repository } from 'typeorm';
+import { User } from '../user/entity/Users.entity';
+import { UserService } from '../user/user.service';
+import { GameBodyDto, GameInfos, GameStatus, GameType, } from '../type/game.type';
+import { ModuleRef } from '@nestjs/core';
+import { ScoreUpdate } from '../multiplayer/types/multiplayer.types';
+import { APIError } from "../utils/errors";
+import { Result, success } from "../utils/Error";
 
 @Injectable()
 export class GameService implements OnModuleInit {
@@ -84,72 +84,30 @@ export class GameService implements OnModuleInit {
     score: { u1: number; u2: number },
   ): Promise<void> {
 
-    await this.userRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({
-        xp: user1.xp + 200 + 50 + score.u1 * 5,
-      })
-      .where('id = :id', { id: user1.id })
-      .execute();
+    user1.xp = user1.xp + 200 + 50 + score.u1 * 5;
 
-    await this.userRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({
-        xp: user2.xp + 200 + score.u2 * 5,
-      })
-      .where('id = :id', { id: user2.id })
-      .execute();
+    user2.xp = user2.xp + 200 + score.u2 * 5;
 
-    if (
-      (user1.level === 1 && user1.xp > 1000) ||
-      user1.xp > 1000 * user1.level + user1.level * 200
-    ) {
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          level: user1.level + 1,
-        })
-        .where('id = :id', { id: user1.id })
-        .execute();
+    if ((user1.level === 1 && user1.xp > 1000)
+      || user1.xp > 1000 * user1.level + user1.level * 200)
+    {
+      user1.level = user1.level + 1;
     }
 
-    if (
-      (user2.level === 1 && user2.xp > 1000) ||
-      user2.xp > 1000 * user2.level + user2.level * 200
-    ) {
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          level: user2.level + 1,
-        })
-        .where('id = :id', { id: user2.id })
-        .execute();
+    if ((user2.level === 1 && user2.xp > 1000)
+      || user2.xp > 1000 * user2.level + user2.level * 200)
+    {
+      user2.level = user2.level + 1;
     }
 
     if (ranked === GameType.RANKED) {
-      console.log("COUCOU");
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          totalGameWon: user1.totalGameWon + 1,
-          ranking: user1.ranking + 10,
-        })
-        .where('id = :id', { id: user1.id })
-        .execute();
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          ranking: user2.ranking - 10,
-        })
-        .where('id = :id', { id: user2.id })
-        .execute();
+      user1.totalGameWon = user1.totalGameWon + 1;
+      user1.ranking = user1.ranking + 10;
+      user2.ranking = user2.ranking - 10;
     }
+
+    await this.userRepository.save(user1);
+    await this.userRepository.save(user2);
   }
 
   async fetchUserGames(user: User) {
@@ -228,7 +186,8 @@ export class GameService implements OnModuleInit {
         id: actualGame.id,
         playerOne: {
           me: isPlayerOne,
-          hasWin: actualGame.scoreP1 > actualGame.scoreP2,
+          hasWin: actualGame.status === GameStatus.FINISHED ? actualGame.scoreP1 > actualGame.scoreP2
+            : actualGame.status === GameStatus.PLAYER2_DISCONNECTED,
           username: playerOne.nickname,
           avatar: playerOne.avatarUrl,
           elo: playerOne.ranking,
@@ -236,7 +195,8 @@ export class GameService implements OnModuleInit {
         },
         playerTwo: {
           me: isPlayerTwo,
-          hasWin: actualGame.scoreP2 > actualGame.scoreP1,
+          hasWin: actualGame.status === GameStatus.FINISHED ? actualGame.scoreP2 > actualGame.scoreP1
+            : actualGame.status === GameStatus.PLAYER1_DISCONNECTED,
           username: playerTwo.nickname,
           avatar: playerTwo.avatarUrl,
           elo: playerTwo.ranking,

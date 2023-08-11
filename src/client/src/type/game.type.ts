@@ -12,7 +12,8 @@ export enum GameMode {
 export enum GameStatus {
   IN_PROGRESS = "In progress",
   FINISHED = "Finished",
-  PLAYER_DISCONNECTED = 'Player disconnected',
+  PLAYER1_DISCONNECTED = 'Player 1 disconnected',
+  PLAYER2_DISCONNECTED = 'Player 2 disconnected',
 }
 
 export interface GameBodyDto {

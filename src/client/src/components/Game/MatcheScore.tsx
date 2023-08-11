@@ -22,10 +22,13 @@ export function MatcheScore(props: { game: GameStats; userId: number }) {
     if (props.game.status === GameStatus.IN_PROGRESS)
       return <div id={"md-in-progress"}>In progress</div>;
     else if (
-      (props.game.ids[0] == props.userId &&
-        props.game.scoreP1 > props.game.scoreP2) ||
-      (props.game.ids[1] == props.userId &&
-        props.game.scoreP1 < props.game.scoreP2)
+      (props.game.ids[0] === props.userId && props.game.status !== GameStatus.PLAYER1_DISCONNECTED &&
+        props.game.scoreP1 > props.game.scoreP2 ||
+      (props.game.ids[0] === props.userId &&
+        props.game.status === GameStatus.PLAYER2_DISCONNECTED)) ||
+      (props.game.ids[1] === props.userId && props.game.status !== GameStatus.PLAYER2_DISCONNECTED &&
+        props.game.scoreP1 < props.game.scoreP2 ||
+      (props.game.ids[1] === props.userId && props.game.status === GameStatus.PLAYER1_DISCONNECTED))
     ) {
       return <div id={"md-win"}>{score()}</div>;
     } else return <div id={"md-loose"}>{score()}</div>;

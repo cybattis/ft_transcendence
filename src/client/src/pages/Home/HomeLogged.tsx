@@ -214,9 +214,9 @@ function GameLauncher() {
 function Result(props: { game: GameStats; userId: number }) {
   const isWin =
     (props.game.ids[0] === props.userId &&
-      props.game.scoreP1 > props.game.scoreP2) ||
+      props.game.scoreP1 > props.game.scoreP2 || props.game.status === GameStatus.PLAYER2_DISCONNECTED) ||
     (props.game.ids[1] === props.userId &&
-      props.game.scoreP1 < props.game.scoreP2);
+      props.game.scoreP1 < props.game.scoreP2 || props.game.status === GameStatus.PLAYER1_DISCONNECTED);
 
   return (
     <div className={"home-game-result"}>
@@ -243,7 +243,9 @@ function LastMatch(props: { data: UserInfo }) {
   }
 
   const lastGames = props.data.games?.slice(slice).filter((game) => {
-    return game.status === GameStatus.FINISHED;
+    return (game.status === GameStatus.FINISHED
+      || game.status === GameStatus.PLAYER1_DISCONNECTED
+      || game.status === GameStatus.PLAYER2_DISCONNECTED);
   });
 
   return (
@@ -288,7 +290,9 @@ function HomeStatContainerDesktop(props: { data: UserInfo }) {
         <hr className={"user-profile-hr"} />
         <div>{props.data.games?.filter(
           (game) => game.type === GameType.RANKED &&
-            (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+            (game.status === GameStatus.FINISHED
+              || game.status === GameStatus.PLAYER1_DISCONNECTED
+              || game.status === GameStatus.PLAYER2_DISCONNECTED)
         ).length}
         </div>
       </div>
@@ -312,7 +316,9 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
           <hr className={"user-profile-hr"} />
           <div>{props.data.games?.filter(
             (game) => game.type === GameType.RANKED &&
-              (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+              (game.status === GameStatus.FINISHED
+                || game.status === GameStatus.PLAYER1_DISCONNECTED
+                || game.status === GameStatus.PLAYER2_DISCONNECTED)
           ).length}
           </div>
         </div>

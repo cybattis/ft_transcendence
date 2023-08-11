@@ -64,7 +64,9 @@ export function Game() {
           myUsername: profileInfos.nickname
         }
 
-        if (gameInfos.status === GameStatus.FINISHED) {
+        if (gameInfos.status === GameStatus.FINISHED
+          || gameInfos.status === GameStatus.PLAYER1_DISCONNECTED
+          || gameInfos.status === GameStatus.PLAYER2_DISCONNECTED) {
           if (gameInfos.playerOne.me) setHasWin(gameInfos.playerOne.hasWin);
           else setHasWin(gameInfos.playerTwo.hasWin);
         }

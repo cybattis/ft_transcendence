@@ -4,7 +4,9 @@ import {GameStatus, GameType} from "../type/game.type";
 export function calculateWinrate(props: UserInfo): number  {
   const actualGame = props.games?.filter(
     (game) => game.type === GameType.RANKED &&
-      (game.status === GameStatus.FINISHED || game.status === GameStatus.PLAYER_DISCONNECTED)
+      (game.status === GameStatus.FINISHED
+        || game.status === GameStatus.PLAYER1_DISCONNECTED
+        || game.status === GameStatus.PLAYER2_DISCONNECTED)
   ).length;
 
   return props.totalGameWon && actualGame
