@@ -74,10 +74,9 @@ export class ChannelController {
         (find[index].users[0] == channel && find[index].users[1] == username) ||
         (find[index].users[0] == username && find[index].users[1] == channel)
       ) {
-        const mess = await this.chatRepository.find({
+        return await this.chatRepository.find({
           where: { channel: find[index].channel },
         });
-        return mess;
       }
     }
     return [];
@@ -151,9 +150,19 @@ export class ChannelController {
   }
 
   @Get('/channel/findName/:channel')
-  async findChannelName(@Param('channel') channel: string) {
+  async findChannelName(@Param('channel') channel: string): Promise<true> {
     const decodedName = decodeURIComponent(channel);
-    return await this.channelService.findChannelName(decodedName);
+    const result = await this.channelService.findChannelName(decodedName);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.ChannelNotFound:
+          throw new NotFoundException('Channel not found');
+        case APIError.InvalidPassword:
+          throw new BadRequestException('Invalid password');
+      }
+    }
+
+    return result.value;
   }
 
   @Delete('/delete-channel/:channel')

@@ -16,4 +16,5 @@ export enum APIError {
   UserNotVerified,
   CodeSend,
   ChannelNotFound,
+  InvalidIntraName,
 }

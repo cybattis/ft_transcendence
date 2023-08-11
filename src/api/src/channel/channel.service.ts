@@ -310,7 +310,6 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
-    console.log('Inside');
     const channelToJoin = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -623,18 +622,20 @@ export class ChannelService implements OnModuleInit {
     return failure(APIError.ChannelNotFound);
   }
 
-  async findChannelName(channel: string) {
+  async findChannelName(channel: string)
+    : Promise<Result<true, typeof APIError.InvalidPassword | typeof APIError.ChannelNotFound>>
+  {
     if (channel.indexOf('#') === -1) channel = '#' + channel;
     for (let i = 0; this.channelStruct[i]; i++) {
       if (channel === this.channelStruct[i].name && !this.channelStruct[i].pswd)
-        return 1;
+        return success(true);
       else if (
         channel === this.channelStruct[i].name &&
         this.channelStruct[i].pswd
       )
-        return new UnauthorizedException('Password mismatch');
+        return failure(APIError.InvalidPassword);
     }
-    return new NotFoundException("Channel doesn't exists");
+    return failure(APIError.ChannelNotFound);
   }
 
   async channelAnnoucement(

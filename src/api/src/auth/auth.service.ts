@@ -189,21 +189,27 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return;
   }
 
-  async createUserIntra(body: IntraSignupDto): Promise<User> {
+  async createUserIntra(body: IntraSignupDto)
+    : Promise<Result<User, typeof APIError.InvalidIntraName>>
+  {
     const user: User = new User();
 
     user.nickname = body.login;
 
-    const parts = body.displayname.split(' ');
-    user.firstname = parts[0];
-    user.lastname = parts[1];
+    if (body.displayname) {
+      const parts = body.displayname.split(' ');
+      user.firstname = parts[0];
+      user.lastname = parts[1];
+    } else {
+      return failure(APIError.InvalidIntraName);
+    }
 
     user.email = body.email;
     user.IsIntra = true;
 
     user.avatarUrl = body.image.link;
 
-    return await this.userRepository.save(user);
+    return success(await this.userRepository.save(user));
   }
 
   async sendIntraToken(dataUser: IntraSignupDto): Promise<Result<string, typeof APIError.UserNotFound>> {

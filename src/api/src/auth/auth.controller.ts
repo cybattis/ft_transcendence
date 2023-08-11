@@ -67,7 +67,9 @@ export class AuthController {
 
     let result = await this.userService.findUserAndGetCredential(userData.email);
     if (result.isErr()) {
-      await this.authService.createUserIntra(userData);
+      const result = await this.authService.createUserIntra(userData);
+      if (result.isErr())
+        throw new BadRequestException("Couldn't fetch user data!");
       const token = await this.authService.sendIntraToken(userData);
       if (token.isErr())
         throw new NotFoundException();
