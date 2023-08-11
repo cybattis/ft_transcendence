@@ -534,7 +534,7 @@ export default function ChatClient() {
                 UnBlock
               </button>
             )}
-            <Link to={`/profile/${usr}`}>
+            <Link to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
             <OpeBtn />

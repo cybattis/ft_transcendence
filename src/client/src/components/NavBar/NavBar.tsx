@@ -75,7 +75,7 @@ function MobileNavBar() {
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/${username}`}
+            link={`/profile/nickname/${username}`}
             callback={handlePageChange}
           />
           <NavButton

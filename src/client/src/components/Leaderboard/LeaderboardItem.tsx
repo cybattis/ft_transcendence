@@ -11,7 +11,7 @@ export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
   return (
     <div className={"leaderboard-item"}>
       <div id={"pastille"}>{props.rank + 1}</div>
-      <Link to={`/profile/${props.data.id}`} id={"LeaderboardProfileLink"}>
+      <Link to={`/profile/id/${props.data.id}`} id={"LeaderboardProfileLink"}>
         <Avatar size={"40px"} img={props.data.avatarUrl} />
         <div id={"ldi-nickname"}>{props.data.nickname}</div>
       </Link>

@@ -47,7 +47,7 @@ function FriendsList() {
             return (
               <div className="friends" key={friendData.nickname}>
                 <Link
-                  to={`/profile/${friendData.nickname}`}
+                  to={`/profile/nickname/${friendData.nickname}`}
                   className="friendLink"
                 >
                   <div>

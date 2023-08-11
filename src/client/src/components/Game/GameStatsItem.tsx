@@ -51,7 +51,7 @@ function GameStatsItemLoaded(props: { game: GameStats; id: number; player1: User
     console.log("name", name);
 
     return (
-      <Link to={`/profile/${name}`} className={"opponent-profile"}>
+      <Link to={`/profile/nickname/${name}`} className={"opponent-profile"}>
         <div id={"opponent-name"}>
           <Avatar size={"30px"} img={opponentAvatar}/>
           <div id={"gi-name"}>{name}</div>

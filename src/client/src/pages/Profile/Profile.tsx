@@ -11,7 +11,7 @@ import { calculateWinrate } from "../../utils/calculateWinrate";
 import { GameStats, GameStatus, GameType } from "../../type/game.type";
 import jwt_decode from "jwt-decode";
 import { PopupContext } from "../../components/Modal/Popup.context";
-import { TokenData } from "../../type/client.type";
+import { ProfileType, TokenData } from "../../type/client.type";
 import { RgbColor, hslToRgb, RGBToHSL, HslColor } from "../../utils/colors";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
@@ -288,9 +288,11 @@ function PaddleColor(props: {
   );
 }
 
-export function ProfileLoader(props: {myProfile?: true}) {
+export function ProfileLoader(props: {profileType: ProfileType}) {
   const params = useParams();
-  const url = props.myProfile ? "user/my-profile" : `user/profile/${params.username}`;
+  const url = props.profileType === ProfileType.MyProfile ? "user/my-profile"
+      : props.profileType === ProfileType.NicknameProfile ? `user/profile/nickname/${params.username}`
+      : `user/profile/id/${params.id}`;
   const { data } = useData<UserInfo>(url, true);
 
   return data ? <Profile data={data}/> : <LoadingPage/>;

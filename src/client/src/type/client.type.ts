@@ -12,3 +12,9 @@ export interface ErrorResponse {
     };
   };
 }
+
+export enum ProfileType {
+  MyProfile,
+  IdProfile,
+  NicknameProfile,
+}

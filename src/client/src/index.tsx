@@ -16,8 +16,9 @@ import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
 import About from "./pages/About/About";
 import { AuthedRoute } from "./components/Auth/AuthedRoute";
-import {Error400Page, Error404Page, Error500Page, ErrorInternetPage} from "./pages/Error/ErrorPage";
+import { Error400Page, Error404Page, Error500Page, ErrorInternetPage } from "./pages/Error/ErrorPage";
 import { IAGame } from "./pages/Game/IAGame";
+import { ProfileType } from "./type/client.type";
 
 const router = createBrowserRouter([
   {
@@ -55,12 +56,16 @@ const router = createBrowserRouter([
             element: <About />,
           },
           {
-            path: "profile/:username",
-            element: <ProfileLoader/>,
+            path: "profile/nickname/:username",
+            element: <ProfileLoader profileType={ProfileType.NicknameProfile}/>,
+          },
+          {
+            path: "profile/id/:id",
+            element: <ProfileLoader profileType={ProfileType.IdProfile}/>,
           },
           {
             path: "my-profile",
-            element: <ProfileLoader myProfile={true}/>,
+            element: <ProfileLoader profileType={ProfileType.MyProfile}/>,
           },
           {
             path: "notifications",
