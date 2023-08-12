@@ -5,7 +5,7 @@ import MultiplayerPongState from "./states/MultiplayerPongState";
 let lastFrameTimestamp: DOMHighResTimeStamp = 0;
 let AIOnlyGameList: AIOnlyPongState[] = new Array<AIOnlyPongState>();
 let practiceGameList: PracticePongState[] = new Array<PracticePongState>();
-let multiplayerGameList: MultiplayerPongState[] = new Array<MultiplayerPongState>();
+let multiplayerGame: MultiplayerPongState | null = null;
 
 let upArrowPressed: boolean = false;
 let downArrowPressed: boolean = false;
@@ -30,9 +30,8 @@ export function startPongManager() {
       practiceGameList.forEach((game) => {
         game.start();
       });
-      multiplayerGameList.forEach((game: MultiplayerPongState) => {
-        game.readyUp();
-      });
+      if (multiplayerGame)
+        multiplayerGame.readyUp();
     }
   });
 
@@ -51,10 +50,10 @@ export function updatePongGames(timestamp: DOMHighResTimeStamp) {
     game.render();
   });
 
-  multiplayerGameList.forEach((game) => {
-    game.update((timestamp - lastFrameTimestamp) / 1000.0, upArrowPressed, downArrowPressed);
-    game.render();
-  });
+  if (multiplayerGame) {
+    multiplayerGame.update((timestamp - lastFrameTimestamp) / 1000.0, upArrowPressed, downArrowPressed);
+    multiplayerGame.render();
+  }
 
   lastFrameTimestamp = timestamp;
   window.requestAnimationFrame(updatePongGames);
@@ -99,16 +98,12 @@ export function removePracticeGame(name: string) {
 }
 
 export function createNewMultiplayerGame(newGame: MultiplayerPongState) {
-  multiplayerGameList.push(newGame);
+  multiplayerGame = newGame;
 }
 
-export function removeMultiplayerGame(name: string) {
-  let index = multiplayerGameList.findIndex((game: MultiplayerPongState) => {
-    return game.state.getName() === name;
-  });
-
-  if (index !== -1) {
-    multiplayerGameList[index].removeCallbacks();
-    multiplayerGameList.splice(index, 1);
+export function removeMultiplayerGame() {
+  if (multiplayerGame) {
+    multiplayerGame.removeCallbacks();
+    multiplayerGame = null;
   }
 }

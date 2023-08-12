@@ -1,65 +1,36 @@
-import { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
-import { apiBaseURL } from "../../utils/constant";
-import { Navigate } from "react-router-dom";
-import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { useFetcher } from "../../hooks/UseFetcher";
+import { ChannelInvite, UserFriend, UserFriendsData } from "../../type/user.type";
 
 export default function Notifications() {
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
-  const token: string | null = localStorage.getItem("token");
-  const [invits, setInvits] = useState([
-    {
-      nickname: "",
-      avatarUrl: "",
-      id: 0,
-    },
-  ]);
-  const [channelInvits, setChannelInvits] = useState([
-    {
-      id: 0,
-      joinChannel: "",
-      invitedByAvatar: "",
-      invitedByUsername: "",
-    },
-  ]);
+  const [invits, setInvits] = useState<UserFriend[]>([]);
+  const [channelInvits, setChannelInvits] = useState<ChannelInvite[]>([]);
 
+  const { get, put, showErrorInModal } = useFetcher();
 
   async function handleAccept(id: number) {
-    if (!id) return;
+    if (id === undefined) return;
 
-    await axios
-      .put(apiBaseURL + "user/accept/" + id, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
+    put<UserFriendsData>("user/accept/" + id, {})
+      .then(res => {
         ChatClientSocket.notificationEvent(id);
         removeNotif(id);
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(showErrorInModal);
   }
 
   async function handleDecline(id: number) {
-    if (!id) return;
+    if (id === undefined) return;
 
-    await axios
-      .put(apiBaseURL + "user/decline/" + id, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
+    put<UserFriendsData>("user/decline/" + id, {})
+      .then(res => {
         ChatClientSocket.notificationEvent(id);
         removeNotif(id);
-      });
+      })
+      .catch(showErrorInModal);
   }
 
   async function removeNotif(id: number) {
@@ -71,41 +42,32 @@ export default function Notifications() {
     const oldChannel = channel;
     if (channel[0] === '#')
       channel = channel.substring(1);
-    const addr = apiBaseURL + "chat-controller/request/" + channel;
-    await axios
-    .put(addr, null,  {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((res) => {
-      const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
-      setChannelInvits(newInvits);
-    });
+    put("chat-controller/request/" + channel, {})
+      .then(res => {
+        const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
+        setChannelInvits(newInvits);
+      })
+      .catch(showErrorInModal);
   }
 
   async function handleDeclineChannel(channel: string) {
     const oldChannel = channel;
     if (channel[0] === '#')
       channel = channel.substring(1);
-    const addr = apiBaseURL + "chat-controller/decline/" + channel;
-    await axios.put(addr, null, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then((res) =>{
-      const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
-      setChannelInvits(newInvits);
-    });
+    put("chat-controller/decline/" + channel, {})
+      .then(res =>{
+        const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
+        setChannelInvits(newInvits);
+      })
+      .catch(showErrorInModal);
   }
 
   function InviteChannel(){
     return (<div className="list">
       {
-        channelInvits.map((channelInvits) => (
+        channelInvits.map((channelInvits, index) => (
           <div className="notifsElements">
-            <div className="invits" key={channelInvits.id}>
+            <div className="invits" key={index}>
                 <Avatar size="50px" img={channelInvits.invitedByAvatar} />
                 <p className="notifText">
                   {channelInvits.invitedByUsername} invited you to the channel {channelInvits.joinChannel}
@@ -132,57 +94,23 @@ export default function Notifications() {
   }
 
   useEffect(() => {
+    async function fetchInvites() {
+      get<UserFriend[]>("user/requested")
+        .then(requests => setInvits(requests))
+        .catch(() => {});
 
-    async function fetchFriends() {
-      await axios
-        .get(apiBaseURL + "user/requested", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setInvits(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            localStorage.clear();
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
+      get<ChannelInvite[]>("user/request/channel")
+        .then(channels => setChannelInvits(channels))
+        .catch(() => {});
     }
 
-    async function fetchInvChannel() {
-      await axios
-        .get(apiBaseURL + "user/request/channel", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setChannelInvits(res.data);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-    
-    fetchInvChannel().then();
-    fetchFriends().then(() => {});
+    fetchInvites();
+    ChatClientSocket.onNotificationEvent(fetchInvites);
 
-    ChatClientSocket.onNotificationEvent(fetchFriends);
-    ChatClientSocket.onNotificationEvent(fetchInvChannel);
+    return () => {
+      ChatClientSocket.offNotificationEvent(fetchInvites);
+    }
   }, []);
-
-
-  if (token === null) {
-    setAuthed(false);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
 
   function FetchFriend () {
     return  (     
@@ -219,39 +147,23 @@ export default function Notifications() {
   }
 
   //Faire une map pour afficher toutes invites a la suite
-  if (invits && invits[0] && invits[0].id > 0 && channelInvits && channelInvits[0] && channelInvits[0].invitedByUsername !== "") {
+  if (invits.length > 0 || channelInvits.length > 0) {
     return (
       <>
         <div className="notifPage">
           <h2 className="notifTitle">Notifications</h2>
           <div className= "invites-elements">
-            <FetchFriend/>
-            <InviteChannel/>
+            {invits.length > 0 && <FetchFriend/>}
+            {channelInvits.length > 0 && <InviteChannel/>}
           </div>
         </div>
       </>
     );
-  } else if (channelInvits && channelInvits[0] && channelInvits[0].invitedByUsername !== ""){
+  } else {
     return (
-      <div className="notifPage">
-      <h2 className="notifTitle">Notifications</h2>
-        <div className= "invites-elements">
-          <InviteChannel/>
-        </div>
-      </div>);
-  } else if (invits && invits[0] && invits[0].id > 0){
-    return (
-    <div className="notifPage">
-    <h2 className="notifTitle">Notifications</h2>
-      <div className= "invites-elements">
-        <FetchFriend/>
+      <div className="noNotifTitle">
+        <h2>No Notifications</h2>
       </div>
-    </div>)
+    );
   }
-  else
-  return (
-    <div className="noNotifTitle">
-      <h2>No Notifications</h2>
-    </div>
-  );
 }

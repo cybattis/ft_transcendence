@@ -7,6 +7,8 @@ import { FormContext, FormState } from "../Auth/form.context";
 import { DisconnectButton, NavButton } from "./NavButton";
 import { Notification } from "./NavButton";
 import { UserData } from "../../pages/Profile/user-data";
+import {removeMultiplayerGame} from "../../game/PongManager";
+import {MultiplayerClient} from "../../game/networking/multiplayer-client";
 
 function Unlogged() {
   const { setFormState } = useContext(FormContext);
@@ -37,11 +39,16 @@ function Unlogged() {
 }
 
 function Logged() {
+  function handlePageChange() {
+    removeMultiplayerGame();
+    MultiplayerClient.quitGame();
+  }
+
   return (
     <>
       <Notification />
-      <NavButton content={"Profile"} link={"/my-profile"} />
-      <NavButton content={"Settings"} link={"/settings"} />
+      <NavButton content={"Profile"} link={"/my-profile"} callback={handlePageChange} />
+      <NavButton content={"Settings"} link={"/settings"} callback={handlePageChange} />
       <DisconnectButton />
     </>
   );

@@ -47,8 +47,7 @@ export default class Ball {
   }
 
   serveRight() {
-    // TODO: check this
-    const direction = Math.random() * Math.PI / 2 + Math.PI * 3 / 4;
+    const direction = Math.random() * Math.PI / 2 - Math.PI / 4;
     this.serve(direction);
   }
 

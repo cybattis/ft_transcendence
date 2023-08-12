@@ -15,7 +15,8 @@ export enum GameStatus {
   WAITING_FOR_PLAYERS = 'Waiting for players',
   IN_PROGRESS = 'In progress',
   FINISHED = 'Finished',
-  PLAYER_DISCONNECTED = 'Player disconnected',
+  PLAYER1_DISCONNECTED = 'Player 1 disconnected',
+  PLAYER2_DISCONNECTED = 'Player 2 disconnected',
 }
 
 export interface GameBodyDto {
@@ -27,11 +28,15 @@ export interface GameBodyDto {
   status: GameStatus;
 }
 
-export interface GameStatsDto extends GameBodyDto {
+export interface GameStats extends GameBodyDto {
   creationDate: string;
-  players: UserInfo[];
 }
 
+export interface PlayerInterface {
+  username: string;
+  avatar?: string;
+  elo: number;
+}
 export interface GameInfos {
   id: number;
   playerOne: {

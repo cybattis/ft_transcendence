@@ -1,14 +1,12 @@
-import React, {useContext, useState} from "react";
-import axios from "axios";
+import React, { useContext, useState } from "react";
 import Logo from "../Logo/Logo";
 import InputForm from "../InputForm/InputForm";
 import "./Auth.css";
 import validator from "validator";
-import {apiBaseURL} from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
-import {MessageModal} from "../Modal/MessageModal";
-import {PopupContext} from "../Modal/Popup.context";
-import {FormContext, FormState} from "./form.context";
+import { MessageModal } from "../Modal/MessageModal";
+import { FormContext, FormState } from "./form.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 interface UserCredential {
   nickname: string;
@@ -20,9 +18,9 @@ interface UserCredential {
 
 export default function Signup() {
   const { setFormState } = useContext(FormContext);
-  const { setErrorMessage } = useContext(PopupContext);
   const [errorInput, setErrorInput] = useState("");
   const [message, setMessage] = useState("");
+  const { get, post, showErrorInModal } = useFetcher();
 
   const inputs = {
     nickname: "",
@@ -47,10 +45,12 @@ export default function Signup() {
   };
 
   const inUse = async (input: string, value: string): Promise<boolean> => {
-    const { data } = await axios.get(
-      apiBaseURL + "user/check/" + input + "/" + value
-    );
-    return !!data; // if data existe return true sinon false
+    try {
+      return await get<boolean>("user/check/" + input + "/" + value);
+    } catch (error) {
+      showErrorInModal(error);
+      return true;
+    }
   };
 
   const validateInput = async () => {
@@ -115,22 +115,9 @@ export default function Signup() {
       password: inputs.password,
     };
 
-    await axios
-      .post(apiBaseURL + "auth/signup", user, {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      })
-      .then(() => {
-        setMessage("Please check your email to confirm your account");
-      })
-      .catch((error) => {
-        if (error.response === undefined) {
-          localStorage.clear();
-          setErrorMessage("Error unknown...");
-        } else setErrorMessage(error.response.data.message + "!");
-      });
+    post("auth/signup", user, "application/json")
+      .then(() => setMessage("Please check your email to confirm your account"))
+      .catch(showErrorInModal);
   };
 
   const intraLink = process.env["REACT_APP_REDIR_URL"];

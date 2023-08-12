@@ -129,7 +129,8 @@ export namespace ChatClientSocket {
   }
 
   export function disconnect() {
-    if (socket) socket.disconnect();
+    if (socket && socket.connected)
+      socket.disconnect();
   }
 
   export function privateMessage(sendPrv: {
@@ -265,12 +266,6 @@ export namespace ChatClientSocket {
     if (!checkChatConnection()) return;
     if (!send.msg || !send.msg[0]) return;
     socket.emit("send", send);
-  }
-
-  export function sendFriendRequest(target: number) {
-    if (!checkChatConnection()) return;
-    console.log("Client send friend request");
-    socket.emit("friend-request", target);
   }
 
   export function notificationEvent(target: number) {

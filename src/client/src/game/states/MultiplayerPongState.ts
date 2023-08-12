@@ -10,11 +10,11 @@ export default class MultiplayerPongState {
   private readonly canvas: HTMLCanvasElement;
   private readonly playerSpeed: number;
 
-  constructor(name: string, canvas: HTMLCanvasElement,
+  constructor(canvas: HTMLCanvasElement,
               paddleColor: RgbColor, opponentPaddleColor: RgbColor)
   {
     this.canvas = canvas;
-    this.state = new MultiplayerPongLogic(name, canvas);
+    this.state = new MultiplayerPongLogic(canvas);
     this.state.setPlayerPaddleColor(paddleColor);
     this.state.setOpponentPaddleColor(opponentPaddleColor);
     this.playerSpeed = canvas.height * 0.8;

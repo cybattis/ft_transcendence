@@ -1,13 +1,12 @@
 import React, {useContext} from "react";
 import "./Auth.css";
-import axios from "axios";
 import InputForm from "../InputForm/InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
-import {apiBaseURL} from "../../utils/constant";
 import logo42 from "../../resource/logo-42.png";
-import {AuthContext} from "./auth.context";
-import {FormContext, FormState} from "./form.context";
+import { AuthContext } from "./auth.context";
+import { FormContext, FormState } from "./form.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 interface SigninDto {
   email: string;
@@ -18,6 +17,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = React.useState("");
   const { setFormState } = useContext(FormContext);
   const { setAuthed } = useContext(AuthContext);
+  const { post, showErrorInModal } = useFetcher();
   const inputs: SigninDto = {
     email: "",
     password: "",
@@ -56,24 +56,18 @@ export default function Login() {
       password: inputs.password,
     };
 
-    await axios
-      .post(apiBaseURL + "auth/signin", user)
-      .then((res) => {
-        if (res.data === "code") {
+    await post<string>("auth/signin", user)
+      .then(newToken => {
+        if (newToken === "code") {
           localStorage.setItem("email", user.email);
           setFormState(FormState.TFA_CODE);
         } else {
-          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("token", newToken);
           setAuthed(true);
           setFormState(FormState.NONE);
         }
-        return;
       })
-      .catch((error) => {
-        if (error.response === undefined) {
-          setErrorMessage("Error unknown...");
-        } else setErrorMessage(error.response.data.message + "!");
-      });
+      .catch(showErrorInModal);
   };
 
   const intraLink = process.env["REACT_APP_REDIR_URL"];

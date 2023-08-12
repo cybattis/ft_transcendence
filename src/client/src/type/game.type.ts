@@ -1,5 +1,3 @@
-import { UserInfo } from "./user.type";
-
 export enum GameType {
   PRACTICE = "Practice",
   CASUAL = "Casual",
@@ -14,6 +12,8 @@ export enum GameMode {
 export enum GameStatus {
   IN_PROGRESS = "In progress",
   FINISHED = "Finished",
+  PLAYER1_DISCONNECTED = 'Player 1 disconnected',
+  PLAYER2_DISCONNECTED = 'Player 2 disconnected',
 }
 
 export interface GameBodyDto {
@@ -25,9 +25,8 @@ export interface GameBodyDto {
   status: GameStatus;
 }
 
-export interface GameStatsDto extends GameBodyDto {
+export interface GameStats extends GameBodyDto {
   creationDate: string;
-  players: UserInfo[];
 }
 
 export interface GameInfos {

@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { apiBaseURL } from "../../../utils/constant";
-import { JwtPayload } from "../../../type/client.type";
-import { ChatInterface } from "../Interface/chat.interface";
+import { TokenData } from "../../../type/client.type";
 import jwt_decode from "jwt-decode";
 import "./UserList.css";
+import { Channel, Chat } from "../../../type/user.type";
+import { useFetcher } from "../../../hooks/UseFetcher";
 
 export default function UsersList(props: {
   channel: string;
-  messages: ChatInterface[];
+  messages: Chat[];
   handleButton: (target: string) => void;
 }) {
-  const [usersList, setUsersList] = useState([]);
-  const [banList, setBanList] = useState([]);
-  const [muteList, setMuteList] = useState([]);
+  const [usersList, setUsersList] = useState<string[]>([]);
+  const [banList, setBanList] = useState<string[]>([]);
+  const [muteList, setMuteList] = useState<string[]>([]);
   const [isOpe, setIsOpe] = useState(false);
+  const { get } = useFetcher();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const payload: JwtPayload = jwt_decode(token);
+    const payload: TokenData = jwt_decode(token);
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;
       setIsOpe(false);
@@ -27,21 +27,15 @@ export default function UsersList(props: {
       if (canal[0] === "#") canal = canal.slice(1);
       else return <></>;
 
-      await axios
-        .get(apiBaseURL + "chat-controller/channelName/" + canal, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      get<Channel | null>("chat-controller/channelName/" + canal)
+        .then(channel => {
+          if (!channel) return;
+          if (channel.operator.includes(payload.nickname)) setIsOpe(true);
+          setUsersList(channel.users);
+          setBanList(channel.ban);
+          setMuteList(channel.mute);
         })
-        .then((res) => {
-          if (res.data.operator.includes(payload.nickname)) setIsOpe(true);
-          setUsersList(res.data.users);
-          setBanList(res.data.ban);
-          setMuteList(res.data.mute);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+        .catch(() => {});
     }
     fecthLists();
   }, [props.messages, props.channel]);

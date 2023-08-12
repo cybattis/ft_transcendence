@@ -1,17 +1,17 @@
 import React, { useContext } from "react";
-import axios from "axios";
 import InputForm from "../InputForm/InputForm";
 import validator from "validator";
 import Logo from "../Logo/Logo";
 import { Navigate } from "react-router-dom";
 import "./Auth.css";
-import { apiBaseURL } from "../../utils/constant";
 import { AuthContext } from "./auth.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 export default function ConfirmEmail() {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const { setAuthed } = useContext(AuthContext);
+  const { post, showErrorInModal } = useFetcher();
   const inputs = {
     code: "",
   };
@@ -39,21 +39,13 @@ export default function ConfirmEmail() {
 
     const code = inputs.code;
 
-    await axios
-      .post(apiBaseURL + "auth/signin", code)
-      .then((res) => {
-        const data = res.data;
-        localStorage.setItem("token", data.token);
+    await post<string>("auth/signin", code)
+      .then(newToken => {
+        localStorage.setItem("token", newToken);
         setAuthed(true);
         return <Navigate to="/" />;
       })
-      .catch((error) => {
-        if (error.response.status === 401) {
-          setErrorMessage(error.response.data.message);
-        } else {
-          setErrorMessage("Server busy... try again");
-        }
-      });
+      .catch(showErrorInModal);
   };
 
   return (

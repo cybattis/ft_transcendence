@@ -5,10 +5,11 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AuthedSocket } from '../types/auth.types';
-import { JwtService } from '@nestjs/jwt';
 import { TokenData } from '../../type/jwt.type';
 import { PUBLIC_DECORATOR_KEY } from './PublicDecorator';
 import { Reflector } from '@nestjs/core';
+import {TypeCheckers} from "../../utils/type-checkers";
+import { AuthService } from "../auth.service";
 
 /*
  * This guard is used to authenticate websocket communications using the Jwt.
@@ -20,7 +21,7 @@ export class WsAuthGuard implements CanActivate {
   private readonly logger = new Logger(WsAuthGuard.name);
 
   constructor(
-    private readonly jwtService: JwtService,
+    private readonly authService: AuthService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -36,7 +37,7 @@ export class WsAuthGuard implements CanActivate {
 
     const client: AuthedSocket = context.switchToWs().getClient();
 
-    if (!WsAuthGuard.validateSocketToken(client, this.jwtService)) {
+    if (!WsAuthGuard.validateSocketToken(client, this.authService)) {
       this.logger.log(
         `Unauthorized connection from ${client.handshake?.address}`,
       );
@@ -57,16 +58,16 @@ export class WsAuthGuard implements CanActivate {
    */
   static validateSocketToken(
     client: AuthedSocket,
-    jwtService: JwtService,
+    authService: AuthService,
   ): boolean {
     const auth = client.handshake?.auth?.token;
     const authHeaders = client.handshake?.headers?.authorization;
 
     const validateToken = (token: string): boolean => {
       try {
-        const payload: TokenData = jwtService.verify<TokenData>(token);
-          if (!payload) return false;
-        client.userId = payload.id;
+        const result = authService.validateToken(token);
+        if (result.isErr()) return false;
+        client.userId = result.value.id;
         return true;
       } catch (e) {
         return false;

@@ -47,7 +47,7 @@ export namespace MatchmakingClient {
     });
 
     socket.on("game-started", (opponentInfos: PlayerInfos) => {
-      console.log("game started");
+      console.log("game started", opponentInfos);
       currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback());
     });
@@ -61,7 +61,7 @@ export namespace MatchmakingClient {
     return true;
   }
 
-  function disconnect() {
+  export function disconnect() {
     if (socket && socket.isConnected) socket.disconnect();
   }
 

@@ -7,8 +7,6 @@ import { BallUpdate, ScoreUpdate, ServeUpdate } from "../networking/types";
 import { RgbColor } from "../../utils/colors";
 
 export class MultiplayerPongLogic {
-  public name: string;
-
   private playerNumber: number;
   private readonly opponentPaddle: Paddle;
   private opponentScore: number;
@@ -39,8 +37,7 @@ export class MultiplayerPongLogic {
   private readonly font: string;
   private readonly fontSize: number;
 
-  constructor(name: string, canvas: HTMLCanvasElement) {
-    this.name = name;
+  constructor(canvas: HTMLCanvasElement) {
     this.playerNumber = 0;
     this.canvas = canvas;
 
@@ -127,10 +124,6 @@ export class MultiplayerPongLogic {
 
   public getFontSize(): number {
     return this.fontSize;
-  }
-
-  public getName(): string {
-    return this.name;
   }
 
   public getOpponentPaddle(): Paddle {

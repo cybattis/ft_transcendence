@@ -1,29 +1,24 @@
 import "./Settings.css";
-import {Avatar} from "../../components/Avatar";
-import axios from "axios";
-import {ChangeEvent, FormEvent, useContext, useState} from "react";
+import { Avatar } from "../../components/Avatar";
+import { ChangeEvent, FormEvent, useContext, useState } from "react";
 import InputForm from "../../components/InputForm/InputForm";
-import {UserSettings} from "../../type/user.type";
-import {Navigate} from "react-router-dom";
-import {apiBaseURL} from "../../utils/constant";
-import {ErrorResponse} from "../../type/client.type";
-import {UserData} from "../Profile/user-data";
-import {AuthContext} from "../../components/Auth/auth.context";
-import {FormContext, FormState} from "../../components/Auth/form.context";
-import {LoadingPage} from "../Loading/LoadingPage";
-import {useData} from "../../hooks/UseData";
+import { UserSettings } from "../../type/user.type";
+import { UserData } from "../Profile/user-data";
+import { AuthContext } from "../../components/Auth/auth.context";
+import { FormContext, FormState } from "../../components/Auth/form.context";
+import { LoadingPage } from "../Loading/LoadingPage";
+import { useData } from "../../hooks/UseData";
 import { PopupContext } from "../../components/Modal/Popup.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 export function Settings() {
-  const { data, error} = useData<UserSettings>("user/settings");
+  const { data} = useData<UserSettings>("user/settings", true);
 
   return data ? <SettingsLoaded data={data} /> : <LoadingPage/>;
 }
 
 export function SettingsLoaded({data }: { data: UserSettings }) {
-  const token = localStorage.getItem("token");
-
-  const { setAuthed, tfaActivated } = useContext(AuthContext);
+  const { tfaActivated } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
   const { setErrorMessage, setInfoMessage } = useContext(PopupContext);
 
@@ -32,48 +27,25 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
   const [lastName, setLastName] = useState(data.lastname);
   const [avatarUrl, setAvatarUrl] = useState(data.avatarUrl);
 
-  if (token === null) {
-    setAuthed(false);
-    setErrorMessage("Session expired, please login again!");
-    return <Navigate to={"/"} />;
-  }
+  const { post, put, showErrorInModal } = useFetcher();
+
 
   function submitImage(event: ChangeEvent<HTMLInputElement>) {
-    if (!token) {
-      setAuthed(false);
-      setErrorMessage("Session expired, please login again!");
-      return <Navigate to={"/"} />;
-    }
-
     if (event.target.files === null) return;
     if (event.target.files[0].size > 2097152) {
       setErrorMessage("File has to be less than 2MB");
       return;
     }
+
     const formData = new FormData();
     formData.append("avatar", event.target.files[0]);
 
-    axios
-      .post(apiBaseURL + "user/upload/avatar", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+    post<string>("user/upload/avatar", formData, "multipart/form-data")
       .then((res) => {
         setInfoMessage("Avatar updated!");
-        setAvatarUrl(res.data);
+        setAvatarUrl(res);
       })
-      .catch((error: ErrorResponse) => {
-        if (error.response === undefined) {
-          localStorage.clear();
-          setErrorMessage("Error unknown...");
-        } else if (error.response.status === 403) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else setErrorMessage(error.response.data.message + "!");
-      });
+      .catch(showErrorInModal);
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -85,12 +57,6 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       lastname: lastName,
     };
 
-    if (!token) {
-      setAuthed(false);
-      setErrorMessage("Session expired, please login again!");
-      return <Navigate to={"/"} />;
-    }
-
     if (user.nickname.length === 0) {
       setErrorMessage("Your Nickname can't be empty!");
       return;
@@ -99,61 +65,18 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       return;
     }
 
-    await axios
-      .put(apiBaseURL + "user/update", user, {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(() => {
-        UserData.updateNickname(user.nickname);
-        setInfoMessage("Update successful!");
-      })
-      .catch((error) => {
-        if (error.response === undefined) {
-          localStorage.clear();
-          setErrorMessage("Error unknown...");
-        } else if (error.response.status === 403) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else setErrorMessage(error.response.data.message + "!");
-      });
+      put<UserSettings>("user/update", user, "application/json")
+        .then((updatedUser) => {
+          UserData.updateNickname(updatedUser.nickname);
+          setInfoMessage("Update successful!");
+        })
+        .catch(showErrorInModal);
   };
 
   const handle2fa = async () => {
-    if (!token) {
-      setAuthed(false);
-      setErrorMessage("Session expired, please login again!");
-      return <Navigate to={"/"} />;
-    }
-
-    await axios
-      .put(
-        apiBaseURL + "auth/2fa/update",
-        {},
-        {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then((res) => {
-        setFormState(FormState.TFA_CODE);
-      })
-      .catch((error) => {
-        if (error.response === undefined) {
-          localStorage.clear();
-          setErrorMessage("Error unknown...");
-        } else if (error.response.status === 403) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else setErrorMessage(error.response.data.message + "!");
-      });
+    put<void>("auth/2fa/update", {})
+      .then(() => setFormState(FormState.TFA_CODE))
+      .catch(showErrorInModal);
   };
 
   return (

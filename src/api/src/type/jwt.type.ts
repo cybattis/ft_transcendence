@@ -3,7 +3,3 @@ export type TokenData = {
   email: string;
   nickname: string;
 };
-
-export type TokenPayload = {
-  token: string;
-};

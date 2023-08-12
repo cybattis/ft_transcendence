@@ -79,28 +79,25 @@ export class User {
 
   // Friends
   // ============================================================
-  @Column('int', { array: true, default: [] })
+  @Column('integer', { array: true, default: [] })
   friendsId: number[];
 
-  @Column('int', { array: true, default: [] })
+  @Column('integer', { array: true, default: [] })
   requestedId: number[];
 
   @Column('varchar', { array: true, default: [] })
   blockedChat: string[];
 
-  @Column('int', { array: true, default: [] })
+  @Column('integer', { array: true, default: [] })
   blockedId: number[];
 
-  @Column('int', { array: true, default: [] })
+  @Column('integer', { array: true, default: [] })
   blockedById: number[];
 
   // Chat
   // ============================================================
   @Column('varchar', { array: true, default: [] })
   invites: string[];
-
-  @Column({ type: 'varchar', default: '' })
-  websocket: string;
 
   @Column('text', { array: true, default: [] })
   joinChannel: string[];

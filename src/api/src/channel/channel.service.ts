@@ -17,11 +17,15 @@ import { JwtService } from '@nestjs/jwt';
 import { ModuleRef } from '@nestjs/core';
 import { UsersSocketStructure } from './usersSocket.structure';
 import { User } from 'src/user/entity/Users.entity';
+import { APIError } from "../utils/errors";
+import { failure, Result, success } from "../utils/Error";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
   private jwtService: JwtService;
+  private userService: UserService;
 
+  private server: Server;
   private readonly channelStruct: ChannelStructure[];
   private usersSocketList: UsersSocketStructure[];
 
@@ -30,7 +34,6 @@ export class ChannelService implements OnModuleInit {
     private chatRepository: Repository<Chat>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    private userService: UserService,
     @InjectRepository(Channel)
     private channelRepository: Repository<Channel>,
     private moduleRef: ModuleRef,
@@ -41,6 +44,7 @@ export class ChannelService implements OnModuleInit {
 
   async onModuleInit() {
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
+    this.userService = this.moduleRef.get(UserService, { strict: false });
     const rowCount = await this.channelRepository.count();
     if (rowCount == 0)
       await this.channelRepository.save({
@@ -54,6 +58,19 @@ export class ChannelService implements OnModuleInit {
         password: '',
       });
   }
+
+  /*
+   * == API ==
+  */
+
+  /*
+   * Set the server
+   *
+   * @param server The server
+   */
+    public setServer(server: Server): void {
+      this.server = server;
+    }
 
   listUsersChannel(channel: string) {
     for (let index = 0; index < this.channelStruct.length; index++) {
@@ -176,24 +193,30 @@ export class ChannelService implements OnModuleInit {
     }
     if (cmd === '+o') {
       await this.addNewOp(channelToUpdate, target);
-      const blockedUsers: any = await this.userService.findByLogin(author);
+      const blockedUsers = await this.userService.findByLogin(author);
+      if (blockedUsers.isErr())
+        return;
+
       await this.channelAnnoucementOp(
         socket,
         channel,
         'op',
         author,
-        blockedUsers.blockedChat,
+        blockedUsers.value.blockedChat,
         target,
       );
     } else if (cmd === '-o') {
       await this.kickOp(channelToUpdate, target);
-      const blockedUsers: any = await this.userService.findByLogin(author);
+      const blockedUsers = await this.userService.findByLogin(author);
+      if (blockedUsers.isErr())
+        return;
+
       await this.channelAnnoucementOp(
         socket,
         channel,
         'deop',
         author,
-        blockedUsers.blockedChat,
+        blockedUsers.value.blockedChat,
         target,
       );
     } else {
@@ -273,9 +296,9 @@ export class ChannelService implements OnModuleInit {
     return null;
   }
 
-  getSocketById(id: number): string | null {
-    const user = this.userService.findByID(id);
-    if (!user) return null;
+  async getSocketById(id: number): Promise<string | null> {
+    const user = await this.userService.findByID(id);
+    if (user.isErr()) return null;
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (id === this.usersSocketList[index].id)
         return this.usersSocketList[index].socket;
@@ -297,7 +320,7 @@ export class ChannelService implements OnModuleInit {
     username: string,
     channel: string,
     pass: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     const channelToJoin = await this.channelRepository.findOne({
       where: { channel: channel },
@@ -381,7 +404,7 @@ export class ChannelService implements OnModuleInit {
     username: string,
     channel: string,
     pass: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     if (channel === '#general') {
       const channelToUpdate = await this.channelRepository.findOne({
@@ -491,13 +514,13 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  sendFriendRequest(server: Server, targetID: number) {
-    const dest: string | null = this.getSocketById(targetID);
+  async sendNotificationEvent(targetID: number) {
+    const dest = await this.getSocketById(targetID);
     if (!dest) {
       console.log('User not connected');
       return;
     }
-    server.to(dest).emit('notification');
+    this.server.to(dest).emit('notification');
   }
 
   channelPosition(channel: string): number {
@@ -525,20 +548,23 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     msg: string,
     sender: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
     if (chan && chan.mute.includes(sender)) return;
     const send = { sender, msg, channel, blockedChat };
-    const emiter: any = await this.userService.findByLogin(sender);
+    const emiter = await this.userService.findByLogin(sender);
+    if (emiter.isErr())
+      throw new NotFoundException();
+
     if (channel[0] === '#') {
       await this.chatRepository.save({
         channel: channel,
         content: msg,
         emitter: sender,
-        emitterId: emiter.id,
+        emitterId: emiter.value.id,
       });
       socket.broadcast.emit('rcv', send);
       server.to(socket.id).emit('rcv', send);
@@ -557,7 +583,7 @@ export class ChannelService implements OnModuleInit {
             channel: find[index].channel,
             content: msg,
             emitter: sender,
-            emitterId: emiter.id,
+            emitterId: emiter.value.id,
           });
           if (target) {
             server.to(target).emit('rcv', prv);
@@ -576,7 +602,7 @@ export class ChannelService implements OnModuleInit {
     msg: string,
     sender: string,
     opponent: string,
-    blockedUsers: any,
+    blockedUsers: string[],
   ) {
     const prv = { sender, opponent, msg, channel, blockedUsers };
     const target = this.getSocketByUsername(opponent);
@@ -584,7 +610,9 @@ export class ChannelService implements OnModuleInit {
     server.to(socket.id).emit('rcvgame', prv);
   }
 
-  async findChannel(channel: string, pwd: string) {
+  async findChannel(channel: string, pwd: string)
+  : Promise<Result<true, typeof APIError.InvalidPassword | typeof APIError.ChannelNotFound>>
+  {
     if (!pwd) pwd = '';
     if (channel.indexOf('#') === -1) channel = '#' + channel;
     for (let i = 0; this.channelStruct[i]; i++) {
@@ -592,28 +620,30 @@ export class ChannelService implements OnModuleInit {
         channel === this.channelStruct[i].name &&
         pwd === this.channelStruct[i].pswd
       )
-        return 1;
+        return success(true);
       else if (
         channel === this.channelStruct[i].name &&
         pwd !== this.channelStruct[i].pswd
       )
-        return new UnauthorizedException('Password mismatch');
+        return failure(APIError.InvalidPassword);
     }
-    return new NotFoundException("Channel doesn't exists");
+    return failure(APIError.ChannelNotFound);
   }
 
-  async findChannelName(channel: string) {
+  async findChannelName(channel: string)
+    : Promise<Result<true, typeof APIError.InvalidPassword | typeof APIError.ChannelNotFound>>
+  {
     if (channel.indexOf('#') === -1) channel = '#' + channel;
     for (let i = 0; this.channelStruct[i]; i++) {
       if (channel === this.channelStruct[i].name && !this.channelStruct[i].pswd)
-        return 1;
+        return success(true);
       else if (
         channel === this.channelStruct[i].name &&
         this.channelStruct[i].pswd
       )
-        return new UnauthorizedException('Password mismatch');
+        return failure(APIError.InvalidPassword);
     }
-    return new NotFoundException("Channel doesn't exists");
+    return failure(APIError.ChannelNotFound);
   }
 
   async channelAnnoucement(
@@ -621,7 +651,7 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     msg: string,
     sender: string,
-    blockedChat: any,
+    blockedChat: string[],
     target: string,
   ) {
     const emitter = 'server';
@@ -643,7 +673,7 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     action: string,
     sender: string,
-    blockedChat: any,
+    blockedChat: string[],
     target: string,
   ) {
     const emitter = 'server';
@@ -673,7 +703,7 @@ export class ChannelService implements OnModuleInit {
     action: string,
     username: string,
     channel: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     const emitter = 'announce';
     let msg = '';
@@ -714,7 +744,7 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
     channel: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
@@ -742,7 +772,7 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
     channel: string,
-    blockedChat: any,
+    blockedChat: string[],
   ) {
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
@@ -828,7 +858,7 @@ export class ChannelService implements OnModuleInit {
     find.joinChannel.push(channel);
     find.invitesId.push(id);
     await this.usersRepository.save(find);
-    this.sendFriendRequest(server, find.id);
+    await this.sendNotificationEvent(find.id);
   }
 
   async AcceptInvitationChannel(
@@ -845,7 +875,7 @@ export class ChannelService implements OnModuleInit {
         find.joinChannel.splice(index, 1);
         find.invitesId.splice(index, 1);
         await this.channelRepository.save(find);
-        const targetId = this.getSocketById(find.id);
+        const targetId = await this.getSocketById(find.id);
         if (!targetId) return;
         server.to(targetId).emit('join', channel);
       }

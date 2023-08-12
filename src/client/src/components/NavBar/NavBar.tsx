@@ -6,11 +6,13 @@ import Logo from "../Logo/Logo";
 import navbarIcon from "../../resource/menu.png";
 import { DisconnectButton, NavButton } from "./NavButton";
 import jwt_decode from "jwt-decode";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import { Notification } from "./NavButton";
 import logo from "../../resource/signin-logo.svg";
 import {AuthContext} from "../Auth/auth.context";
 import {FormContext, FormState} from "../Auth/form.context";
+import {removeMultiplayerGame} from "../../game/PongManager";
+import {MultiplayerClient} from "../../game/networking/multiplayer-client";
 
 function MobileNavBar() {
   const [sidePanel, setSidePanel] = useState(false);
@@ -21,13 +23,15 @@ function MobileNavBar() {
 
   const token = localStorage.getItem("token");
   if (token) {
-    const decoded: JwtPayload = jwt_decode(token);
+    const decoded: TokenData = jwt_decode(token);
     if (decoded) username = decoded.nickname;
     else username = "";
   }
 
-  function handleSidePanel() {
+  function handlePageChange() {
     setSidePanel(!sidePanel);
+    removeMultiplayerGame();
+    MultiplayerClient.quitGame();
   }
 
   function toggleLoginForm() {
@@ -42,7 +46,10 @@ function MobileNavBar() {
 
   return (
     <nav className={"nav-style-mobile"}>
-      <Link to="/">
+      <Link to="/" onClick={() => {
+        removeMultiplayerGame();
+        MultiplayerClient.quitGame();
+      }}>
         <Logo />
       </Link>
       <div className={"navbar-mobile-div"}></div>
@@ -51,7 +58,7 @@ function MobileNavBar() {
           <Notification />
         </>
       ) : null}
-      <button className={"navbar-button"} onClick={handleSidePanel}>
+      <button className={"navbar-button"} onClick={handlePageChange}>
         <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
       </button>
       {sidePanel && authed ? (
@@ -59,22 +66,22 @@ function MobileNavBar() {
           <NavButton
             content={"About"}
             link={"/about"}
-            callback={handleSidePanel}
+            callback={handlePageChange}
           />
           <NavButton
             content={"Ranking"}
             link={"/leaderboard"}
-            callback={handleSidePanel}
+            callback={handlePageChange}
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/${username}`}
-            callback={handleSidePanel}
+            link={`/profile/nickname/${username}`}
+            callback={handlePageChange}
           />
           <NavButton
             content={"Settings"}
             link={"/settings"}
-            callback={handleSidePanel}
+            callback={handlePageChange}
           />
           <div
             style={{
@@ -84,7 +91,7 @@ function MobileNavBar() {
               margin: "10px 0",
             }}
           >
-            <DisconnectButton callback={handleSidePanel} />
+            <DisconnectButton callback={handlePageChange} />
           </div>
         </div>
       ) : !authed && sidePanel ? (
@@ -92,7 +99,7 @@ function MobileNavBar() {
           <NavButton
             content={"About"}
             link={"/about"}
-            callback={handleSidePanel}
+            callback={handlePageChange}
           />
           <div
             style={{
@@ -117,11 +124,16 @@ function MobileNavBar() {
 }
 
 export default function NavBar() {
+  function handlePageChange() {
+    removeMultiplayerGame();
+    MultiplayerClient.quitGame();
+  }
+
   return (
     <>
       <MobileNavBar />
       <nav className={"nav-style"}>
-        <Link to="/">
+        <Link to="/" onClick={handlePageChange}>
           <Logo />
         </Link>
         <LeftMenu />

@@ -104,7 +104,7 @@ export namespace MultiplayerClient {
     return true;
   }
 
-  function disconnect(): void {
+  export function disconnect(): void {
     if (socket && socket.connected) socket.disconnect();
   }
 
@@ -126,7 +126,7 @@ export namespace MultiplayerClient {
   }
 
   export function offGameEnded(callback: MultiplayerGameEndedCallback): void {
-    gameEndedCallback.filter((cb) => cb !== callback);
+    gameEndedCallback = gameEndedCallback.filter((cb) => cb !== callback);
   }
 
   export function onMovementUpdate(
