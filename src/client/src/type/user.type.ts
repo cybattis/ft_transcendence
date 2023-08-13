@@ -1,4 +1,4 @@
-import { GameStatsDto } from "./game.type";
+import { GameStats } from "./game.type";
 
 export interface UserInfo {
   id: number;
@@ -7,15 +7,13 @@ export interface UserInfo {
   level: number;
   ranking: number;
   avatarUrl?: string;
-  games?: GameStatsDto[];
+  games?: GameStats[];
   friendsId: number[];
   requestedId: number[];
   blockedId: number[];
   blockedById: number[];
   totalGameWon?: number;
   paddleColor: string;
-  joinChannel: [],
-
 }
 
 export interface UserSettings {
@@ -27,21 +25,54 @@ export interface UserSettings {
   authActivated?: boolean;
 }
 
-export interface TokenData {
-  email: string;
-  id: number;
-  iat: number;
-  exp: number;
-}
-
 export interface UserFriend {
-  friendsId: number[];
-  requestedId: number[];
-  blockedId: number[];
-  blockedById: number[];
-  joinChannel: [],
+  id: number,
+  nickname: string,
+  avatarUrl?: string,
+  inGame: boolean,
+  online: boolean,
 }
 
-export interface FriendRequestDto {
-  targetID: number;
+export interface UserFriendsData {
+  id: number,
+  friendsId: number[],
+  requestedId: number[],
+  blockedId: number[],
+  blockedById: number[],
+  blockedChat: string[],
+}
+
+export interface ChannelInvite {
+  joinChannel: string,
+  invitedByAvatar?: string,
+  invitedByUsername: string,
+}
+
+export interface Channel {
+  id: number,
+  channel: string,
+  status: string,
+  users: string[],
+  owner: string,
+  operator: string[],
+  ban: string[],
+  mute: string[],
+  password: string,
+}
+
+export interface Chat {
+  id: number,
+  channel: string,
+  content: string,
+  emitter: string,
+  emitterId: number,
+}
+
+export interface UserCredentials {
+  id: number,
+  nickname: string,
+  email: string,
+  password: string,
+  isIntra: boolean,
+  isVerified: boolean,
 }

@@ -87,7 +87,7 @@ export function ErrorModalChat(props: {
   );
 }
 
-export function EndGamePopup(props: { hasWin: boolean; onClose: () => void }) {
+export function EndGamePopup(props: { hasWin: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
 
   return (
@@ -96,7 +96,7 @@ export function EndGamePopup(props: { hasWin: boolean; onClose: () => void }) {
       ref={ref}
       onClick={(event: MouseEvent) => {
         if (event.target === ref.current) {
-          props.onClose();
+
         }
       }}
     >
@@ -106,7 +106,6 @@ export function EndGamePopup(props: { hasWin: boolean; onClose: () => void }) {
           <Link
             to={"/"}
             id="close"
-            onClick={props.onClose}
             className={"go-home-button"}
           >
             Go home

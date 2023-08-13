@@ -1,14 +1,11 @@
-import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import "./Friends.css";
 import { Avatar } from "../Avatar";
 import { Link } from "react-router-dom";
-import { apiBaseURL } from "../../utils/constant";
-import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
-import { AuthContext } from "../Auth/auth.context";
+import { UserFriend } from "../../type/user.type";
+import { useFetcher } from "../../hooks/UseFetcher";
 
-//Mettre un useState refresh automatique
 function Online(props: { inGame: boolean }) {
   console.log("inGame: ", props.inGame);
   return (
@@ -23,117 +20,43 @@ function Offline() {
 }
 
 function FriendsList() {
-  const { setErrorMessage } = useContext(PopupContext);
-  const { setAuthed } = useContext(AuthContext);
-
-  const token = localStorage.getItem("token");
-
-  const [dataOnline, setDataOnline] = useState([
-    {
-      nickname: "",
-      avatarUrl: "",
-      online: false,
-      inGame: false,
-      id: 0,
-    },
-  ]);
-
-  const [dataOffline, setDataOffline] = useState([
-    {
-      nickname: "",
-      avatarUrl: "",
-      online: false,
-      inGame: false,
-      id: 0,
-    },
-  ]);
+  const [friendsStatus, setFriendsStatus] = useState<UserFriend[]>([]);
+  const { get } = useFetcher();
 
   useEffect(() => {
-    async function fetchDataOnline() {
-      await axios
-        .get(apiBaseURL + "user/friends/online", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setDataOnline(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            localStorage.clear();
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
+    async function fetchFriendsStatus() {
+      await get<UserFriend[]>("user/friends/status")
+        .then(friends => setFriendsStatus(friends))
+        .catch(() => {});
     }
-    async function fetchDataOffline() {
-      await axios
-        .get(apiBaseURL + "user/friends/offline", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setDataOffline(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            setErrorMessage("Error unknown...");
-          } else if (error.response.status === 403) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else setErrorMessage(error.response.data.message + "!");
-        });
-    }
-    fetchDataOnline().then();
-    fetchDataOffline().then();
+    fetchFriendsStatus();
 
-    ChatClientSocket.onNotificationEvent(fetchDataOffline);
-    ChatClientSocket.onNotificationEvent(fetchDataOnline);
+    ChatClientSocket.onNotificationEvent(fetchFriendsStatus);
+
+    return () => {
+      ChatClientSocket.offNotificationEvent(fetchFriendsStatus);
+    }
   }, []);
 
-  if ((dataOnline && dataOnline[0]) || (dataOffline && dataOffline[0])) {
+  if (friendsStatus && friendsStatus[0]) {
     return (
       <>
         <h4>Friends</h4>
         <>
-          {dataOnline.map((dataOnline) => {
+          {friendsStatus.map((friendData) => {
             return (
-              <div className="friends" key={dataOnline.nickname}>
+              <div className="friends" key={friendData.nickname}>
                 <Link
-                  to={`/profile/${dataOnline.nickname}`}
+                  to={`/profile/nickname/${friendData.nickname}`}
                   className="friendLink"
                 >
                   <div>
                     <p className="friendsImg">
-                      <Avatar size="50px" img={dataOnline.avatarUrl} />
+                      <Avatar size="50px" img={friendData.avatarUrl} />
                     </p>
-                    {<Online inGame={dataOnline.inGame} />}
+                    {friendData.online ? <Online inGame={friendData.inGame} /> : <Offline />}
                   </div>
-                  <p className="nickname">{dataOnline.nickname}</p>
-                </Link>
-              </div>
-            );
-          })}
-          {dataOffline.map((dataOffline) => {
-            return (
-              <div className="friends" key={dataOffline.nickname}>
-                <Link
-                  to={`/profile/${dataOffline.nickname}`}
-                  className="friendLink"
-                >
-                  <div>
-                    <p className="friendsImg">
-                      <Avatar size="50px" img={dataOffline.avatarUrl} />
-                    </p>
-                    {<Offline />}
-                  </div>
-                  <p className="nickname">{dataOffline.nickname}</p>
+                  <p className="nickname">{friendData.nickname}</p>
                 </Link>
               </div>
             );

@@ -6,6 +6,8 @@ import {
   Delete,
   UseGuards,
   Headers,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
@@ -17,6 +19,8 @@ import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
+import { decodeTokenOrThrow } from "../utils/tokenUtils";
+import { APIError } from "../utils/errors";
 
 @UseGuards(TokenGuard)
 @Controller('chat-controller')
@@ -46,28 +50,22 @@ export class ChannelController {
     return await this.chatRepository.find({ where: { channel: channel } });
   }
 
-  @Get('/message/channel/:channel/:username')
-  async findMessageChatWBlocked(
-    @Param('channel') channel: string,
-    @Headers('Authorization') header: Headers,
-  ): Promise<Chat[]> {
-    const payload: any = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    );
-    channel = '#' + channel;
-    const listBlocked: string[] = await this.userService.getBlockedList(
-      payload.id,
-    );
-    return await this.chatRepository.find({
-      where: { channel: channel, emitter: Not(In([...listBlocked])) },
-    });
-  }
+    
+    @Get('/message/channel/:channel/:username')
+    async findMessageChatWBlocked(@Param('channel') channel : string, @Headers('Authorization') header: Headers): Promise<Chat[]>{
+        const payload: any = this.jwtService.decode(header.toString().split(' ')[1]);
+        channel = "#" + channel;
+        const listBlocked = await this.userService.getBlockedList(payload.id);
+        if (listBlocked.isErr())
+          return [];
+        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
+    }
 
   @Get('/message/:channel/:username')
   async findPrivateMessage(
     @Param('channel') channel: string,
     @Param('username') username: string,
-  ): Promise<Chat[] | null> {
+  ): Promise<Chat[]> {
     const find: Channel[] = await this.channelRepository.find({
       where: { status: 'message' },
     });
@@ -76,13 +74,12 @@ export class ChannelController {
         (find[index].users[0] == channel && find[index].users[1] == username) ||
         (find[index].users[0] == username && find[index].users[1] == channel)
       ) {
-        const mess = await this.chatRepository.find({
+        return await this.chatRepository.find({
           where: { channel: find[index].channel },
         });
-        return mess;
       }
     }
-    return null;
+    return [];
   }
 
   @Delete('/delete-chat/:channel')
@@ -109,7 +106,7 @@ export class ChannelController {
   async findChannelInfo(
     @Param('name') name: string,
     @Headers('token') header: Headers,
-  ) {
+  ): Promise<Channel | null> {
     const decodedName = '#' + name;
     return await this.channelRepository.findOne({
       where: { channel: decodedName },
@@ -137,15 +134,35 @@ export class ChannelController {
   async findChannelPsw(
     @Param('channel') channel: string,
     @Param('pwd') pwd: string,
-  ) {
+  ): Promise<true> {
     const decodedName = decodeURIComponent(channel);
-    return await this.channelService.findChannel(decodedName, pwd);
+    const result = await this.channelService.findChannel(decodedName, pwd);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.InvalidPassword:
+          throw new BadRequestException('Invalid password');
+        case APIError.ChannelNotFound:
+          throw new NotFoundException('Channel not found');
+      }
+    }
+
+    return result.value;
   }
 
   @Get('/channel/findName/:channel')
-  async findChannelName(@Param('channel') channel: string) {
+  async findChannelName(@Param('channel') channel: string): Promise<true> {
     const decodedName = decodeURIComponent(channel);
-    return await this.channelService.findChannelName(decodedName);
+    const result = await this.channelService.findChannelName(decodedName);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.ChannelNotFound:
+          throw new NotFoundException('Channel not found');
+        case APIError.InvalidPassword:
+          throw new BadRequestException('Invalid password');
+      }
+    }
+
+    return result.value;
   }
 
   @Delete('/delete-channel/:channel')
@@ -182,21 +199,19 @@ export class ChannelController {
   async acceptChannelRequest(
     @Param('channel') channel: string,
     @Headers('Authorization') header: Headers,
-  ) {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
-    await this.channelService.acceptChannelRequest('#' + channel, userID.id);
+  ): Promise<void>
+  {
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
+    await this.channelService.acceptChannelRequest('#' + channel, decoded.id);
   }
 
   @Put('decline/:channel')
   async declineChannelRequest(
     @Param('channel') channel: string,
     @Headers('Authorization') header: Headers,
-  ) {
-    const userID = this.jwtService.decode(
-      header.toString().split(' ')[1],
-    ) as TokenData;
-    await this.channelService.declineChannelRequest('#' + channel, userID.id);
+  ): Promise<void>
+  {
+    const decoded = decodeTokenOrThrow(header, this.jwtService);
+    await this.channelService.declineChannelRequest('#' + channel, decoded.id);
   }
 }

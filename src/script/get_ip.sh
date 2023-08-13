@@ -1,13 +1,15 @@
 #!/usr/bin/env sh
 
 echo "Getting IP address..."
-if (uname -a | grep -q Darwin); then
-    LOCAL_IP=$(ipconfig getifaddr en0)
-else
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-fi
+#if (uname -a | grep -q Darwin); then
+#    LOCAL_IP=$(ipconfig getifaddr en0)
+#else
+#    LOCAL_IP=$(hostname -I | awk '{print $1}')
+#fi
 
 #LOCAL_IP=127.0.0.1
+
+LOCAL_IP=$(curl -s http://whatismyip.akamai.com/)
 
 echo "IP address: $LOCAL_IP"
 

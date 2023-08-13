@@ -3,10 +3,9 @@ import { Navigate } from "react-router-dom";
 import { LeaderboardItem } from "../../components/Leaderboard/LeaderboardItem";
 import { UserInfo } from "../../type/user.type";
 import { useContext } from "react";
-import {AuthContext} from "../../components/Auth/auth.context";
+import { AuthContext } from "../../components/Auth/auth.context";
 import { useData } from "../../hooks/UseData";
 import { LoadingPage } from "../Loading/LoadingPage";
-import { ErrorPage } from "../Error/ErrorPage";
 import { PopupContext } from "../../components/Modal/Popup.context";
 
 function TableHeader() {
@@ -22,9 +21,9 @@ function TableHeader() {
 }
 
 export function LeaderboardLoader() {
-  const { data, error } = useData<UserInfo[] | null>("user/leaderboard");
+  const { data } = useData<UserInfo[] | null>("user/leaderboard", true);
 
-  return data ? <Leaderboard data={data}/> : error ? <ErrorPage/> : <LoadingPage/>;
+  return data ? <Leaderboard data={data}/> : <LoadingPage/>;
 }
 
 export function Leaderboard(props: { data: UserInfo[] }) {

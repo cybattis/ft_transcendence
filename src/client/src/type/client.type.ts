@@ -1,4 +1,4 @@
-export interface JwtPayload {
+export interface TokenData {
   id: number;
   email: string;
   nickname: string;
@@ -11,4 +11,10 @@ export interface ErrorResponse {
       message: string;
     };
   };
+}
+
+export enum ProfileType {
+  MyProfile,
+  IdProfile,
+  NicknameProfile,
 }

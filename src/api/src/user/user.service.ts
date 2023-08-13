@@ -1,25 +1,31 @@
+import {Injectable, OnModuleInit,} from '@nestjs/common';
+import {InjectRepository} from '@nestjs/typeorm';
+import {MoreThan, Repository} from 'typeorm';
+import {User} from './entity/Users.entity';
+import {GameService} from '../game/game.service';
+import {ModuleRef} from '@nestjs/core';
 import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  OnModuleInit,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
-import { User } from './entity/Users.entity';
-import { GameService } from '../game/game.service';
-import { ModuleRef } from '@nestjs/core';
-import { UserInfo, UserSettings } from '../type/user.type';
-import { JwtService } from '@nestjs/jwt';
-import { MailService } from '../mail/mail.service';
-import { apiBaseURL } from '../utils/constant';
-import { TokenData } from '../type/jwt.type';
-import { Channel } from 'src/channel/entity/Channel.entity';
+  ChannelInvite,
+  UserCredentials,
+  UserFriend,
+  UserFriendsData,
+  UserInfo,
+  UserSettings
+} from '../type/user.type';
+import {JwtService} from '@nestjs/jwt';
+import {apiBaseURL} from '../utils/constant';
+import {TokenData} from '../type/jwt.type';
+import {TypeConverters} from "../utils/type-converters";
+import {failure, Result, success} from "../utils/Error";
+import {APIError} from "../utils/errors";
+import {TypeCheckers} from "../utils/type-checkers";
+import {ChannelService} from "../channel/channel.service";
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
+  private channelService: ChannelService;
 
   constructor(
     @InjectRepository(User)
@@ -30,59 +36,79 @@ export class UserService implements OnModuleInit {
   onModuleInit() {
     this.gameService = this.moduleRef.get(GameService, { strict: false });
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
+    this.channelService = this.moduleRef.get(ChannelService, { strict: false });
   }
 
-  async findByLogin(nickname: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { nickname: nickname } });
+  async findByLogin(nickname: string)
+    : Promise<Result<User, typeof APIError.UserNotFound>>
+  {
+    const result = await this.usersRepository.findOneBy({nickname: nickname });
+    return result !== null ? success(result) : failure(APIError.UserNotFound);
   }
 
-  async findByID(id: number): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { id: id },
-    });
+  async findByID(id: number)
+    : Promise<Result<User, typeof APIError.UserNotFound>>
+  {
+    const result = await this.usersRepository.findOneBy({ id: id });
+    return result !== null ? success(result) : failure(APIError.UserNotFound);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email: email } });
+  async findByEmail(email: string)
+    : Promise<Result<User, typeof APIError.UserNotFound>>
+  {
+    const result = await this.usersRepository.findOneBy({ email: email });
+    return result !== null ? success(result) : failure(APIError.UserNotFound);
   }
 
-  async findUserAndGetCredential(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
+  async findUserAndGetCredential(email: string)
+    : Promise<Result<UserCredentials, typeof APIError.UserNotFound>>
+  {
+    const result = await this.usersRepository.findOne({
       where: { email: email },
-      select: ['id', 'nickname', 'email', 'password', 'IsIntra'],
+      select: ['id', 'nickname', 'email', 'password', 'IsIntra', "isVerified"],
     });
+    return result !== null ? success(TypeConverters.fromUserToUserCredentials(result)) : failure(APIError.UserNotFound);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll()
+    : Promise<User[]>
+  {
+    const result = await this.usersRepository.find();
+    return result !== null ? result : [];
   }
 
-  async getUserEmail(id: number) {
-    const user: User | null = await this.usersRepository.findOne({
+  async getUserEmail(id: number)
+    : Promise<Result<string, typeof APIError.UserNotFound>>
+  {
+    const result = await this.usersRepository.findOne({
       where: { id: id },
       select: ['id', 'email'],
     });
-    if (!user) throw new BadRequestException('User does not exist');
-    return user;
+    return result !== null ? success(result.email) : failure(APIError.UserNotFound);
   }
 
-  async userSettings(token: string): Promise<User | null> {
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    return this.usersRepository.findOne({
-      where: { id: decoded.id },
-      select: [
-        'id',
-        'nickname',
-        'avatarUrl',
-        'email',
-        'firstname',
-        'lastname',
-        'authActivated',
-      ],
+  async userSettings(payload: TokenData)
+    : Promise<Result<UserSettings, typeof APIError.UserNotFound>>
+  {
+    const user: User | null = await this.usersRepository.findOne({
+      where: {id: payload.id},
+      select: {
+        id: true,
+        nickname: true,
+        avatarUrl: true,
+        email: true,
+        firstname: true,
+        lastname: true,
+        authActivated: true,
+      },
     });
+    if (!user) return failure(APIError.UserNotFound);
+    return success(TypeConverters.fromUserToUserSettings(user));
   }
 
-  async userInfo(username: string): Promise<UserInfo | any> {
+  async userInfo(username: string)
+    : Promise<Result<UserInfo, typeof APIError.UserNotFound>>
+  {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -97,7 +123,6 @@ export class UserService implements OnModuleInit {
         requestedId: true,
         blockedId: true,
         blockedById: true,
-        websocket: true,
         paddleColor: true,
         joinChannel: true,
       },
@@ -106,12 +131,15 @@ export class UserService implements OnModuleInit {
       },
     });
 
-    if (!user) throw new BadRequestException('User does not exist');
+    if (!user) return failure(APIError.UserNotFound);
     user.games = await this.gameService.fetchUserGames(user);
-    return user;
+
+    return success(TypeConverters.fromUserToUserInfo(user));
   }
 
-  async myInfo(token: number): Promise<UserInfo | any> {
+  async userInfoByID(id: number)
+    : Promise<Result<UserInfo, typeof APIError.UserNotFound>>
+  {
     const user: User | null = await this.usersRepository.findOne({
       select: {
         id: true,
@@ -126,22 +154,25 @@ export class UserService implements OnModuleInit {
         requestedId: true,
         blockedId: true,
         blockedById: true,
-        websocket: true,
         paddleColor: true,
+        joinChannel: true,
       },
       where: {
-        id: token,
+        id: id,
       },
     });
 
-    if (!user) throw new BadRequestException('User does not exist');
+    if (!user) return failure(APIError.UserNotFound);
     user.games = await this.gameService.fetchUserGames(user);
-    return user;
+
+    return success(TypeConverters.fromUserToUserInfo(user));
   }
 
-  async leaderboard(): Promise<UserInfo[] | any> {
-    return this.usersRepository.find({
-      order: { ranking: 'DESC' },
+  async leaderboard()
+    : Promise<UserInfo[]>
+  {
+    const users: User[] | null = await this.usersRepository.find({
+      order: {ranking: 'DESC'},
       take: 10,
       select: {
         id: true,
@@ -149,7 +180,6 @@ export class UserService implements OnModuleInit {
         ranking: true,
         avatarUrl: true,
         totalGameWon: true,
-        websocket: true,
       },
       relations: {
         games: true,
@@ -158,122 +188,175 @@ export class UserService implements OnModuleInit {
         games: MoreThan(0),
       },
     });
-  }
 
-  async isVerified(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email: email, isVerified: true },
+    if (!users)
+      return[];
+
+    return users.map((user) => {
+      return TypeConverters.fromUserToUserInfo(user);
     });
   }
 
-  async authActivated(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email: email, authActivated: true },
-    });
+  async isVerified(email: string)
+    : Promise<Result<boolean, typeof APIError.UserNotFound>>
+  {
+   const result: User | null = await this.usersRepository.findOneBy({ email: email });
+    return result !== null ? success(result.isVerified) : failure(APIError.UserNotFound);
   }
 
-  async updateUserVerifiedStatus(id: number) {
-    await this.usersRepository.update(id, {
-      isVerified: true,
-      online: true,
-    });
+  async authActivated(email: string)
+    : Promise<Result<boolean, typeof APIError.UserNotFound>>
+  {
+    const result: User | null = await this.usersRepository.findOneBy({email: email });
+    return result !== null ? success(result.authActivated) : failure(APIError.UserNotFound);
   }
 
-  async updateUser2FAstatus(token: string) {
-    const user = await this.decodeToken(token);
-    if (!user) throw new ForbiddenException('Invalid token');
+  async updateUserVerifiedStatus(id: number)
+    : Promise<Result<true, typeof APIError.UserNotFound>>
+  {
+    const user = await this.usersRepository.findOneBy({id: id});
+    if (!user)
+      return failure(APIError.UserNotFound);
 
-    return await this.usersRepository.update(user.id, {
-      authActivated: !user.authActivated,
-    });
+    user.isVerified = true;
+    user.online = true;
+    await this.usersRepository.save(user);
+    return success(true);
   }
 
-  async changeOnlineStatus(id: number, state: boolean) {
-    await this.usersRepository.update(id, { online: state });
+  async updateUser2FAstatus(token: string)
+    : Promise<Result<true, typeof APIError.UserNotFound>>
+  {
+    const result = await this.getUserFromToken(token);
+    if (result.isErr())
+      return failure(APIError.UserNotFound);
+
+    result.value.authActivated = !result.value.authActivated;
+    await this.usersRepository.save(result.value);
+    return success(true);
   }
 
-  async requestFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({
+  async changeOnlineStatus(id: number, state: boolean)
+    : Promise<Result<true, typeof APIError.UserNotFound>>
+  {
+    const user = await this.usersRepository.findOneBy({id: id});
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    user.online = state;
+    await this.usersRepository.save(user);
+    return success(true);
+  }
+
+  async requestFriend(friendId: number, myId: number)
+    : Promise<Result<true, APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    const friend: any = await this.usersRepository.findOne({
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    const friend: User | null = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    if (friend.requestedId.includes(me.id)) return;
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
+
+    // If the friend has already a request from me, return
+    if (friend.requestedId.includes(me.id))
+      return success(true);
+
+    // Add friend to my requested list
     friend.requestedId.push(me.id);
+
+    // Update the friend's requests field in the database
     await this.usersRepository.save(friend);
+    await this.channelService.sendNotificationEvent(friendId);
+    return success(true);
   }
 
-  async getOnlineFriendsList(id: number) {
-    const user: any = await this.usersRepository.findOne({ where: { id: id } });
-    if (user && user.friendsId) {
-      const friends: User[] = [];
-      for (let i = 0; user.friendsId[i]; i++) {
-        const friend: any = await this.usersRepository.findOne({
-          select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
-          where: { id: user.friendsId[i] },
-        });
-        if (friend.online === true) friends.push(friend);
+  async getFriendsListStatus(id: number)
+    : Promise<Result<UserFriend[], typeof APIError.UserNotFound>>
+  {
+    const user: User | null = await this.usersRepository.findOneBy({ id: id });
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    const friendsStatus: UserFriend[] = [];
+
+    for (const friendId of user.friendsId) {
+      const friend: User | null = await this.usersRepository.findOne({
+        select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
+        where: { id: friendId },
+      });
+
+      if (!friend) {
+        // Remove the friend from the requested list
+        user.requestedId = user.requestedId.filter((id) => id !== friendId);
+        await this.usersRepository.save(user);
+        continue;
       }
-      return friends;
+
+      friendsStatus.push(TypeConverters.fromUserToUserFriend(friend));
     }
-    return null;
+    return success(friendsStatus);
   }
 
-  async getOfflineFriendsList(id: number) {
-    const user: any = await this.usersRepository.findOne({ where: { id: id } });
-    if (user && user.friendsId) {
-      const friends: User[] = [];
-      for (let i = 0; user.friendsId[i]; i++) {
-        const friend: any = await this.usersRepository.findOne({
-          select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
-          where: { id: user.friendsId[i] },
-        });
-        if (friend.online === false) friends.push(friend);
-      }
-      return friends;
-    }
-    return null;
-  }
+  async removeFriend(friendId: number, myId: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOneBy({id: myId });
+    if (!me)
+      return failure(APIError.UserNotFound);
 
-  async removeFriend(friendId: number, myId: number) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
-    const friend: any = await this.usersRepository.findOne({
-      where: { id: friendId },
-    });
-    if (me.friendsId) {
-      for (let i = 0; me.friendsId[i]; i++) {
-        if (me.friendsId[i] === friend.id) {
-          const newFriends: number[] = me.friendsId.splice(i, 1);
-          await this.usersRepository.update(me.id, { friendsId: newFriends });
-          await this.usersRepository.save(me);
-          if (friend.friendsId) {
-            for (let i = 0; friend.friendsId[i]; i++) {
-              if (friend.friendsId[i] === me.id) {
-                const newFriends: number[] = friend.friendsId.splice(i, 1);
-                await this.usersRepository.update(friend.id, {
-                  friendsId: newFriends,
-                });
-                return await this.usersRepository.save(friend);
-              }
-            }
+    const friend: User | null = await this.usersRepository.findOneBy({ id: friendId });
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
+
+
+    for (let i = 0; i < me.friendsId.length; i++) {
+      if (me.friendsId[i] === friend.id) {
+        // Create a new array without the friend and update the database
+        me.friendsId.splice(i, 1);
+        const updated_me = await this.usersRepository.save(me);
+
+        // Remove me from the friend's friends list
+        for (let j = 0; j < friend.friendsId.length; j++) {
+          if (friend.friendsId[j] === me.id) {
+            // Create a new array without me and update the database
+            friend.friendsId.splice(j, 1);
+            await this.usersRepository.save(friend);
+
+            // Both users are not friends anymore
+            return success(TypeConverters.fromUserToUserFriendsData(updated_me));
           }
         }
+
+        // The friend does not have me in his friends list
+        return  success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }
     }
-    return null;
+
+    // I do not have the friend in my friends list
+    return success(TypeConverters.fromUserToUserFriendsData(me));
   }
 
-  async blockFriend(friendId: number, myId: number) {
-    await this.removeFriend(friendId, myId);
+  async blockFriend(friendId: number, myId: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
+  {
+    const result = await this.removeFriend(friendId, myId);
+    if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
+      return failure(result.error);
+
     const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
@@ -282,6 +365,9 @@ export class UserService implements OnModuleInit {
         blockedChat: true,
       },
     });
+    if (!me)
+      return failure(APIError.UserNotFound);
+
     const friend: User | null = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
@@ -290,124 +376,118 @@ export class UserService implements OnModuleInit {
         blockedChat: true,
       },
     });
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
 
-    if (!me || !friend)
-      throw new BadRequestException('One user does not exist');
-
+    // Add friend to my blocked list
     me.blockedId.push(friend.id);
     me.blockedChat.push(friend.nickname);
+
+    // Add me to friend's blocked list
     friend.blockedById.push(me.id);
     friend.blockedChat.push(me.nickname);
+
+    // Update the friend's blocked list in the database
     await this.usersRepository.save(friend);
-    await this.usersRepository.save(me);
+
+    // Update my blocked list in the database
+    const updated_me = await this.usersRepository.save(me);
+
+    // Both users are blocked
+    return success(TypeConverters.fromUserToUserFriendsData(updated_me));
   }
 
-  async blockFriendUsr(friendName: string, myId: number) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
-    const friend: any = await this.usersRepository.findOne({
-      where: { nickname: friendName },
-    });
-    me.blockedId.push(friend.id);
-    friend.blockedById.push(me.id);
-    me.blockedChat.push(friend.nickname);
-    friend.blockedChat.push(me.nickname);
-    await this.usersRepository.save(friend);
-    return await this.usersRepository.save(me);
-  }
-
-  async unblockFriend(friendId: number, myId: number) {
+  async unblockFriend(friendId: number, myId: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
+  {
     const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         blockedId: true,
-        blockedById: true,
         blockedChat: true,
       },
     });
+    if (!me)
+      return failure(APIError.UserNotFound);
+
     const friend: User | null = await this.usersRepository.findOne({
       where: { id: friendId },
       select: {
         id: true,
-        blockedId: true,
         blockedById: true,
         blockedChat: true,
       },
     });
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
 
-    if (!me || !friend) throw new BadRequestException('User does not exist');
-
-    if (me.blockedId) {
-      for (let i = 0; me.blockedId[i]; i++) {
-        if (me.blockedId[i] === friend.id) {
-          const newBlocked: number[] = me.blockedId.splice(i, 1);
-          await this.usersRepository.update(me.id, { blockedId: newBlocked });
-          await this.usersRepository.save(me);
-        }
-      }
-    }
-    if (friend.blockedById) {
-      for (let i = 0; friend.blockedById[i]; i++) {
-        if (friend.blockedById[i] === me.id) {
-          const newBlockedBy: number[] = friend.blockedById.splice(i, 1);
-          await this.usersRepository.update(friend.id, {
-            blockedById: newBlockedBy,
-          });
-          await this.usersRepository.save(friend);
-        }
-      }
+    for (let i = 0; i < me.blockedId.length; i++) {
+      if (me.blockedId[i] === friend.id)
+        me.blockedId.splice(i, 1);
     }
 
-    if (me.blockedChat) {
-      for (let i = 0; me.blockedChat[i]; i++) {
-        if (me.blockedChat[i] === friend.nickname) {
-          const newBlockedChatMe: string[] = me.blockedChat.splice(i, 1);
-          await this.usersRepository.update(me.id, {
-            blockedChat: newBlockedChatMe,
-          });
-          await this.usersRepository.save(me);
-        }
-      }
+    for (let i = 0; i < friend.blockedById.length; i++) {
+      if (friend.blockedById[i] === me.id)
+        friend.blockedById.splice(i, 1);
     }
 
-    if (friend.blockedChat) {
-      for (let i = 0; friend.blockedChat[i]; i++) {
-        if (friend.blockedChat[i] === me.nickname) {
-          const newBlockedChat: string[] = friend.blockedChat.splice(i, 1);
-          await this.usersRepository.update(friend.id, {
-            blockedChat: newBlockedChat,
-          });
-          return await this.usersRepository.save(friend);
-        }
-      }
+    for (let i = 0; i < me.blockedChat.length; i++) {
+      if (me.blockedChat[i] === friend.nickname)
+        me.blockedChat.splice(i, 1);
     }
-    return null;
+
+    for (let i = 0; i < friend.blockedChat.length; i++) {
+      if (friend.blockedChat[i] === me.nickname)
+        friend.blockedChat.splice(i, 1);
+    }
+
+    // Update the friend's blocked list in the database
+    await this.usersRepository.save(friend);
+
+    // Update my blocked list in the database
+    const updated_me = await this.usersRepository.save(me);
+
+    // Both user are unblocked
+    return success(TypeConverters.fromUserToUserFriendsData(updated_me));
   }
 
-  async requests(id: number) {
-    const user: any = await this.usersRepository.findOne({
+  async requests(id: number)
+    : Promise<Result<UserFriend[], typeof APIError.UserNotFound>>
+  {
+    const user: User | null = await this.usersRepository.findOne({
       where: { id: id },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    if (user && user.requestedId) {
-      const friends: User[] = [];
-      for (let i = 0; user.requestedId[i]; i++) {
-        const friend: any = await this.usersRepository.findOne({
-          select: ['nickname', 'avatarUrl', 'id'],
-          where: { id: user.requestedId[i] },
-        });
-        friends.push(friend);
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    const friendRequests: UserFriend[] = [];
+    for (const requestedId of user.requestedId) {
+      const friend: User | null = await this.usersRepository.findOne({
+        select: ['nickname', 'avatarUrl', 'online', 'inGame', 'id'],
+        where: { id: requestedId },
+      });
+      if (!friend) {
+        // Remove the friend from the requested list
+        user.requestedId = user.requestedId.filter((id) => id !== requestedId);
+        await this.usersRepository.save(user);
+        continue;
       }
-      return friends;
+
+      friendRequests.push(TypeConverters.fromUserToUserFriend(friend));
     }
-    return null;
+    return success(friendRequests);
   }
 
-  async acceptFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({
+  async acceptFriendRequest(idFriend: number, myId: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound
+    | typeof APIError.FriendRequestNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
@@ -415,65 +495,86 @@ export class UserService implements OnModuleInit {
         friendsId: true,
       },
     });
-    const friend: any = await this.usersRepository.findOne({
-      where: { id: idFriend },
-    });
-    if (me.requestedId) {
-      for (let i = 0; me.requestedId[i]; i++) {
-        if (me.requestedId[i] === friend.id) {
-          const newRequested: number[] = me.requestedId.splice(i, 1);
-          await this.usersRepository.update(me.id, {
-            requestedId: newRequested,
-          });
-          me.friendsId.push(friend.id);
-          friend.friendsId.push(me.id);
-          await this.usersRepository.save(friend);
-          return await this.usersRepository.save(me);
-        }
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    const friend = await this.usersRepository.findOneBy({ id: idFriend });
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
+
+    for (let i = 0; i < me.requestedId.length; i++) {
+      if (me.requestedId[i] === friend.id) {
+        me.requestedId.splice(i, 1);
+        me.friendsId.push(friend.id);
+        friend.friendsId.push(me.id);
+
+        await this.usersRepository.save(friend);
+        const updated_me = await this.usersRepository.save(me);
+        return success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }
     }
-    return null;
+
+    return failure(APIError.FriendRequestNotFound);
   }
 
-  async declineFriendRequest(idFriend: number, myId: any) {
-    const me: any = await this.usersRepository.findOne({
+  async declineFriendRequest(idFriend: number, myId: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound
+    | typeof APIError.FriendRequestNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
         requestedId: true,
       },
     });
-    const friend: any = await this.usersRepository.findOne({
-      where: { id: idFriend },
-    });
-    if (me.requestedId) {
-      for (let i = 0; me.requestedId[i]; i++) {
-        if (me.requestedId[i] === friend.id) {
-          const newRequested: number[] = me.requestedId.splice(i, 1);
-          await this.usersRepository.update(me.id, {
-            requestedId: newRequested,
-          });
-          return await this.usersRepository.save(me);
-        }
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    const friend: User | null = await this.usersRepository.findOneBy({ id: idFriend });
+    if (!friend)
+      return failure(APIError.OtherUserNotFound);
+
+    for (let i = 0; i < me.requestedId.length; i++) {
+      if (me.requestedId[i] === friend.id) {
+        me.requestedId.splice(i, 1);
+        const updated_me = await this.usersRepository.save(me);
+        return success(updated_me);
       }
     }
-    return null;
+
+    return failure(APIError.FriendRequestNotFound);
   }
 
-  async getBlockedList(myId: number) {
-    const me: any = await this.usersRepository.findOne({ where: { id: myId } });
-    const blockedusr: string[] = [];
-    for (let i = 0; me.blockedId[i]; i++) {
-      const newUsr: User | null = await this.usersRepository.findOne({
-        where: { id: me.blockedId[i] },
+  async getBlockedList(myId: number)
+    : Promise<Result<string[], typeof APIError.UserNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOneBy({ id: myId });
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    let blockedUsernames: string[] = [];
+    for (const id of me.blockedId) {
+      const user: User | null = await this.usersRepository.findOne({
+        where: { id: id },
+        select: ['nickname'],
       });
-      if (newUsr) blockedusr.push(newUsr.nickname);
+      if (!user) {
+        me.blockedId = me.blockedId.filter((id) => id !== id);
+        await this.usersRepository.save(me);
+        continue;
+      }
+
+      blockedUsernames.push(user.nickname);
     }
-    return blockedusr;
+
+    return success(blockedUsernames);
   }
 
-  async getNotifs(myId: number) {
-    const user: any = await this.usersRepository.findOne({
+  async hasNotifs(myId: number)
+    : Promise<Result<boolean, typeof APIError.UserNotFound>>
+  {
+    const user: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
         id: true,
@@ -482,59 +583,68 @@ export class UserService implements OnModuleInit {
         joinChannel: true,
       },
     });
-    if (
-      (user && user.joinChannel[0]) ||
-      (user && user.requestedId && user.requestedId[0]) ||
-      (user && user.invites && user.invites[0])
-    )
-      return true;
-    return null;
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    if (user.joinChannel.length > 0 || user.requestedId.length > 0 || user.invites.length > 0)
+      return success(true);
+    return success(false);
   }
 
-  async updateAvatar(path: string, token: string) {
-    const user = await this.decodeToken(token);
-    if (!user) return null;
+  async updateAvatar(path: string, token: string)
+    : Promise<Result<string, typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
+  {
+    const user = await this.getUserFromToken(token);
+    if (user.isErr())
+      return failure(user.error);
 
-    user.avatarUrl = apiBaseURL + path;
-    await this.usersRepository.save(user);
+    user.value.avatarUrl = apiBaseURL + path;
+    await this.usersRepository.save(user.value);
 
-    return user.avatarUrl;
+    return success(user.value.avatarUrl);
   }
 
-  async updateUserSettings(body: UserSettings, token: string) {
+  async updateUserSettings(body: UserSettings, token: string)
+    : Promise<Result<User, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
+    | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
+  {
     if (body.nickname.length == 0 || body.nickname.length > 15)
-      throw new BadRequestException('nickname must be between 1 and 15 chars');
+      return failure(APIError.InvalidNickname);
 
-    const user = await this.decodeToken(token);
-    if (!user) return null;
+    const result = await this.getUserFromToken(token);
+    if (result.isErr())
+      return failure(result.error);
 
+    const user = result.value;
     if (user.nickname !== body.nickname) {
-      const checkNickname = await this.findByLogin(body.nickname);
-      if (checkNickname) {
-        throw new BadRequestException('Nickname already taken');
-      }
+      const otherUser = await this.findByLogin(body.nickname);
+      if (otherUser.isOk())
+        return failure(APIError.NicknameAlreadyTaken);
+
       user.nickname = body.nickname;
     }
 
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
-    return user;
+    return success(user);
   }
 
-  async decodeToken(token: string): Promise<User | null> {
-    if (!token) throw new ForbiddenException('Invalid token');
+  async getUserFromToken(token: string)
+    : Promise<Result<User, typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
+  {
+    const decoded= this.jwtService.decode(token);
+    if (!TypeCheckers.isTokenData(decoded))
+      return failure(APIError.InvalidToken);
 
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    const user = await this.usersRepository.findOne({
-      where: { id: decoded.id },
-    });
-    if (!user) return null;
-    return user;
+    const user = await this.usersRepository.findOneBy({ id: decoded.id });
+    return user !== null ? success(user) : failure(APIError.UserNotFound);
   }
 
-  async getFriends(id: number) {
-    return await this.usersRepository.findOneOrFail({
+  async getFriendData(id: number)
+    : Promise<Result<UserFriendsData, typeof APIError.UserNotFound>>
+  {
+    const result: User | null = await this.usersRepository.findOne({
       where: { id: id },
       select: {
         id: true,
@@ -544,65 +654,73 @@ export class UserService implements OnModuleInit {
         blockedById: true,
       },
     });
+
+    return result !== null ? success(TypeConverters.fromUserToUserFriendsData(result)) : failure(APIError.UserNotFound);
   }
 
-  async addInvite(channel: string, id: number) {
-    const user = await this.usersRepository.findOne({ where: { id: id } });
+  async addInvite(channel: string, id: number)
+    : Promise<Result<User, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInvitedToChannel>>
+  {
+    const user: User | null = await this.usersRepository.findOneBy({ id: id });
     if (user) {
-      if (!user.invites.includes(channel)) {
-        user.invites.push(channel);
-        return await this.usersRepository.save(user);
-      }
-      //Jeter error comme quoi deja invite
+      if (user.invites.includes(channel))
+        return failure(APIError.UserAlreadyInvitedToChannel);
+
+      user.invites.push(channel);
+      return success(await this.usersRepository.save(user));
     }
+    return failure(APIError.UserNotFound);
   }
 
-  async updatePaddleColor(id: number, color: string): Promise<boolean> {
+  async updatePaddleColor(id: number, color: string)
+    : Promise<Result<true, typeof APIError.InvalidColor | typeof APIError.UserNotFound>>
+  {
     if (!color.match(/^[0-9A-F]{6}$/i)) {
-      return false;
+      return failure(APIError.InvalidColor);
     }
 
-    await this.usersRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({ paddleColor: color })
-      .where('id = :id', { id: id })
-      .execute();
+    const user = await this.usersRepository.findOneBy({id: id});
+    if (!user)
+      return failure(APIError.UserNotFound);
 
-    return true;
+    user.paddleColor = color;
+    await this.usersRepository.save(user);
+
+    return success(true);
   }
 
-  async getPaddleColor(id: number): Promise<string> {
-    const user: User = await this.usersRepository.findOneOrFail({
-      where: { id: id },
-    });
-
-    return user.paddleColor;
+  async getPaddleColor(id: number)
+    : Promise<Result<string, typeof APIError.UserNotFound>>
+  {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    return user !== null ? success(user.paddleColor) : failure(APIError.UserNotFound);
   }
 
-  async fetchInvChannel(id: string) {
-    const user = await this.usersRepository.findOne({
-      where: { id: Number(id) },
-      select: { id: true, joinChannel: true, invitesId: true },
-    });
-    if (user && user.joinChannel && user.invitesId) {
-      const result = [];
-      for (let i = 0; user.joinChannel[i]; i++) {
-        const sender: any = await this.usersRepository.findOne({
-          select: ['nickname', 'avatarUrl', 'id'],
-          where: { id: user.invitesId[i] },
-        });
-        const temp = {
-          id: i,
-          joinChannel: user.joinChannel[i],
-          invitedByAvatar: sender.avatarUrl,
-          invitedByUsername: sender.nickname,
-        };
-        result.push(temp);
-      }
-      return result;
+  async fetchInvChannel(id : number)
+    : Promise<Result<ChannelInvite[], typeof APIError.UserNotFound>>
+  {
+    const user =  await this.usersRepository.findOneBy({id :Number(id)});
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    const result: ChannelInvite[] = [];
+    for (let i = 0; user.invites.length; i++) {
+      const sender = await this.usersRepository.findOne({
+        select: ['nickname', 'avatarUrl', 'id'],
+        where: { id: user.invitesId[i] },
+      });
+      if (!sender)
+        continue;
+
+      const temp: ChannelInvite = {
+        joinChannel: user.invites[i],
+        invitedByAvatar: sender.avatarUrl,
+        invitedByUsername: sender.nickname,
+      };
+
+      result.push(temp);
     }
-    return null;
+    return success(result);
   }
 
   async updateUserGameStatus(user: User) {
