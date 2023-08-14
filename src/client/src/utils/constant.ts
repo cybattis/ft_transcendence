@@ -1,22 +1,10 @@
-export const apiBaseURL =
-  process.env["REACT_APP_PROTOCOL"] +
-  "://" +
-  process.env["REACT_APP_HOST_IP"] +
-  ":" +
-  process.env["REACT_APP_API_PORT"] +
-  "/";
+import "./Config";
+import Config from "./Config";
 
-export const wsBaseURL =
-  "ws://" +
-  process.env["REACT_APP_HOST_IP"] +
-  ":" +
-  process.env["REACT_APP_API_PORT"] +
-  "/";
+export const apiBaseURL =
+  Config.protocol + "://" + Config.host_ip + ":" + Config.api_port + "/";
+
+export const wsBaseURL = "ws://" + Config.host_ip + ":" + Config.api_port + "/";
 
 export const clientBaseURL =
-  process.env["REACT_APP_PROTOCOL"] +
-  "://" +
-  process.env["REACT_APP_HOST_IP"] +
-  ":" +
-  process.env["REACT_APP_CLIENT_PORT"] +
-  "/";
+  Config.protocol + "://" + Config.host_ip + ":" + Config.client_port + "/";

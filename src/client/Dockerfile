@@ -22,17 +22,14 @@ RUN npm install
 
 COPY . .
 
-CMD [ "npm", "run", "build" ]
+RUN npm run build
 
-# Production stage
-FROM nginx:stable-alpine3.17 as production
 
-WORKDIR /usr/src/app
+FROM nginx:stable-alpine as production
 
-ENV NODE_ENV production
+COPY --from=build /usr/src/app/build /usr/share/nginx/html
+RUN rm /etc/nginx/conf.d/default.conf
 
-COPY --from=build . /usr/share/nginx/html
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.conf /etc/nginx/conf.d
 
 CMD ["nginx", "-g", "daemon off;"]

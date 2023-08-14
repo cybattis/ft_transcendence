@@ -19,11 +19,9 @@ FROM node:20.2-alpine as build
 
 WORKDIR /usr/src/app
 
-RUN npm install -g @nestjs/cli
-
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci --only=development
 
 COPY . .
 
@@ -32,18 +30,16 @@ RUN npm run build
 # Production stage
 FROM node:20.2-alpine as production
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
-
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --only=production
+RUN npm install -g @nestjs/cli
+RUN npm ci
 RUN mkdir -p avatar
 
 COPY . .
 
 COPY --from=build /usr/src/app/dist ./dist
 
-CMD ["node", "dist/main"]
+CMD ["npm", "start"]
