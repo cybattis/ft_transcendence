@@ -73,6 +73,7 @@ endif
 .PHONY: _prod
 _prod:
 	@echo 'starting all in production mode'
+	@src/script/start_prod.sh
 	$(PRODUCTION) up -d
 
 START	=	$(COMPOSE) up -d
