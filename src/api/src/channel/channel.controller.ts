@@ -2,10 +2,12 @@ import {
   Controller,
   Put,
   Get,
+  Body,
   Param,
   Delete,
   UseGuards,
   Headers,
+  BadRequestException
 } from '@nestjs/common';
 import { Chat } from './entity/Chat.entity';
 import { Channel } from './entity/Channel.entity';
@@ -17,6 +19,7 @@ import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
+import { UserSettings } from 'src/type/user.type';
 
 @UseGuards(TokenGuard)
 @Controller('chat-controller')
@@ -38,6 +41,19 @@ export class ChannelController {
   findAllChat(): Promise<Chat[]> {
     console.log('fetch all chat');
     return this.chatRepository.find();
+  }
+
+  @Put('update')
+  async updateSettings(
+    @Body() body: UserSettings,
+    @Headers('Authorization') header: Headers,
+  ) {
+    const token = header.toString().split(' ')[1];
+    try {
+      return await this.channelService.updateNickname(body, token);
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
   }
 
   @Get('/message/:channel')

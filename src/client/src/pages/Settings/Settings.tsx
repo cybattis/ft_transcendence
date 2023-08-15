@@ -121,6 +121,18 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
           setErrorMessage("Session expired, please login again!");
         } else setErrorMessage(error.response.data.message + "!");
       });
+
+      await axios
+      .put(apiBaseURL + "chat-controller/update", user, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(() => {
+        setInfoMessage("Update successful!");
+      })
   };
 
   const handle2fa = async () => {

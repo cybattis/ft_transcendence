@@ -2,7 +2,9 @@ import {
   UnauthorizedException,
   Injectable,
   NotFoundException,
+  BadRequestException,
   OnModuleInit,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ChannelStructure } from './channel.structure';
 import { Socket, Server } from 'socket.io';
@@ -17,6 +19,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ModuleRef } from '@nestjs/core';
 import { UsersSocketStructure } from './usersSocket.structure';
 import { User } from 'src/user/entity/Users.entity';
+import { UserSettings } from 'src/type/user.type';
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -923,4 +926,43 @@ export class ChannelService implements OnModuleInit {
       }
     }
   }
+
+  async updateChat(past : string, actual: string){
+    const chats = await this.chatRepository.find();
+    for (const chat of chats) {
+      if (chat.emitter === past) {
+        chat.emitter = actual;
+      }
+    }
+    await this.chatRepository.save(chats);
+  }
+
+  async updateChannel(past : string, actual: string){
+    const channels = await this.channelRepository.find();
+    for (const channel of channels){
+      if (channel.owner === past)
+        channel.owner === actual;
+      const updateUsers = channel.users.map((user : string) => (user === past ? actual : user));
+      channel.users = updateUsers;
+      const updateOpe = channel.operator.map((user : string) => (user === past ? actual : user));
+      channel.operator = updateOpe;
+      const updateBan = channel.ban.map((user : string) => (user === past ? actual : user));
+      channel.ban = updateBan;
+      const updateMute = channel.mute.map((user : string) => (user === past ? actual : user));
+      channel.mute = updateMute;
+    }
+    await this.channelRepository.save(channels);
+  }
+
+  async updateNickname(body: UserSettings, token: string){
+    if (body.nickname.length == 0 || body.nickname.length > 15)
+      throw new BadRequestException('nickname must be between 1 and 15 chars');
+
+    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
+    console.log("In update Service", body);
+    console.log("Bis", decoded );
+    this.updateChat(decoded.nickname, body.nickname);
+    this.updateChannel(decoded.nickname, body.nickname);
+  }
+
 }
