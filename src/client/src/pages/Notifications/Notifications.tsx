@@ -6,9 +6,9 @@ import { useFetcher } from "../../hooks/UseFetcher";
 import { ChannelInvite, UserFriend, UserFriendsData, UserInfo } from "../../type/user.type";
 import { GameInvite, GameType } from "../../type/game.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationItemProps {
-  key: number,
   avatar: string | undefined,
   text: string,
   onAccept: () => void,
@@ -19,8 +19,8 @@ export default function Notifications() {
   const [invits, setInvits] = useState<UserFriend[]>([]);
   const [channelInvits, setChannelInvits] = useState<ChannelInvite[]>([]);
   const [gameInvites, setGameInvites] = useState<GameInvite[]>([]);
-
   const { get, put, showErrorInModal } = useFetcher();
+  const navigate = useNavigate();
 
   async function handleAccept(id: number) {
     if (id === undefined) return;
@@ -79,6 +79,7 @@ export default function Notifications() {
     else
       MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId);
     setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
+    navigate("/game");
   }
 
   async function handleDeclineGame(invitingPlayerId: number, type: GameType) {
@@ -123,12 +124,12 @@ export default function Notifications() {
   function GameInvites() {
     return (<div className="list">
       {gameInvites.map((invite, index) => (
-          <GameInvite invite={invite} index={index}/>
+          <GameInvite invite={invite} key={index}/>
       ))}
     </div>);
   }
 
-  function GameInvite(props: { invite: GameInvite, index: number }) {
+  function GameInvite(props: { invite: GameInvite }) {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
     useEffect(() => {
@@ -137,11 +138,10 @@ export default function Notifications() {
         .catch(() => {});
     });
 
-    return (userInfo === null ? <NotificationElementLoading key={props.index}/> :
+    return (userInfo === null ? <NotificationElementLoading/> :
       <NotificationElement
-        key={props.index}
         avatar={userInfo.avatarUrl}
-        text={userInfo.nickname + " invited you to play a " + (props.invite.type === GameType.CASUAL) ? "casual" : "ranked" + " game"}
+        text={userInfo.nickname + " invited you to play a " + ((props.invite.type === GameType.CASUAL) ? "casual" : "ranked") + " game"}
         onAccept={() => handleAcceptGame(props.invite.invitingPlayerId, props.invite.type)}
         onDecline={() => handleDeclineGame(props.invite.invitingPlayerId, props.invite.type)}
       />
@@ -205,7 +205,7 @@ export default function Notifications() {
 
   function NotificationElement(props: NotificationItemProps) {
     return (
-      <div key={props.key}>
+      <div>
         <div className="notifsElements">
           <div className="invits">
             <Avatar size="50px" img={props.avatar} />
@@ -232,9 +232,9 @@ export default function Notifications() {
     );
   }
 
-  function NotificationElementLoading(props: { key: number }) {
+  function NotificationElementLoading() {
     return (
-      <div key={props.key}>
+      <div>
         <div className="notifsElements">
           <div className="invits">
             Loading...
@@ -245,7 +245,7 @@ export default function Notifications() {
   }
 
   //Faire une map pour afficher toutes invites a la suite
-  if (invits.length > 0 || channelInvits.length > 0) {
+  if (invits.length > 0 || channelInvits.length > 0 || gameInvites.length > 0) {
     return (
       <>
         <div className="notifPage">

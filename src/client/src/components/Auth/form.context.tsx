@@ -7,7 +7,8 @@ export enum FormState {
   NONE,
   LOGIN,
   SIGNUP,
-  TFA_CODE
+  TFA_CODE,
+  ACCEPT_GAME_INVITE,
 }
 
 type FormContextType = {

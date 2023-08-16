@@ -284,6 +284,7 @@ export class MatchmakingService {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
 
+    invite.invitingPlayer.socket.emit("game-invite-accepted");
     return success(true);
   }
 
@@ -415,8 +416,8 @@ export class MatchmakingService {
     * @returns An array of GameInvite
    */
   public getGameInvitesForPlayer(playerId: number): GameInvite[] {
-    const casualInvites = this.casualGameInvites.filter((invite) => invite.invitedPlayerId !== playerId);
-    const rankedInvites = this.rankedGameInvites.filter((invite) => invite.invitedPlayerId !== playerId);
+    const casualInvites = this.casualGameInvites.filter((invite) => invite.invitedPlayerId === playerId);
+    const rankedInvites = this.rankedGameInvites.filter((invite) => invite.invitedPlayerId === playerId);
 
     const invites: GameInvite[] = [];
     for (const casual of casualInvites)

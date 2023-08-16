@@ -43,7 +43,6 @@ export class ChannelService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    console.log("ChannelService initialized");
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
     this.userService = this.moduleRef.get(UserService, { strict: false });
     const rowCount = await this.channelRepository.count();
@@ -298,12 +297,9 @@ export class ChannelService implements OnModuleInit {
   }
 
   async getSocketById(id: number): Promise<string | null> {
-    console.log("HOLA");
     const user = await this.userService.findByID(id);
     if (user.isErr()) return null;
-    console.log("HEY", this.usersSocketList.length);
     for (let index = 0; index < this.usersSocketList.length; index++) {
-      console.log(this.usersSocketList[index].id, typeof this.usersSocketList[index].id);
       if (id === this.usersSocketList[index].id)
         return this.usersSocketList[index].socket;
     }
@@ -519,7 +515,6 @@ export class ChannelService implements OnModuleInit {
   }
 
   async sendNotificationEvent(targetID: number) {
-    console.log("sendNotificationEvent with id: ", targetID);
     const dest = await this.getSocketById(targetID);
     if (!dest) {
       console.log('User not connected');
@@ -904,7 +899,6 @@ export class ChannelService implements OnModuleInit {
     this.usersSocketList.push(
       new UsersSocketStructure(data.nickname, socket.id, data.id),
     );
-    console.log('socket added: ', this.usersSocketList);
   }
 
   removeUserSocketFromList(socket: Socket) {
@@ -915,7 +909,6 @@ export class ChannelService implements OnModuleInit {
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (data.nickname === this.usersSocketList[index].username) {
         this.usersSocketList.splice(index, 1);
-        console.log('socket removed: ', this.usersSocketList);
         return;
       }
     }

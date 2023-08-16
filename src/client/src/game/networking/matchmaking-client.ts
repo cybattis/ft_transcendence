@@ -9,6 +9,7 @@ export namespace MatchmakingClient {
   let socket: ManagedSocket;
   let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
+  let gameInviteAcceptedCallbacks: MatchmakingGameStartedCallback[] = [];
   let currentOpponentInfos: PlayerInfos = {
     id: 0,
     nickname: "",
@@ -50,6 +51,11 @@ export namespace MatchmakingClient {
       console.log("game started", opponentInfos);
       currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback());
+    });
+
+    socket.on("game-invite-accepted", () => {
+      console.log("game invite accepted");
+      gameInviteAcceptedCallbacks.forEach((callback) => callback());
     });
 
     socket.on("unauthorized", () => {
@@ -155,5 +161,13 @@ export namespace MatchmakingClient {
 
   export function offgameStarted(callback: MatchmakingGameStartedCallback) {
     gameStartedCallbacks = gameStartedCallbacks.filter((cb) => cb !== callback);
+  }
+
+  export function ongameInviteAccepted(callback: MatchmakingGameStartedCallback) {
+    gameInviteAcceptedCallbacks.push(callback);
+  }
+
+  export function offgameInviteAccepted(callback: MatchmakingGameStartedCallback) {
+    gameInviteAcceptedCallbacks = gameInviteAcceptedCallbacks.filter((cb) => cb !== callback);
   }
 }
