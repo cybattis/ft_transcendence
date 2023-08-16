@@ -38,7 +38,7 @@ export namespace MatchmakingClient {
       path: "/matchmaking",
     };
 
-    const endpoint: string = "ws://" + Config.host_ip + Config.api_port;
+    const endpoint: string = "ws://" + Config.host_ip + ":" + Config.api_port;
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
