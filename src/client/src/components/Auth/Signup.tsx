@@ -7,6 +7,7 @@ import logo42 from "../../resource/logo-42.png";
 import { MessageModal } from "../Modal/MessageModal";
 import { FormContext, FormState } from "./form.context";
 import { useFetcher } from "../../hooks/UseFetcher";
+import Config from "../../utils/Config";
 
 interface UserCredential {
   nickname: string;
@@ -120,7 +121,7 @@ export default function Signup() {
       .catch(showErrorInModal);
   };
 
-  const intraLink = process.env["REACT_APP_REDIR_URL"];
+  const intraLink = Config.redir_url;
 
   return (
     <div className="background">

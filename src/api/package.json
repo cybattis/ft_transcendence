@@ -20,8 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@nestjs-modules/mailer": "^1.8.1",
-    "@nestjs/cache-manager": "^1.0.0",
+    "@nestjs-modules/mailer": "^1.9.1",
+    "@nestjs/cache-manager": "^2.1.0",
     "@nestjs/common": "^9.4.3",
     "@nestjs/config": "^2.3.4",
     "@nestjs/core": "^9.4.3",
@@ -52,15 +52,12 @@
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
-    "@nestjs-modules/mailer": "^1.8.1",
-    "@nestjs/cache-manager": "^1.0.0",
     "@nestjs/cli": "^9.5.0",
     "@nestjs/graphql": "^11.0.6",
     "@nestjs/passport": "^9.0.3",
     "@nestjs/schematics": "^9.2.0",
     "@nestjs/testing": "^9.4.3",
     "@types/bcrypt": "^5.0.0",
-    "@types/cron": "^2.0.1",
     "@types/express": "^4.17.17",
     "@types/express-session": "^1.17.7",
     "@types/jest": "29.2.4",
@@ -70,8 +67,6 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
-    "bcrypt": "^5.1.0",
-    "cache-manager": "^5.2.3",
     "eslint": "^8.44.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
