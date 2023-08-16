@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { MultiplayerPong } from "../../game/components/MultiplayerPong";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { UserData } from "../Profile/user-data";
@@ -15,8 +15,11 @@ import { useTokenSession } from "../../hooks/UseTokenSession";
 import { UserInfo } from "../../type/user.type";
 import "./Game.css";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import { EndGamePopup } from "../../components/Modal/PopUpModal";
+import { EndGamePopup, GameNotFoundModal, InfoModal } from "../../components/Modal/PopUpModal";
 import { GameStatus } from "../../type/game.type";
+import { PopupContext } from "../../components/Modal/Popup.context";
+import { PongManagerOffGameNotFound, PongManagerOnGameNotFound } from "../../game/PongManager";
+import { useNavigate } from "react-router-dom";
 
 export interface PlayerInterface {
   username: string;
@@ -37,9 +40,10 @@ export function Game() {
   const terminateSession = useTokenSession();
   const [endGame, setEndGame] = useState(false);
   const [hasWin, setHasWin] = useState(false);
+  const [ infoMessage, setInfoMessage ] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Game Page use effect");
     const fetchBothPlayerInfos = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -78,30 +82,46 @@ export function Game() {
     };
 
     function gameEndedCallback() {
-      console.log("gameEndedCallback");
       fetchBothPlayerInfos().then(() => {
         setEndGame(true);
       });
     }
 
+    function onGameNotFound() {
+      setInfoMessage("Game ended");
+    }
+
     fetchBothPlayerInfos();
     MultiplayerClient.onGameEnded(gameEndedCallback);
+    PongManagerOnGameNotFound(onGameNotFound);
 
     return () => {
       MultiplayerClient.offGameEnded(gameEndedCallback);
+      PongManagerOffGameNotFound();
     };
   }, []);
 
+  function onGameNotFoundAcknowledged() {
+    navigate("/");
+  }
+
   return (
-    gameProps === null ? <LoadingPage /> :
-      <GameLoaded
-        playerOne={gameProps.playerOne}
-        playerTwo={gameProps.playerTwo}
-        canal={gameProps.canal}
-        myUsername={gameProps.myUsername}
-        endGame={endGame}
-        hasWin={hasWin}
-      />
+    <>
+      {infoMessage === "" ?
+        (gameProps === null ? <LoadingPage /> :
+          <GameLoaded
+            playerOne={gameProps.playerOne}
+            playerTwo={gameProps.playerTwo}
+            canal={gameProps.canal}
+            myUsername={gameProps.myUsername}
+            endGame={endGame}
+            hasWin={hasWin}
+          />
+        )
+         :
+        <GameNotFoundModal text={infoMessage} onClose={onGameNotFoundAcknowledged} />
+      }
+    </>
   );
 }
 

@@ -46,28 +46,33 @@ export class MatchmakingService {
    * @param socket The socket of the player
    * @param playerId The id of the player
    */
-  public async joinMatchmakingCasual(socket: Socket, playerId: number): Promise<boolean> {
-
+  public async joinMatchmakingCasual(socket: Socket, playerId: number)
+    : Promise<Result<true, typeof APIError.UserNotFound
+    | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
+  {
     // Find the player in the database
     const user = await this.getUserFromDb(playerId);
 
     // If the player was not found, return
-    if (user.isErr()) return false;
+    if (user.isErr())
+      return failure(APIError.UserNotFound);
 
     // Check if the user is already in game
-    if (this.multiplayerService.isPlayerInGame(playerId)) return false;
+    if (this.multiplayerService.isPlayerInGame(playerId))
+      return failure(APIError.UserAlreadyInGame);
+
+    // Check if the user is already in matchmaking
+    if (this.isPlayerInMatchmaking(playerId))
+      return failure(APIError.UserInMatchmaking);
 
     // Create a new player object
     const player: CasualMatchmakingPlayer = {socket: socket, id: playerId};
-
-    // Check if the user is already in matchmaking
-    if (this.isPlayerInMatchmaking(player.id)) return false;
 
     // Make him join the matchmaking
     await this.addPlayerToCasualQueue(player);
 
     console.log("A registered player joined the casual matchmaking server. ID: ", playerId);
-    return true;
+    return success(true);
   }
 
   /*
@@ -90,28 +95,34 @@ export class MatchmakingService {
     * @param socket The socket of the player
     * @param playerId The id of the player
    */
-  public async joinMatchmakingRanked(socket: Socket, playerId: number): Promise<boolean> {
+  public async joinMatchmakingRanked(socket: Socket, playerId: number)
+    : Promise<Result<true, typeof APIError.UserNotFound
+    | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
+  {
 
     // Find the player in the database
     const user = await this.getUserFromDb(playerId);
 
     // If the player was not found, return
-    if (user.isErr()) return false;
+    if (user.isErr())
+      return failure(APIError.UserNotFound);
 
     // Check if the user is already in game
-    if (this.multiplayerService.isPlayerInGame(playerId)) return false;
+    if (this.multiplayerService.isPlayerInGame(playerId))
+      return failure(APIError.UserAlreadyInGame);
+
+    // Check if the user is already in matchmaking
+    if (this.isPlayerInMatchmaking(playerId))
+      return failure(APIError.UserInMatchmaking);
 
     // Create a new player object
     const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.value.ranking};
-
-    // Check if the user is already in matchmaking
-    if (this.isPlayerInMatchmaking(player.id)) return false;
 
     // Make him join the matchmaking
     await this.addPlayerToRankedQueue(player);
 
     console.log("A registered player joined the ranked matchmaking server");
-    return true;
+    return success(true);
   }
 
   /*
@@ -143,7 +154,9 @@ export class MatchmakingService {
     *
     * @param playerId The id of the player
    */
-  public async acceptFoundGame(playerId: number): Promise<void> {
+  public async acceptFoundGame(playerId: number)
+    : Promise<Result<true, typeof APIError.GameNotFound>>
+  {
     const pendingCasualGame: PendingCasualGame | undefined = this.findPendingCasualGame(playerId);
     const pendingRankedGame: PendingRankedGame | undefined = this.findPendingRankedGame(playerId);
 
@@ -167,6 +180,7 @@ export class MatchmakingService {
 
         this.removePendingCasualGame(pendingCasualGame);
       }
+      return success(true);
     } else if (pendingRankedGame) {
       console.log("Player " + playerId + " accepted the ranked game");
 
@@ -187,7 +201,11 @@ export class MatchmakingService {
 
         this.removePendingRankedGame(pendingRankedGame);
       }
+
+      return success(true);
     }
+
+    return failure(APIError.GameNotFound);
   }
 
   /*
@@ -285,6 +303,7 @@ export class MatchmakingService {
     });
 
     invite.invitingPlayer.socket.emit("game-invite-accepted");
+    await this.channelService.sendNotificationEvent(invitingId);
     return success(true);
   }
 
@@ -294,10 +313,11 @@ export class MatchmakingService {
     * @param invitedId The id of the invited player
     * @param invitingId The id of the inviting player
    */
-  public declineCasualGameInvite(invitedId: number, invitingId: number): void {
+  public async declineCasualGameInvite(invitedId: number, invitingId: number): Promise<void> {
     this.casualGameInvites = this.casualGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
+    await this.channelService.sendNotificationEvent(invitingId);
   }
 
   /*
@@ -394,6 +414,8 @@ export class MatchmakingService {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
 
+    invite.invitingPlayer.socket.emit("game-invite-accepted");
+    await this.channelService.sendNotificationEvent(invitingId);
     return success(true);
   }
 
@@ -402,10 +424,11 @@ export class MatchmakingService {
      *
      * @param invitedId The id of the invited player
    */
-  public declineRankedGameInvite(invitedId: number, invitingId: number): void {
+  public async declineRankedGameInvite(invitedId: number, invitingId: number): Promise<void> {
     this.rankedGameInvites = this.rankedGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
+    await this.channelService.sendNotificationEvent(invitingId);
   }
 
   /*

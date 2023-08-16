@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { ChatClientSocket } from "../Chat/Chat-client";
@@ -7,6 +7,7 @@ import { ChannelInvite, UserFriend, UserFriendsData, UserInfo } from "../../type
 import { GameInvite, GameType } from "../../type/game.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { useNavigate } from "react-router-dom";
+import { PopupContext } from "../../components/Modal/Popup.context";
 
 interface NotificationItemProps {
   avatar: string | undefined,
@@ -20,6 +21,7 @@ export default function Notifications() {
   const [channelInvits, setChannelInvits] = useState<ChannelInvite[]>([]);
   const [gameInvites, setGameInvites] = useState<GameInvite[]>([]);
   const { get, put, showErrorInModal } = useFetcher();
+  const { setErrorMessage } = useContext(PopupContext);
   const navigate = useNavigate();
 
   async function handleAccept(id: number) {
@@ -75,18 +77,23 @@ export default function Notifications() {
 
   async function handleAcceptGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
-      MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId);
+      MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId)
+        .then(() => {navigate("/game"); console.log("callbackkkkkk");})
+        .catch((err) => setErrorMessage(err.message));
     else
-      MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId);
+      MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId)
+        .then(() => navigate("/game"))
+        .catch((err) => setErrorMessage(err.message));
     setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
-    navigate("/game");
   }
 
   async function handleDeclineGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
-      MatchmakingClient.declineInviteToCasualGame(invitingPlayerId);
+      MatchmakingClient.declineInviteToCasualGame(invitingPlayerId)
+        .catch((err) => setErrorMessage(err.message));
     else
-      MatchmakingClient.declineInviteToRankedGame(invitingPlayerId);
+      MatchmakingClient.declineInviteToRankedGame(invitingPlayerId)
+        .catch((err) => setErrorMessage(err.message));
     setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
   }
 
@@ -94,31 +101,33 @@ export default function Notifications() {
     return (<div className="list">
       {
         channelInvits.map((channelInvits, index) => (
-          <div className="notifsElements">
-            <div className="invits" key={index}>
-                <Avatar size="50px" img={channelInvits.invitedByAvatar} />
-                <p className="notifText">
-                  {channelInvits.invitedByUsername} invited you to the channel {channelInvits.joinChannel}
-                </p>
-                <div className="buttons">
-                  <button
-                    className="refuse"
-                    onClick={() => handleDeclineChannel(channelInvits.joinChannel)}
-                  >
-                    <div className="cross"></div>Decline
-                  </button>
-                  <button
-                    className="accept"
-                    onClick={() => handleAcceptChannel(channelInvits.joinChannel)}
-                  >
-                    <div className="tick-mark"></div>Accept
-                  </button>
-                </div>
-            </div>
-          </div>
+          <NotificationElement
+            key={index}
+            avatar={channelInvits.invitedByAvatar}
+            text={channelInvits.invitedByUsername + " invited you to join " + channelInvits.joinChannel}
+            onAccept={() => handleAcceptChannel(channelInvits.joinChannel)}
+            onDecline={() => handleDeclineChannel(channelInvits.joinChannel)}
+          />
         ))
       }
-    </div>)
+    </div>
+    );
+  }
+
+  function FetchFriend () {
+    return  (
+      <div className="list">
+        {invits.map((invits, index) =>
+          <NotificationElement
+            key={index}
+            avatar={invits.avatarUrl}
+            text={invits.nickname + " wants to be your friend"}
+            onAccept={() => handleAccept(invits.id)}
+            onDecline={() => handleDecline(invits.id)}
+          />
+        )
+        })
+      </div>);
   }
 
   function GameInvites() {
@@ -168,40 +177,6 @@ export default function Notifications() {
       ChatClientSocket.offNotificationEvent(fetchNotifications);
     }
   }, []);
-
-  function FetchFriend () {
-    return  (     
-    <div className="list">
-      {invits.map((invits) => {
-        return (
-          <div key={invits.id}>
-            <div className="notifsElements">
-              <div className="invits">
-                <Avatar size="50px" img={invits.avatarUrl} />
-                <p className="notifText">
-                  {invits.nickname} wants to be your Friend!
-                </p>
-                <div className="buttons">
-                  <button
-                    className="refuse"
-                    onClick={() => handleDecline(invits.id)}
-                  >
-                    <div className="cross"></div>Decline
-                  </button>
-                  <button
-                    className="accept"
-                    onClick={() => handleAccept(invits.id)}
-                  >
-                    <div className="tick-mark"></div>Accept
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>);
-  }
 
   function NotificationElement(props: NotificationItemProps) {
     return (

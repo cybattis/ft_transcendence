@@ -14,15 +14,15 @@ function App() {
   return (
     <div className="app" id={"background"}>
         <AuthContextProvider>
-          <FormContextProvider>
-              <PopupProvider>
-                <AcceptGamePopup>
-                  <NavBar />
-                  <Outlet />
-                  <AuthForms />
-                </AcceptGamePopup>
-              </PopupProvider>
-          </FormContextProvider>
+          <PopupProvider>
+            <FormContextProvider>
+              <AcceptGamePopup>
+                <NavBar />
+                <Outlet />
+                <AuthForms />
+              </AcceptGamePopup>
+            </FormContextProvider>
+          </PopupProvider>
         </AuthContextProvider>
       <Footer />
     </div>

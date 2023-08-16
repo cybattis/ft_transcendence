@@ -168,9 +168,13 @@ export namespace MultiplayerClient {
     socket.emit("update-ball", ballUpdate);
   }
 
-  export function sendReady(): void {
-    if (!checkConnection()) return;
-    socket.emit("ready");
+  export async function sendReady(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+      const result = await socket.emitWithAck("ready");
+      if (result !== "OK")
+        throw new Error(result);
   }
 
   export function sendGoal(): void {
