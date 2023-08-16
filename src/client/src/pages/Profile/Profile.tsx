@@ -20,6 +20,7 @@ import { LoadingPage } from "../Loading/LoadingPage";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Fetching } from "../../utils/fetching";
 import { TypeCheckers } from "../../utils/type-checkers";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 
 enum relationStatus {
   NONE,
@@ -34,6 +35,12 @@ interface FriendRequestProps {
   data: UserInfo;
   status: relationStatus;
   setStatus: (status: relationStatus) => void;
+}
+
+interface InviteToGameProps {
+  data: UserInfo;
+  status: boolean,
+  setStatus: (status: boolean) => void;
 }
 
 function BlockUser(props: FriendRequestProps) {
@@ -136,6 +143,35 @@ function FriendRequest(props: FriendRequestProps) {
       <>
         <button className="friendButton">PENDING...</button>
       </>
+    );
+  }
+}
+
+function InviteToGame(props: InviteToGameProps) {
+  function inviteToCasualGame() {
+    MatchmakingClient.inviteUserToCasualGame(props.data.id);
+    props.setStatus(true);
+  }
+
+  function inviteToRankedGame() {
+    MatchmakingClient.inviteUserToRankedGame(props.data.id);
+    props.setStatus(true);
+  }
+
+  if (props.status === false) {
+    return (
+      <>
+        <button className="friendButton" type="button" onClick={inviteToCasualGame}>
+          Invite to casual game
+        </button>
+        <button className="friendButton" type="button" onClick={inviteToRankedGame}>
+          Invite to ranked game
+        </button>
+      </>
+    );
+  } else {
+    return (
+        <button className="friendButton">Waiting for player to join the game...</button>
     );
   }
 }
@@ -300,6 +336,7 @@ export function ProfileLoader(props: {profileType: ProfileType}) {
 
 export function Profile(props: {data: UserInfo}) {
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
+  const [isInvitedToGame, setIsInvitedToGame] = useState(false);
   const [customization, setCustomization] = useState(false);
   const winrate: number = calculateWinrate(props.data);
   const [oldColor, setOldColor] = useState<RgbColor>({
@@ -307,7 +344,7 @@ export function Profile(props: {data: UserInfo}) {
     g: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(2, 4), 16) : 255,
     b: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(4, 6), 16) : 255,
   });
-  const { get, showErrorInModal } = useFetcher();
+  const { get } = useFetcher();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -343,9 +380,13 @@ export function Profile(props: {data: UserInfo}) {
     async function fetchData() {
       if (props.data.id === undefined) return;
 
-      get<UserFriendsData>(`user/friends-data/${props.data.id}`)
-        .then(friend => checkFriendStatus(friend))
-        .catch(showErrorInModal);
+      try {
+        const friendData = await get<UserFriendsData>(`user/friends-data/${props.data.id}`);
+        const invitedData = await get<boolean>(`game-invites/has-invited/${props.data.id}`);
+
+        checkFriendStatus(friendData);
+        setIsInvitedToGame(invitedData);
+      } catch (err) {}
     }
 
     fetchData().then(() => {});
@@ -379,6 +420,11 @@ export function Profile(props: {data: UserInfo}) {
                 data={props.data}
                 status={friendStatus}
                 setStatus={setFriendStatus}
+              />
+              <InviteToGame
+                data={props.data}
+                status={isInvitedToGame}
+                setStatus={setIsInvitedToGame}
               />
             </div>
           ) : (

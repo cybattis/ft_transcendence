@@ -53,7 +53,7 @@ export class ChannelController {
     
     @Get('/message/channel/:channel/:username')
     async findMessageChatWBlocked(@Param('channel') channel : string, @Headers('Authorization') header: Headers): Promise<Chat[]>{
-        const payload: any = this.jwtService.decode(header.toString().split(' ')[1]);
+        const payload: TokenData = decodeTokenOrThrow(header, this.jwtService);
         channel = "#" + channel;
         const listBlocked = await this.userService.getBlockedList(payload.id);
         if (listBlocked.isErr())

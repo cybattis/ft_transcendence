@@ -554,13 +554,13 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     let blockedUsernames: string[] = [];
-    for (const id of me.blockedId) {
+    for (const otherId of me.blockedId) {
       const user: User | null = await this.usersRepository.findOne({
-        where: { id: id },
-        select: ['nickname'],
+        where: { id: otherId },
+        select: ['id', 'nickname'],
       });
       if (!user) {
-        me.blockedId = me.blockedId.filter((id) => id !== id);
+        me.blockedId = me.blockedId.filter((id) => id !== otherId);
         await this.usersRepository.save(me);
         continue;
       }

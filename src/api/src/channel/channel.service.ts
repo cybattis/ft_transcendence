@@ -884,7 +884,9 @@ export class ChannelService implements OnModuleInit {
   }
 
   addUserSocketToList(socket: Socket) {
-    const token: string | null = socket.handshake.auth.token;
+    const auth = socket.handshake?.auth?.token;
+    const authHeaders = socket.handshake?.headers?.authorization;
+    const token = auth ? auth : authHeaders;
     if (!token) return;
 
     const data = this.jwtService.decode(token) as TokenData;

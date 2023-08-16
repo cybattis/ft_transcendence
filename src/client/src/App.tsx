@@ -7,6 +7,7 @@ import {AuthContextProvider} from "./components/Auth/auth.context";
 import {FormContextProvider} from "./components/Auth/form.context";
 import {AuthForms} from "./components/Auth/Forms";
 import { PopupProvider } from "./components/Modal/Popup.context";
+import { AcceptGamePopup } from "./components/Modal/AcceptGamePopup";
 
 function App() {
 
@@ -15,9 +16,11 @@ function App() {
         <AuthContextProvider>
           <FormContextProvider>
               <PopupProvider>
-                <NavBar />
-                <Outlet />
-                <AuthForms />
+                <AcceptGamePopup>
+                  <NavBar />
+                  <Outlet />
+                  <AuthForms />
+                </AcceptGamePopup>
               </PopupProvider>
           </FormContextProvider>
         </AuthContextProvider>
