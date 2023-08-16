@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@types/validator": "^13.7.17",
+    "dotenv": "^16.3.1",
     "validator": "^13.9.0"
   }
 }

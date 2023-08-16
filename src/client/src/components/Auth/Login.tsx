@@ -1,4 +1,4 @@
-import React, {useContext} from "react";
+import React, { useContext } from "react";
 import "./Auth.css";
 import InputForm from "../InputForm/InputForm";
 import validator from "validator";
@@ -7,6 +7,7 @@ import logo42 from "../../resource/logo-42.png";
 import { AuthContext } from "./auth.context";
 import { FormContext, FormState } from "./form.context";
 import { useFetcher } from "../../hooks/UseFetcher";
+import Config from "../../utils/Config";
 
 interface SigninDto {
   email: string;
@@ -57,7 +58,7 @@ export default function Login() {
     };
 
     await post<string>("auth/signin", user)
-      .then(newToken => {
+      .then((newToken) => {
         if (newToken === "code") {
           localStorage.setItem("email", user.email);
           setFormState(FormState.TFA_CODE);
@@ -70,7 +71,7 @@ export default function Login() {
       .catch(showErrorInModal);
   };
 
-  const intraLink = process.env["REACT_APP_REDIR_URL"];
+  const intraLink = Config.redir_url;
 
   return (
     <div className="background">
