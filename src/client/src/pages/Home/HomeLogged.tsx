@@ -11,9 +11,9 @@ import { Friends } from "../../components/Friends/Friends";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { UserData } from "../Profile/user-data";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import { AIDifficulty } from "../../game/logic/PongAi";
 import { calculateWinrate } from "../../utils/calculateWinrate";
-import {useProfileData} from "../../hooks/UseProfileData";
+import { useProfileData } from "../../hooks/UseProfileData";
+import { ChatClientSocket } from "../Chat/Chat-client";
 
 enum MatchmakingAcceptButtonState {
   SEARCHING,
@@ -178,45 +178,47 @@ function GameLauncher() {
   const [searchingRanked, setSearchingRanked] = useState(false);
 
   return (
-      <div className="game-launcher">
+    <div className="game-launcher">
       {!searchingCasual && !searchingRanked && (
         <>
-        <h1 className="game-mode-title">Game modes</h1>
-        <div className="game-mode">
-        <PracticeGameMode />
-        <MultiplayerGameMode
-        gameType={GameType.CASUAL}
-        setSearching={setSearchingCasual}
-        />
-        <MultiplayerGameMode
-        gameType={GameType.RANKED}
-        setSearching={setSearchingRanked}
-        />
-        </div>
+          <h1 className="game-mode-title">Game modes</h1>
+          <div className="game-mode">
+            <PracticeGameMode />
+            <MultiplayerGameMode
+              gameType={GameType.CASUAL}
+              setSearching={setSearchingCasual}
+            />
+            <MultiplayerGameMode
+              gameType={GameType.RANKED}
+              setSearching={setSearchingRanked}
+            />
+          </div>
         </>
       )}
       {searchingCasual && (
-          <MatchmakingButton
+        <MatchmakingButton
           gameType={GameType.CASUAL}
           setSearching={setSearchingCasual}
-          />
-        )}
-        {searchingRanked && (
-            <MatchmakingButton
-            gameType={GameType.RANKED}
-            setSearching={setSearchingRanked}
-            />
-        )}
-      </div>
+        />
+      )}
+      {searchingRanked && (
+        <MatchmakingButton
+          gameType={GameType.RANKED}
+          setSearching={setSearchingRanked}
+        />
+      )}
+    </div>
   );
 }
 
 function Result(props: { game: GameStats; userId: number }) {
   const isWin =
     (props.game.ids[0] === props.userId &&
-      props.game.scoreP1 > props.game.scoreP2 || props.game.status === GameStatus.PLAYER2_DISCONNECTED) ||
+      props.game.scoreP1 > props.game.scoreP2) ||
+    props.game.status === GameStatus.PLAYER2_DISCONNECTED ||
     (props.game.ids[1] === props.userId &&
-      props.game.scoreP1 < props.game.scoreP2 || props.game.status === GameStatus.PLAYER1_DISCONNECTED);
+      props.game.scoreP1 < props.game.scoreP2) ||
+    props.game.status === GameStatus.PLAYER1_DISCONNECTED;
 
   return (
     <div className={"home-game-result"}>
@@ -243,9 +245,11 @@ function LastMatch(props: { data: UserInfo }) {
   }
 
   const lastGames = props.data.games?.slice(slice).filter((game) => {
-    return (game.status === GameStatus.FINISHED
-      || game.status === GameStatus.PLAYER1_DISCONNECTED
-      || game.status === GameStatus.PLAYER2_DISCONNECTED);
+    return (
+      game.status === GameStatus.FINISHED ||
+      game.status === GameStatus.PLAYER1_DISCONNECTED ||
+      game.status === GameStatus.PLAYER2_DISCONNECTED
+    );
   });
 
   return (
@@ -288,12 +292,16 @@ function HomeStatContainerDesktop(props: { data: UserInfo }) {
       <div className={"home-stat-box"}>
         <h5>Matches</h5>
         <hr className={"user-profile-hr"} />
-        <div>{props.data.games?.filter(
-          (game) => game.type === GameType.RANKED &&
-            (game.status === GameStatus.FINISHED
-              || game.status === GameStatus.PLAYER1_DISCONNECTED
-              || game.status === GameStatus.PLAYER2_DISCONNECTED)
-        ).length}
+        <div>
+          {
+            props.data.games?.filter(
+              (game) =>
+                game.type === GameType.RANKED &&
+                (game.status === GameStatus.FINISHED ||
+                  game.status === GameStatus.PLAYER1_DISCONNECTED ||
+                  game.status === GameStatus.PLAYER2_DISCONNECTED)
+            ).length
+          }
         </div>
       </div>
       <Winrate data={props.data} />
@@ -314,12 +322,16 @@ function HomeStatContainerMobile(props: { data: UserInfo }) {
         <div className={"home-stat-box"}>
           <h5>Matches</h5>
           <hr className={"user-profile-hr"} />
-          <div>{props.data.games?.filter(
-            (game) => game.type === GameType.RANKED &&
-              (game.status === GameStatus.FINISHED
-                || game.status === GameStatus.PLAYER1_DISCONNECTED
-                || game.status === GameStatus.PLAYER2_DISCONNECTED)
-          ).length}
+          <div>
+            {
+              props.data.games?.filter(
+                (game) =>
+                  game.type === GameType.RANKED &&
+                  (game.status === GameStatus.FINISHED ||
+                    game.status === GameStatus.PLAYER1_DISCONNECTED ||
+                    game.status === GameStatus.PLAYER2_DISCONNECTED)
+              ).length
+            }
           </div>
         </div>
       </div>
@@ -339,8 +351,7 @@ function UserProfile(props: { data: UserInfo | null }) {
   let xp = 0;
   const data = props.data;
 
-  if (data)
-    xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
+  if (data) xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
 
   return (
     <div id={"HomeUserInfo"} className="userProfile_container">
@@ -353,12 +364,12 @@ function UserProfile(props: { data: UserInfo | null }) {
           {data ? <XPBar xp={xp} lvl={data.level} /> : null}
         </div>
       </div>
-      {data ?
+      {data ? (
         <>
           <HomeStatContainerDesktop data={data} />
           <HomeStatContainerMobile data={data} />
         </>
-        : null}
+      ) : null}
     </div>
   );
 }
@@ -369,6 +380,7 @@ export function HomeLogged() {
   useEffect(() => {
     MatchmakingClient.connect();
     MultiplayerClient.connect();
+    ChatClientSocket.connect();
 
     if (data) {
       UserData.updatePaddleColor(data.paddleColor);

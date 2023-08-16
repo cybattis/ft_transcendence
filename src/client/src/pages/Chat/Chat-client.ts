@@ -13,7 +13,7 @@ export type newMessagesCallBack = {
 export type newGameMessageCallBack = {
   (data: {
     sender: string;
-    opponent: string,
+    opponent: string;
     msg: string;
     channel: string;
     blockedUsers: any;
@@ -58,6 +58,11 @@ export namespace ChatClientSocket {
   let newErrCallBack: newErrCallBack[] = [];
 
   export function checkChatConnection(): boolean {
+    if (socket && !socket.needsToConnect()) return true;
+    return connect();
+  }
+
+  export function connect(): boolean {
     if (socket && !socket.needsToConnect()) return true;
 
     const token = localStorage.getItem("token");
@@ -129,8 +134,7 @@ export namespace ChatClientSocket {
   }
 
   export function disconnect() {
-    if (socket && socket.connected)
-      socket.disconnect();
+    if (socket && socket.connected) socket.disconnect();
   }
 
   export function privateMessage(sendPrv: {
@@ -326,7 +330,9 @@ export namespace ChatClientSocket {
   }
 
   export function offGameMessageRecieve(callback: newGameMessageCallBack) {
-    newGameMessageCallBack = newGameMessageCallBack.filter((cb) => cb !== callback);
+    newGameMessageCallBack = newGameMessageCallBack.filter(
+      (cb) => cb !== callback
+    );
   }
 
   export function offJoinChan(callback: newChannelCallBack) {
@@ -354,6 +360,8 @@ export namespace ChatClientSocket {
   }
 
   export function offNotificationEvent(callback: notificationEventCallback) {
-    notificationEventCallbacks = notificationEventCallbacks.filter((cb) => cb !== callback);
+    notificationEventCallbacks = notificationEventCallbacks.filter(
+      (cb) => cb !== callback
+    );
   }
 }

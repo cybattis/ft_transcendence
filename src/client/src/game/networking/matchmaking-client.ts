@@ -1,8 +1,10 @@
 import {
   MatchmakingMatchFoundCallback,
-  MatchmakingGameStartedCallback, PlayerInfos,
+  MatchmakingGameStartedCallback,
+  PlayerInfos,
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
+import Config from "../../utils/Config";
 
 export namespace MatchmakingClient {
   import ManagedSocket = SocketManager.ManagedSocket;
@@ -37,8 +39,7 @@ export namespace MatchmakingClient {
       path: "/matchmaking",
     };
 
-    const endpoint: string =
-      "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
+    const endpoint: string = "ws://" + Config.host_ip + ":" + Config.api_port;
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 

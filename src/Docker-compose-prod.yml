@@ -16,30 +16,22 @@ services:
       - postgres:/var/lib/postgresql/data/
 
   client:
-    container_name: ft_transcendance-client
+    container_name: ft_transcendance-client-prod
     build:
       context: ./client
-      target: development
+      target: production
     ports:
       - $CLIENT_PORT:$CLIENT_PORT
     networks:
       - net0
-    volumes:
-      - ./client:/usr/src/app
-      - /usr/src/app/node_modules
-    environment:
-      - REACT_APP_API_PORT=$API_PORT
-      - REACT_APP_CLIENT_PORT=$CLIENT_PORT
-      - REACT_APP_PROTOCOL=$PROTOCOL
-      - REACT_APP_HOST_IP=$HOST_IP
-      - REACT_APP_REDIR_URL=$REDIR_URL
+    env_file:
+      - client/.env.local
 
   api:
-    container_name: ft_transcendance-api
+    container_name: ft_transcendance-api-prod
     build:
       context: ./api
-      target: development
-    command: npm run start:dev
+      target: production
     environment:
       - API_PORT=$API_PORT
       - CLIENT_PORT=$CLIENT_PORT
@@ -61,13 +53,9 @@ services:
       - postgres
     networks:
       - net0
-    volumes:
-      - ./api:/usr/src/app
-      - /usr/src/app/node_modules
 
 volumes:
   postgres:
-  pgadmin:
 
 networks:
   net0: {}
