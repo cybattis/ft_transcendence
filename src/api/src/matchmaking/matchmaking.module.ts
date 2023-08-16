@@ -8,14 +8,17 @@ import { Game } from '../game/entity/Game.entity';
 import { User } from '../user/entity/Users.entity';
 import { AuthModule } from '../auth/auth.module';
 import { MultiplayerModule } from '../multiplayer/multiplayer.module';
+import { MatchmakingController } from "./matchmaking.controller";
+import { ChannelModule } from "../channel/channel.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Game, User]),
     AuthModule,
     MultiplayerModule,
+    ChannelModule,
   ],
-  controllers: [],
+  controllers: [MatchmakingController],
   providers: [MatchmakingGateway, MatchmakingService, UserService, GameService],
 })
 export class MatchmakingModule {}

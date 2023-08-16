@@ -17,4 +17,9 @@ export enum APIError {
   CodeSend,
   ChannelNotFound,
   InvalidIntraName,
+  UserAlreadyInGame,
+  OtherUserAlreadyInGame,
+  UserInMatchmaking,
+  OtherUserInMatchmaking,
+  GameInviteNotFound,
 }

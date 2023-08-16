@@ -3,11 +3,22 @@ import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { useFetcher } from "../../hooks/UseFetcher";
-import { ChannelInvite, UserFriend, UserFriendsData } from "../../type/user.type";
+import { ChannelInvite, UserFriend, UserFriendsData, UserInfo } from "../../type/user.type";
+import { GameInvite, GameType } from "../../type/game.type";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
+
+interface NotificationItemProps {
+  key: number,
+  avatar: string | undefined,
+  text: string,
+  onAccept: () => void,
+  onDecline: () => void
+}
 
 export default function Notifications() {
   const [invits, setInvits] = useState<UserFriend[]>([]);
   const [channelInvits, setChannelInvits] = useState<ChannelInvite[]>([]);
+  const [gameInvites, setGameInvites] = useState<GameInvite[]>([]);
 
   const { get, put, showErrorInModal } = useFetcher();
 
@@ -34,7 +45,7 @@ export default function Notifications() {
   }
 
   async function removeNotif(id: number) {
-    const newInvits: any = invits.filter((invits) => invits.id !== id);
+    const newInvits: UserFriend[] = invits.filter((invits) => invits.id !== id);
     setInvits(newInvits);
   }
 
@@ -44,7 +55,7 @@ export default function Notifications() {
       channel = channel.substring(1);
     put("chat-controller/request/" + channel, {})
       .then(res => {
-        const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
+        const newInvits: ChannelInvite[] = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
         setChannelInvits(newInvits);
       })
       .catch(showErrorInModal);
@@ -60,6 +71,22 @@ export default function Notifications() {
         setChannelInvits(newInvits);
       })
       .catch(showErrorInModal);
+  }
+
+  async function handleAcceptGame(invitingPlayerId: number, type: GameType) {
+    if (type === GameType.CASUAL)
+      MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId);
+    else
+      MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId);
+    setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
+  }
+
+  async function handleDeclineGame(invitingPlayerId: number, type: GameType) {
+    if (type === GameType.CASUAL)
+      MatchmakingClient.declineInviteToCasualGame(invitingPlayerId);
+    else
+      MatchmakingClient.declineInviteToRankedGame(invitingPlayerId);
+    setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
   }
 
   function InviteChannel(){
@@ -93,22 +120,52 @@ export default function Notifications() {
     </div>)
   }
 
-  useEffect(() => {
-    async function fetchInvites() {
-      get<UserFriend[]>("user/requested")
-        .then(requests => setInvits(requests))
-        .catch(() => {});
+  function GameInvites() {
+    return (<div className="list">
+      {gameInvites.map((invite, index) => (
+          <GameInvite invite={invite} index={index}/>
+      ))}
+    </div>);
+  }
 
-      get<ChannelInvite[]>("user/request/channel")
-        .then(channels => setChannelInvits(channels))
+  function GameInvite(props: { invite: GameInvite, index: number }) {
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+    useEffect(() => {
+      get<UserInfo>("user/profile/id/" + props.invite.invitingPlayerId)
+        .then(infos => setUserInfo(infos))
         .catch(() => {});
+    });
+
+    return (userInfo === null ? <NotificationElementLoading key={props.index}/> :
+      <NotificationElement
+        key={props.index}
+        avatar={userInfo.avatarUrl}
+        text={userInfo.nickname + " invited you to play a " + (props.invite.type === GameType.CASUAL) ? "casual" : "ranked" + " game"}
+        onAccept={() => handleAcceptGame(props.invite.invitingPlayerId, props.invite.type)}
+        onDecline={() => handleDeclineGame(props.invite.invitingPlayerId, props.invite.type)}
+      />
+    );
+  }
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const friendInvites = await get<UserFriend[]>("user/requested");
+        const channelInvites = await get<ChannelInvite[]>("user/request/channel");
+        const gameInvites = await get<GameInvite[]>("game-invites");
+
+        setInvits(friendInvites);
+        setChannelInvits(channelInvites);
+        setGameInvites(gameInvites);
+      } catch (error) {}
     }
 
-    fetchInvites();
-    ChatClientSocket.onNotificationEvent(fetchInvites);
+    fetchNotifications();
+    ChatClientSocket.onNotificationEvent(fetchNotifications);
 
     return () => {
-      ChatClientSocket.offNotificationEvent(fetchInvites);
+      ChatClientSocket.offNotificationEvent(fetchNotifications);
     }
   }, []);
 
@@ -146,6 +203,47 @@ export default function Notifications() {
     </div>);
   }
 
+  function NotificationElement(props: NotificationItemProps) {
+    return (
+      <div key={props.key}>
+        <div className="notifsElements">
+          <div className="invits">
+            <Avatar size="50px" img={props.avatar} />
+            <p className="notifText">
+              {props.text}
+            </p>
+            <div className="buttons">
+              <button
+                className="refuse"
+                onClick={props.onDecline}
+              >
+                <div className="cross"></div>Decline
+              </button>
+              <button
+                className="accept"
+                onClick={props.onAccept}
+              >
+                <div className="tick-mark"></div>Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function NotificationElementLoading(props: { key: number }) {
+    return (
+      <div key={props.key}>
+        <div className="notifsElements">
+          <div className="invits">
+            Loading...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   //Faire une map pour afficher toutes invites a la suite
   if (invits.length > 0 || channelInvits.length > 0) {
     return (
@@ -155,6 +253,7 @@ export default function Notifications() {
           <div className= "invites-elements">
             {invits.length > 0 && <FetchFriend/>}
             {channelInvits.length > 0 && <InviteChannel/>}
+            {gameInvites.length > 0 && <GameInvites/>}
           </div>
         </div>
       </>

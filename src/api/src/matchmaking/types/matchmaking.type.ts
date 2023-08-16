@@ -16,7 +16,6 @@ export type PendingCasualGame = {
   player1Ready: boolean;
   player2: CasualMatchmakingPlayer;
   player2Ready: boolean;
-  creationDate: Date;
 }
 
 export type PendingRankedGame = {
@@ -24,5 +23,14 @@ export type PendingRankedGame = {
   player1Ready: boolean;
   player2: RankedMatchmakingPlayer;
   player2Ready: boolean;
-  creationDate: Date;
+}
+
+export type CasualGameInvite = {
+  invitedPlayerId: number;
+  invitingPlayer: CasualMatchmakingPlayer;
+}
+
+export type RankedGameInvite = {
+  invitedPlayerId: number;
+  invitingPlayer: RankedMatchmakingPlayer;
 }

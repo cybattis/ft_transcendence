@@ -54,7 +54,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   async handleConnection(socket: AuthedSocket) {
-    console.log(`Client connected: ${socket.id}`);
+    console.log(`Client connected to chat: ${socket.userId}`);
     this.channelService.addUserSocketToList(socket);
     await this.userService.changeOnlineStatus(socket.userId, true);
   }
@@ -64,7 +64,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const authHeaders = socket.handshake?.headers?.authorization;
     const token = auth ? auth : authHeaders;
     await this.userService.changeOnlineStatus(socket.userId, false);
-    console.log(`Client disconnected: ${socket.id}`);
+    console.log(`Client disconnected from chat: ${socket.userId}`);
     this.channelService.removeUserSocketFromList(socket);
   }
 

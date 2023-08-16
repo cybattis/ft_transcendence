@@ -51,3 +51,8 @@ export interface GameInfos {
   type: GameType;
   status: GameStatus;
 }
+
+export interface GameInvite {
+  invitingPlayerId: number,
+  type: GameType,
+}

@@ -99,6 +99,48 @@ export namespace MatchmakingClient {
     socket.emit("accept-found-game");
   }
 
+  export function inviteUserToCasualGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("invite-user-to-casual-game", {userId: userId}, (response: string) => {
+      console.log("invite-user-to-casual-game : ", response);
+    });
+  }
+
+  export function inviteUserToRankedGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("invite-user-to-ranked-game", {userId: userId}, (response: string) => {
+      console.log("invite-user-to-ranked-game : ", response);
+    });
+  }
+
+  export function acceptInviteToCasualGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("accept-invite-to-casual-game", {userId: userId}, (response: string) => {
+      console.log("accept-invite-to-casual-game : ", response);
+    });
+  }
+
+  export function acceptInviteToRankedGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("accept-invite-to-ranked-game", {userId: userId}, (response: string) => {
+      console.log("accept-invite-to-ranked-game : ", response);
+    });
+  }
+
+  export function declineInviteToCasualGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("decline-invite-to-casual-game", {userId: userId}, (response: string) => {
+      console.log("decline-invite-to-casual-game : ", response);
+    });
+  }
+
+  export function declineInviteToRankedGame(userId: number) {
+    if (!checkConnection()) return;
+    socket.emit("decline-invite-to-ranked-game", {userId: userId}, (response: string) => {
+      console.log("decline-invite-to-ranked-game : ", response);
+    });
+  }
+
   export function onMatchFound(callback: MatchmakingMatchFoundCallback) {
     matchFoundCallbacks.push(callback);
   }
