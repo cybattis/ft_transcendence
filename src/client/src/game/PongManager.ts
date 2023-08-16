@@ -10,6 +10,16 @@ let multiplayerGame: MultiplayerPongState | null = null;
 let upArrowPressed: boolean = false;
 let downArrowPressed: boolean = false;
 
+let gameNotFoundCallback: () => void = () => {};
+
+export function PongManagerOnGameNotFound(callback: () => void) {
+  gameNotFoundCallback = callback;
+}
+
+export function PongManagerOffGameNotFound() {
+  gameNotFoundCallback = () => {};
+}
+
 export function startPongManager() {
   window.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp")
@@ -31,7 +41,7 @@ export function startPongManager() {
         game.start();
       });
       if (multiplayerGame)
-        multiplayerGame.readyUp();
+        multiplayerGame.readyUp(gameNotFoundCallback);
     }
   });
 

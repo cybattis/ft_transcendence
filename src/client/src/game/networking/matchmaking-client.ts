@@ -75,76 +75,108 @@ export namespace MatchmakingClient {
     return currentOpponentInfos;
   }
 
-  export function leaveMatchmaking() {
-    leaveMatchmakingRanked();
-    leaveMatchmakingCasual();
+  export async function leaveMatchmaking(): Promise<void> {
+    await leaveMatchmakingRanked();
+    await leaveMatchmakingCasual();
   }
 
-  export function joinMatchmakingCasual() {
-    if (!checkConnection()) return;
-    socket.emit("join-matchmaking-casual");
+  export async function joinMatchmakingCasual(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("join-matchmaking-casual");
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function leaveMatchmakingCasual() {
-    if (!checkConnection()) return;
-    socket.emit("leave-matchmaking-casual");
+  export async function leaveMatchmakingCasual(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("leave-matchmaking-casual");
+
+    if (result !== "OK")
+      throw new Error(result);}
+
+  export async function joinMatchmakingRanked(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("join-matchmaking-ranked");
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function joinMatchmakingRanked() {
-    if (!checkConnection()) return;
-    socket.emit("join-matchmaking-ranked");
+  export async function leaveMatchmakingRanked(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("leave-matchmaking-ranked");
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function leaveMatchmakingRanked() {
-    if (!checkConnection()) return;
-    socket.emit("leave-matchmaking-ranked");
+  export async function joinFoundMatch(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("accept-found-game");
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function joinFoundMatch() {
-    if (!checkConnection()) return;
-    socket.emit("accept-found-game");
+  export async function inviteUserToCasualGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("invite-user-to-casual-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function inviteUserToCasualGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("invite-user-to-casual-game", {userId: userId}, (response: string) => {
-      console.log("invite-user-to-casual-game : ", response);
-    });
+  export async function inviteUserToRankedGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("invite-user-to-ranked-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function inviteUserToRankedGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("invite-user-to-ranked-game", {userId: userId}, (response: string) => {
-      console.log("invite-user-to-ranked-game : ", response);
-    });
+  export async function acceptInviteToCasualGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("accept-invite-to-casual-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function acceptInviteToCasualGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("accept-invite-to-casual-game", {userId: userId}, (response: string) => {
-      console.log("accept-invite-to-casual-game : ", response);
-    });
+  export async function acceptInviteToRankedGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("accept-invite-to-ranked-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function acceptInviteToRankedGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("accept-invite-to-ranked-game", {userId: userId}, (response: string) => {
-      console.log("accept-invite-to-ranked-game : ", response);
-    });
+  export async function declineInviteToCasualGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+    const result: string = await socket.emitWithAck("decline-invite-to-casual-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
-  export function declineInviteToCasualGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("decline-invite-to-casual-game", {userId: userId}, (response: string) => {
-      console.log("decline-invite-to-casual-game : ", response);
-    });
-  }
+  export async function declineInviteToRankedGame(userId: number): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
 
-  export function declineInviteToRankedGame(userId: number) {
-    if (!checkConnection()) return;
-    socket.emit("decline-invite-to-ranked-game", {userId: userId}, (response: string) => {
-      console.log("decline-invite-to-ranked-game : ", response);
-    });
+    const result: string = await socket.emitWithAck("decline-invite-to-ranked-game", {userId: userId});
+    if (result !== "OK")
+      throw new Error(result);
   }
 
   export function onMatchFound(callback: MatchmakingMatchFoundCallback) {

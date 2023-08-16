@@ -12,6 +12,8 @@ import { AuthedSocket } from '../auth/types/auth.types';
 import { GameStatus } from '../type/game.type';
 import { Server } from 'socket.io';
 import { UserService } from '../user/user.service';
+import { APIError } from "../utils/errors";
+import { failure, Result, success } from "../utils/Error";
 
 @Injectable()
 export class MultiplayerService {
@@ -80,7 +82,7 @@ export class MultiplayerService {
    *
    * @param client The client that sent the ready event
    */
-  public async setClientReady(client: AuthedSocket): Promise<void> {
+  public async setClientReady(client: AuthedSocket): Promise<Result<true, typeof APIError.GameNotFound>> {
     const room = this.getRoomByPlayerId(client.userId);
     if (room) {
       if (room.player1Id === client.userId) {
@@ -90,19 +92,21 @@ export class MultiplayerService {
         room.player2Ready = true;
         client.emit('ready-ack', 2);
       } else {
-        return;
+        return failure(APIError.GameNotFound);
       }
 
       client.join(room.serverRoomId);
 
       console.log('[MULTIPLAYER] Player ' + client.userId + ' is ready.');
 
-      if (room.player1Ready && room.player2Ready) {
+      if (room.player1Ready && room.player2Ready)
         await this.startGame(room);
-      }
+
+      return success(true);
     } else {
       console.log('NO ROOM FOUND FOR PLAYER ' + client.userId);
       console.log(this.rooms);
+      return failure(APIError.GameNotFound);
     }
   }
 

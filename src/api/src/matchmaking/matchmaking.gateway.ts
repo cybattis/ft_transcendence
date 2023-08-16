@@ -77,9 +77,8 @@ export class MatchmakingGateway
         case APIError.UserInMatchmaking:
           return "You can't invite someone while you are in matchmaking.";
       }
-    } else {
-      return "OK";
     }
+    return "OK";
   }
 
   @SubscribeMessage('accept-invite-to-casual-game')
@@ -106,9 +105,8 @@ export class MatchmakingGateway
         case APIError.GameInviteNotFound:
           return "Couldn't find the game invite you're trying to accept.";
       }
-    } else {
-      return "OK";
     }
+    return "OK";
   }
 
   @SubscribeMessage('decline-invite-to-casual-game')
@@ -139,9 +137,8 @@ export class MatchmakingGateway
         case APIError.UserInMatchmaking:
           return "You can't invite someone while you are in matchmaking.";
       }
-    } else {
-      return "OK";
     }
+    return "OK";
   }
 
   @SubscribeMessage('accept-invite-to-ranked-game')
@@ -168,9 +165,8 @@ export class MatchmakingGateway
         case APIError.GameInviteNotFound:
           return "Couldn't find the game invite you're trying to accept.";
       }
-    } else {
-      return "OK";
     }
+    return "OK";
   }
 
   @SubscribeMessage('decline-invite-to-ranked-game')
@@ -186,52 +182,69 @@ export class MatchmakingGateway
   @SubscribeMessage('join-matchmaking-casual')
   async handleJoinMatchmakingCasual(
     @ConnectedSocket() client: AuthedSocket,
-  ): Promise<void> {
-    if (
-      !(await this.matchmakingService.joinMatchmakingCasual(
-        client,
-        client.userId,
-      ))
-    ) {
-      // If an error occurred, send an error message
-      throw new WsException("Couldn't join the casual matchmaking");
+  ): Promise<string> {
+    const result = await this.matchmakingService.joinMatchmakingCasual(
+      client, client.userId);
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.UserNotFound:
+          return "Couldn't authenticate your account. Please log out and log back in.";
+        case APIError.UserAlreadyInGame:
+          return "You can't join matchmaking while you are in a game.";
+        case APIError.UserInMatchmaking:
+          return "You are already in matchmaking.";
+      }
     }
+    return "OK";
   }
 
   @SubscribeMessage('leave-matchmaking-casual')
   async handleLeaveMatchmakingCasual(
     @ConnectedSocket() client: AuthedSocket,
-  ): Promise<void> {
+  ): Promise<string> {
     this.matchmakingService.leaveMatchmakingCasual(client.userId);
+    return "OK";
   }
 
   @SubscribeMessage('join-matchmaking-ranked')
   async handleJoinMatchmakingRanked(
     @ConnectedSocket() client: AuthedSocket,
-  ): Promise<void> {
-    if (
-      !(await this.matchmakingService.joinMatchmakingRanked(
-        client,
-        client.userId,
-      ))
-    ) {
-      // If an error occurred, send an error message
-      throw new WsException("Couldn't join the ranked matchmaking");
+  ): Promise<string> {
+    const result = await this.matchmakingService.joinMatchmakingRanked(
+        client, client.userId);
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.UserNotFound:
+          return "Couldn't authenticate your account. Please log out and log back in.";
+        case APIError.UserAlreadyInGame:
+          return "You can't join matchmaking while you are in a game.";
+        case APIError.UserInMatchmaking:
+          return "You are already in matchmaking.";
+      }
     }
+    return "OK";
   }
 
   @SubscribeMessage('leave-matchmaking-ranked')
   async handleLeaveMatchmakingRanked(
     @ConnectedSocket() client: AuthedSocket,
-  ): Promise<void> {
+  ): Promise<string> {
     this.matchmakingService.leaveMatchmakingRanked(client.userId);
+    return "OK";
   }
 
   @SubscribeMessage('accept-found-game')
   async handleAcceptFoundGame(
     @ConnectedSocket() client: AuthedSocket,
-  ): Promise<void> {
-    await this.matchmakingService.acceptFoundGame(client.userId);
+  ): Promise<string> {
+    const result = await this.matchmakingService.acceptFoundGame(client.userId);
+    if (result.isErr()) {
+      switch(result.error) {
+        case APIError.GameNotFound:
+          return "Couldn't find the game you're trying to accept.";
+      }
+    }
+    return "OK";
   }
 
   @Public()
@@ -239,7 +252,8 @@ export class MatchmakingGateway
   async handleAuthorization(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody() token: string,
-  ): Promise<void> {
+  ): Promise<string> {
     client.handshake.auth.token = token;
+    return "OK";
   }
 }

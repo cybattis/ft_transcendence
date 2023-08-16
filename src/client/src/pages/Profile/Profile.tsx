@@ -148,14 +148,24 @@ function FriendRequest(props: FriendRequestProps) {
 }
 
 function InviteToGame(props: InviteToGameProps) {
+  const { setErrorMessage } = useContext(PopupContext);
+
   function inviteToCasualGame() {
-    MatchmakingClient.inviteUserToCasualGame(props.data.id);
     props.setStatus(true);
+    MatchmakingClient.inviteUserToCasualGame(props.data.id)
+      .catch((err) => {
+        props.setStatus(false);
+        setErrorMessage(err.message);
+      });
   }
 
   function inviteToRankedGame() {
-    MatchmakingClient.inviteUserToRankedGame(props.data.id);
     props.setStatus(true);
+    MatchmakingClient.inviteUserToRankedGame(props.data.id)
+      .catch((err) => {
+        props.setStatus(false);
+        setErrorMessage(err.message);
+      });
   }
 
   if (props.status === false) {

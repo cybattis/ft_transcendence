@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./Notifications.css";
 import { Avatar } from "../../components/Avatar";
 import { ChatClientSocket } from "../Chat/Chat-client";
@@ -7,6 +7,7 @@ import { ChannelInvite, UserFriend, UserFriendsData, UserInfo } from "../../type
 import { GameInvite, GameType } from "../../type/game.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { useNavigate } from "react-router-dom";
+import { PopupContext } from "../../components/Modal/Popup.context";
 
 interface NotificationItemProps {
   avatar: string | undefined,
@@ -20,6 +21,7 @@ export default function Notifications() {
   const [channelInvits, setChannelInvits] = useState<ChannelInvite[]>([]);
   const [gameInvites, setGameInvites] = useState<GameInvite[]>([]);
   const { get, put, showErrorInModal } = useFetcher();
+  const { setErrorMessage } = useContext(PopupContext);
   const navigate = useNavigate();
 
   async function handleAccept(id: number) {
@@ -75,18 +77,23 @@ export default function Notifications() {
 
   async function handleAcceptGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
-      MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId);
+      MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId)
+        .then(() => {navigate("/game"); console.log("callbackkkkkk");})
+        .catch((err) => setErrorMessage(err.message));
     else
-      MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId);
+      MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId)
+        .then(() => navigate("/game"))
+        .catch((err) => setErrorMessage(err.message));
     setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
-    navigate("/game");
   }
 
   async function handleDeclineGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
-      MatchmakingClient.declineInviteToCasualGame(invitingPlayerId);
+      MatchmakingClient.declineInviteToCasualGame(invitingPlayerId)
+        .catch((err) => setErrorMessage(err.message));
     else
-      MatchmakingClient.declineInviteToRankedGame(invitingPlayerId);
+      MatchmakingClient.declineInviteToRankedGame(invitingPlayerId)
+        .catch((err) => setErrorMessage(err.message));
     setGameInvites(gameInvites.filter(invite => invite.invitingPlayerId !== invitingPlayerId));
   }
 

@@ -1,5 +1,5 @@
 import "./PopUpModal.css";
-import { MouseEvent, useContext, useRef } from "react";
+import { MouseEvent, useContext, useRef, useState } from "react";
 import { PopupContext } from "./Popup.context";
 import { Link, Navigate } from "react-router-dom";
 
@@ -53,6 +53,35 @@ export function InfoModal(props: { onClose: () => void }) {
           </form>
         </dialog>
       ) : null}
+    </div>
+  );
+}
+
+export function GameNotFoundModal(props: { text: string, onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  if (props.text === "")
+    return null;
+
+  return (
+    <div
+      ref={ref}
+      onClick={(event: MouseEvent) => {
+        if (event.target === ref.current) {
+          props.onClose();
+        }
+      }}
+    >
+      <div id="info-modal-centered">
+        <dialog id="info-modal-centered-inner" open>
+          <p>{props.text}</p>
+          <form method="dialog">
+            <button id="close" onClick={props.onClose}>
+              X
+            </button>
+          </form>
+        </dialog>
+      </div>
     </div>
   );
 }
