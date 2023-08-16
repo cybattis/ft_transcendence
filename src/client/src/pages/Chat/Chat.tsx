@@ -38,6 +38,7 @@ export default function ChatClient() {
   const [isMute, setIsMute] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
+  const [allChannels, setAllChannels] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState({
     channel: "",
     error: "",
@@ -1054,6 +1055,21 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
+    const fetchAllChannels = async () => {
+      await axios
+          .get(apiBaseURL + 'user/myChannels', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((response) => {
+            console.log("RES: ", response)
+            setAllChannels(response.data);
+          });
+    }
+
+    fetchAllChannels();
+
     const messageCallBack = async (data: {
       sender: string;
       msg: string;
@@ -1069,6 +1085,7 @@ export default function ChatClient() {
     }
 
     const joinCallBack = (room: string) => {
+      console.log("Information", room);
       if (room[0] !== "#")
         room.indexOf(username) === 0
           ? (room = room.substring(username.length))
@@ -1176,7 +1193,6 @@ export default function ChatClient() {
           },
         })
         .then((response) => {
-          console.log("HERE: ", response.data);
           setMessages(response.data);
         });
     } else {
@@ -1225,7 +1241,7 @@ export default function ChatClient() {
         <div className="chat-container">
           <div className="list">
             <ChannelList
-              channelList={channelList}
+              channelList={allChannels}
               onStringChange={handleStringChange}
             />
           </div>

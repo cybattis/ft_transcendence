@@ -29,3 +29,26 @@ export interface GameStatsDto extends GameBodyDto {
   creationDate: string;
   players: UserInfo[];
 }
+
+export interface GameInfos {
+  id: number;
+  playerOne: {
+    me: boolean;
+    hasWin: boolean;
+    username: string;
+    avatar?: string;
+    elo: number;
+    scoreP1: number;
+  };
+  playerTwo: {
+    me: boolean;
+    hasWin: boolean;
+    username: string;
+    avatar?: string;
+    elo: number;
+    scoreP2: number;
+  };
+  mode: GameMode;
+  type: GameType;
+  status: GameStatus;
+}

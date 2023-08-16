@@ -609,4 +609,11 @@ export class UserService implements OnModuleInit {
     user.inGame = false;
     await this.usersRepository.save(user);
   }
+
+  async fetchAllMyChannels(id: number) {
+    const channels = await this.usersRepository.findOne({where: {id: id}});
+    if (channels)
+      return channels.chans;
+  return null;
+  }
 }

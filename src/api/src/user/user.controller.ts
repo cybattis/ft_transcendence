@@ -369,4 +369,13 @@ export class UserController {
     );
     return await this.userService.fetchInvChannel(payload.id);
   }
+
+  @UseGuards(TokenGuard)
+  @Get('myChannels')
+  async getAllMyChannels(@Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return await this.userService.fetchAllMyChannels(payload.id);
+  }
 }

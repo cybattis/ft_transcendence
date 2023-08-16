@@ -66,7 +66,7 @@ export class MultiplayerGateway
 
     await this.userService.updateUserGameStatus(user);
 
-    //await this.multiplayerService.disconnectPlayerFromGame(client);
+    await this.multiplayerService.disconnectPlayerFromGame(client);
   }
 
   @Public()
@@ -80,7 +80,7 @@ export class MultiplayerGateway
 
   @SubscribeMessage('quit')
   async handleQuit(@ConnectedSocket() client: AuthedSocket): Promise<void> {
-    //await this.multiplayerService.disconnectPlayerFromGame(client);
+    await this.multiplayerService.disconnectPlayerFromGame(client);
   }
 
   @SubscribeMessage('ready')
