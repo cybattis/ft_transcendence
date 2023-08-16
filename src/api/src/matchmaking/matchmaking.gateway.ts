@@ -117,7 +117,7 @@ export class MatchmakingGateway
     @MessageBody() data: { userId: number },
   ): Promise<string>
   {
-    this.matchmakingService.declineCasualGameInvite(client.userId, data.userId);
+    await this.matchmakingService.declineCasualGameInvite(client.userId, data.userId);
     return "OK";
   }
 
@@ -179,7 +179,7 @@ export class MatchmakingGateway
     @MessageBody() data: { userId: number },
   ): Promise<string>
   {
-    this.matchmakingService.declineRankedGameInvite(client.userId, data.userId);
+    await this.matchmakingService.declineRankedGameInvite(client.userId, data.userId);
     return "OK";
   }
 

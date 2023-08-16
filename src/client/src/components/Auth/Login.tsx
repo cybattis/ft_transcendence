@@ -56,7 +56,7 @@ export default function Login() {
       password: inputs.password,
     };
 
-    await post<string>("auth/signin", user)
+    post<string>("auth/signin", user)
       .then(newToken => {
         if (newToken === "code") {
           localStorage.setItem("email", user.email);

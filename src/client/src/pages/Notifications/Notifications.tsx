@@ -94,31 +94,33 @@ export default function Notifications() {
     return (<div className="list">
       {
         channelInvits.map((channelInvits, index) => (
-          <div className="notifsElements">
-            <div className="invits" key={index}>
-                <Avatar size="50px" img={channelInvits.invitedByAvatar} />
-                <p className="notifText">
-                  {channelInvits.invitedByUsername} invited you to the channel {channelInvits.joinChannel}
-                </p>
-                <div className="buttons">
-                  <button
-                    className="refuse"
-                    onClick={() => handleDeclineChannel(channelInvits.joinChannel)}
-                  >
-                    <div className="cross"></div>Decline
-                  </button>
-                  <button
-                    className="accept"
-                    onClick={() => handleAcceptChannel(channelInvits.joinChannel)}
-                  >
-                    <div className="tick-mark"></div>Accept
-                  </button>
-                </div>
-            </div>
-          </div>
+          <NotificationElement
+            key={index}
+            avatar={channelInvits.invitedByAvatar}
+            text={channelInvits.invitedByUsername + " invited you to join " + channelInvits.joinChannel}
+            onAccept={() => handleAcceptChannel(channelInvits.joinChannel)}
+            onDecline={() => handleDeclineChannel(channelInvits.joinChannel)}
+          />
         ))
       }
-    </div>)
+    </div>
+    );
+  }
+
+  function FetchFriend () {
+    return  (
+      <div className="list">
+        {invits.map((invits, index) =>
+          <NotificationElement
+            key={index}
+            avatar={invits.avatarUrl}
+            text={invits.nickname + " wants to be your friend"}
+            onAccept={() => handleAccept(invits.id)}
+            onDecline={() => handleDecline(invits.id)}
+          />
+        )
+        })
+      </div>);
   }
 
   function GameInvites() {
@@ -168,40 +170,6 @@ export default function Notifications() {
       ChatClientSocket.offNotificationEvent(fetchNotifications);
     }
   }, []);
-
-  function FetchFriend () {
-    return  (     
-    <div className="list">
-      {invits.map((invits) => {
-        return (
-          <div key={invits.id}>
-            <div className="notifsElements">
-              <div className="invits">
-                <Avatar size="50px" img={invits.avatarUrl} />
-                <p className="notifText">
-                  {invits.nickname} wants to be your Friend!
-                </p>
-                <div className="buttons">
-                  <button
-                    className="refuse"
-                    onClick={() => handleDecline(invits.id)}
-                  >
-                    <div className="cross"></div>Decline
-                  </button>
-                  <button
-                    className="accept"
-                    onClick={() => handleAccept(invits.id)}
-                  >
-                    <div className="tick-mark"></div>Accept
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>);
-  }
 
   function NotificationElement(props: NotificationItemProps) {
     return (

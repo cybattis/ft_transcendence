@@ -285,6 +285,7 @@ export class MatchmakingService {
     });
 
     invite.invitingPlayer.socket.emit("game-invite-accepted");
+    await this.channelService.sendNotificationEvent(invitingId);
     return success(true);
   }
 
@@ -294,10 +295,11 @@ export class MatchmakingService {
     * @param invitedId The id of the invited player
     * @param invitingId The id of the inviting player
    */
-  public declineCasualGameInvite(invitedId: number, invitingId: number): void {
+  public async declineCasualGameInvite(invitedId: number, invitingId: number): Promise<void> {
     this.casualGameInvites = this.casualGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
+    await this.channelService.sendNotificationEvent(invitingId);
   }
 
   /*
@@ -394,6 +396,8 @@ export class MatchmakingService {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
 
+    invite.invitingPlayer.socket.emit("game-invite-accepted");
+    await this.channelService.sendNotificationEvent(invitingId);
     return success(true);
   }
 
@@ -402,10 +406,11 @@ export class MatchmakingService {
      *
      * @param invitedId The id of the invited player
    */
-  public declineRankedGameInvite(invitedId: number, invitingId: number): void {
+  public async declineRankedGameInvite(invitedId: number, invitingId: number): Promise<void> {
     this.rankedGameInvites = this.rankedGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
+    await this.channelService.sendNotificationEvent(invitingId);
   }
 
   /*
