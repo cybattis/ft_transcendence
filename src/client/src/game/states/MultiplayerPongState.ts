@@ -54,9 +54,9 @@ export default class MultiplayerPongState {
     MultiplayerClient.removeCallbacks();
   }
 
-  readyUp() {
+  readyUp(onMatchNotFound: () => void) {
     if (!this.state.isWaitingForGameToStart() && !this.state.isPlaying() && !this.state.isEnded()) {
-      MultiplayerClient.sendReady();
+      MultiplayerClient.sendReady().catch(() => onMatchNotFound());
       this.state.waitForGameToStart();
     }
   }

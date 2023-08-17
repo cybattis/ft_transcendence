@@ -18,6 +18,7 @@ import { UseGuards } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
+import { APIError } from "../utils/errors";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -75,39 +76,51 @@ export class MultiplayerGateway
   async handleAuthorization(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody() token: string,
-  ): Promise<void> {
+  ): Promise<string> {
     client.handshake.auth.token = token;
+    return "OK";
   }
 
   @SubscribeMessage('quit')
-  async handleQuit(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+  async handleQuit(@ConnectedSocket() client: AuthedSocket): Promise<string> {
     console.log("A user quit the game: ", client.userId);
     await this.multiplayerService.disconnectPlayerFromGame(client);
+    return "OK";
   }
 
   @SubscribeMessage('ready')
-  async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<void> {
-    await this.multiplayerService.setClientReady(client);
+  async handleReady(@ConnectedSocket() client: AuthedSocket): Promise<string> {
+    const result = await this.multiplayerService.setClientReady(client);
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.GameNotFound:
+          return "Game not found";
+      }
+    }
+    return "OK";
   }
 
   @SubscribeMessage('update-movement')
   async handleUpdateMovement(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody() data: MovementUpdate,
-  ): Promise<void> {
+  ): Promise<string> {
     this.multiplayerService.processMovementUpdate(client, data);
+    return "OK";
   }
 
   @SubscribeMessage('update-ball')
   async handleUpdateBall(
     @ConnectedSocket() client: AuthedSocket,
     @MessageBody() data: BallUpdate,
-  ): Promise<void> {
+  ): Promise<string> {
     this.multiplayerService.processBallUpdate(client, data);
+    return "OK";
   }
 
   @SubscribeMessage('goal')
-  async handleGoal(@ConnectedSocket() client: AuthedSocket): Promise<void> {
+  async handleGoal(@ConnectedSocket() client: AuthedSocket): Promise<string> {
     await this.multiplayerService.processGoal(client);
+    return "OK";
   }
 }

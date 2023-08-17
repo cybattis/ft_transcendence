@@ -1,7 +1,7 @@
 import "./HomeLogged.css";
 import { Avatar } from "../../components/Avatar";
 import ChatClient from "../Chat/Chat";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserInfo } from "../../type/user.type";
 import { Navigate, useNavigate } from "react-router-dom";
 import { GameStats, GameStatus, GameType } from "../../type/game.type";
@@ -13,6 +13,7 @@ import { UserData } from "../Profile/user-data";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import { useProfileData } from "../../hooks/UseProfileData";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
 
 enum MatchmakingAcceptButtonState {
@@ -28,6 +29,7 @@ function MatchmakingButton(props: {
 }) {
   const [state, setState] = useState(MatchmakingAcceptButtonState.SEARCHING);
   const [timeLeft, setTimeLeft] = useState(0);
+  const { setErrorMessage } = useContext(PopupContext);
   const countdownOffset: number = 10;
 
   useEffect(() => {
@@ -66,15 +68,23 @@ function MatchmakingButton(props: {
     } else {
       if (state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT) {
         // The opponent didn't accept the game, continue matchmaking
+        setState(MatchmakingAcceptButtonState.SEARCHING);
         switch (props.gameType) {
           case GameType.CASUAL:
-            MatchmakingClient.joinMatchmakingCasual();
+            MatchmakingClient.joinMatchmakingCasual()
+              .catch((err) => {
+                setErrorMessage(err.message);
+                props.setSearching(false);
+              });
             break;
           case GameType.RANKED:
-            MatchmakingClient.joinMatchmakingRanked();
+            MatchmakingClient.joinMatchmakingRanked()
+              .catch((err) => {
+                setErrorMessage(err.message);
+                props.setSearching(false);
+              });
             break;
         }
-        setState(MatchmakingAcceptButtonState.SEARCHING);
       }
     }
 
@@ -90,17 +100,23 @@ function MatchmakingButton(props: {
     if (state === MatchmakingAcceptButtonState.SEARCHING) {
       switch (props.gameType) {
         case GameType.CASUAL:
-          MatchmakingClient.leaveMatchmakingCasual();
+          MatchmakingClient.leaveMatchmakingCasual()
+            .catch((err) => setErrorMessage(err.message));
           break;
         case GameType.RANKED:
-          MatchmakingClient.leaveMatchmakingRanked();
+          MatchmakingClient.leaveMatchmakingRanked()
+            .catch((err) => setErrorMessage(err.message));
           break;
       }
 
       props.setSearching(false);
     } else if (state === MatchmakingAcceptButtonState.MATCH_FOUND) {
-      MatchmakingClient.joinFoundMatch();
       setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
+      MatchmakingClient.joinFoundMatch()
+        .catch((err) => {
+          setErrorMessage(err.message);
+          props.setSearching(false);
+        });
     }
   };
 
@@ -134,28 +150,29 @@ function MultiplayerGameMode(props: {
   gameType: GameType;
   setSearching: (value: boolean) => void;
 }) {
-  const handleClick = () => {
-    if (props.gameType === GameType.CASUAL)
-      MatchmakingClient.joinMatchmakingCasual();
-    else if (props.gameType === GameType.RANKED)
-      MatchmakingClient.joinMatchmakingRanked();
+  const { setErrorMessage } = useContext(PopupContext);
 
+  const handleClick = () => {
     props.setSearching(true);
+    if (props.gameType === GameType.CASUAL) {
+      MatchmakingClient.joinMatchmakingCasual()
+        .catch((err) => {
+          setErrorMessage(err.message);
+          props.setSearching(false);
+        });
+    } else if (props.gameType === GameType.RANKED) {
+      MatchmakingClient.joinMatchmakingRanked()
+        .catch((err) => {
+          setErrorMessage(err.message);
+          props.setSearching(false);
+        });
+    }
   };
 
-  if (props.gameType.toString() === "Casual") {
-    return (
-      <div className="game-mode-button">
-        <button className="casual" onClick={handleClick}>
-          <h2 className="titleMode">Casual</h2>
-        </button>
-      </div>
-    );
-  }
   return (
     <div className="game-mode-button">
-      <button className="ranked" onClick={handleClick}>
-        <h2 className="titleMode">Ranked</h2>
+      <button className={props.gameType.toString().toLowerCase()} onClick={handleClick}>
+        <h2 className="titleMode">{props.gameType.toString()}</h2>
       </button>
     </div>
   );
@@ -196,18 +213,18 @@ function GameLauncher() {
         </>
       )}
       {searchingCasual && (
-        <MatchmakingButton
-          gameType={GameType.CASUAL}
-          setSearching={setSearchingCasual}
-        />
-      )}
-      {searchingRanked && (
-        <MatchmakingButton
-          gameType={GameType.RANKED}
-          setSearching={setSearchingRanked}
-        />
-      )}
-    </div>
+          <MatchmakingButton
+            gameType={GameType.CASUAL}
+            setSearching={setSearchingCasual}
+          />
+        )}
+        {searchingRanked && (
+            <MatchmakingButton
+              gameType={GameType.RANKED}
+              setSearching={setSearchingRanked}
+            />
+        )}
+      </div>
   );
 }
 
@@ -388,7 +405,7 @@ export function HomeLogged() {
     }
 
     return () => {
-      MatchmakingClient.leaveMatchmaking();
+      MatchmakingClient.leaveMatchmaking().catch(() => {});
     };
   }, [data]);
 
