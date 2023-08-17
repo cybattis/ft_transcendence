@@ -2,16 +2,15 @@
     display: flex;
     width: 100%;
     height: 100%;
-    gap: 10px;
-    bottom: 56px;
+    gap: 20px;
 
     text-align: center;
     justify-content: center;
+    align-items: center;
     overflow-y: auto;
 }
 
 .gameBox {
-    display: flex;
     gap: 10px;
 
     flex-direction: column;
@@ -20,6 +19,8 @@
 .gameScreen {
     display: flex;
     box-sizing: border-box;
+
+    justify-content: center;
 
     aspect-ratio: 16 / 9;
 }
@@ -32,64 +33,105 @@
 
 .chatBox {
     box-sizing: border-box;
+
     display: flex;
     flex-direction: column;
+    flex: auto;
+
     overflow-y: auto;
-    flex: 3 2;
-    
     width: 100%;
+
+    max-height: 400px;
+    max-width: 800px;
+
     justify-content: center;
     align-items: center;
+
     border-radius: 20px;
 }
 
-@media screen and (width < 800px) {
+.game-extra {
+    display: flex;
+    width: 100%;
+    height: 100%;
+
+   align-items: center;
+    gap: 10px;
+}
+
+@media screen and (width < 350px) {
     .gamePage {
         flex-direction: column;
     }
 
     .gameScreen {
-        width: 90%;
+        width: 200px;
+        height: 100px;
     }
 
-    .chatBox {
-        max-height: 50%;
+    .game-extra {
+        flex-direction: column;
+    }
+}
+
+@media screen and (width >= 300px) and (width < 800px) {
+    .gamePage {
+        flex-direction: column;
+    }
+
+    .gameScreen {
+        width: 700px;
+        height: 350px;
+    }
+
+    .game-extra {
+        flex-direction: column;
     }
 }
 
 @media screen and (width >= 800px) and (width < 1600px) {
     .gamePage {
         flex-direction: column;
-        height: var(--vp-size);
-        align-items: center;
     }
 
-    .gameScreen {
-        width: 90%;
-        justify-content: center;
+    .players {
+        flex-direction: row;
+        gap: 10px;
     }
 
-    .chatBox {
-        max-width: 60%;
-        max-height: 80%;
+    .game-extra {
+        flex-direction: column;
     }
 }
 
-@media screen and (width >= 1600px) {
+@media screen and (width >= 1600px) and (width < 2400px) {
     .gamePage {
-        flex-direction: row;
-        min-width: 1600px;
-        align-items: center;
+        flex-direction: column;
     }
 
     .gameScreen {
-        width: 50%;
-        height: 50%;
-        justify-content: center;
+        width: 1400px;
+        height: 700px;
     }
 
-    .chatBox {
-        max-width: 40%;
-        height: 80%;
+    .game-extra {
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+@media screen and (width >= 2400px) {
+    .gamePage {
+        flex-direction: row;
+    }
+
+    .gameScreen {
+        width: 2000px;
+        height: 1000px;
+    }
+
+    .game-extra {
+        flex-direction: column;
+        justify-content: center;
     }
 }

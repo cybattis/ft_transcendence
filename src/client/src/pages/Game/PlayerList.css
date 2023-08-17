@@ -4,6 +4,8 @@
     align-items: center;
     text-align: center;
     gap: 50px;
+
+    flex-direction: row;
 }
 
 .vs {
@@ -13,16 +15,4 @@
 .playerAvatar {
     display: flex;
     justify-content: center;
-}
-
-@media screen and (width < 1600px) {
-    .playerList {
-        flex-direction: row;
-    }
-}
-
-@media screen and (width >= 1600px) {
-    .playerList {
-        flex-direction: column;
-    }
 }
