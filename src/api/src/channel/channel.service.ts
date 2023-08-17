@@ -573,6 +573,18 @@ export class ChannelService implements OnModuleInit {
         mute: [],
         password: '',
       });
+      const me = await this.usersRepository.findOne({where: {nickname: username}})
+      if (me)
+      {
+        me.chans.push(target);
+        await this.usersRepository.save(me);
+      }
+      const friend = await this.usersRepository.findOne({where: {nickname: target}})
+      if (friend)
+      {
+        friend.chans.push(username);
+        await this.usersRepository.save(friend);
+      }
       socket.to(socketTarget).emit('inv', { username, target });
       server.to(socket.id).emit('inv', { username, target });
     }
