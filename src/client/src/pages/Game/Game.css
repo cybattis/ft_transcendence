@@ -5,9 +5,19 @@
     gap: 20px;
 
     text-align: center;
-    justify-content: center;
-    align-items: center;
     overflow-y: auto;
+}
+
+.game-canvas {
+    display: flex;
+    position: absolute;
+    width: 100%;
+    height: auto;
+    align-items: center;
+
+    aspect-ratio: 16 / 9;
+
+    margin-top: 20px;
 }
 
 .gameBox {
@@ -17,12 +27,11 @@
 }
 
 .gameScreen {
-    display: flex;
-    box-sizing: border-box;
+    position: relative;
+    width: 90%;
 
     justify-content: center;
-
-    aspect-ratio: 16 / 9;
+    align-items: center;
 }
 
 .players {
@@ -35,14 +44,13 @@
     box-sizing: border-box;
 
     display: flex;
-    flex-direction: column;
     flex: auto;
+    flex-direction: column;
 
     overflow-y: auto;
-    width: 100%;
 
-    max-height: 400px;
-    max-width: 800px;
+    width: 100%;
+    height: 100%;
 
     justify-content: center;
     align-items: center;
@@ -52,46 +60,45 @@
 
 .game-extra {
     display: flex;
+
     width: 100%;
     height: 100%;
 
-   align-items: center;
+    max-width: 500px;
+
+    margin: 20px;
+
+    flex-direction: column;
+
     gap: 10px;
 }
 
-@media screen and (width < 350px) {
+@media screen and (width < 400px) {
     .gamePage {
         flex-direction: column;
+        align-items: center;
     }
 
-    .gameScreen {
-        width: 200px;
-        height: 100px;
-    }
-
-    .game-extra {
-        flex-direction: column;
+    .game-canvas {
+        margin: 10px;
     }
 }
 
-@media screen and (width >= 300px) and (width < 800px) {
+@media screen and (width >= 400px) and (width < 800px) {
     .gamePage {
         flex-direction: column;
+        align-items: center;
     }
 
-    .gameScreen {
-        width: 700px;
-        height: 350px;
-    }
-
-    .game-extra {
-        flex-direction: column;
+    .game-canvas {
+        margin: 10px;
     }
 }
 
 @media screen and (width >= 800px) and (width < 1600px) {
     .gamePage {
         flex-direction: column;
+        align-items: center;
     }
 
     .players {
@@ -100,23 +107,27 @@
     }
 
     .game-extra {
-        flex-direction: column;
+        max-width: 500px;
+        max-height: 500px;
+    }
+
+    .game-canvas {
+        margin-left: 20px;
     }
 }
 
 @media screen and (width >= 1600px) and (width < 2400px) {
     .gamePage {
-        flex-direction: column;
-    }
-
-    .gameScreen {
-        width: 1400px;
-        height: 700px;
+        flex-direction: row;
     }
 
     .game-extra {
-        flex-direction: column;
-        justify-content: center;
+        max-width: 500px;
+        max-height: 1000px;
+    }
+
+    .game-canvas {
+        margin-left: 20px;
     }
 }
 
@@ -125,13 +136,11 @@
         flex-direction: row;
     }
 
-    .gameScreen {
-        width: 2000px;
-        height: 1000px;
+    .game-canvas {
+        margin-left: 20px;
     }
 
     .game-extra {
-        flex-direction: column;
-        justify-content: center;
+        max-height: 1000px;
     }
 }
