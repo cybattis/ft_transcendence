@@ -459,6 +459,7 @@ export class ChannelService implements OnModuleInit {
         where: { channel: channel },
       });
       if (channelToJoin)
+      {
         await this.tryJoin(
           server,
           socket,
@@ -468,6 +469,13 @@ export class ChannelService implements OnModuleInit {
           pass,
           blockedChat,
         );
+        const user = await this.usersRepository.findOne({where: {nickname: username}});
+        if (user)
+        {
+          user.chans.push(channel);
+          await this.usersRepository.save(user);
+        }
+      }
       else {
         const salt = await bcrypt.genSalt();
         const hash = await bcrypt.hash(pass, salt);

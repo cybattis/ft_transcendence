@@ -280,6 +280,8 @@
     display: flex;
     max-width: 250px;
     flex-direction: row;
+    justify-content: center;
+    align-items: center;
     overflow-x: auto;
 }
 
@@ -363,6 +365,10 @@
     .pop-invite {
         left: 1%;
     }
+
+    .ctnr-param {
+        left: 1%;
+    }
 }
 
 @media screen and (width >= 1200px) {
@@ -375,6 +381,10 @@
     }
 
     .pop-invite {
+        left: 5%;
+    }
+
+    .ctnr-param {
         left: 5%;
     }
 }
@@ -390,6 +400,10 @@
 
     .pop-invite {
         left: 10%;
+    }
+
+    .ctnr-param {
+        left: 13%;
     }
 }
 
@@ -412,7 +426,7 @@
     z-index: 90;
 
     top: 30%;
-    min-width: max-content;
+    min-width: 250px;
 
     align-items: center;
     justify-items: center;
@@ -426,7 +440,24 @@
 
 .form-param {
     display: flex;
+    max-width: 250px;
     flex-direction: column;
+}
+
+.submitParamButton {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    width: 250px;
+    height: 46px;
+    border-radius: 8px;
+    margin: 20px 0 5px 0;
+
+    color: white;
+    background-color: var(--purple-wave);
+    font-family: 'Space Mono', monospace;
+    font-weight: bold;
 }
 
 .chat-line {
