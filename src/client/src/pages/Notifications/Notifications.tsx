@@ -125,8 +125,7 @@ export default function Notifications() {
             onAccept={() => handleAccept(invits.id)}
             onDecline={() => handleDecline(invits.id)}
           />
-        )
-        })
+        )}
       </div>);
   }
 
