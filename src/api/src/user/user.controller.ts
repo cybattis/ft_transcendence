@@ -14,7 +14,6 @@ import {
   ForbiddenException, NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './entity/Users.entity';
 import {
   ChannelInvite,
   UserFriend,
@@ -72,7 +71,7 @@ export class UserController{
   async userInfoId(
     @Param('id') id: number,
   ): Promise<UserInfo> {
-    const result = await this.userService.userInfoByID(id);
+    const result = await this.userService.userInfoByID(Number(id));
 
     if (result.isErr())
       throw new NotFoundException();
@@ -201,7 +200,7 @@ export class UserController{
   @UseGuards(TokenGuard)
   @Get('friends-data/:id')
   async getFriends(@Param('id') id: number): Promise<UserFriendsData> {
-    const result = await this.userService.getFriendData(id);
+    const result = await this.userService.getFriendData(Number(id));
     if (result.isErr())
       throw new NotFoundException();
     return result.value;
@@ -252,7 +251,7 @@ export class UserController{
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.removeFriend(id, payload.id);
+    const result = await this.userService.removeFriend(Number(id), payload.id);
     if (result.isErr()) {
       switch (result.error) {
         case APIError.UserNotFound:
@@ -283,7 +282,7 @@ export class UserController{
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.blockFriend(id, payload.id);
+    const result = await this.userService.blockFriend(Number(id), payload.id);
 
     if (result.isErr()) {
       switch (result.error) {
@@ -304,7 +303,7 @@ export class UserController{
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result =  await this.userService.unblockFriend(id, payload.id);
+    const result = await this.userService.unblockFriend(Number(id), payload.id);
 
     if (result.isErr()) {
       switch(result.error) {
@@ -326,8 +325,8 @@ export class UserController{
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request accepted by: ', id, payload.id);
-    const result = await this.userService.acceptFriendRequest(id, payload.id);
+    console.log('friend request accepted by: ', Number(id), payload.id);
+    const result = await this.userService.acceptFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
         case APIError.UserNotFound:
@@ -350,7 +349,7 @@ export class UserController{
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
     console.log('friend request declined by: ', id, payload.id);
-    const result = await this.userService.declineFriendRequest(id, payload.id);
+    const result = await this.userService.declineFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
         case APIError.UserNotFound:
@@ -402,7 +401,7 @@ export class UserController{
   @UseGuards(TokenGuard)
   @Get('customization/paddleColor/:id')
   async getPaddleColor(@Param('id') id: number): Promise<string> {
-    const result = await this.userService.getPaddleColor(id);
+    const result = await this.userService.getPaddleColor(Number(id));
     if (result.isErr())
       throw new NotFoundException();
     return result.value;

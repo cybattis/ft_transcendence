@@ -32,7 +32,7 @@ export class User {
   @Column({ type: 'varchar', length: 100, nullable: true, select: false })
   password: string;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   isVerified: boolean;
 
   @Column({ default: false, nullable: false })

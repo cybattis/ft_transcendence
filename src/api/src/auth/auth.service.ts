@@ -136,7 +136,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     if (isVerified.isErr())
       return failure(APIError.UserNotVerified);
 
-    if ((await this.userService.authActivated(user.email)).isOk()) {
+    const authActivated = await this.userService.authActivated(user.email);
+    if (authActivated.isOk() && authActivated.value === true) {
       if (await bcrypt.compare(user.password, foundUser.value.password)) {
         await this.mailService.sendCodeConfirmation(user.email);
         return success('code');
@@ -206,6 +207,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     user.email = body.email;
     user.IsIntra = true;
+    user.isVerified = true;
 
     user.avatarUrl = body.image.link;
 
