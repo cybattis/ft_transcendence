@@ -27,7 +27,7 @@ export class TokenGuard implements CanActivate {
       return false;
     }
 
-    if (this.authService.validateToken(token)) return true;
+    if (this.authService.validateToken(token).isOk()) return true;
     else {
       console.log(`Invalid token: ${request.url}`);
       return false;

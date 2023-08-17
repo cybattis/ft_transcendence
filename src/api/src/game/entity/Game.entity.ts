@@ -28,7 +28,7 @@ export class Game {
   })
   players: User[];
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column('integer', { array: true, default: [] })
   ids: number[];
 
   @Column({ type: 'integer', default: 0 })

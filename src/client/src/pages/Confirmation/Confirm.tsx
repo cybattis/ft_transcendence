@@ -1,33 +1,23 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import { apiBaseURL } from "../../utils/constant";
-import { PopupContext } from "../../components/Modal/Popup.context";
 import { AuthContext } from "../../components/Auth/auth.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 async function ValidateEmail() {
   const { setAuthed } = React.useContext(AuthContext);
-  const { setErrorMessage } = React.useContext(PopupContext);
+  const { put, showErrorInModal } = useFetcher();
 
   const location = useLocation();
   const id = location.search.substring(1);
 
-  axios
-    .put(apiBaseURL + "auth/" + id, true)
-    .then((res) => {
-      const data = res.data;
-      localStorage.setItem("token", data);
+  put<string>("auth/get-token/" + id, {})
+    .then(newToken => {
+      localStorage.setItem("token", newToken);
       setAuthed(true);
     })
     .catch((error) => {
-      if (error.response === undefined) {
-        localStorage.clear();
-        setErrorMessage("Error unknown...");
-      } else if (error.response.status === 403) {
-        localStorage.clear();
-        setAuthed(false);
-        setErrorMessage("Session expired, please login again!");
-      } else setErrorMessage(error.response.data.message + "!");
+      showErrorInModal(error);
+      return <Navigate to={"/"} />;
     });
 }
 
@@ -46,10 +36,7 @@ export default function Confirmation() {
     textAlign: "center" as "center",
   };
 
-  ValidateEmail().catch((err) => {
-    console.log(err);
-    return <Navigate to={"/"} />;
-  });
+  ValidateEmail();
 
   return (
     <div style={home}>

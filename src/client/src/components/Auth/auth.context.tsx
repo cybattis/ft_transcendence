@@ -1,14 +1,10 @@
 import React, {
   createContext,
   ReactNode,
-  useContext,
   useEffect,
   useState,
 } from "react";
-import axios from "axios";
-import { apiBaseURL } from "../../utils/constant";
-import { Navigate } from "react-router-dom";
-import { PopupContext } from "../Modal/Popup.context";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 interface AuthContextType {
   authed: boolean;
@@ -34,12 +30,10 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState<boolean>(false);
   const [isAuthing, setIsAuthing] = useState<boolean>(!authed);
   const [tfaActivated, setTfaActivated] = useState<boolean>(false);
-  const { setErrorMessage } = useContext(PopupContext);
+  const { get } = useFetcher();
   const token = localStorage.getItem("token");
 
   function setAuthedFunction(authed: boolean) {
-    console.log("setting authed to :", authed);
-    console.trace("setAuthedFunction");
     setIsAuthing(false);
     setAuthed(authed);
   }
@@ -50,23 +44,12 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    axios
-      .get(apiBaseURL + "auth/token-validation", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
+    get<true>("auth/token-validation")
+      .then(res => {
         setAuthed(true);
         setIsAuthing(false);
       })
-      .catch((error) => {
-        setAuthed(false);
-        setIsAuthing(false);
-        setErrorMessage("Your session has expired, please log in again.");
-        localStorage.removeItem("token");
-        return <Navigate to="/" />;
-      });
+      .catch(() => setIsAuthing(false));
   }, [token]);
 
   return (

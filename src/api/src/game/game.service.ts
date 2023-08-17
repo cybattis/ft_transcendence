@@ -1,21 +1,14 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game } from './entity/Game.entity';
 import { Repository } from 'typeorm';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from '../user/user.service';
-import {
-  GameBodyDto,
-  GameInfos,
-  GameStatus,
-  GameType,
-} from '../type/game.type';
+import { GameBodyDto, GameInfos, GameStatus, GameType, } from '../type/game.type';
 import { ModuleRef } from '@nestjs/core';
 import { ScoreUpdate } from '../multiplayer/types/multiplayer.types';
+import { APIError } from "../utils/errors";
+import { Result, success } from "../utils/Error";
 
 @Injectable()
 export class GameService implements OnModuleInit {
@@ -28,8 +21,16 @@ export class GameService implements OnModuleInit {
     private moduleRef: ModuleRef,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     this.userService = this.moduleRef.get(UserService, { strict: false });
+
+    const allGames = await this.gameRepository.find();
+    for (const game of allGames) {
+      if (game.status === GameStatus.WAITING_FOR_PLAYERS || game.status === GameStatus.IN_PROGRESS) {
+        game.status = GameStatus.FINISHED;
+        await this.gameRepository.save(game);
+      }
+    }
   }
 
   async findAll(): Promise<Game[]> {
@@ -42,23 +43,24 @@ export class GameService implements OnModuleInit {
       where: { id: userId },
     });
 
-    if (!user) return [];
+    if (!user)
+      return [];
     return user.games;
   }
 
-  async createGame(body: GameBodyDto): Promise<Game> {
+  async createGame(body: GameBodyDto): Promise<Result<Game, typeof APIError.UserNotFound>> {
     const game: Game = new Game();
 
     game.mode = body.mode;
     game.type = body.type;
 
     const user1 = await this.userService.findByID(body.ids[0]);
-    if (!user1) throw new InternalServerErrorException('User not found');
+    if (user1.isErr()) throw new NotFoundException('User not found');
 
     const user2 = await this.userService.findByID(body.ids[1]);
-    if (!user2) throw new InternalServerErrorException('User not found');
+    if (user2.isErr()) throw new NotFoundException('User not found');
 
-    game.players = [user1, user2];
+    game.players = [user1.value, user2.value];
 
     game.ids = body.ids;
 
@@ -66,13 +68,13 @@ export class GameService implements OnModuleInit {
     game.scoreP2 = body.scoreP2;
     game.status = body.status;
 
-    user1.inGame = true;
-    user2.inGame = true;
-    await this.userRepository.save(user1);
-    await this.userRepository.save(user2);
+    user1.value.inGame = true;
+    user2.value.inGame = true;
+    await this.userRepository.save(user1.value);
+    await this.userRepository.save(user2.value);
 
-    await this.gameRepository.save(game);
-    return game;
+    const updated = await this.gameRepository.save(game);
+    return success(updated);
   }
 
   async updateUserStats(
@@ -81,70 +83,31 @@ export class GameService implements OnModuleInit {
     ranked: GameType,
     score: { u1: number; u2: number },
   ): Promise<void> {
-    await this.userRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({
-        totalGameWon: user1.totalGameWon + 1,
-        xp: user1.xp + 200 + 50 + score.u1 * 5,
-      })
-      .where('id = :id', { id: user1.id })
-      .execute();
-    await this.userRepository
-      .createQueryBuilder()
-      .update(User)
-      .set({
-        xp: user2.xp + 200 + score.u2 * 5,
-      })
-      .where('id = :id', { id: user2.id })
-      .execute();
 
-    if (
-      (user1.level === 1 && user1.xp > 1000) ||
-      user1.xp > 1000 * user1.level + user1.level * 200
-    ) {
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          level: user1.level + 1,
-        })
-        .where('id = :id', { id: user1.id })
-        .execute();
+    user1.xp = user1.xp + 200 + 50 + score.u1 * 5;
+
+    user2.xp = user2.xp + 200 + score.u2 * 5;
+
+    if ((user1.level === 1 && user1.xp > 1000)
+      || user1.xp > 1000 * user1.level + user1.level * 200)
+    {
+      user1.level = user1.level + 1;
     }
 
-    if (
-      (user2.level === 1 && user2.xp > 1000) ||
-      user2.xp > 1000 * user2.level + user2.level * 200
-    ) {
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          level: user2.level + 1,
-        })
-        .where('id = :id', { id: user2.id })
-        .execute();
+    if ((user2.level === 1 && user2.xp > 1000)
+      || user2.xp > 1000 * user2.level + user2.level * 200)
+    {
+      user2.level = user2.level + 1;
     }
 
     if (ranked === GameType.RANKED) {
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          ranking: user1.ranking + 10,
-        })
-        .where('id = :id', { id: user1.id })
-        .execute();
-      await this.userRepository
-        .createQueryBuilder()
-        .update(User)
-        .set({
-          ranking: user2.ranking - 10,
-        })
-        .where('id = :id', { id: user2.id })
-        .execute();
+      user1.totalGameWon = user1.totalGameWon + 1;
+      user1.ranking = user1.ranking + 10;
+      user2.ranking = user2.ranking - 10;
     }
+
+    await this.userRepository.save(user1);
+    await this.userRepository.save(user2);
   }
 
   async fetchUserGames(user: User) {
@@ -154,7 +117,9 @@ export class GameService implements OnModuleInit {
         relations: { players: true },
         where: { id: user.games[i].id },
       });
-      games[i] = game as Game;
+      if (game === null)
+        continue;
+      games[i] = game;
     }
     return games;
   }
@@ -201,7 +166,10 @@ export class GameService implements OnModuleInit {
   }
 
   async getInfoGame(id: number): Promise<GameInfos | null> {
-    const games = await this.findUserGames(id);
+    const userID = Number(id);
+    const games = await this.findUserGames(userID);
+    if (games.length === 0)
+      return null;
 
     const actualGame: Game = games[games.length - 1];
     const playerOne: User | null = await this.userRepository.findOne({
@@ -211,14 +179,15 @@ export class GameService implements OnModuleInit {
       where: { id: actualGame.ids[1] },
     });
     if (playerOne && playerTwo) {
-      const isPlayerOne = actualGame.ids[0] === id;
-      const isPlayerTwo = actualGame.ids[1] === id;
+      const isPlayerOne = actualGame.ids[0] === userID;
+      const isPlayerTwo = actualGame.ids[1] === userID;
 
       return {
         id: actualGame.id,
         playerOne: {
           me: isPlayerOne,
-          hasWin: actualGame.scoreP1 > actualGame.scoreP2,
+          hasWin: actualGame.status === GameStatus.FINISHED ? actualGame.scoreP1 > actualGame.scoreP2
+            : actualGame.status === GameStatus.PLAYER2_DISCONNECTED,
           username: playerOne.nickname,
           avatar: playerOne.avatarUrl,
           elo: playerOne.ranking,
@@ -226,7 +195,8 @@ export class GameService implements OnModuleInit {
         },
         playerTwo: {
           me: isPlayerTwo,
-          hasWin: actualGame.scoreP2 > actualGame.scoreP1,
+          hasWin: actualGame.status === GameStatus.FINISHED ? actualGame.scoreP2 > actualGame.scoreP1
+            : actualGame.status === GameStatus.PLAYER1_DISCONNECTED,
           username: playerTwo.nickname,
           avatar: playerTwo.avatarUrl,
           elo: playerTwo.ranking,
@@ -237,6 +207,7 @@ export class GameService implements OnModuleInit {
         status: actualGame.status,
       };
     }
+
     return null;
   }
 }

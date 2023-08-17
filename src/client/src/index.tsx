@@ -9,15 +9,16 @@ import Confirmation from "./pages/Confirmation/Confirm";
 import RedirectionPage from "./pages/Redirection/Redirection";
 import TFARedirection from "./pages/Confirmation/TFARedirection";
 import { startPongManager } from "./game/PongManager";
-import { Profile } from "./pages/Profile/Profile";
+import { ProfileLoader } from "./pages/Profile/Profile";
 import { Game } from "./pages/Game/Game";
 import { LeaderboardLoader } from "./pages/Leaderboard/Leaderboard";
 import Notifications from "./pages/Notifications/Notifications";
 import { Settings } from "./pages/Settings/Settings";
-import { apiBaseURL } from "./utils/constant";
 import About from "./pages/About/About";
 import { AuthedRoute } from "./components/Auth/AuthedRoute";
+import { Error400Page, Error404Page, Error500Page, ErrorInternetPage } from "./pages/Error/ErrorPage";
 import { IAGame } from "./pages/Game/IAGame";
+import { ProfileType } from "./type/client.type";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,22 @@ const router = createBrowserRouter([
             element: <Error404 />,
           },
           {
+            path: "bad-request/:path",
+            element: <Error400Page />,
+          },
+          {
+            path: "not-found/:path",
+            element: <Error404Page />,
+          },
+          {
+            path: "server-busy/:path",
+            element: <Error500Page />,
+          },
+          {
+            path: "no-internet/:path",
+            element: <ErrorInternetPage />,
+          },
+          {
             path: "",
             element: <Home />,
           },
@@ -39,45 +56,16 @@ const router = createBrowserRouter([
             element: <About />,
           },
           {
-            path: "profile/:username",
-            element: <Profile />,
-            errorElement: <Error404 />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(
-                apiBaseURL + `user/profile/${params.username}`,
-                {
-                  headers: {
-                    Authorization:
-                      "Bearer " + localStorage.getItem("token") || "",
-                  },
-                }
-              );
-              if (res.status === 400)
-                throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) {
-                localStorage.clear();
-              }
-              return res.json();
-            },
+            path: "profile/nickname/:username",
+            element: <ProfileLoader profileType={ProfileType.NicknameProfile}/>,
+          },
+          {
+            path: "profile/id/:id",
+            element: <ProfileLoader profileType={ProfileType.IdProfile}/>,
           },
           {
             path: "my-profile",
-            element: <Profile />,
-            errorElement: <Error404 />,
-            loader: async ({ request, params }) => {
-              const res = await fetch(apiBaseURL + "user/my-profile", {
-                headers: {
-                  Authorization:
-                    "Bearer " + localStorage.getItem("token") || "",
-                },
-              });
-              if (res.status === 400)
-                throw new Response("User not found", { status: 400 });
-              else if (res.status === 403) {
-                localStorage.clear();
-              }
-              return res.json();
-            },
+            element: <ProfileLoader profileType={ProfileType.MyProfile}/>,
           },
           {
             path: "notifications",

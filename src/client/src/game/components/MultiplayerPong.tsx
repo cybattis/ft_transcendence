@@ -6,17 +6,13 @@ import { PlayerInfos } from "../networking/types";
 import { MatchmakingClient } from "../networking/matchmaking-client";
 
 export type MultiplayerPongProps = {
-  name: string;
   width: number;
   height: number;
   paddleColor: RgbColor;
 };
 
 export function MultiplayerPong({
-  name,
-  width,
-  height,
-  paddleColor,
+  width, height, paddleColor,
 }: MultiplayerPongProps) {
   let canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -25,15 +21,9 @@ export function MultiplayerPong({
     const canvas = canvasRef.current;
 
     const opponentInfos: PlayerInfos = MatchmakingClient.getOpponentInfos();
-    createNewMultiplayerGame(
-      new MultiplayerPongState(
-        name,
-        canvas,
-        paddleColor,
-        stringToRGB(opponentInfos.paddleColor)
-      )
-    );
-  }, [name, width, height, paddleColor]);
+    createNewMultiplayerGame(new MultiplayerPongState(canvas,
+      paddleColor, stringToRGB(opponentInfos.paddleColor)));
+  }, [width, height, paddleColor]);
 
   return (
     <canvas ref={canvasRef} width={width} height={height}>

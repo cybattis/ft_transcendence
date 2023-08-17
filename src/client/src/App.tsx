@@ -7,19 +7,22 @@ import {AuthContextProvider} from "./components/Auth/auth.context";
 import {FormContextProvider} from "./components/Auth/form.context";
 import {AuthForms} from "./components/Auth/Forms";
 import { PopupProvider } from "./components/Modal/Popup.context";
+import { AcceptGamePopup } from "./components/Modal/AcceptGamePopup";
 
 function App() {
 
   return (
     <div className="app" id={"background"}>
         <AuthContextProvider>
-          <FormContextProvider>
-              <PopupProvider>
+          <PopupProvider>
+            <FormContextProvider>
+              <AcceptGamePopup>
                 <NavBar />
                 <Outlet />
                 <AuthForms />
-              </PopupProvider>
-          </FormContextProvider>
+              </AcceptGamePopup>
+            </FormContextProvider>
+          </PopupProvider>
         </AuthContextProvider>
       <Footer />
     </div>

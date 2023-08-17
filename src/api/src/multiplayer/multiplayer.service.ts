@@ -11,8 +11,9 @@ import { Game } from '../game/entity/Game.entity';
 import { AuthedSocket } from '../auth/types/auth.types';
 import { GameStatus } from '../type/game.type';
 import { Server } from 'socket.io';
-import { User } from '../user/entity/Users.entity';
 import { UserService } from '../user/user.service';
+import { APIError } from "../utils/errors";
+import { failure, Result, success } from "../utils/Error";
 
 @Injectable()
 export class MultiplayerService {
@@ -20,7 +21,7 @@ export class MultiplayerService {
   private server: Server;
 
   // Game constants
-  private readonly BALL_SPEED: number = 0.4; // Traveling half of the board in 1 second
+  private readonly BALL_SPEED: number = 0.5; // Traveling half of the board in 1 second
   private readonly BALL_SERVING_SPEED: number = this.BALL_SPEED / 2; // 50% of the normal speed
 
   constructor(
@@ -81,7 +82,7 @@ export class MultiplayerService {
    *
    * @param client The client that sent the ready event
    */
-  public setClientReady(client: AuthedSocket): void {
+  public async setClientReady(client: AuthedSocket): Promise<Result<true, typeof APIError.GameNotFound>> {
     const room = this.getRoomByPlayerId(client.userId);
     if (room) {
       if (room.player1Id === client.userId) {
@@ -91,19 +92,21 @@ export class MultiplayerService {
         room.player2Ready = true;
         client.emit('ready-ack', 2);
       } else {
-        return;
+        return failure(APIError.GameNotFound);
       }
 
       client.join(room.serverRoomId);
 
       console.log('[MULTIPLAYER] Player ' + client.userId + ' is ready.');
 
-      if (room.player1Ready && room.player2Ready) {
-        this.startGame(room);
-      }
+      if (room.player1Ready && room.player2Ready)
+        await this.startGame(room);
+
+      return success(true);
     } else {
       console.log('NO ROOM FOUND FOR PLAYER ' + client.userId);
       console.log(this.rooms);
+      return failure(APIError.GameNotFound);
     }
   }
 
@@ -112,8 +115,9 @@ export class MultiplayerService {
    *
    * @param game The game to start
    */
-  public startGame(game: GameRoom): void {
+  public async startGame(game: GameRoom): Promise<void> {
     game.status = GameStatus.IN_PROGRESS;
+    await this.gameService.updateGameStatus(game.id, GameStatus.IN_PROGRESS);
 
     const ballUpdate: BallUpdate = {
       x: 0.5,
@@ -227,8 +231,8 @@ export class MultiplayerService {
 
     // Check if the game is finished
     if (
-      (game.player1Score >= 1 && game.player1Score - game.player2Score >= 0) ||
-      (game.player2Score >= 1 && game.player2Score - game.player1Score >= 0)
+      (game.player1Score >= 7 && game.player1Score - game.player2Score >= 2) ||
+      (game.player2Score >= 7 && game.player2Score - game.player1Score >= 2)
     ) {
       await this.endGame(game);
       return;
@@ -269,9 +273,12 @@ export class MultiplayerService {
     if (game.status === GameStatus.FINISHED) return;
 
     // Update the game status
-    if (game.player1Disconnected || game.player2Disconnected)
-      game.status = GameStatus.PLAYER_DISCONNECTED;
-    else game.status = GameStatus.FINISHED;
+    if (game.player1Disconnected)
+      game.status = GameStatus.PLAYER1_DISCONNECTED;
+    else if (game.player2Disconnected)
+      game.status = GameStatus.PLAYER2_DISCONNECTED;
+    else
+      game.status = GameStatus.FINISHED;
 
     // Send the end event to all players and spectators
     this.server.to(game.serverRoomId).emit('game-ended');
@@ -285,24 +292,29 @@ export class MultiplayerService {
     await this.gameService.updateGameStatus(game.id, game.status);
 
     // Update the stats of the players
-    const user1: User | null = await this.userService.findByID(game.player1Id);
-    const user2: User | null = await this.userService.findByID(game.player2Id);
+    const user1 = await this.userService.findByID(game.player1Id);
+    const user2 = await this.userService.findByID(game.player2Id);
+
     const score = { u1: game.player1Score, u2: game.player2Score };
 
-    if (user1 && user2) {
+    if (user1.isOk() && user2.isOk()) {
+      const u1 = user1.value;
+      const u2 = user2.value;
       if (game.player1Disconnected)
-        await this.gameService.updateUserStats(user2, user1, game.type, score);
+        await this.gameService.updateUserStats(u2, u1, game.type, score);
       else if (game.player2Disconnected)
-        await this.gameService.updateUserStats(user1, user2, game.type, score);
+        await this.gameService.updateUserStats(u1, u2, game.type, score);
       else if (game.player1Score > game.player2Score)
-        await this.gameService.updateUserStats(user1, user2, game.type, score);
+        await this.gameService.updateUserStats(u1, u2, game.type, score);
       else
-        await this.gameService.updateUserStats(user2, user1, game.type, score);
+        await this.gameService.updateUserStats(u2, u1, game.type, score);
     }
 
-    if (user1) await this.userService.updateUserGameStatus(user1);
+    if (user1.isOk())
+      await this.userService.updateUserGameStatus(user1.value);
 
-    if (user2) await this.userService.updateUserGameStatus(user2);
+    if (user2.isOk())
+      await this.userService.updateUserGameStatus(user2.value);
 
     // Remove the game from the list
     const index: number = this.rooms.indexOf(game);

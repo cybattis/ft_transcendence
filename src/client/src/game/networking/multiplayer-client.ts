@@ -12,6 +12,7 @@ import {
   ServeUpdate,
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
+import Config from "../../utils/Config";
 
 export namespace MultiplayerClient {
   import SocketParameters = SocketManager.SocketParameters;
@@ -58,8 +59,7 @@ export namespace MultiplayerClient {
       path: "/multiplayer",
     };
 
-    const endpoint: string =
-      "ws://" + process.env["REACT_APP_HOST_IP"] + ":5400";
+    const endpoint: string = "ws://" + Config.host_ip + ":" + Config.api_port;
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
@@ -104,7 +104,7 @@ export namespace MultiplayerClient {
     return true;
   }
 
-  function disconnect(): void {
+  export function disconnect(): void {
     if (socket && socket.connected) socket.disconnect();
   }
 
@@ -126,7 +126,7 @@ export namespace MultiplayerClient {
   }
 
   export function offGameEnded(callback: MultiplayerGameEndedCallback): void {
-    gameEndedCallback.filter((cb) => cb !== callback);
+    gameEndedCallback = gameEndedCallback.filter((cb) => cb !== callback);
   }
 
   export function onMovementUpdate(
@@ -168,9 +168,13 @@ export namespace MultiplayerClient {
     socket.emit("update-ball", ballUpdate);
   }
 
-  export function sendReady(): void {
-    if (!checkConnection()) return;
-    socket.emit("ready");
+  export async function sendReady(): Promise<void> {
+    if (!checkConnection())
+      throw new Error("Connection to matchmaking server failed");
+
+      const result = await socket.emitWithAck("ready");
+      if (result !== "OK")
+        throw new Error(result);
   }
 
   export function sendGoal(): void {

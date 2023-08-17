@@ -1,13 +1,14 @@
 import { Link, Navigate } from "react-router-dom";
 import "./NavButton.css";
-import { apiBaseURL } from "../../utils/constant";
-import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import notifsLogo from "../../resource/logo-notifications.png";
 import notifsLogoOn from "../../resource/logo-notifications-on.png";
-import { PopupContext } from "../Modal/Popup.context";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { AuthContext } from "../Auth/auth.context";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
+import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import { removeMultiplayerGame } from "../../game/PongManager";
+import { useFetcher } from "../../hooks/UseFetcher";
 
 export function NavButton(props: {
   link: string;
@@ -21,9 +22,9 @@ export function NavButton(props: {
   );
 }
 
-export function PlayButton(props: { text: string; link: string }) {
+export function PlayButton(props: { text: string; link: string; callback?: () => void;}) {
   return (
-    <Link to={props.link} className="playButton">
+    <Link to={props.link} className="playButton" onClick={props.callback}>
       {props.text}
     </Link>
   );
@@ -31,35 +32,18 @@ export function PlayButton(props: { text: string; link: string }) {
 
 export function DisconnectButton(props: { callback?: () => void }) {
   const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
 
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
     setAuthed(false);
+    removeMultiplayerGame();
+    MultiplayerClient.quitGame();
     ChatClientSocket.disconnect();
-
-    const token: string | null = localStorage.getItem("token");
-    if (!token) {
-      await axios.put(apiBaseURL + "user/disconnect").then(() => {
-        return <Navigate to={"/"} />;
-      });
-    }
-
+    MultiplayerClient.disconnect();
+    MatchmakingClient.disconnect();
     localStorage.clear();
-
-    await axios
-      .put(apiBaseURL + "auth/disconnect", null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then(() => {
-        return <Navigate to={"/"} />;
-      })
-      .catch((err) => {
-        setErrorMessage("Error when disconnecting...");
-      });
+    return <Navigate to={'/'} />;
   };
 
   return (
@@ -81,43 +65,22 @@ function BellNotif({
   hasNotifs: boolean;
   setHasNotifs: (value: boolean) => void;
 }) {
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
+  const { get } = useFetcher();
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      let token = localStorage.getItem("token");
-      if (token) {
-        await axios
-          .get(apiBaseURL + "user/notifs", {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          .then((res) => {
-            if (res.data) setHasNotifs(true);
-          })
-          .catch((error) => {
-            if (error.response === undefined) {
-              setErrorMessage("Error unknown...");
-            } else if (error.response.status === 403) {
-              localStorage.clear();
-              setAuthed(false);
-              setErrorMessage("Session expired, please login again!");
-              return <Navigate to={"/"} />;
-            } else setErrorMessage(error.response.data.message + "!");
-          });
-      } else {
-        setAuthed(false);
-        setErrorMessage("Session expired, please login again!");
-        return <Navigate to={"/"} />;
-      }
+      get<boolean>("user/notifs")
+      .then((res) => {
+        if (res) setHasNotifs(true);
+      })
+      .catch(() => {});
     };
-
-    fetchNotifs().then(() => {});
 
     const notifHandler = () => {
       setHasNotifs(true);
     };
 
+    fetchNotifs();
     ChatClientSocket.onNotificationEvent(notifHandler);
 
     return () => {
@@ -134,14 +97,12 @@ export function Notification() {
   const [hasNotifs, setHasNotifs] = useState(false);
 
   return (
-    <Link
-      to={`/notifications`}
-      className="notifs"
-      onClick={() => {
-        setHasNotifs(false);
-      }}
-    >
-      <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs} />
+    <Link to={`/notifications`} className="notifs" onClick={() => {
+      setHasNotifs(false)
+      removeMultiplayerGame();
+      MultiplayerClient.quitGame();
+    }} >
+      <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
       Notifs
     </Link>
   );

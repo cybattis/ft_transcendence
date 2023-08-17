@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Chat.css";
-import { ChatInterface } from "./Interface/chat.interface";
 import ChannelList from "./List/ChannelList";
-import { JwtPayload } from "../../type/client.type";
+import { TokenData } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
-import axios from "axios";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
-import { apiBaseURL } from "../../utils/constant";
 import { Link, Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
@@ -17,6 +14,10 @@ import ParamLogo from "../../resource/param-logo.png";
 import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";
 import InvLogo from "../../resource/invite-logo.png";
+import { useFetcher } from "../../hooks/UseFetcher";
+import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
+import { Fetching } from "../../utils/fetching";
+import {useProfileData} from "../../hooks/UseProfileData";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -24,7 +25,7 @@ const channelList: string[] = [];
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [roomChange, setRoomChange] = useState("");
-  const [messages, setMessages] = useState<ChatInterface[]>([]);
+  const [messages, setMessages] = useState<Chat[]>([]);
   const blocedList: string[] = [];
   const [joinForm, setJoinForm] = useState(false);
   const [banForm, setBanForm] = useState(false);
@@ -43,9 +44,10 @@ export default function ChatClient() {
     channel: "",
     error: "",
   });
+  const { get, put, showErrorInModal } = useFetcher();
 
   const token = localStorage.getItem("token");
-  let payload: JwtPayload;
+  let payload: TokenData;
   let username = "";
 
   if (username === "" && token) {
@@ -87,8 +89,8 @@ export default function ChatClient() {
   }
 
   function Param(props: { canal: string }) {
-    const token = localStorage.getItem("token");
     const [buttonParam, setButtonParam] = useState(false);
+    const { get } = useFetcher();
     const channel = takeActiveCanal();
 
     function AffParam() {
@@ -180,26 +182,20 @@ export default function ChatClient() {
         }
         const channelB = channel.substring(1);
         const sendOwner =
-          apiBaseURL +
           "chat-controller/channel/owner/" +
           channelB +
           "/" +
           username;
-        await axios.get(sendOwner, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          if (response.data !== owner)
-            setOwner(response.data);
-        })
+        try {
+          const bool = await get<boolean>(sendOwner);
+          bool ? setOwner(true) : setOwner(false);
+        } catch (error) {} // Silently fail
       }
 
       isOwner();
 
       document.addEventListener("keydown", keyPress);
-      return () => document.removeEventListener("keydown", keyPress);      
+      return () => document.removeEventListener("keydown", keyPress);
     });
 
     const btnParam = () => {
@@ -221,7 +217,7 @@ export default function ChatClient() {
       );
   }
 
-  const handleButton = async (user: string) => {
+  const handleButton = (user: string) => {
     if (user === usr) {
       if (buttons) setButtons(false);
     }
@@ -242,42 +238,27 @@ export default function ChatClient() {
     }
   };
 
-  const handleBlock = async () => {
+  const handleBlock = () => {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
-    await axios
-      .put(apiBaseURL + `user/blockUsr/${usr}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    put<UserFriendsData>(`user/block-user/${usr}`, {})
+      .catch(showErrorInModal);
   };
 
   const handleUnBlock = async () => {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
-    await axios
-      .put(apiBaseURL + `user/unblockUsr/${usr}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        for (let i = 0; blocedList[i]; i ++)
-        {
+    put<UserFriendsData>(`user/unblockUsr/${usr}`, {})
+      .then(res => {
+        for (let i = 0; blocedList[i]; i ++) {
           if (blocedList[i] === usr)
             blocedList.splice(i, 1);
         }
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(showErrorInModal);
   };
 
-  const handleAddOpe = async () => {
+  const handleAddOpe = () => {
     const ope = {
       op: "op",
       channel: takeActiveCanal(),
@@ -417,27 +398,21 @@ export default function ChatClient() {
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
     const [me, setMe] = useState(true);
-    
+    const userData = useProfileData();
+
     useEffect(() => {
-      const getMyNickname = async () => {
-        await axios
-          .get(apiBaseURL + "user/my-profile", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((res) => {
-            if (usr === res.data.nickname)
-            {
-              if (me !== true)
-                setMe(true);
-            }
-            else if (usr !== res.data.nickname)
-              setMe(false);
-            console.log(me);
-          });
+      function getMyNickname() {
+        if (userData.data === null) return;
+
+        if (usr === userData.data.nickname) {
+          if (!me)
+            setMe(true);
+        } else if (usr !== userData.data.nickname)
+          setMe(false);
       }
+
       getMyNickname();
+    }, [userData.data]);
 
       const keyPress = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
@@ -448,22 +423,17 @@ export default function ChatClient() {
         }
       };
 
+    useEffect(() => {
       async function isUsrInChan() {
         let canal = takeActiveCanal();
         if (canal[0] === "#") canal = canal.slice(1);
-        await axios
-          .get(apiBaseURL + "chat-controller/channelName/" + canal, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((res) => {
-            if (res.data.users.includes(usr)) setIsHere(true);
+
+        get<Channel | null>("chat-controller/channelName/" + canal)
+          .then(channel => {
+            if (channel && channel.users.includes(usr)) setIsHere(true);
             else setIsHere(false);
           })
-          .catch((error) => {
-            console.log(error);
-          });
+          .catch(() => {});
       }
       isUsrInChan();
 
@@ -471,34 +441,23 @@ export default function ChatClient() {
         let name = takeActiveCanal();
         if (name === defaultChannelGen) return;
         if (name[0] === "#") name = name.slice(1);
-        await axios
-          .get(apiBaseURL + "chat-controller/channelName/" + name, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+
+        get<Channel | null>("chat-controller/channelName/" + name)
+          .then(channel => {
+            if (!channel) return;
+            if (channel.operator.includes(payload?.nickname)) setIsOpe(true);
+            if (channel.ban.includes(usr)) setIsBan(true);
+            if (channel.mute.includes(usr)) setIsMute(true);
           })
-          .then((res) => {
-            if (!res.data) return;
-            if (res.data.operator.includes(payload?.nickname)) setIsOpe(true);
-            if (res.data.ban.includes(usr)) setIsBan(true);
-            if (res.data.mute.includes(usr)) setIsMute(true);
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+          .catch(() => {});
       }
       getOpeList();
 
       async function getBlockedUsrs() {
-        await axios
-          .get(apiBaseURL + "user/blockedList", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
+          get<string[]>("user/blockedList")
           .then((res) => {
             setBlocked(false);
-            if (res.data.includes(usr))
+            if (res.includes(usr))
               setBlocked(true);
           })
           .catch((error) => {
@@ -510,16 +469,11 @@ export default function ChatClient() {
       async function IsOpe() {
         const channel = takeActiveCanal();
         const channelB = channel.substring(1);
-        const sendTarget =
-          apiBaseURL + "chat-controller/channel/ope/" + channelB + "/" + usr;
-        await axios.get(sendTarget, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        const sendTarget = "chat-controller/channel/ope/" + channelB + "/" + usr;
+        get<boolean>(sendTarget)
         .then((response) => {
-          if (targetOp !== response.data)
-            setTargetOp(response.data);
+          if (targetOp !== response)
+            setTargetOp(response);
         });
       }
       IsOpe();
@@ -527,7 +481,7 @@ export default function ChatClient() {
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
-    
+
 
     if (me === true)
     {
@@ -601,7 +555,7 @@ export default function ChatClient() {
                 Sub operator
               </button>
             )}
-            <Link to={`/profile/${usr}`}>
+            <Link to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
           </div>
@@ -611,7 +565,7 @@ export default function ChatClient() {
     );
   }
 
-  function ChatMap({ messages }: { messages: ChatInterface[] }) {
+  function ChatMap({ messages }: { messages: Chat[] }) {
     const [channelName, setChannelName] = useState("");
 
     useEffect(() => {
@@ -619,20 +573,16 @@ export default function ChatClient() {
         let channel = takeActiveCanal();
         if (channel[0] !== "#") {
           let addressInfo =
-            apiBaseURL +
             "chat-controller/channel/private/" +
             channel +
             "/" +
             username;
-          await axios
-            .get(addressInfo, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
+
+          get<string | null>(addressInfo)
+            .then(response => {
+              if (response) setChannelName(response);
             })
-            .then((response) => {
-              setChannelName(response.data);
-            });
+            .catch(() => {});
         } else setChannelName(channel);
       }
       actifCanal();
@@ -755,47 +705,46 @@ export default function ChatClient() {
         }
       }
       if (state.pwd[0]) {
-        const exists = await axios.get(
-          apiBaseURL +
+        try {
+          await get<true>(
             "chat-controller/channel/find/" +
             state.channel +
             "/" +
-            state.pwd,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            state.pwd);
+        } catch (error) {
+          if (!Fetching.isFetchingError(error))
+            return;
+
+          if (error.isRequestError()) {
+            if (error.code === 404)
+              sendForm(state.channel, state.pwd, state.selectedOption);
+            else if (error.code === 400)
+              setErrorInput("Password mismatch.");
+          } else if (error.isServerError()) {
+            setErrorInput("Server busy, try again later");
+          } else if (error.isTransportError()) {
+            setErrorInput("Network error, try again later");
           }
-        );
-        if (
-          exists.data.status === 404 &&
-          exists.data.name === "NotFoundException"
-        )
-          sendForm(state.channel, state.pwd, state.selectedOption);
-        else if (
-          exists.data.status === 404 &&
-          exists.data.name === "NotFoundException"
-        )
-          setErrorInput("Password mismatch.");
+        }
+
       } else {
-        const exists = await axios.get(
-          apiBaseURL + "chat-controller/channel/findName/" + state.channel,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        try {
+          await get<true>("chat-controller/channel/findName/" + state.channel);
+        } catch (error) {
+          if (!Fetching.isFetchingError(error))
+            return;
+
+          if (error.isRequestError()) {
+            if (error.code === 404)
+              sendForm(state.channel, state.pwd, state.selectedOption);
+            else if (error.code === 400)
+              setErrorInput("Password mismatch.");
+          } else if (error.isServerError()) {
+            setErrorInput("Server busy, try again later");
+          } else if (error.isTransportError()) {
+            setErrorInput("Network error, try again later");
           }
-        );
-        if (
-          exists.data.status === 404 &&
-          exists.data.name === "NotFoundException"
-        )
-          sendForm(state.channel, state.pwd, state.selectedOption);
-        else if (
-          exists.data.status === 404 &&
-          exists.data.name === "NotFoundException"
-        )
-          setErrorInput("Password mismatch.");
+        }
       }
     };
 
@@ -853,7 +802,7 @@ export default function ChatClient() {
   ////////////////////////////////////////INVITATION///////////////////////////////////
   function Invitation(props: { canal: string }) {
     const [buttonInvitation, setButtonInvitation] = useState(false);
-    const [usersList, setUsersList] = useState([]);
+    const [usersList, setUsersList] = useState<UserInfo[]>([]);
 
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -881,16 +830,9 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function requUser() {
-        const url = apiBaseURL + "user";
-        await axios
-          .get(url, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((response) => {
-            setUsersList(response.data);
-          });
+        get<UserInfo[]>("user")
+          .then(users => setUsersList(users))
+          .catch(() => {});
       }
       requUser();
 
@@ -981,7 +923,7 @@ export default function ChatClient() {
   }
 
   function AffPrivateMessage() {
-    const [usersList, setUsersList] = useState([]);
+    const [usersList, setUsersList] = useState<UserInfo[]>([]);
 
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -996,16 +938,9 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function requUser() {
-        const url = apiBaseURL + "user";
-        await axios
-          .get(url, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((response) => {
-            setUsersList(response.data);
-          });
+        get<UserInfo[]>("user")
+          .then(users => setUsersList(users))
+          .catch(() => {});
       }
       requUser();
     }, []);
@@ -1094,24 +1029,19 @@ export default function ChatClient() {
       console.log(channel);
       if (channel[0] === '#' && channel !== "#general")
       {
-        if (inGeneral === true)
+        if (inGeneral)
           setInGeneral(false);
       }
-      else if (inGeneral === false && (channel === "#general" || channel[0] !== '#'))
+      else if (!inGeneral && (channel === "#general" || channel[0] !== '#'))
         setInGeneral(true);
     }
     getChan();
 
     const fetchAllChannels = async () => {
-      await axios
-          .get(apiBaseURL + 'user/myChannels', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-          .then((response) => {
-            setAllChannels(response.data);
-          });
+      get<string[]>('user/myChannels')
+        .then((response) => {
+          setAllChannels(response);
+        }).catch(showErrorInModal);
     }
 
     fetchAllChannels();
@@ -1229,34 +1159,22 @@ export default function ChatClient() {
 
   async function fetchMessage(channelFetch: string) {
     if (channelFetch[0] !== "#") {
-      let addressInfo =
-        apiBaseURL + "chat-controller/message/" + channelFetch + "/" + username;
-      await axios
-        .get(addressInfo, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setMessages(response.data);
-        });
+      let addressInfo = "chat-controller/message/" + channelFetch + "/" + username;
+
+      await get<Chat[]>(addressInfo)
+        .then(chats => setMessages(chats))
+        .catch(() => {});
+
     } else {
       channelFetch = channelFetch.substring(1);
       let addressInfo =
-        apiBaseURL +
         "chat-controller/message/channel/" +
         channelFetch +
         "/" +
         username;
-      await axios
-        .get(addressInfo, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((response) => {
-          setMessages(response.data);
-        });
+      await get<Chat[]>(addressInfo)
+        .then(chats => setMessages(chats))
+        .catch(() => {});
     }
   }
 

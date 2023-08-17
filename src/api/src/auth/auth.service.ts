@@ -1,11 +1,7 @@
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
-  UnauthorizedException,
   Inject,
-  NotFoundException,
-  InternalServerErrorException,
+  InternalServerErrorException, OnModuleInit, OnModuleDestroy,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,15 +11,22 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entity/Users.entity';
 import { UserService } from 'src/user/user.service';
-import { TokenData, TokenPayload } from '../type/jwt.type';
+import { TokenData } from '../type/jwt.type';
 import { MailService } from 'src/mail/mail.service';
 import { GlobalService } from './global.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import * as process from 'process';
+import {failure, Result, success} from "../utils/Error";
+import {APIError} from "../utils/errors";
+import {TypeCheckers} from "../utils/type-checkers";
+import {UserCredentials} from "../type/user.type";
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit, OnModuleDestroy {
+  private timer: NodeJS.Timer;
+  private static invalidTokens: string[] = [];
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -33,6 +36,16 @@ export class AuthService {
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
   ) {}
+
+  onModuleInit(): void {
+    this.timer = setInterval(async () => {
+      await this.checkTokenInvalidationList();
+    }, 60 * 1000);
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.timer);
+  }
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
     const clientId = process.env['API_UID'];
@@ -59,6 +72,12 @@ export class AuthService {
     return await response.json();
   }
 
+  async disconnectUser(token: string, id: number): Promise<void> {
+    if (token)
+      AuthService.invalidTokens.push(token);
+    await this.userService.changeOnlineStatus(id, false);
+  }
+
   async infoUser(token: IntraTokenDto): Promise<IntraSignupDto> {
     const meUrl = 'https://api.intra.42.fr/v2/me';
     const response = await fetch(meUrl, {
@@ -70,76 +89,87 @@ export class AuthService {
     return await response.json();
   }
 
-  async intraSignin(user: User): Promise<TokenPayload | null> {
-    if (
-      (await this.userService.authActivated(user?.email)) === null &&
-      (await this.userService.isVerified(user?.email)) != null
-    ) {
-      if (user) {
-        await this.userService.changeOnlineStatus(user.id, true);
-        const payload: TokenData = {
-          email: user.email,
-          id: user.id,
-          nickname: user.nickname,
-        };
-        return {
-          token: await this.jwtService.signAsync(payload),
-        };
-      }
-    }
+  async intraSignin(user: UserCredentials)
+    : Promise<Result<string, typeof APIError.UserNotFound | typeof APIError.CodeSend>>
+  {
+    const authActivated = await this.userService.authActivated(user.email);
+    if (authActivated.isErr())
+      return failure(authActivated.error);
 
-    while ((await this.userService.isVerified(user.email)) === null) {}
-    if (await this.userService.authActivated(user.email)) {
-      const code = await this.mailService.sendCodeConfirmation(user.email);
-      await this.cacheManager.set(code, user.email, 600000);
-    }
-    return null;
-  }
+    const isVerified = await this.userService.isVerified(user.email);
+    if (isVerified.isErr())
+      return failure(isVerified.error);
 
-  async signin(user: SigninDto): Promise<string | TokenPayload> {
-    const foundUser = await this.userService.findUserAndGetCredential(
-      user.email,
-    );
+    if (authActivated.value == false && isVerified.value == true) {
+      const update = await this.userService.changeOnlineStatus(user.id, true);
+      if (update.isErr())
+        return failure(update.error);
 
-    if (foundUser && !foundUser.IsIntra) {
-      const isVerified = await this.userService.isVerified(user.email);
-      if (isVerified) {
-        if ((await this.userService.authActivated(user.email)) != null) {
-          if (await bcrypt.compare(user.password, foundUser.password)) {
-            await this.mailService.sendCodeConfirmation(user.email);
-            return 'code';
-          }
-          throw new UnauthorizedException('Incorrect email or password');
-        } else if (await bcrypt.compare(user.password, foundUser.password)) {
-          await this.userService.changeOnlineStatus(foundUser.id, true);
-          const payload: TokenData = {
-            email: user.email,
-            id: foundUser.id,
-            nickname: foundUser.nickname,
-          };
-          return {
-            token: await this.jwtService.signAsync(payload),
-          };
-        }
-        throw new UnauthorizedException('Incorrect email or password');
-      }
-      throw new UnauthorizedException(
-        'You must verify your email before logging in.',
-      );
-    }
-    throw new UnauthorizedException('Incorrect email or password');
-  }
-
-  async generateToken(id: number) {
-    const user: User | null = await this.userService.findByID(id);
-    if (user) {
       const payload: TokenData = {
         email: user.email,
         id: user.id,
         nickname: user.nickname,
       };
-      return await this.jwtService.signAsync(payload);
+      return success(await this.jwtService.signAsync(payload));
     }
+
+    const code = await this.mailService.sendCodeConfirmation(user.email);
+    await this.cacheManager.set(code, user.email, 600000);
+    return failure(APIError.CodeSend);
+  }
+
+  async signin(user: SigninDto)
+    : Promise<Result<string,
+    typeof APIError.UserNotFound | typeof APIError.UserIsIntra
+    | typeof APIError.InvalidPassword | typeof APIError.UserNotVerified>>
+  {
+    const foundUser = await this.userService.findUserAndGetCredential(
+      user.email,
+    );
+    if (foundUser.isErr())
+      return failure(foundUser.error);
+
+    if (foundUser.value.isIntra)
+      return failure(APIError.UserIsIntra);
+
+    const isVerified = await this.userService.isVerified(user.email);
+    if (isVerified.isErr())
+      return failure(APIError.UserNotVerified);
+
+    if ((await this.userService.authActivated(user.email)).isOk()) {
+      if (await bcrypt.compare(user.password, foundUser.value.password)) {
+        await this.mailService.sendCodeConfirmation(user.email);
+        return success('code');
+      }
+      return failure(APIError.InvalidPassword);
+    } else if (await bcrypt.compare(user.password, foundUser.value.password)) {
+      const update = await this.userService.changeOnlineStatus(foundUser.value.id, true);
+      if (update.isErr())
+        return failure(update.error);
+
+      const payload: TokenData = {
+        email: user.email,
+        id: foundUser.value.id,
+        nickname: foundUser.value.nickname,
+      };
+      return success(await this.jwtService.signAsync(payload));
+    }
+
+    return failure(APIError.InvalidPassword);
+  }
+
+  async generateToken(id: number): Promise<Result<string, typeof APIError.UserNotFound>> {
+    const result = await this.userService.findByID(id);
+    if (result.isErr())
+      return failure(result.error);
+
+    const user = result.value;
+    const payload: TokenData = {
+      email: user.email,
+      id: user.id,
+      nickname: user.nickname,
+    };
+    return success(await this.jwtService.signAsync(payload));
   }
 
   async createUser(body: SignupDto): Promise<void> {
@@ -159,39 +189,54 @@ export class AuthService {
     return;
   }
 
-  async createUserIntra(body: IntraSignupDto): Promise<User> {
+  async createUserIntra(body: IntraSignupDto)
+    : Promise<Result<User, typeof APIError.InvalidIntraName>>
+  {
     const user: User = new User();
 
     user.nickname = body.login;
 
-    const parts = body.displayname.split(' ');
-    user.firstname = parts[0];
-    user.lastname = parts[1];
+    if (body.displayname) {
+      const parts = body.displayname.split(' ');
+      user.firstname = parts[0];
+      user.lastname = parts[1];
+    } else {
+      return failure(APIError.InvalidIntraName);
+    }
 
     user.email = body.email;
     user.IsIntra = true;
 
     user.avatarUrl = body.image.link;
 
-    return await this.userRepository.save(user);
+    return success(await this.userRepository.save(user));
   }
 
-  async sendIntraToken(dataUser: IntraSignupDto) {
-    const user: any = await this.userService.findByEmail(dataUser.email);
-    await this.userService.updateUserVerifiedStatus(user.id);
-    const payload = { email: user.email, id: user.id, nickname: user.nickname };
-    return await this.jwtService.signAsync(payload);
+  async sendIntraToken(dataUser: IntraSignupDto): Promise<Result<string, typeof APIError.UserNotFound>> {
+    const result = await this.userService.findByEmail(dataUser.email);
+    if (result.isErr())
+      return failure(result.error);
+
+    const user = result.value;
+    const update = await this.userService.updateUserVerifiedStatus(user.id);
+    if (update.isErr())
+      return failure(update.error);
+
+    const payload: TokenData = { email: user.email, id: user.id, nickname: user.nickname };
+    return success(await this.jwtService.signAsync(payload));
   }
 
-  async update2fa(id: number) {
-    const user = await this.userService.getUserEmail(id);
-    if (!user) throw new NotFoundException('User not found');
+  async update2fa(id: number): Promise<Result<string, typeof APIError.UserNotFound>> {
+    const result = await this.userService.getUserEmail(id);
+    if (result.isErr())
+      return failure(result.error);
 
-    return await this.mailService.sendCodeConfirmation(user.email);
+    const code = await this.mailService.sendCodeConfirmation(result.value);
+    return success(code);
   }
 
-  async checkCode(code: string, email: string) {
-    for (let i = 1; GlobalService.emails[i]; i++) {
+  async checkCode(code: string, email: string): Promise<boolean> {
+    for (let i = 1; i < GlobalService.emails.length; i++) {
       if (
         ((email && GlobalService.emails[i] === email) ||
           (!email &&
@@ -202,55 +247,52 @@ export class AuthService {
         return true;
       }
     }
-    throw new HttpException('Code Wrong.', HttpStatus.UNAUTHORIZED);
+    return false;
   }
 
-  async loggingInUser(email: string): Promise<TokenPayload> {
+  async logUser(email: string): Promise<Result<string, typeof APIError.UserNotFound>> {
     const user = await this.userService.findByEmail(email);
-    if (user) {
-      await this.userService.changeOnlineStatus(user.id, true);
-      const payload: TokenData = {
-        email: email,
-        id: user.id,
-        nickname: user.nickname,
-      };
-      return {
-        token: await this.jwtService.signAsync(payload),
-      };
-    }
-    throw new NotFoundException('User not found');
+    if (user.isErr())
+      return failure(user.error);
+
+    const result = await this.userService.changeOnlineStatus(user.value.id, true);
+    if (result.isErr())
+      return failure(result.error);
+
+    const payload: TokenData = {
+      email: email,
+      id: user.value.id,
+      nickname: user.value.nickname,
+    };
+    return success(await this.jwtService.signAsync(payload));
   }
 
-  static invalidToken: string[] = [];
-
-  validateToken(token: string): boolean {
-    if (AuthService.invalidToken.includes(token)) {
+  validateToken(token: string): Result<TokenData, false> {
+    if (AuthService.invalidTokens.includes(token)) {
       console.log('LIST: invalid token: ', token);
-      return false;
+      return failure(false);
     }
 
     try {
       const payload: TokenData = this.jwtService.verify<TokenData>(token);
-      if (!payload) {
-        const index = AuthService.invalidToken.indexOf(token, 0);
+      if (!TypeCheckers.isTokenData(payload)) {
+        const index = AuthService.invalidTokens.indexOf(token, 0);
         if (index > -1) {
-          AuthService.invalidToken.splice(index, 1);
+          AuthService.invalidTokens.splice(index, 1);
         }
-        return false;
+        return failure(false);
       }
+      return success(payload);
     } catch (e) {
       console.log('Error :', e);
-      return false;
+      return failure(false);
     }
-    return true;
   }
 
-  // go through list
-  // if token is invalid, remove it from list
   async checkTokenInvalidationList() {
-    for (let i = 0; i < AuthService.invalidToken[i].length; i++) {
-      if (!this.jwtService.verify<TokenData>(AuthService.invalidToken[i], {})) {
-        AuthService.invalidToken.splice(i, 1);
+    for (let i = 0; i < AuthService.invalidTokens.length; i++) {
+      if (!TypeCheckers.isTokenData(this.jwtService.verify<TokenData>(AuthService.invalidTokens[i]))) {
+        AuthService.invalidTokens.splice(i, 1);
       }
     }
   }

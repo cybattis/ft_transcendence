@@ -9,7 +9,9 @@ fi
 
 #LOCAL_IP=127.0.0.1
 
+#LOCAL_IP=$(curl -s http://whatismyip.akamai.com/)
+
 echo "IP address: $LOCAL_IP"
 
-awk '{ if (NR == 13) print "'HOST_IP=${LOCAL_IP}'"; else print $0}' src/.env > src/.env.tmp
+awk '{ if (NR == 7) print "'HOST_IP=${LOCAL_IP}'"; else print $0}' src/.env > src/.env.tmp
 mv src/.env.tmp src/.env && rm -f src/.env.tmp

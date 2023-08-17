@@ -1,23 +1,26 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./Profile.css";
-import axios from "axios";
-import { Navigate, useLoaderData } from "react-router-dom";
-import { UserFriend, UserInfo } from "../../type/user.type";
+import { useParams } from "react-router-dom";
+import { UserFriendsData, UserInfo } from "../../type/user.type";
 import { Avatar } from "../../components/Avatar";
 import {
   GameStatsHeader,
   GameStatsItem,
 } from "../../components/Game/GameStatsItem";
 import { calculateWinrate } from "../../utils/calculateWinrate";
-import { GameStatsDto } from "../../type/game.type";
+import { GameStats, GameStatus, GameType } from "../../type/game.type";
 import jwt_decode from "jwt-decode";
-import { apiBaseURL } from "../../utils/constant";
 import { PopupContext } from "../../components/Modal/Popup.context";
-import { JwtPayload } from "../../type/client.type";
+import { ProfileType, TokenData } from "../../type/client.type";
 import { RgbColor, hslToRgb, RGBToHSL, HslColor } from "../../utils/colors";
 import { UserData } from "./user-data";
 import { ChatClientSocket } from "../Chat/Chat-client";
-import { AuthContext } from "../../components/Auth/auth.context";
+import { useData } from "../../hooks/UseData";
+import { LoadingPage } from "../Loading/LoadingPage";
+import { useFetcher } from "../../hooks/UseFetcher";
+import { Fetching } from "../../utils/fetching";
+import { TypeCheckers } from "../../utils/type-checkers";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 
 enum relationStatus {
   NONE,
@@ -34,53 +37,31 @@ interface FriendRequestProps {
   setStatus: (status: relationStatus) => void;
 }
 
+interface InviteToGameProps {
+  data: UserInfo;
+  status: boolean,
+  setStatus: (status: boolean) => void;
+}
+
 function BlockUser(props: FriendRequestProps) {
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
-  const token = localStorage.getItem("token");
+  const { put, showErrorInModal } = useFetcher();
 
   const handleUnblockButton = async () => {
-    await axios
-      .put(apiBaseURL + `user/unblock/${props.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
+    put<UserFriendsData>(`user/unblock/${props.data.id}`, {})
+      .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.NONE);
       })
-      .catch((error) => {
-        if (error.response === undefined) {
-          setErrorMessage("Error unknown...");
-        } else if (
-          error.response.status === 403 ||
-          error.response.status === 400
-        ) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else {
-          setErrorMessage(error.response.data.message + "!");
-        }
-        return <Navigate to={"/"} />;
-      });
+      .catch(showErrorInModal);
   };
 
   const handleBlockButton = async () => {
-    await axios
-      .put(apiBaseURL + `user/block/${props.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
+    put<UserFriendsData>(`user/block-user/${props.data.id}`, {})
+      .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.BLOCKED);
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch(showErrorInModal);
   };
 
   if (props.status !== relationStatus.BLOCKED) {
@@ -111,52 +92,18 @@ function BlockUser(props: FriendRequestProps) {
 }
 
 function FriendRequest(props: FriendRequestProps) {
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
-  const token = localStorage.getItem("token");
+  const { put, showErrorInModal } = useFetcher();
 
   const handleAddFriend = async () => {
-    await axios
-      .put(apiBaseURL + `user/request/${props.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        ChatClientSocket.sendFriendRequest(props.data.id);
-        props.setStatus(relationStatus.REQUESTED);
-      })
-      .catch((error) => {
-        if (error.response === undefined) {
-          setErrorMessage("Error unknown...");
-        } else if (
-          error.response.status === 403 ||
-          error.response.status === 400
-        ) {
-          localStorage.clear();
-          setAuthed(false);
-          setErrorMessage("Session expired, please login again!");
-        } else {
-          setErrorMessage(error.response.data.message + "!");
-        }
-        return <Navigate to={"/"} />;
-      });
+    put(`user/friend-request/${props.data.id}`, {})
+      .then(() => props.setStatus(relationStatus.REQUESTED))
+      .catch(showErrorInModal);
   };
 
   const handleRemoveButton = async () => {
-    await axios
-      .put(apiBaseURL + `user/remove/${props.data.id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((res) => {
-        ChatClientSocket.notificationEvent(props.data.id);
-        props.setStatus(relationStatus.NONE);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    put(`user/remove-friend/${props.data.id}`, {})
+      .then(() => props.setStatus(relationStatus.NONE))
+      .catch(showErrorInModal);
   };
 
   if (props.status === relationStatus.NONE) {
@@ -200,6 +147,45 @@ function FriendRequest(props: FriendRequestProps) {
   }
 }
 
+function InviteToGame(props: InviteToGameProps) {
+  const { setErrorMessage } = useContext(PopupContext);
+
+  function inviteToCasualGame() {
+    props.setStatus(true);
+    MatchmakingClient.inviteUserToCasualGame(props.data.id)
+      .catch((err) => {
+        props.setStatus(false);
+        setErrorMessage(err.message);
+      });
+  }
+
+  function inviteToRankedGame() {
+    props.setStatus(true);
+    MatchmakingClient.inviteUserToRankedGame(props.data.id)
+      .catch((err) => {
+        props.setStatus(false);
+        setErrorMessage(err.message);
+      });
+  }
+
+  if (!props.status) {
+    return (
+      <>
+        <button className="friendButton" type="button" onClick={inviteToCasualGame}>
+          Invite to casual game
+        </button>
+        <button className="friendButton" type="button" onClick={inviteToRankedGame}>
+          Invite to ranked game
+        </button>
+      </>
+    );
+  } else {
+    return (
+        <button className="friendButton">Waiting for player to join the game...</button>
+    );
+  }
+}
+
 function PaddleColor(props: {
   oldColor: RgbColor;
   setOldColor: (value: RgbColor) => void;
@@ -210,6 +196,7 @@ function PaddleColor(props: {
     s: 100,
     l: RGBToHSL(props.oldColor).l,
   });
+  const { get, put, showErrorInModal } = useFetcher();
   const color: RgbColor = hslToRgb(hue);
 
   const style = {
@@ -228,63 +215,80 @@ function PaddleColor(props: {
       componentToHex(color.r) +
       componentToHex(color.g) +
       componentToHex(color.b);
-    axios
-      .put(
-        apiBaseURL + "user/customization/paddleColor",
-        { color: colorString },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      )
-      .then((res): void => {
+
+    put("user/customization/paddleColor",
+      { color: colorString },
+      "application/json")
+      .then(() => {
         UserData.updatePaddleColor(colorString);
         props.setOldColor(hslToRgb(hue));
         setInfoMessage("Color updated successfully!");
       })
-      .catch((err): void => {
-        const response = err.response?.data;
-        setErrorMessage(response?.message);
+      .catch((err) => {
+        if (!Fetching.isFetchingError(err))
+          return;
+        if (err.isRequestError() && err.code === 400) {
+          setErrorMessage(err.message);
 
-        const actualColor: RgbColor = {
-          r: parseInt(response?.paddleColor.substring(0, 2), 16),
-          g: parseInt(response?.paddleColor.substring(2, 4), 16),
-          b: parseInt(response?.paddleColor.substring(4, 6), 16),
-        };
-        setHue(RGBToHSL(actualColor));
+          const token = localStorage.getItem("token");
+          if (!token)
+            return;
+          const decoded: TokenData = jwt_decode(token);
+          if (!TypeCheckers.isTokenData(decoded))
+            return;
+
+          get<string>("user/customization/paddleColor/" + decoded.id)
+            .then(serverColor => {
+              const actualColor: RgbColor = {
+                r: parseInt(serverColor.substring(0, 2), 16),
+                g: parseInt(serverColor.substring(2, 4), 16),
+                b: parseInt(serverColor.substring(4, 6), 16),
+              };
+              setHue(RGBToHSL(actualColor));
+            })
+            .catch(showErrorInModal);
+        }
+        else
+          showErrorInModal(err);
       });
   }
 
   function resetPaddleColor(): void {
-    axios
-      .put(
-        apiBaseURL + "user/customization/paddleColor",
+    put("user/customization/paddleColor",
         { color: "ffffff" },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      )
-      .then((res): void => {
+        "application/json")
+      .then(() => {
         UserData.updatePaddleColor("ffffff");
         setInfoMessage("Color reset successfully!");
         props.setOldColor({ r: 255, g: 255, b: 255 });
         setHue({ h: 0, s: 100, l: 100 });
       })
-      .catch((err): void => {
-        const response = err.response?.data;
-        setErrorMessage(response?.message);
+      .catch((err) => {
+        if (!Fetching.isFetchingError(err))
+          return;
+        if (err.isRequestError() && err.code === 400) {
+          setErrorMessage(err.message);
 
-        const actualColor: RgbColor = {
-          r: parseInt(response?.paddleColor.substring(0, 2), 16),
-          g: parseInt(response?.paddleColor.substring(2, 4), 16),
-          b: parseInt(response?.paddleColor.substring(4, 6), 16),
-        };
-        setHue(RGBToHSL(actualColor));
+          const token = localStorage.getItem("token");
+          if (!token)
+            return;
+          const decoded: TokenData = jwt_decode(token);
+          if (!TypeCheckers.isTokenData(decoded))
+            return;
+
+          get<string>("user/customization/paddleColor/" + decoded.id)
+            .then(serverColor => {
+              const actualColor: RgbColor = {
+                r: parseInt(serverColor.substring(0, 2), 16),
+                g: parseInt(serverColor.substring(2, 4), 16),
+                b: parseInt(serverColor.substring(4, 6), 16),
+              };
+              setHue(RGBToHSL(actualColor));
+            })
+            .catch(showErrorInModal);
+        }
+        else
+          showErrorInModal(err);
       });
   }
 
@@ -330,27 +334,36 @@ function PaddleColor(props: {
   );
 }
 
-export function Profile() {
-  let data: UserInfo = useLoaderData() as UserInfo;
-  const { setAuthed } = useContext(AuthContext);
-  const { setErrorMessage } = useContext(PopupContext);
+export function ProfileLoader(props: {profileType: ProfileType}) {
+  const params = useParams();
+  const url = props.profileType === ProfileType.MyProfile ? "user/my-profile"
+      : props.profileType === ProfileType.NicknameProfile ? `user/profile/nickname/${params.username}`
+      : `user/profile/id/${params.id}`;
+  const { data } = useData<UserInfo>(url, true);
+
+  return data ? <Profile data={data}/> : <LoadingPage/>;
+}
+
+export function Profile(props: {data: UserInfo}) {
   const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
+  const [isInvitedToGame, setIsInvitedToGame] = useState(false);
   const [customization, setCustomization] = useState(false);
-  const winrate: number = calculateWinrate(data);
+  const winrate: number = calculateWinrate(props.data);
   const [oldColor, setOldColor] = useState<RgbColor>({
-    r: data.paddleColor ? parseInt(data.paddleColor.substring(0, 2), 16) : 255,
-    g: data.paddleColor ? parseInt(data.paddleColor.substring(2, 4), 16) : 255,
-    b: data.paddleColor ? parseInt(data.paddleColor.substring(4, 6), 16) : 255,
+    r: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(0, 2), 16) : 255,
+    g: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(2, 4), 16) : 255,
+    b: props.data.paddleColor ? parseInt(props.data.paddleColor.substring(4, 6), 16) : 255,
   });
+  const { get } = useFetcher();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const payload: JwtPayload | null = jwt_decode(token);
+    const payload: TokenData | null = jwt_decode(token);
 
-    function checkFriendStatus(meData: UserFriend) {
-      if (!payload) return;
-      if (payload.id === data.id) setFriendStatus(relationStatus.ME);
+    function checkFriendStatus(meData: UserFriendsData) {
+    if (!payload) return;
+    if (payload.id === props.data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
         meData.friendsId.includes(Number(payload.id))
@@ -375,31 +388,15 @@ export function Profile() {
     }
 
     async function fetchData() {
-      if (data.id === undefined) return;
-      axios
-        .get(apiBaseURL + `user/friends-data/${data.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          checkFriendStatus(res.data);
-        })
-        .catch((error) => {
-          if (error.response === undefined) {
-            setErrorMessage("Error unknown...");
-          } else if (
-            error.response.status === 403 ||
-            error.response.status === 400
-          ) {
-            localStorage.clear();
-            setAuthed(false);
-            setErrorMessage("Session expired, please login again!");
-          } else {
-            setErrorMessage(error.response.data.message + "!");
-          }
-          return <Navigate to={"/"} />;
-        });
+      if (props.data.id === undefined) return;
+
+      try {
+        const friendData = await get<UserFriendsData>(`user/friends-data/${props.data.id}`);
+        const invitedData = await get<boolean>(`game-invites/has-invited/${props.data.id}`);
+
+        checkFriendStatus(friendData);
+        setIsInvitedToGame(invitedData);
+      } catch (err) {}
     }
 
     fetchData().then(() => {});
@@ -407,32 +404,37 @@ export function Profile() {
 
     return () => {
       ChatClientSocket.offNotificationEvent(fetchData);
-    };
-  }, [data.id]);
+    }
+  }, [props.data.id]);
 
   return (
     <div className={"profile-page"}>
       <div className={"profile-infobox-background"}>
         <div className={"profile-infobox"}>
-          <Avatar size="200px" img={data.avatarUrl} />
+          <Avatar size="200px" img={props.data.avatarUrl} />
           <div id="info">
             <div id="header">
-              <h1 id={"nickname"}>{data.nickname}</h1>
+              <h1 id={"nickname"}>{props.data.nickname}</h1>
             </div>
           </div>
           {friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
               {friendStatus !== relationStatus.BLOCKED ? (
                 <FriendRequest
-                  data={data}
+                  data={props.data}
                   status={friendStatus}
                   setStatus={setFriendStatus}
                 />
               ) : null}
               <BlockUser
-                data={data}
+                data={props.data}
                 status={friendStatus}
                 setStatus={setFriendStatus}
+              />
+              <InviteToGame
+                data={props.data}
+                status={isInvitedToGame}
+                setStatus={setIsInvitedToGame}
               />
             </div>
           ) : (
@@ -451,19 +453,24 @@ export function Profile() {
       <div className={"profile-stats"}>
         <div id={"level"}>
           <div>Level</div>
-          <div>{data.level}</div>
+          <div>{props.data.level}</div>
         </div>
         <div id={"xp"}>
           <div>XP</div>
-          <div>{data.xp}</div>
+          <div>{props.data.xp}</div>
         </div>
         <div id={"elo"}>
           <div>ELO</div>
-          <div>{data.ranking}</div>
+          <div>{props.data.ranking}</div>
         </div>
         <div id={"game-played"}>
           <div>Matches</div>
-          <div>{data.games?.length}</div>
+          <div>{props.data.games?.filter(
+            (game) => game.type === GameType.RANKED &&
+              (game.status === GameStatus.FINISHED
+                || game.status === GameStatus.PLAYER1_DISCONNECTED
+                || game.status === GameStatus.PLAYER2_DISCONNECTED)
+          ).length}</div>
         </div>
         <div id={"winrate"}>
           <div>Winrate</div>
@@ -475,9 +482,9 @@ export function Profile() {
         <hr id={"games-stats-hrbar"} />
         <GameStatsHeader />
         <div className={"matches-table"}>
-          {data.games?.map((game: GameStatsDto, index) => (
+          {props.data.games?.map((game: GameStats, index) => (
             <div key={index}>
-              <GameStatsItem game={game} id={data!.id} />
+              <GameStatsItem game={game} id={props.data.id} />
             </div>
           ))}
         </div>
