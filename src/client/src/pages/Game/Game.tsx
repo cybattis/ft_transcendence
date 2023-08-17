@@ -47,13 +47,13 @@ export function Game() {
         return;
       }
 
-      const payload: TokenData = jwt_decode(token);
-      if (!TypeCheckers.isTokenData(payload)) {
-        terminateSession();
-        return;
-      }
-
       try {
+        let payload: TokenData = jwt_decode(token);
+        if (!TypeCheckers.isTokenData(payload)) {
+          terminateSession();
+          return;
+        }
+
         const gameInfos = await get<GameInfos>("game/info/" + payload.id);
         const profileInfos = await get<UserInfo>("user/my-profile");
 
@@ -115,21 +115,23 @@ function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
       ) : null}
       <div className="gameScreen">
         <MultiplayerPong
-          width={1000}
+          width={1600}
           height={800}
           paddleColor={rgb}
         />
       </div>
-      <div className="players">
-        <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo} />
-      </div>
-      <div className="chatBox">
-        <PrivateGameChat
-          playerOne={props.playerOne.username}
-          playerTwo={props.playerTwo.username}
-          canal={props.canal}
-          myUsername={props.myUsername}
-        />
+      <div className="game-extra">
+        <div className="players">
+          <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo} />
+        </div>
+        <div className="chatBox">
+          <PrivateGameChat
+            playerOne={props.playerOne.username}
+            playerTwo={props.playerTwo.username}
+            canal={props.canal}
+            myUsername={props.myUsername}
+          />
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import jwt_decode from "jwt-decode";
 import "./UserList.css";
 import { Channel, Chat } from "../../../type/user.type";
 import { useFetcher } from "../../../hooks/UseFetcher";
+import {TypeCheckers} from "../../../utils/type-checkers";
 
 export default function UsersList(props: {
   channel: string;
@@ -17,9 +18,17 @@ export default function UsersList(props: {
   const { get } = useFetcher();
 
   useEffect(() => {
+    let decoded: TokenData;
     const token = localStorage.getItem("token");
-    if (!token) return;
-    const payload: TokenData = jwt_decode(token);
+    if (!token)
+      return;
+    try {
+      decoded = jwt_decode(token);
+      if (!TypeCheckers.isTokenData(decoded))
+        return;
+    } catch (error) {
+      console.log(error);
+    }
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;
       setIsOpe(false);
@@ -30,7 +39,7 @@ export default function UsersList(props: {
       get<Channel | null>("chat-controller/channelName/" + canal)
         .then(channel => {
           if (!channel) return;
-          if (channel.operator.includes(payload.nickname)) setIsOpe(true);
+          if (channel.operator.includes(decoded.nickname)) setIsOpe(true);
           setUsersList(channel.users);
           setBanList(channel.ban);
           setMuteList(channel.mute);

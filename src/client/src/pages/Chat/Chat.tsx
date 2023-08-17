@@ -17,6 +17,7 @@ import InvLogo from "../../resource/invite-logo.png";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
+import {TypeCheckers} from "../../utils/type-checkers";
 
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
@@ -51,9 +52,11 @@ export default function ChatClient() {
   if (username === "" && token) {
     try {
       payload = jwt_decode(token);
-      if (payload?.nickname) username = payload.nickname;
-    } catch (e) {
-      console.log(`Decode error ${e}`);
+      if (TypeCheckers.isTokenData(payload))
+        if (payload?.nickname) username = payload.nickname;
+    }
+    catch (e) {
+      console.log(e);
     }
   }
 
