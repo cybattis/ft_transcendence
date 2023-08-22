@@ -32,21 +32,21 @@
 }
 
 @media screen and (width < 800px) {
-    .gameScreen {
+    .home-game-screen {
         width: 700px;
         height: 300px;
     }
 }
 
 @media screen and (width >= 800px) and (width < 1600px) {
-    .gameScreen {
+    .home-game-screen {
         width: 800px;
         height: 500px;
     }
 }
 
 @media screen and (width >= 1600px) {
-    .gameScreen {
+    .home-game-screen {
         width: 1000px;
         height: 500px;
     }

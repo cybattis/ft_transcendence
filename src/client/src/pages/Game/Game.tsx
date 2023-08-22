@@ -129,11 +129,11 @@ function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
   const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
 
   return (
-    <div className="gamePage">
+    <div className="game-page">
       {props.endGame ? (
         <EndGamePopup hasWin={props.hasWin}/>
       ) : null}
-      <div className="gameScreen">
+      <div className="game-box">
         <MultiplayerPong
           width={1600}
           height={800}
@@ -141,15 +141,13 @@ function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
         />
       </div>
       <div className="game-extra">
-        <div className="players">
+        <div className="game-chat-box">
           <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo} />
-        </div>
-        <div className="chatBox">
           <PrivateGameChat
-            playerOne={props.playerOne.username}
-            playerTwo={props.playerTwo.username}
-            canal={props.canal}
-            myUsername={props.myUsername}
+              playerOne={props.playerOne.username}
+              playerTwo={props.playerTwo.username}
+              canal={props.canal}
+              myUsername={props.myUsername}
           />
         </div>
       </div>

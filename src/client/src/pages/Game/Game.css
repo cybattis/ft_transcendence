@@ -1,146 +1,80 @@
-.gamePage {
-    display: flex;
+.game-page {
     width: 100%;
     height: 100%;
-    gap: 20px;
 
-    text-align: center;
+    display: grid;
+    margin-bottom: 60px;
+
     overflow-y: auto;
 }
 
-.game-canvas {
-    display: flex;
-    position: absolute;
-    width: 100%;
-    height: auto;
-    align-items: center;
-
-    aspect-ratio: 16 / 9;
-
-    margin-top: 20px;
-}
-
-.gameBox {
-    gap: 10px;
-
-    flex-direction: column;
-}
-
-.gameScreen {
+.game-box {
     position: relative;
-    width: 90%;
-
-    justify-content: center;
-    align-items: center;
-}
-
-.players {
-    display: flex;
-    justify-content: center;
-    text-align: center;
-}
-
-.chatBox {
-    box-sizing: border-box;
-
-    display: flex;
-    flex: auto;
-    flex-direction: column;
-
-    overflow-y: auto;
-
-    width: 100%;
-    height: 100%;
-
-    justify-content: center;
-    align-items: center;
-
-    border-radius: 20px;
+    grid-area: g;
+    margin: 20px 10px 20px 20px;
+    aspect-ratio: 16/9;
 }
 
 .game-extra {
-    display: flex;
+    position: relative;
+    grid-area: c;
+}
 
+.game-chat-box {
+    width: 100%;
+    height: 85%;
+}
+
+@media screen and (width <= 1000px) {
+    .game-page {
+        grid-template-areas:
+        "g g g g"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+        "c c c c"
+    }
+
+    .game-extra {
+        margin: 20px 20px 20px 20px;
+    }
+
+    .game-chat-box {
+        max-height: 200px;
+    }
+}
+
+@media screen and (width > 1000px) {
+    .game-page {
+        grid-gap: 10px;
+
+        grid-template-areas:
+        "g g g g g g g g c"
+        "g g g g g g g g c"
+    }
+
+    .game-extra {
+        margin: 20px 20px 20px 0px;
+    }
+}
+
+.game-canvas {
+    position: absolute;
     width: 100%;
     height: 100%;
-
-    max-width: 500px;
-
-    margin: 20px;
-
-    flex-direction: column;
-
-    gap: 10px;
-}
-
-@media screen and (width < 400px) {
-    .gamePage {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .game-canvas {
-        margin: 10px;
-    }
-}
-
-@media screen and (width >= 400px) and (width < 800px) {
-    .gamePage {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .game-canvas {
-        margin: 10px;
-    }
-}
-
-@media screen and (width >= 800px) and (width < 1600px) {
-    .gamePage {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .players {
-        flex-direction: row;
-        gap: 10px;
-    }
-
-    .game-extra {
-        max-width: 500px;
-        max-height: 500px;
-    }
-
-    .game-canvas {
-        margin-left: 20px;
-    }
-}
-
-@media screen and (width >= 1600px) and (width < 2400px) {
-    .gamePage {
-        flex-direction: row;
-    }
-
-    .game-extra {
-        max-width: 500px;
-        max-height: 1000px;
-    }
-
-    .game-canvas {
-        margin-left: 20px;
-    }
-}
-
-@media screen and (width >= 2400px) {
-    .gamePage {
-        flex-direction: row;
-    }
-
-    .game-canvas {
-        margin-left: 20px;
-    }
-
-    .game-extra {
-        max-height: 1000px;
-    }
+    aspect-ratio: 16 / 9;
 }
