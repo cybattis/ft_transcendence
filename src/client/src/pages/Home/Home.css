@@ -35,6 +35,9 @@
     .home-game-screen {
         width: 700px;
         height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 
@@ -42,6 +45,9 @@
     .home-game-screen {
         width: 800px;
         height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
 
@@ -49,5 +55,8 @@
     .home-game-screen {
         width: 1000px;
         height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }
