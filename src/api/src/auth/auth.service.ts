@@ -136,11 +136,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       return failure(APIError.UserNotVerified);
 
     const authActivated = await this.userService.authActivated(user.email);
-    if (authActivated.isOk() && authActivated.value === true) {
       try {
-        if (await bcrypt.compare(user.password, foundUser.value.password)) {
-          await this.mailService.sendCodeConfirmation(user.email);
-          return success('code');
+        if (authActivated.isOk() && authActivated.value === true) {
+            if (await bcrypt.compare(user.password, foundUser.value.password)) {
+              await this.mailService.sendCodeConfirmation(user.email);
+              return success('code');
+            }
         } else if (await bcrypt.compare(user.password, foundUser.value.password)) {
           const update = await this.userService.changeOnlineStatus(foundUser.value.id, true);
           if (update.isErr())
@@ -156,8 +157,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       } catch (e) {
         return failure(APIError.InvalidPassword);
       }
-    }
-    return failure(APIError.InvalidPassword);
+      return failure(APIError.InvalidPassword);
   }
 
   async generateToken(id: number): Promise<Result<string, typeof APIError.UserNotFound>> {
