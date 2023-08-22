@@ -454,7 +454,6 @@ export class ChannelService implements OnModuleInit {
   }
 
   async joinOldChannel(socket: Socket, username: string) {
-    console.log('old');
     const allChannel: Channel[] = await this.channelRepository.find();
     if (allChannel) {
       for (let index = 0; allChannel[index]; index++) {
@@ -954,6 +953,22 @@ export class ChannelService implements OnModuleInit {
     await this.channelRepository.save(channels);
   }
 
+  async updatePrvChannel(past : string, actual: string) {
+    const channelsPrv = await this.channelRepository.find({
+      where: { status: 'message' },
+    });
+    for (const channel of channelsPrv){
+      if (channel.users.includes(past)){
+        const title = channel.channel.replace(past, actual);
+        channel.channel = title;
+        console.log(title);
+        const updateUsers = channel.users.map((user : string) => (user === past ? actual : user));
+        channel.users = updateUsers;
+      }
+    }
+    await this.channelRepository.save(channelsPrv);
+  }
+
   async updateNickname(body: UserSettings, token: string){
     if (body.nickname.length == 0 || body.nickname.length > 15)
       throw new BadRequestException('nickname must be between 1 and 15 chars');
@@ -963,6 +978,7 @@ export class ChannelService implements OnModuleInit {
     console.log("Bis", decoded );
     this.updateChat(decoded.nickname, body.nickname);
     this.updateChannel(decoded.nickname, body.nickname);
+    this.updatePrvChannel(decoded.nickname, body.nickname);
   }
 
 }

@@ -81,6 +81,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     let type, pass, username, channel: string;
     if (!data) return;
+    console.log('New cHANNEL', data.channel);
     !data.channel ? (channel = '#general') : (channel = data.channel);
     !data.username ? (username = '') : (username = data.username);
     !data.password ? (pass = '') : (pass = data.password);
