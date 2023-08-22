@@ -704,7 +704,7 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     const result: ChannelInvite[] = [];
-    for (let i = 0; user.invites.length; i++) {
+    for (let i = 0; user.invitesId[i]; i++) {
       const sender = await this.usersRepository.findOne({
         select: ['nickname', 'avatarUrl', 'id'],
         where: { id: user.invitesId[i] },
@@ -713,7 +713,7 @@ export class UserService implements OnModuleInit {
         continue;
 
       const temp: ChannelInvite = {
-        joinChannel: user.invites[i],
+        joinChannel: user.joinChannel[i],
         invitedByAvatar: sender.avatarUrl,
         invitedByUsername: sender.nickname,
       };

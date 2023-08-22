@@ -23,7 +23,7 @@ const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
 
 //FAIRE EN SORTE QUE ID SOIT MIS POUR NOM DE CHANNEL PRV ET PAS LE USERNAME PPUR PAS AVOIR D ERREUR
-//FAIRE EN SORTE QUE QUAND UN MEC EST OFFLINE APPARAISSE PAS DANS LES USERS CONNECTES DE LA LIST DES CHANS
+
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [roomChange, setRoomChange] = useState("");

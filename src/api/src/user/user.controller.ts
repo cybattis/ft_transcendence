@@ -42,13 +42,14 @@ export class UserController{
   ) {}
 
   @Get()
-  async findAll(): Promise<UserInfo[]> {
+  async findAll()/*: Promise<UserInfo[]> */{
     const result = await this.userService.findAll();
-    const infos: UserInfo[] = [];
+    return result;
+    /*const infos: UserInfo[] = [];
     result.forEach((user) => {
       infos.push(TypeConverters.fromUserToUserInfo(user));
     });
-    return infos;
+    return infos;*/
   }
 
   /*
@@ -415,6 +416,7 @@ export class UserController{
   ) : Promise<ChannelInvite[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
+    console.log(result);
     if (result.isErr())
       throw new ForbiddenException();
     return result.value;

@@ -68,13 +68,19 @@ export default function Notifications() {
   }
 
   async function handleAcceptChannel(channel: string){
+    if (token)
+    {
+      const myToken: TokenData = jwt_decode(token);
+      if (!myToken)
+        return;
       const data = {
           channel: channel,
-          targetID: decoded.id,
+          targetID: myToken.id,
       }
       ChatClientSocket.AcceptInvitationChannel(data);
-    const newInvits: ChannelInvite[] = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== channel);
-    setChannelInvits(newInvits);
+      const newInvits: ChannelInvite[] = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== channel);
+      setChannelInvits(newInvits);
+    }
   }
 
   async function handleDeclineChannel(channel: string) {
@@ -140,7 +146,7 @@ export default function Notifications() {
             onDecline={() => handleDecline(invits.id)}
           />
         )
-        })
+        }
       </div>);
   }
 
