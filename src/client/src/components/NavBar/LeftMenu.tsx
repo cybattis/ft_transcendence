@@ -28,7 +28,7 @@ export default function LeftMenu() {
   const { authed } = useContext(AuthContext);
 
   return (
-    <div className={"leftMenu"}>
+    <div className={"left-menu"}>
       <div className={"leftButtons"}>
         {authed ? <Logged /> : <Unlogged />}
       </div>

@@ -23,9 +23,14 @@ function MobileNavBar() {
 
   const token = localStorage.getItem("token");
   if (token) {
-    const decoded: TokenData = jwt_decode(token);
-    if (decoded) username = decoded.nickname;
-    else username = "";
+    try {
+      const decoded: TokenData = jwt_decode(token);
+      if (decoded) username = decoded.nickname;
+      else username = "";
+    } catch (e) {
+      username = "";
+      console.log(e);
+    }
   }
 
   function handlePageChange() {

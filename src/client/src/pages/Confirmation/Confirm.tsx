@@ -1,25 +1,7 @@
-import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../components/Auth/auth.context";
 import { useFetcher } from "../../hooks/UseFetcher";
-
-async function ValidateEmail() {
-  const { setAuthed } = React.useContext(AuthContext);
-  const { put, showErrorInModal } = useFetcher();
-
-  const location = useLocation();
-  const id = location.search.substring(1);
-
-  put<string>("auth/get-token/" + id, {})
-    .then(newToken => {
-      localStorage.setItem("token", newToken);
-      setAuthed(true);
-    })
-    .catch((error) => {
-      showErrorInModal(error);
-      return <Navigate to={"/"} />;
-    });
-}
 
 export default function Confirmation() {
   const home = {
@@ -36,7 +18,24 @@ export default function Confirmation() {
     textAlign: "center" as "center",
   };
 
-  ValidateEmail();
+  const { setAuthed } = React.useContext(AuthContext);
+  const { put, showErrorInModal } = useFetcher();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const uuid = location.search.substring(1);
+
+    put<string>("auth/confirm-user/" + uuid, {})
+      .then(newToken => {
+        localStorage.setItem("token", newToken);
+        setAuthed(true);
+      })
+      .catch((error) => {
+        showErrorInModal(error);
+        navigate("/");
+      });
+  }, []);
 
   return (
     <div style={home}>

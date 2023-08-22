@@ -23,6 +23,7 @@ import { TypeCheckers } from "../../utils/type-checkers";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 
 enum relationStatus {
+  UNKNOWN,
   NONE,
   ME,
   FRIEND,
@@ -168,7 +169,7 @@ function InviteToGame(props: InviteToGameProps) {
       });
   }
 
-  if (props.status === false) {
+  if (!props.status) {
     return (
       <>
         <button className="friendButton" type="button" onClick={inviteToCasualGame}>
@@ -230,23 +231,27 @@ function PaddleColor(props: {
         if (err.isRequestError() && err.code === 400) {
           setErrorMessage(err.message);
 
+          let decoded: TokenData;
           const token = localStorage.getItem("token");
           if (!token)
             return;
-          const decoded: TokenData = jwt_decode(token);
-          if (!TypeCheckers.isTokenData(decoded))
-            return;
-
-          get<string>("user/customization/paddleColor/" + decoded.id)
-            .then(serverColor => {
-              const actualColor: RgbColor = {
-                r: parseInt(serverColor.substring(0, 2), 16),
-                g: parseInt(serverColor.substring(2, 4), 16),
-                b: parseInt(serverColor.substring(4, 6), 16),
-              };
-              setHue(RGBToHSL(actualColor));
-            })
-            .catch(showErrorInModal);
+          try {
+            decoded = jwt_decode(token);
+            if (!TypeCheckers.isTokenData(decoded))
+              return;
+            get<string>("user/customization/paddleColor/" + decoded.id)
+              .then(serverColor => {
+                const actualColor: RgbColor = {
+                  r: parseInt(serverColor.substring(0, 2), 16),
+                  g: parseInt(serverColor.substring(2, 4), 16),
+                  b: parseInt(serverColor.substring(4, 6), 16),
+                };
+                setHue(RGBToHSL(actualColor));
+              })
+              .catch(showErrorInModal);
+          } catch (error) {
+            console.log("JWT token: ", error);
+          }
         }
         else
           showErrorInModal(err);
@@ -269,23 +274,27 @@ function PaddleColor(props: {
         if (err.isRequestError() && err.code === 400) {
           setErrorMessage(err.message);
 
+          let decoded: TokenData;
           const token = localStorage.getItem("token");
           if (!token)
             return;
-          const decoded: TokenData = jwt_decode(token);
-          if (!TypeCheckers.isTokenData(decoded))
-            return;
-
-          get<string>("user/customization/paddleColor/" + decoded.id)
-            .then(serverColor => {
-              const actualColor: RgbColor = {
-                r: parseInt(serverColor.substring(0, 2), 16),
-                g: parseInt(serverColor.substring(2, 4), 16),
-                b: parseInt(serverColor.substring(4, 6), 16),
-              };
-              setHue(RGBToHSL(actualColor));
-            })
-            .catch(showErrorInModal);
+          try {
+            decoded = jwt_decode(token);
+            if (!TypeCheckers.isTokenData(decoded))
+              return;
+            get<string>("user/customization/paddleColor/" + decoded.id)
+              .then(serverColor => {
+                const actualColor: RgbColor = {
+                  r: parseInt(serverColor.substring(0, 2), 16),
+                  g: parseInt(serverColor.substring(2, 4), 16),
+                  b: parseInt(serverColor.substring(4, 6), 16),
+                };
+                setHue(RGBToHSL(actualColor));
+              })
+              .catch(showErrorInModal);
+          } catch (error) {
+            console.log("JWT token: ", error);
+          }
         }
         else
           showErrorInModal(err);
@@ -345,7 +354,7 @@ export function ProfileLoader(props: {profileType: ProfileType}) {
 }
 
 export function Profile(props: {data: UserInfo}) {
-  const [friendStatus, setFriendStatus] = useState(relationStatus.NONE);
+  const [friendStatus, setFriendStatus] = useState(relationStatus.UNKNOWN);
   const [isInvitedToGame, setIsInvitedToGame] = useState(false);
   const [customization, setCustomization] = useState(false);
   const winrate: number = calculateWinrate(props.data);
@@ -357,31 +366,39 @@ export function Profile(props: {data: UserInfo}) {
   const { get } = useFetcher();
 
   useEffect(() => {
+    let decoded: TokenData;
     const token = localStorage.getItem("token");
-    if (!token) return;
-    const payload: TokenData | null = jwt_decode(token);
+    if (!token)
+      return;
+    try {
+      decoded = jwt_decode(token);
+      if (!TypeCheckers.isTokenData(decoded))
+        return;
+    } catch (error) {
+      console.log("JWT token: ", error);
+    }
 
     function checkFriendStatus(meData: UserFriendsData) {
-    if (!payload) return;
-    if (payload.id === props.data.id) setFriendStatus(relationStatus.ME);
+    if (!decoded) return;
+    if (decoded.id === props.data.id) setFriendStatus(relationStatus.ME);
       else if (
         meData.friendsId &&
-        meData.friendsId.includes(Number(payload.id))
+        meData.friendsId.includes(Number(decoded.id))
       )
         setFriendStatus(relationStatus.FRIEND);
       else if (
         meData.requestedId &&
-        meData.requestedId.includes(Number(payload.id))
+        meData.requestedId.includes(Number(decoded.id))
       )
         setFriendStatus(relationStatus.REQUESTED);
       else if (
         meData.blockedById &&
-        meData.blockedById.includes(Number(payload.id))
+        meData.blockedById.includes(Number(decoded.id))
       )
         setFriendStatus(relationStatus.BLOCKED);
       else if (
         meData.blockedId &&
-        meData.blockedId.includes(Number(payload.id))
+        meData.blockedId.includes(Number(decoded.id))
       )
         setFriendStatus(relationStatus.BLOCKEDBY);
       else setFriendStatus(relationStatus.NONE);
@@ -417,25 +434,23 @@ export function Profile(props: {data: UserInfo}) {
               <h1 id={"nickname"}>{props.data.nickname}</h1>
             </div>
           </div>
-          {friendStatus !== relationStatus.ME ? (
+          {friendStatus === relationStatus.UNKNOWN ? null : friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
-              {friendStatus !== relationStatus.BLOCKED ? (
                 <FriendRequest
+                data={props.data}
+                status={friendStatus}
+                setStatus={setFriendStatus}
+                />
+                <BlockUser
                   data={props.data}
                   status={friendStatus}
                   setStatus={setFriendStatus}
                 />
-              ) : null}
-              <BlockUser
-                data={props.data}
-                status={friendStatus}
-                setStatus={setFriendStatus}
-              />
-              <InviteToGame
-                data={props.data}
-                status={isInvitedToGame}
-                setStatus={setIsInvitedToGame}
-              />
+                <InviteToGame
+                  data={props.data}
+                  status={isInvitedToGame}
+                  setStatus={setIsInvitedToGame}
+                />
             </div>
           ) : (
             <button

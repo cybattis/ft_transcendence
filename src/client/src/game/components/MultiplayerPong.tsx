@@ -26,7 +26,7 @@ export function MultiplayerPong({
   }, [width, height, paddleColor]);
 
   return (
-    <canvas ref={canvasRef} width={width} height={height}>
+    <canvas className={"game-canvas"} ref={canvasRef} width={width} height={height}>
       A multiplayer pong game
     </canvas>
   );

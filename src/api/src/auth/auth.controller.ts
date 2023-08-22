@@ -22,6 +22,7 @@ import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
 import { APIError } from "../utils/errors";
 import { decodeTokenOrThrow, getTokenOrThrow } from "../utils/tokenUtils";
+import { GlobalService } from "./global.service";
 
 @Controller('auth')
 export class AuthController {
@@ -158,16 +159,21 @@ export class AuthController {
       throw new NotFoundException();
   }
 
-  @Put('get-token/:id')
-  async update(@Param('id') id: number): Promise<string> {
-    console.log(id);
+  @Put('confirm-user/:uuid')
+  async update(@Param('uuid') uuid: string): Promise<string> {
+    const id = GlobalService.confirmationLinks.get(uuid);
+    if (!id)
+      throw new NotFoundException('Confirmation link expired');
+
+    GlobalService.confirmationLinks.delete(uuid);
+
     const token = await this.authService.generateToken(id);
     if (token.isErr())
-      throw new NotFoundException();
+      throw new NotFoundException('User not found');
 
     const result = await this.userService.updateUserVerifiedStatus(id);
     if (result.isErr())
-      throw new NotFoundException();
+      throw new NotFoundException('User not found');
     return token.value;
   }
 

@@ -3,13 +3,20 @@ import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entity/Users.entity';
 import { GlobalService } from 'src/auth/global.service';
 import { clientBaseURL } from '../utils/constant';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class MailService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: User) {
-    const url = clientBaseURL + 'confirmation?' + user.id;
+    let uuid = randomUUID();
+    while (GlobalService.confirmationLinks.has(uuid))
+      uuid = randomUUID();
+
+    GlobalService.confirmationLinks.set(uuid, user.id);
+
+    const url = clientBaseURL + 'confirmation?' + uuid;
 
     return await this.mailerService.sendMail({
       to: user.email,

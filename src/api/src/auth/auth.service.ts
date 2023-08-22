@@ -121,10 +121,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   async signin(user: SigninDto)
     : Promise<Result<string,
     typeof APIError.UserNotFound | typeof APIError.UserIsIntra
-    | typeof APIError.InvalidPassword | typeof APIError.UserNotVerified>>
-  {
+    | typeof APIError.InvalidPassword | typeof APIError.UserNotVerified>> {
     const foundUser = await this.userService.findUserAndGetCredential(
-      user.email,
+        user.email,
     );
     if (foundUser.isErr())
       return failure(foundUser.error);
@@ -136,26 +135,29 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     if (isVerified.isErr())
       return failure(APIError.UserNotVerified);
 
-    if ((await this.userService.authActivated(user.email)).isOk()) {
-      if (await bcrypt.compare(user.password, foundUser.value.password)) {
-        await this.mailService.sendCodeConfirmation(user.email);
-        return success('code');
+    const authActivated = await this.userService.authActivated(user.email);
+      try {
+        if (authActivated.isOk() && authActivated.value === true) {
+            if (await bcrypt.compare(user.password, foundUser.value.password)) {
+              await this.mailService.sendCodeConfirmation(user.email);
+              return success('code');
+            }
+        } else if (await bcrypt.compare(user.password, foundUser.value.password)) {
+          const update = await this.userService.changeOnlineStatus(foundUser.value.id, true);
+          if (update.isErr())
+            return failure(update.error);
+
+          const payload: TokenData = {
+            email: user.email,
+            id: foundUser.value.id,
+            nickname: foundUser.value.nickname,
+          };
+          return success(await this.jwtService.signAsync(payload));
+        }
+      } catch (e) {
+        return failure(APIError.InvalidPassword);
       }
       return failure(APIError.InvalidPassword);
-    } else if (await bcrypt.compare(user.password, foundUser.value.password)) {
-      const update = await this.userService.changeOnlineStatus(foundUser.value.id, true);
-      if (update.isErr())
-        return failure(update.error);
-
-      const payload: TokenData = {
-        email: user.email,
-        id: foundUser.value.id,
-        nickname: foundUser.value.nickname,
-      };
-      return success(await this.jwtService.signAsync(payload));
-    }
-
-    return failure(APIError.InvalidPassword);
   }
 
   async generateToken(id: number): Promise<Result<string, typeof APIError.UserNotFound>> {
@@ -206,6 +208,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     user.email = body.email;
     user.IsIntra = true;
+    user.isVerified = true;
 
     user.avatarUrl = body.image.link;
 

@@ -17,10 +17,10 @@ export class User {
   @Column({ type: 'varchar', length: 15, unique: true })
   nickname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
+  @Column({ type: 'varchar', length: 30, select: false, default: "" })
   firstname: string;
 
-  @Column({ type: 'varchar', length: 30, select: false, nullable: true })
+  @Column({ type: 'varchar', length: 30, select: false, default: "" })
   lastname: string;
 
   @Column({ type: 'varchar', length: 100, unique: true })
@@ -29,10 +29,10 @@ export class User {
   @Column({ type: 'boolean', select: true })
   IsIntra: boolean;
 
-  @Column({ type: 'varchar', length: 100, nullable: true, select: false })
+  @Column({ type: 'varchar', length: 100, select: false, default: "" })
   password: string;
 
-  @Column({ default: false, nullable: true })
+  @Column({ default: false, nullable: false })
   isVerified: boolean;
 
   @Column({ default: false, nullable: false })

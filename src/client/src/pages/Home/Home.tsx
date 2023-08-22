@@ -24,7 +24,7 @@ export function HomeUnlogged() {
         <h3>PongFever</h3>
         <h4>Come play to the new and fun multiplayer pong game !</h4>
       </div>
-      <div className={"homeGame"}>
+      <div className={"home-game-screen"}>
         <PracticePong
           name={"Home game"}
           width={800}

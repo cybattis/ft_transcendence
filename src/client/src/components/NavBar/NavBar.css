@@ -9,9 +9,10 @@
     font-weight: bold;
 
     margin: 0 50px 0 50px;
+    align-items: center;
 }
 
-.leftMenu {
+.left-menu {
     display: flex;
     flex-direction: row;
     flex: 1;
@@ -19,12 +20,13 @@
     height: 100%;
 
     justify-content: left;
-    align-items: center;
 }
 
 .leftButtons {
     display: flex;
     flex-direction: row;
+
+    align-items: center;
 }
 
 .rightMenu {
