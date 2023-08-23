@@ -5,9 +5,7 @@ export class banStructure {
     constructor(username: string, time: number) {
         this.name = username;
         this.date = new Date();
-        console.log(`date before : ${this.date}`);
         this.date = this.addMinutes(this.date, time);
-        console.log(`date after : ${this.date}`);
     }
 
     public addMinutes(date: Date, minutes: number) {
@@ -37,7 +35,7 @@ export class ChannelStructure {
         this.operator.push(username);
         this.ban = [];
         this.mute= [];
-        this.pswd = "";
+        this.pswd = pass;
     }
 
     public isUser(username: string) :boolean{
@@ -63,7 +61,6 @@ export class ChannelStructure {
             {
                 const actualDate: Date = new Date();
                 if (this.ban[index].date < actualDate){
-                    console.log(`ban ttrop grand`);
                     this.ban.splice(index, 1);
                     return false;
                 } else

@@ -6,7 +6,6 @@ import { AuthContext } from "../Auth/auth.context";
 import { FormContext, FormState } from "../Auth/form.context";
 import { DisconnectButton, NavButton } from "./NavButton";
 import { Notification } from "./NavButton";
-import { UserData } from "../../pages/Profile/user-data";
 import {removeMultiplayerGame} from "../../game/PongManager";
 import {MultiplayerClient} from "../../game/networking/multiplayer-client";
 

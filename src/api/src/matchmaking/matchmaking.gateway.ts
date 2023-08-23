@@ -38,12 +38,8 @@ export class MatchmakingGateway
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
-        console.log('An authorized user connected to the matchmaking server');
         next();
       } else {
-        console.log(
-          'An unauthorized user tried to connect to the matchmaking server',
-        );
         socket.emit('unauthorized');
         next(new WsException('Unauthorized'));
       }
@@ -51,11 +47,9 @@ export class MatchmakingGateway
   }
 
   handleConnection(socket: AuthedSocket) {
-    console.log('A user connected to the matchmaking server');
   }
 
   handleDisconnect(client: AuthedSocket) {
-    console.log('A user disconnected from the matchmaking server');
     this.matchmakingService.leaveMatchmaking(client.userId);
   }
 

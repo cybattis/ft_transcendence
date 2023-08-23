@@ -12,7 +12,6 @@ import { Server, Socket } from 'socket.io';
 import { ChannelService } from '../channel/channel.service';
 import { UserService } from '../user/user.service';
 import {WsAuthGuard} from "../auth/guards/ws.auth.guard";
-import {JwtService} from "@nestjs/jwt";
 import { AuthedSocket } from "../auth/types/auth.types";
 import {AuthService} from "../auth/auth.service";
 
@@ -42,10 +41,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
-        console.log("An authorized user connected to the multiplayer server");
         next();
       } else {
-        console.log("An unauthorized user tried to connect to the multiplayer server");
         socket.emit('unauthorized');
         next(new WsException("Unauthorized"));
       }
@@ -53,7 +50,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   async handleConnection(socket: AuthedSocket) {
-    console.log(`Client connected to chat: ${socket.userId}`);
     this.channelService.addUserSocketToList(socket);
     await this.userService.changeOnlineStatus(socket.userId, true);
   }
@@ -63,7 +59,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const authHeaders = socket.handshake?.headers?.authorization;
     const token = auth ? auth : authHeaders;
     await this.userService.changeOnlineStatus(socket.userId, false);
-    console.log(`Client disconnected from chat: ${socket.userId}`);
     this.channelService.removeUserSocketFromList(socket);
   }
 
@@ -114,7 +109,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   ) {
     let type, pass, username, channel: string;
     if (!data) return;
-    console.log('New cHANNEL', data.channel);
     !data.channel ? (channel = '#general') : (channel = data.channel);
     !data.username ? (username = '') : (username = data.username);
     !data.password ? (pass = '') : (pass = data.password);
@@ -354,7 +348,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('ping')
   handlePing() {
-    console.log(`Ping`);
     this.server.emit('pong');
   }
 
@@ -362,10 +355,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   async notifyEvent(@MessageBody() target: number) {
     const targetSocket = await this.channelService.getSocketById(target);
     if (!targetSocket) {
-      console.log(`socket not found`);
       return;
     }
     this.server.to(targetSocket).emit('notification');
+  }
+
+  @SubscribeMessage('change-username')
+  async changeUsernameUpdate(
+    @ConnectedSocket() socket: AuthedSocket,
+  ) {
+    socket.broadcast.emit('change-username');
   }
 
   @SubscribeMessage('inv')

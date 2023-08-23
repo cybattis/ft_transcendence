@@ -33,22 +33,15 @@ function GameStatsItemLoaded(props: { game: GameStats; id: number; player1: User
   const date = new Date(props.game.creationDate);
 
   function OpponentName() {
-    console.log("ids", props.game.ids[0]);
-    console.log("my id: ", props.id);
-    console.log(props.game.ids[0] === props.id);
     let name: string;
     let opponentAvatar: string | undefined;
     if (props.game.ids[0] === props.id) {
       name = props.player2.nickname;
       opponentAvatar = props.player2.avatarUrl;
-      console.log("HEY");
     } else {
       name = props.player1.nickname;
       opponentAvatar = props.player1.avatarUrl;
-      console.log("HOY");
     }
-
-    console.log("name", name);
 
     return (
       <Link to={`/profile/nickname/${name}`} className={"opponent-profile"}>

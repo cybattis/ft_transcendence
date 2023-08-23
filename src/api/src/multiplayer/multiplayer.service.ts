@@ -28,7 +28,6 @@ export class MultiplayerService {
     private readonly gameService: GameService,
     private readonly userService: UserService,
   ) {
-    console.log('[MULTIPLAYER] Service initialized');
   }
 
   /*
@@ -74,7 +73,6 @@ export class MultiplayerService {
     };
 
     this.rooms.push(gameRoom);
-    console.log('[MULTIPLAYER] Room created: ' + gameRoom.id);
   }
 
   /*
@@ -97,15 +95,11 @@ export class MultiplayerService {
 
       client.join(room.serverRoomId);
 
-      console.log('[MULTIPLAYER] Player ' + client.userId + ' is ready.');
-
       if (room.player1Ready && room.player2Ready)
         await this.startGame(room);
 
       return success(true);
     } else {
-      console.log('NO ROOM FOUND FOR PLAYER ' + client.userId);
-      console.log(this.rooms);
       return failure(APIError.GameNotFound);
     }
   }
@@ -148,8 +142,6 @@ export class MultiplayerService {
     };
 
     this.server.to(game.serverRoomId).emit('game-start', serveUpdate);
-
-    console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' started.');
   }
 
   /*
@@ -214,7 +206,6 @@ export class MultiplayerService {
 
     // Send the updated score to all players and spectators
     this.server.to(game.serverRoomId).emit('update-score', scoreUpdate);
-    console.log('[MULTIPLAYER] Score updated for game ' + game.id.toString());
 
     // Reset the ball position
     const ballUpdate: BallUpdate = {
@@ -286,8 +277,6 @@ export class MultiplayerService {
     // Remove all players from the room
     this.server.socketsLeave(game.serverRoomId);
 
-    console.log('[MULTIPLAYER] Game ' + game.id.toString() + ' ended');
-
     // Update the game in the database
     await this.gameService.updateGameStatus(game.id, game.status);
 
@@ -336,13 +325,6 @@ export class MultiplayerService {
       // Update the game
       if (game.player1Id === client.userId) game.player1Disconnected = true;
       else game.player2Disconnected = true;
-
-      console.log(
-        '[MULTIPLAYER] Player ' +
-          client.userId.toString() +
-          ' disconnected from game ' +
-          game.id.toString(),
-      );
 
       // If the game is not finished, end it
       await this.endGame(game);

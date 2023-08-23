@@ -250,7 +250,6 @@ function PaddleColor(props: {
               })
               .catch(showErrorInModal);
           } catch (error) {
-            console.log("JWT token: ", error);
           }
         }
         else
@@ -293,7 +292,6 @@ function PaddleColor(props: {
               })
               .catch(showErrorInModal);
           } catch (error) {
-            console.log("JWT token: ", error);
           }
         }
         else
@@ -375,7 +373,6 @@ export function Profile(props: {data: UserInfo}) {
       if (!TypeCheckers.isTokenData(decoded))
         return;
     } catch (error) {
-      console.log("JWT token: ", error);
     }
 
     function checkFriendStatus(meData: UserFriendsData) {

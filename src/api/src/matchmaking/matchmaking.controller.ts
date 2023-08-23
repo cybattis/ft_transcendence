@@ -1,4 +1,4 @@
-import { Controller, ForbiddenException, Get, Headers, Param } from "@nestjs/common";
+import { Controller, Get, Headers, Param } from "@nestjs/common";
 import { MatchmakingService } from "./matchmaking.service";
 import { decodeTokenOrThrow } from "../utils/tokenUtils";
 import { JwtService } from "@nestjs/jwt";

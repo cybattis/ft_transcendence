@@ -32,14 +32,12 @@ import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
-import {AuthService} from "../auth/auth.service";
 
 @Controller('user')
 export class UserController{
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private authService: AuthService,
   ) {}
 
   @Get()
@@ -47,7 +45,8 @@ export class UserController{
     const result = await this.userService.findAll();
     const infos: UserInfo[] = [];
     result.forEach((user) => {
-      infos.push(TypeConverters.fromUserToUserInfo(user));
+      if (user.isVerified === true)
+        infos.push(TypeConverters.fromUserToUserInfo(user));
     });
     return infos;
   }
@@ -327,7 +326,6 @@ export class UserController{
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request accepted by: ', Number(id), payload.id);
     const result = await this.userService.acceptFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
@@ -350,7 +348,6 @@ export class UserController{
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request declined by: ', id, payload.id);
     const result = await this.userService.declineFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
@@ -416,7 +413,6 @@ export class UserController{
   ) : Promise<ChannelInvite[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
-    console.log(result);
     if (result.isErr())
       throw new ForbiddenException();
     return result.value;

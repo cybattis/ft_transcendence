@@ -53,7 +53,6 @@ export default function PrivateGameChat(props: {
       function scrollbar() {
         const scr = document.getElementById("list-gamemsg-container");
         if (scr) scr.scrollTop += scr.clientHeight;
-        console.log(scr?.clientHeight);
       }
 
       scrollbar();

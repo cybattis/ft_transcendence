@@ -27,7 +27,6 @@ export default function UsersList(props: {
       if (!TypeCheckers.isTokenData(decoded))
         return;
     } catch (error) {
-      console.log(error);
     }
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;

@@ -23,13 +23,11 @@ export class TokenGuard implements CanActivate {
     const token = request.headers.authorization?.split(' ')[1];
 
     if (!token) {
-      console.log(`No token: ${request.url}`);
       return false;
     }
 
     if (this.authService.validateToken(token).isOk()) return true;
     else {
-      console.log(`Invalid token: ${request.url}`);
       return false;
     }
   }

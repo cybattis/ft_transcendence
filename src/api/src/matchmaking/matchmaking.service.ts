@@ -71,7 +71,6 @@ export class MatchmakingService {
     // Make him join the matchmaking
     await this.addPlayerToCasualQueue(player);
 
-    console.log("A registered player joined the casual matchmaking server. ID: ", playerId);
     return success(true);
   }
 
@@ -85,7 +84,6 @@ export class MatchmakingService {
     const player: CasualMatchmakingPlayer | undefined = this.findPlayerInCasualMatchmaking(playerId);
     if (player) {
       this.removePlayerFromCasualQueue(player);
-      console.log("A registered player left the casual matchmaking server");
     }
   }
 
@@ -121,7 +119,6 @@ export class MatchmakingService {
     // Make him join the matchmaking
     await this.addPlayerToRankedQueue(player);
 
-    console.log("A registered player joined the ranked matchmaking server");
     return success(true);
   }
 
@@ -135,7 +132,6 @@ export class MatchmakingService {
     const player: RankedMatchmakingPlayer | undefined = this.findPlayerInRankedMatchmaking(playerId);
     if (player) {
       this.removePlayerFromRankedQueue(player);
-      console.log("A registered player left the ranked matchmaking server");
     }
   }
 
@@ -160,9 +156,7 @@ export class MatchmakingService {
     const pendingCasualGame: PendingCasualGame | undefined = this.findPendingCasualGame(playerId);
     const pendingRankedGame: PendingRankedGame | undefined = this.findPendingRankedGame(playerId);
 
-    console.log("Player " + playerId + " accepted the game");
     if (pendingCasualGame) {
-
       // Set the player as ready
       if (pendingCasualGame.player1.id === playerId) {
         pendingCasualGame.player1Ready = true;
@@ -182,15 +176,12 @@ export class MatchmakingService {
       }
       return success(true);
     } else if (pendingRankedGame) {
-      console.log("Player " + playerId + " accepted the ranked game");
-
       // Set the player as ready
       if (pendingRankedGame.player1.id === playerId) {
         pendingRankedGame.player1Ready = true;
       } else if (pendingRankedGame.player2.id === playerId) {
         pendingRankedGame.player2Ready = true;
       }
-
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
         await this.sendPlayersToRankedGame(
@@ -592,7 +583,6 @@ export class MatchmakingService {
       if (newGame.isErr())
         return false;
       this.multiplayerService.createRoom(newGame.value, player1Id, player2Id);
-      console.log("Casual game created");
       return true;
     } catch (e) {
       return false;
@@ -614,7 +604,6 @@ export class MatchmakingService {
       if (newGame.isErr())
         return false;
       this.multiplayerService.createRoom(newGame.value, player1Id, player2Id);
-      console.log("Ranked game created");
       return true;
     } catch (e) {
       return false;

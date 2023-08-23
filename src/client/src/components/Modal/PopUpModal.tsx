@@ -1,7 +1,7 @@
 import "./PopUpModal.css";
-import { MouseEvent, useContext, useRef, useState } from "react";
+import { MouseEvent, useContext, useRef } from "react";
 import { PopupContext } from "./Popup.context";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export function ErrorModal(props: { onClose: () => void }) {
   const { errorMessage } = useContext(PopupContext);

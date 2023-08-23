@@ -29,7 +29,6 @@ export namespace SocketManager {
     socket.isConnecting = true;
 
     socket.on("connect_error", (err) => {
-      console.log("connexion error due to : ", err.message);
       socket.isConnecting = false;
       socket.isConnected = false;
     });

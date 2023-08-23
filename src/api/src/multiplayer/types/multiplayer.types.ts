@@ -1,5 +1,4 @@
 import { GameMode, GameStatus, GameType } from "../../type/game.type";
-import { AuthedSocket } from "../../auth/types/auth.types";
 
 export type GameRoom = {
   id: number;

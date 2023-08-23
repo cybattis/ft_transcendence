@@ -17,14 +17,11 @@ import InvLogo from "../../resource/invite-logo.png";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
-import {TypeCheckers} from "../../utils/type-checkers";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
-
-//FAIRE EN SORTE QUE ID SOIT MIS POUR NOM DE CHANNEL PRV ET PAS LE USERNAME PPUR PAS AVOIR D ERREUR
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,14 +49,13 @@ export default function ChatClient() {
 
   const token = localStorage.getItem("token");
   let payload: TokenData;
-  let username = "";
+  let username = UserData.getNickname();;
 
-  if (username === "" && token) {
+  if (token) {
     try {
       payload = jwt_decode(token);
       username = UserData.getNickname();
     } catch (e) {
-      console.log(`Decode error ${e}`);
     }
   }
 
@@ -180,7 +176,7 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function isOwner() {
-        if (props.canal[0] != "#") {
+        if (props.canal[0] !== "#" || props.canal === "#general") {
           setOwner(false);
           return;
         }
@@ -465,7 +461,6 @@ export default function ChatClient() {
               setBlocked(true);
           })
           .catch((error) => {
-            console.log(error);
           });
       }
       getBlockedUsrs();
@@ -709,46 +704,41 @@ export default function ChatClient() {
         }
       }
       if (state.pwd[0]) {
-        try {
-          await get<true>(
-            "chat-controller/channel/find/" +
-            state.channel +
-            "/" +
-            state.pwd);
-        } catch (error) {
-          if (!Fetching.isFetchingError(error))
-            return;
-
-          if (error.isRequestError()) {
-            if (error.code === 404)
-              sendForm(state.channel, state.pwd, state.selectedOption);
-            else if (error.code === 400)
-              setErrorInput("Password mismatch.");
-          } else if (error.isServerError()) {
-            setErrorInput("Server busy, try again later");
-          } else if (error.isTransportError()) {
-            setErrorInput("Network error, try again later");
-          }
-        }
-
+        await get<true>(
+            "chat-controller/channel/find/" + state.channel + "/" + state.pwd)
+          .then(() => {
+            sendForm(state.channel, state.pwd, state.selectedOption);
+          })
+          .catch ((error) => {
+            if (!Fetching.isFetchingError(error))
+              return;
+            if (error.isRequestError()) {   
+              if (error.code === 400)
+                setErrorInput("Password mismatch.");
+            } else if (error.isServerError()) {
+              setErrorInput("Server busy, try again later");
+            } else if (error.isTransportError()) {
+              setErrorInput("Network error, try again later");
+            }
+          })
       } else {
-        try {
-          await get<true>("chat-controller/channel/findName/" + state.channel);
-        } catch (error) {
+        await get<true>(
+          "chat-controller/channel/findName/" + state.channel)
+        .then(() => {
+          sendForm(state.channel, state.pwd, state.selectedOption);
+        })
+        .catch ((error) => {
           if (!Fetching.isFetchingError(error))
             return;
-
-          if (error.isRequestError()) {
-            if (error.code === 404)
-              sendForm(state.channel, state.pwd, state.selectedOption);
-            else if (error.code === 400)
+          if (error.isRequestError()) {   
+            if (error.code === 400)
               setErrorInput("Password mismatch.");
           } else if (error.isServerError()) {
             setErrorInput("Server busy, try again later");
           } else if (error.isTransportError()) {
             setErrorInput("Network error, try again later");
           }
-        }
+        })
       }
     };
 
@@ -850,8 +840,6 @@ export default function ChatClient() {
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
     };
-
-    console.log("BTN VALUE: ", buttonInvitation);
 
     function ListUsers() {
       const list = usersList.map((user: any) =>
@@ -1028,15 +1016,16 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const getChan = async () => {
+      username = UserData.getNickname();
+
+      const getChan = async () => {
       const channel = takeActiveCanal();
-      console.log(channel);
       if (channel[0] === '#' && channel !== "#general")
       {
         if (inGeneral)
           setInGeneral(false);
       }
-      else if (!inGeneral && (channel === "#general" || channel[0] !== '#'))
+      else if (channel === "#general" || channel[0] !== '#')
         setInGeneral(true);
     }
     getChan();
@@ -1093,6 +1082,13 @@ export default function ChatClient() {
 
     ChatClientSocket.joinChatServer(joinCallBack);
 
+    const changeUsernameCallBack = async () => {
+      username = UserData.getNickname();
+      await fetchMessage(takeActiveCanal());
+    }
+
+    ChatClientSocket.onChangeUsername(changeUsernameCallBack);
+
     const quitCallBack = (room: string) => {
       for (let index = 0; index < channelList.length; index++) {
         if (room === channelList[index]) {
@@ -1144,6 +1140,7 @@ export default function ChatClient() {
       ChatClientSocket.offQuit(quitCallBack);
       ChatClientSocket.offInv(inviteCallBack);
       ChatClientSocket.offMessageRecieve(messageCallBack);
+      ChatClientSocket.offChange(changeUsernameCallBack);
       ChatClientSocket.offErr(errCallBack);
     };
   }, [roomChange, username]);

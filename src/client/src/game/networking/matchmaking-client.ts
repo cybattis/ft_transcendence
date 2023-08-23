@@ -26,8 +26,6 @@ export namespace MatchmakingClient {
   export function connect(): boolean {
     if (socket && !socket.needsToConnect()) return true;
 
-    console.log("connecting to matchmaking server");
-
     const token = localStorage.getItem("token");
 
     const socketOptions = {
@@ -44,23 +42,19 @@ export namespace MatchmakingClient {
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
     socket.on("match-found", (acceptTimeout: number) => {
-      console.log("match found");
       matchFoundCallbacks.forEach((callback) => callback(acceptTimeout));
     });
 
     socket.on("game-started", (opponentInfos: PlayerInfos) => {
-      console.log("game started", opponentInfos);
       currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback());
     });
 
     socket.on("game-invite-accepted", () => {
-      console.log("game invite accepted");
       gameInviteAcceptedCallbacks.forEach((callback) => callback());
     });
 
     socket.on("unauthorized", () => {
-      console.log("unauthorized");
       const token = localStorage.getItem("token");
       socket.emit("authorization", token ? { token } : {});
     });

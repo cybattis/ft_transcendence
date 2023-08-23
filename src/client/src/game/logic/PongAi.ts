@@ -81,7 +81,6 @@ export class PongAi {
     const ballEndingPos = this.state.getBallEnding();
     const ballDistanceFactor = Math.abs(this.state.getBallPos().x - this.paddle.centerX) / (this.canvas.width / 6);
     this.targetPos = ballEndingPos.y + (Math.random() - 0.5) * this.errorFactor * this.canvas.height * ballDistanceFactor;
-    console.log(this.targetPos, ballEndingPos.y);
   }
 
   private isBallGoingAway(): boolean {

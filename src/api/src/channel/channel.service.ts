@@ -15,7 +15,6 @@ import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
-import {TypeCheckers} from "../utils/type-checkers";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -114,15 +113,12 @@ export class ChannelService implements OnModuleInit {
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return false;
     if (!this.checkUserIsHere(channelToUpdate.operator, username)) {
-      console.log(`Ban : ${username} isn't operator`);
       return false;
     }
     if (!this.checkUserIsHere(channelToUpdate.users, target)) {
-      console.log(`Ban : ${target} isn't users`);
       return false;
     }
     if (cmd === 'kick') {
-      console.log(`Kick Target ${target}`);
       await this.kickOp(channelToUpdate, target);
       await this.kickUser(channelToUpdate, target);
       const user = await this.usersRepository.findOne({where: {nickname: target}});
@@ -156,7 +152,6 @@ export class ChannelService implements OnModuleInit {
     if (!this.checkUserIsHere(channelToUpdate.operator, username))
       return `Ban : ${username} isn't operator`;
     const timeBan: number = this.valideTime(time);
-    console.log(`time : ${timeBan}`);
     if (cmd === '+b')
     {
       await this.actBan(channelToUpdate, target, timeBan);
@@ -258,8 +253,6 @@ export class ChannelService implements OnModuleInit {
         blockedUsers.value.blockedChat,
         target,
       );
-    } else {
-      console.log('error invalid cmd');
     }
   }
 
@@ -417,7 +410,6 @@ export class ChannelService implements OnModuleInit {
         server.to(socket.id).emit('err', err);
         return; // bad mpd
       }
-      console.log('Await', await bcrypt.compare(pass, channelToJoin.password));
       channelToJoin.users.push(username);
       await this.channelRepository.save(channelToJoin);
       socket.join(channel);
@@ -433,7 +425,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
-    } else console.log('Aucun type de channel');
+    }
   }
 
   async joinChannel(
@@ -588,7 +580,6 @@ export class ChannelService implements OnModuleInit {
   async sendNotificationEvent(targetID: number) {
     const dest = await this.getSocketById(targetID);
     if (!dest) {
-      console.log('User not connected');
       return;
     }
     this.server.to(dest).emit('notification');
@@ -989,7 +980,6 @@ export class ChannelService implements OnModuleInit {
     const data = this.jwtService.decode(token) as TokenData;
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (data.nickname === this.usersSocketList[index].username) {
-        console.log('socket already present');
         return;
       }
     }
@@ -1059,7 +1049,6 @@ export class ChannelService implements OnModuleInit {
       if (channel.users.includes(past)){
         const title = channel.channel.replace(past, actual);
         channel.channel = title;
-        console.log(title);
         channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       }
     }
