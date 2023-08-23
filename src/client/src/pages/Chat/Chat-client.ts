@@ -40,6 +40,10 @@ export type notificationEventCallback = {
   (): void;
 };
 
+export type newUsername = {
+  (newName: string): void;
+};
+
 export type newErrCallBack = {
   (data: { channel: string; reason: string }): void;
 };
@@ -55,7 +59,7 @@ export namespace ChatClientSocket {
   let newQuitCallBack: newQuitCallBack[] = [];
   let newInvCallBack: newInvCallBack[] = [];
   let notificationEventCallbacks: notificationEventCallback[] = [];
-  let changesCallBack: notificationEventCallback[] = [];
+  let changesCallBack: newUsername[] = [];
   let newErrCallBack: newErrCallBack[] = [];
 
   export function checkChatConnection(): boolean {
@@ -128,8 +132,8 @@ export namespace ChatClientSocket {
       newErrCallBack.forEach((callback) => callback(data));
     });
 
-    socket.on("change-username", () => {
-      changesCallBack.forEach((callback) => callback());
+    socket.on("change-username", (newName: string) => {
+      changesCallBack.forEach((callback) => callback(newName));
     });
 
     return true;
@@ -276,9 +280,9 @@ export namespace ChatClientSocket {
     socket.emit("notif-event", target);
   }
 
-  export function changedUsername() {
+  export function changedUsername(newName: string) {
     if (!checkChatConnection()) return;
-    socket.emit("change-username");
+    socket.emit("change-username", newName);
   }
 
   export function AcceptInvitationChannel(data: {
@@ -315,7 +319,7 @@ export namespace ChatClientSocket {
     newGameMessageCallBack.push(callback);
   }
 
-  export function onChangeUsername(callback: notificationEventCallback) {
+  export function onChangeUsername(callback: newUsername) {
     changesCallBack.push(callback);
   }
 
@@ -365,7 +369,7 @@ export namespace ChatClientSocket {
     newInvCallBack = newInvCallBack.filter((cb) => cb !== callback);
   }
 
-  export function offChange(callback: notificationEventCallback) {
+  export function offChange(callback: newUsername) {
     changesCallBack = changesCallBack.filter(
       (cb) => cb !== callback
     );

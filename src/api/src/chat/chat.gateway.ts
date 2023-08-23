@@ -363,8 +363,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('change-username')
   async changeUsernameUpdate(
     @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() newName: string,
   ) {
-    socket.broadcast.emit('change-username');
+    socket.broadcast.emit('change-username', newName);
   }
 
   @SubscribeMessage('inv')

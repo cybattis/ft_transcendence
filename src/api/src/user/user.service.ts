@@ -733,6 +733,6 @@ export class UserService implements OnModuleInit {
     const channels = await this.usersRepository.findOne({where: {id: id}});
     if (channels)
       return channels.chans;
-  return null;
+    return null;
   }
 }

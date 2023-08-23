@@ -70,7 +70,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       .then((updatedUser) => {
         UserData.updateNickname(updatedUser.nickname);
         setInfoMessage("Update successful!");
-        ChatClientSocket.changedUsername();
+        ChatClientSocket.changedUsername(updatedUser.nickname);
       })
       .catch(showErrorInModal);
   };

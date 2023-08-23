@@ -46,6 +46,7 @@ export default function UsersList(props: {
         .catch(() => {});
     }
     fecthLists();
+
   }, [props.messages, props.channel]);
 
   

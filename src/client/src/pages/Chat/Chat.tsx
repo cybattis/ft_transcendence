@@ -39,6 +39,7 @@ export default function ChatClient() {
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
   const [inGeneral, setInGeneral] = useState(true);
+  const [isPriv, setIsPriv] = useState(false);
   const [owner, setOwner] = useState(false);
   const [allChannels, setAllChannels] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState({
@@ -1018,6 +1019,11 @@ export default function ChatClient() {
   useEffect(() => {
       username = UserData.getNickname();
 
+      if (takeActiveCanal()[0] !== '#' && isPriv === false)
+        setIsPriv(true);
+      else if (takeActiveCanal()[0] === '#' && isPriv === true)
+        setIsPriv(false);
+
       const getChan = async () => {
       const channel = takeActiveCanal();
       if (channel[0] === '#' && channel !== "#general")
@@ -1031,7 +1037,7 @@ export default function ChatClient() {
     getChan();
 
     const fetchAllChannels = async () => {
-      get<string[]>('user/myChannels')
+      await get<string[]>('user/myChannels')
         .then((response) => {
           setAllChannels(response);
         }).catch(showErrorInModal);
@@ -1082,9 +1088,18 @@ export default function ChatClient() {
 
     ChatClientSocket.joinChatServer(joinCallBack);
 
-    const changeUsernameCallBack = async () => {
+    const changeUsernameCallBack = async (newName: string) => {
       username = UserData.getNickname();
       await fetchMessage(takeActiveCanal());
+      await fetchAllChannels();
+      if (takeActiveCanal()[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(takeActiveCanal()))
+      {
+        const canal = document.getElementById("canal");
+        if (canal) {
+          canal.innerHTML = newName;
+          setRoomChange(newName);
+        }
+      }
     }
 
     ChatClientSocket.onChangeUsername(changeUsernameCallBack);
@@ -1237,13 +1252,13 @@ export default function ChatClient() {
             </button>
           </div>
         </div>
-        <div className="user-lists">
+        {!isPriv && (<div className="user-lists">
           <UsersList
             messages={messages}
             channel={takeActiveCanal()}
             handleButton={handleButton}
           />
-        </div>
+        </div>)}
         <ErrorModalChat
           msg={errorMessage}
           onClose={() => setErrorMessage({ channel: "", error: "" })}

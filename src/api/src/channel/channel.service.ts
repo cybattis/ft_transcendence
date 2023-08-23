@@ -631,7 +631,10 @@ export class ChannelService implements OnModuleInit {
       socket.broadcast.emit('rcv', send);
       server.to(socket.id).emit('rcv', send);
     } else {
-      const target = this.getSocketByUsername(channel);
+      const user = await this.usersRepository.findOne({where: {nickname: channel}});
+      if (!user)
+        return ;
+      const target = await this.getSocketById(user.id);
       const prv = { sender, msg, channel };
       const find: Channel[] = await this.channelRepository.find({
         where: { status: 'message' },
@@ -640,13 +643,13 @@ export class ChannelService implements OnModuleInit {
         if (
           (find[index].users[0] == sender && find[index].users[1] == channel) ||
           (find[index].users[1] == sender && find[index].users[0] == channel)
-        ) {
-          await this.chatRepository.save({
-            channel: find[index].channel,
-            content: msg,
-            emitter: sender,
-            emitterId: emiter.value.id,
-          });
+          ) {
+            await this.chatRepository.save({
+              channel: find[index].channel,
+              content: msg,
+              emitter: sender,
+              emitterId: emiter.value.id,
+            });
           if (target) {
             server.to(target).emit('rcv', prv);
             server.to(socket.id).emit('rcv', prv);
@@ -1046,10 +1049,20 @@ export class ChannelService implements OnModuleInit {
       where: { status: 'message' },
     });
     for (const channel of channelsPrv){
-      if (channel.users.includes(past)){
-        const title = channel.channel.replace(past, actual);
-        channel.channel = title;
+      if (channel.users.includes(actual)){
+        channel.channel = channel.users[1] + channel.users[0];
         channel.users = channel.users.map((user: string) => (user === past ? actual : user));
+
+        const other = channel.users[1] == actual ? channel.users[0] : channel.users[1];
+        let user1 = await this.usersRepository.findOne({where : {nickname: other}});
+        if (!user1) return ;
+        for (let i = 0; user1.chans[i]; i ++){
+          if (user1.chans[i] === past){
+            user1.chans.splice(i, 1, actual);
+            break;
+          }
+        }
+        await this.usersRepository.save(user1);
       }
     }
     await this.channelRepository.save(channelsPrv);
