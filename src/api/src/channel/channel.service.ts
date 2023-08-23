@@ -1,25 +1,20 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  OnModuleInit,
-} from '@nestjs/common';
-import { ChannelStructure } from './channel.structure';
-import { Socket, Server } from 'socket.io';
+import {BadRequestException, Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
+import {ChannelStructure} from './channel.structure';
+import {Server, Socket} from 'socket.io';
 import * as bcrypt from 'bcrypt';
-import { Chat } from './entity/Chat.entity';
-import { Channel } from './entity/Channel.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
-import { TokenData } from '../type/jwt.type';
-import { JwtService } from '@nestjs/jwt';
-import { ModuleRef } from '@nestjs/core';
-import { UsersSocketStructure } from './usersSocket.structure';
-import { User } from 'src/user/entity/Users.entity';
+import {Chat} from './entity/Chat.entity';
+import {Channel} from './entity/Channel.entity';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {UserService} from 'src/user/user.service';
+import {TokenData} from '../type/jwt.type';
+import {JwtService} from '@nestjs/jwt';
+import {ModuleRef} from '@nestjs/core';
+import {UsersSocketStructure} from './usersSocket.structure';
+import {User} from 'src/user/entity/Users.entity';
+import {UserSettings} from 'src/type/user.type';
 import { APIError } from "../utils/errors";
 import { failure, Result, success } from "../utils/Error";
-import { UserSettings } from 'src/type/user.type';
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -537,7 +532,6 @@ export class ChannelService implements OnModuleInit {
   }
 
   async joinOldChannel(socket: Socket, username: string) {
-    console.log('old');
     const allChannel: Channel[] = await this.channelRepository.find();
     if (allChannel) {
       for (let index = 0; allChannel[index]; index++) {
@@ -1049,16 +1043,28 @@ export class ChannelService implements OnModuleInit {
     for (const channel of channels){
       if (channel.owner === past)
         channel.owner === actual;
-      const updateUsers = channel.users.map((user : string) => (user === past ? actual : user));
-      channel.users = updateUsers;
-      const updateOpe = channel.operator.map((user : string) => (user === past ? actual : user));
-      channel.operator = updateOpe;
-      const updateBan = channel.ban.map((user : string) => (user === past ? actual : user));
-      channel.ban = updateBan;
-      const updateMute = channel.mute.map((user : string) => (user === past ? actual : user));
-      channel.mute = updateMute;
+      channel.users = channel.users.map((user: string) => (user === past ? actual : user));
+      channel.operator = channel.operator.map((user: string) => (user === past ? actual : user));
+      channel.ban = channel.ban.map((user: string) => (user === past ? actual : user));
+      channel.mute = channel.mute.map((user: string) => (user === past ? actual : user));
     }
     await this.channelRepository.save(channels);
+  }
+
+  async updatePrvChannel(past : string, actual: string) {
+    const channelsPrv = await this.channelRepository.find({
+      where: { status: 'message' },
+    });
+    for (const channel of channelsPrv){
+      if (channel.users.includes(past)){
+        const title = channel.channel.replace(past, actual);
+        channel.channel = title;
+        console.log(title);
+        const updateUsers = channel.users.map((user : string) => (user === past ? actual : user));
+        channel.users = updateUsers;
+      }
+    }
+    await this.channelRepository.save(channelsPrv);
   }
 
   async updateNickname(body: UserSettings, token: string){
@@ -1066,10 +1072,8 @@ export class ChannelService implements OnModuleInit {
       throw new BadRequestException('nickname must be between 1 and 15 chars');
 
     const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    console.log("In update Service", body);
-    console.log("Bis", decoded );
     await this.updateChat(decoded.nickname, body.nickname);
     await this.updateChannel(decoded.nickname, body.nickname);
+    await this.updatePrvChannel(decoded.nickname, body.nickname);
   }
-
 }
