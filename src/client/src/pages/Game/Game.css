@@ -6,6 +6,7 @@
     margin-bottom: 60px;
 
     overflow-y: auto;
+    z-index: 0;
 }
 
 .game-box {
