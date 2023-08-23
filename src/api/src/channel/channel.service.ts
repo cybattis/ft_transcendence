@@ -1052,15 +1052,25 @@ export class ChannelService implements OnModuleInit {
   }
 
   async updatePrvChannel(past : string, actual: string) {
+    console.log('Upate Prv');
     const channelsPrv = await this.channelRepository.find({
       where: { status: 'message' },
     });
     for (const channel of channelsPrv){
-      if (channel.users.includes(past)){
-        const title = channel.channel.replace(past, actual);
-        channel.channel = title;
-        console.log(title);
+      if (channel.users.includes(actual)){
+        channel.channel = channel.users[1] + channel.users[0];
         channel.users = channel.users.map((user: string) => (user === past ? actual : user));
+
+        const other = channel.users[1] == actual ? channel.users[0] : channel.users[1];
+        let user1 = await this.usersRepository.findOne({where : {nickname: other}});
+        if (!user1) return ;
+        for (let i = 0; user1.chans[i]; i ++){
+          if (user1.chans[i] === past){
+            user1.chans.splice(i, 1, actual);
+            break;
+          }
+        }
+        await this.usersRepository.save(user1);
       }
     }
     await this.channelRepository.save(channelsPrv);
