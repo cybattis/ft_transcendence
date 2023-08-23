@@ -132,7 +132,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       return failure(APIError.UserIsIntra);
 
     const isVerified = await this.userService.isVerified(user.email);
-    if (isVerified.isErr())
+    if (isVerified.isErr() || isVerified.value == false)
       return failure(APIError.UserNotVerified);
 
     const authActivated = await this.userService.authActivated(user.email);
