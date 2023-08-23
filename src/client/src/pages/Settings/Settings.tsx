@@ -65,12 +65,12 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       return;
     }
 
-      put<UserSettings>("user/update", user, "application/json")
-        .then((updatedUser) => {
-          UserData.updateNickname(updatedUser.nickname);
-          setInfoMessage("Update successful!");
-        })
-        .catch(showErrorInModal);
+    put<UserSettings>("user/update", user, "application/json")
+      .then((updatedUser) => {
+        UserData.updateNickname(updatedUser.nickname);
+        setInfoMessage("Update successful!");
+      })
+      .catch(showErrorInModal);
   };
 
   const handle2fa = async () => {

@@ -605,7 +605,7 @@ export class UserService implements OnModuleInit {
   }
 
   async updateUserSettings(body: UserSettings, token: string)
-    : Promise<Result<User, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
+    : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     if (body.nickname.length == 0 || body.nickname.length > 15)
@@ -622,12 +622,13 @@ export class UserService implements OnModuleInit {
         return failure(APIError.NicknameAlreadyTaken);
 
       user.nickname = body.nickname;
+      await this.channelService.updateNickname(body, token);
     }
 
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
-    return success(user);
+    return success(TypeConverters.fromUserToUserSettings(user));
   }
 
   async getUserFromToken(token: string)

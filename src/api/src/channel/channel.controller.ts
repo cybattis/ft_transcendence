@@ -40,27 +40,13 @@ export class ChannelController {
   // Chat
   @Get('/message')
   findAllChat(): Promise<Chat[]> {
-    console.log('fetch all chat');
     return this.chatRepository.find();
-  }
-
-  @Put('update')
-  async updateSettings(
-    @Body() body: UserSettings,
-    @Headers('Authorization') header: Headers,
-  ) {
-    const token = header.toString().split(' ')[1];
-    try {
-      return await this.channelService.updateNickname(body, token);
-    } catch (e) {
-      throw new BadRequestException(e.message);
-    }
   }
 
   @Get('/message/:channel')
   async findChat(@Param('channel') channel: string): Promise<Chat[]> {
     channel = '#' + channel;
-    return await this.chatRepository.find({ where: { channel: channel } });
+    return await this.chatRepository.find({ order: { id: "ASC" }, where: { channel: channel } });
   }
 
 
@@ -71,7 +57,7 @@ export class ChannelController {
         const listBlocked = await this.userService.getBlockedList(payload.id);
         if (listBlocked.isErr())
           return [];
-        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
+        return (await this.chatRepository.find({ order: { id: "ASC" }, where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
     }
 
   @Get('/message/:channel/:username')
@@ -88,6 +74,7 @@ export class ChannelController {
         (find[index].users[0] == username && find[index].users[1] == channel)
       ) {
         return await this.chatRepository.find({
+          order: { id: "ASC" },
           where: { channel: find[index].channel },
         });
       }

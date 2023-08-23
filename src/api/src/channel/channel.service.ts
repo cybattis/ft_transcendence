@@ -13,8 +13,9 @@ import {ModuleRef} from '@nestjs/core';
 import {UsersSocketStructure} from './usersSocket.structure';
 import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
-import { APIError } from "../utils/errors";
-import { failure, Result, success } from "../utils/Error";
+import {APIError} from "../utils/errors";
+import {failure, Result, success} from "../utils/Error";
+import {TypeCheckers} from "../utils/type-checkers";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -976,7 +977,6 @@ export class ChannelService implements OnModuleInit {
       socket.broadcast.emit('rcv', send);
       //Envoyer un message dans le chat pour dire qu'il a rejoint
     }
-
     // Channel n'existe plus
   }
 
@@ -1060,8 +1060,7 @@ export class ChannelService implements OnModuleInit {
         const title = channel.channel.replace(past, actual);
         channel.channel = title;
         console.log(title);
-        const updateUsers = channel.users.map((user : string) => (user === past ? actual : user));
-        channel.users = updateUsers;
+        channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       }
     }
     await this.channelRepository.save(channelsPrv);
@@ -1071,9 +1070,12 @@ export class ChannelService implements OnModuleInit {
     if (body.nickname.length == 0 || body.nickname.length > 15)
       throw new BadRequestException('nickname must be between 1 and 15 chars');
 
-    const decoded: TokenData = this.jwtService.decode(token) as TokenData;
-    await this.updateChat(decoded.nickname, body.nickname);
-    await this.updateChannel(decoded.nickname, body.nickname);
-    await this.updatePrvChannel(decoded.nickname, body.nickname);
+    const result = await this.userService.getUserFromToken(token);
+    if (result.isErr())
+      return failure(result.error);
+
+    await this.updateChat(result.value.nickname, body.nickname);
+    await this.updateChannel(result.value.nickname, body.nickname);
+    await this.updatePrvChannel(result.value.nickname, body.nickname);
   }
 }

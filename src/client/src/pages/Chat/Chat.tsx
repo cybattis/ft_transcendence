@@ -18,6 +18,7 @@ import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
 import {useProfileData} from "../../hooks/UseProfileData";
+import {UserData} from "../Profile/user-data";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -55,7 +56,7 @@ export default function ChatClient() {
   if (username === "" && token) {
     try {
       payload = jwt_decode(token);
-      if (payload?.nickname) username = payload.nickname;
+      username = UserData.getNickname();
     } catch (e) {
       console.log(`Decode error ${e}`);
     }
@@ -1144,7 +1145,7 @@ export default function ChatClient() {
       ChatClientSocket.offMessageRecieve(messageCallBack);
       ChatClientSocket.offErr(errCallBack);
     };
-  }, [roomChange]);
+  }, [roomChange, username]);
 
   if (!token) {
     return <Navigate to={"/"} />;

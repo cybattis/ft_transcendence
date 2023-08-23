@@ -14,7 +14,6 @@ import {
   ForbiddenException, NotFoundException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './entity/Users.entity';
 import {
   ChannelInvite,
   UserFriend,
@@ -33,23 +32,24 @@ import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
+import {AuthService} from "../auth/auth.service";
 
 @Controller('user')
 export class UserController{
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private authService: AuthService,
   ) {}
 
   @Get()
   async findAll()/*: Promise<UserInfo[]> */{
     const result = await this.userService.findAll();
-    return result;
-    /*const infos: UserInfo[] = [];
+    const infos: UserInfo[] = [];
     result.forEach((user) => {
       infos.push(TypeConverters.fromUserToUserInfo(user));
     });
-    return infos;*/
+    return infos;
   }
 
   /*

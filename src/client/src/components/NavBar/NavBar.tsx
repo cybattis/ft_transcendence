@@ -19,15 +19,6 @@ function MobileNavBar() {
   const { authed } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
 
-  let username: string = "";
-
-  const token = localStorage.getItem("token");
-  if (token) {
-    const decoded: TokenData = jwt_decode(token);
-    if (decoded) username = decoded.nickname;
-    else username = "";
-  }
-
   function handlePageChange() {
     setSidePanel(!sidePanel);
     removeMultiplayerGame();
@@ -80,7 +71,7 @@ function MobileNavBar() {
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/nickname/${username}`}
+            link={`/profile/my-profile`}
             callback={handlePageChange}
           />
           <NavButton
