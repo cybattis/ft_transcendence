@@ -32,16 +32,18 @@ import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
+import {AuthService} from "../auth/auth.service";
 
 @Controller('user')
 export class UserController{
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private authService: AuthService,
   ) {}
 
   @Get()
-  async findAll(): Promise<UserInfo[]> {
+  async findAll()/*: Promise<UserInfo[]> */{
     const result = await this.userService.findAll();
     const infos: UserInfo[] = [];
     result.forEach((user) => {
@@ -414,8 +416,18 @@ export class UserController{
   ) : Promise<ChannelInvite[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
+    console.log(result);
     if (result.isErr())
       throw new ForbiddenException();
     return result.value;
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('myChannels')
+  async getAllMyChannels(@Headers('Authorization') header: Headers) {
+    const payload: any = this.jwtService.decode(
+      header.toString().split(' ')[1],
+    );
+    return await this.userService.fetchAllMyChannels(payload.id);
   }
 }

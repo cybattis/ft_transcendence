@@ -605,7 +605,7 @@ export class UserService implements OnModuleInit {
   }
 
   async updateUserSettings(body: UserSettings, token: string)
-    : Promise<Result<User, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
+    : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     if (body.nickname.length == 0 || body.nickname.length > 15)
@@ -622,12 +622,13 @@ export class UserService implements OnModuleInit {
         return failure(APIError.NicknameAlreadyTaken);
 
       user.nickname = body.nickname;
+      await this.channelService.updateNickname(body, token);
     }
 
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
-    return success(user);
+    return success(TypeConverters.fromUserToUserSettings(user));
   }
 
   async getUserFromToken(token: string)
@@ -704,7 +705,7 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     const result: ChannelInvite[] = [];
-    for (let i = 0; user.invites.length; i++) {
+    for (let i = 0; user.invitesId[i]; i++) {
       const sender = await this.usersRepository.findOne({
         select: ['nickname', 'avatarUrl', 'id'],
         where: { id: user.invitesId[i] },
@@ -713,7 +714,7 @@ export class UserService implements OnModuleInit {
         continue;
 
       const temp: ChannelInvite = {
-        joinChannel: user.invites[i],
+        joinChannel: user.joinChannel[i],
         invitedByAvatar: sender.avatarUrl,
         invitedByUsername: sender.nickname,
       };
@@ -726,5 +727,12 @@ export class UserService implements OnModuleInit {
   async updateUserGameStatus(user: User) {
     user.inGame = false;
     await this.usersRepository.save(user);
+  }
+
+  async fetchAllMyChannels(id: number) {
+    const channels = await this.usersRepository.findOne({where: {id: id}});
+    if (channels)
+      return channels.chans;
+  return null;
   }
 }

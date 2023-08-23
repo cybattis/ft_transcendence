@@ -2,6 +2,7 @@ import {
   Controller,
   Put,
   Get,
+  Body,
   Param,
   Delete,
   UseGuards,
@@ -19,6 +20,7 @@ import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
+import { UserSettings } from 'src/type/user.type';
 import { decodeTokenOrThrow } from "../utils/tokenUtils";
 import { APIError } from "../utils/errors";
 
@@ -31,8 +33,6 @@ export class ChannelController {
     private chatRepository: Repository<Chat>,
     @InjectRepository(Channel)
     private channelRepository: Repository<Channel>,
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
     private channelService: ChannelService,
     private jwtService: JwtService,
   ) {}
@@ -40,17 +40,16 @@ export class ChannelController {
   // Chat
   @Get('/message')
   findAllChat(): Promise<Chat[]> {
-    console.log('fetch all chat');
     return this.chatRepository.find();
   }
 
   @Get('/message/:channel')
   async findChat(@Param('channel') channel: string): Promise<Chat[]> {
     channel = '#' + channel;
-    return await this.chatRepository.find({ where: { channel: channel } });
+    return await this.chatRepository.find({ order: { id: "ASC" }, where: { channel: channel } });
   }
 
-    
+
     @Get('/message/channel/:channel/:username')
     async findMessageChatWBlocked(@Param('channel') channel : string, @Headers('Authorization') header: Headers): Promise<Chat[]>{
         const payload: TokenData = decodeTokenOrThrow(header, this.jwtService);
@@ -58,7 +57,7 @@ export class ChannelController {
         const listBlocked = await this.userService.getBlockedList(payload.id);
         if (listBlocked.isErr())
           return [];
-        return (await this.chatRepository.find({where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
+        return (await this.chatRepository.find({ order: { id: "ASC" }, where : {channel : channel, emitter: Not(In([...listBlocked.value]))} }));
     }
 
   @Get('/message/:channel/:username')
@@ -75,6 +74,7 @@ export class ChannelController {
         (find[index].users[0] == username && find[index].users[1] == channel)
       ) {
         return await this.chatRepository.find({
+          order: { id: "ASC" },
           where: { channel: find[index].channel },
         });
       }
@@ -193,16 +193,6 @@ export class ChannelController {
     });
     if (!find) return false;
     return find.owner === username;
-  }
-
-  @Put('request/:channel')
-  async acceptChannelRequest(
-    @Param('channel') channel: string,
-    @Headers('Authorization') header: Headers,
-  ): Promise<void>
-  {
-    const decoded = decodeTokenOrThrow(header, this.jwtService);
-    await this.channelService.acceptChannelRequest('#' + channel, decoded.id);
   }
 
   @Put('decline/:channel')

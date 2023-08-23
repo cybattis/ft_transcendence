@@ -10,12 +10,12 @@ export class Channel {
 
   @Column({ type: 'varchar' })
   status: string;
+  
+  @Column({ type: 'varchar' })
+  owner: string;
 
   @Column('text', { array: true })
   users: string[];
-
-  @Column({ type: 'varchar' })
-  owner: string;
 
   @Column('text', { array: true })
   operator: string[];

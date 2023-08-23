@@ -31,7 +31,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   private server: Server;
 
   constructor(
-    private readonly jwtService: JwtService,
     private readonly channelService: ChannelService,
     private readonly userService: UserService,
     private readonly authService: AuthService,
@@ -115,6 +114,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   ) {
     let type, pass, username, channel: string;
     if (!data) return;
+    console.log('New cHANNEL', data.channel);
     !data.channel ? (channel = '#general') : (channel = data.channel);
     !data.username ? (username = '') : (username = data.username);
     !data.password ? (pass = '') : (pass = data.password);
@@ -379,12 +379,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('acc')
   async AcceptInvitationChannel(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { channel: string; target: string },
+    @MessageBody() data: { channel: string; targetID: number },
   ) {
     await this.channelService.AcceptInvitationChannel(
+      socket,
       this.server,
       data.channel,
-      data.target,
+      data.targetID,
     );
   }
 }

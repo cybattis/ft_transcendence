@@ -18,11 +18,13 @@ import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
 import {TypeCheckers} from "../../utils/type-checkers";
+import {useProfileData} from "../../hooks/UseProfileData";
+import {UserData} from "../Profile/user-data";
 
-//QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
-//FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
+
+//FAIRE EN SORTE QUE ID SOIT MIS POUR NOM DE CHANNEL PRV ET PAS LE USERNAME PPUR PAS AVOIR D ERREUR
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +41,9 @@ export default function ChatClient() {
   const [isMute, setIsMute] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
+  const [inGeneral, setInGeneral] = useState(true);
+  const [owner, setOwner] = useState(false);
+  const [allChannels, setAllChannels] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState({
     channel: "",
     error: "",
@@ -52,11 +57,9 @@ export default function ChatClient() {
   if (username === "" && token) {
     try {
       payload = jwt_decode(token);
-      if (TypeCheckers.isTokenData(payload))
-        if (payload?.nickname) username = payload.nickname;
-    }
-    catch (e) {
-      console.log(e);
+      username = UserData.getNickname();
+    } catch (e) {
+      console.log(`Decode error ${e}`);
     }
   }
 
@@ -75,8 +78,8 @@ export default function ChatClient() {
       ChatClientSocket.quit(sendQuit);
     };
 
-    if (props.canal !== defaultChannelGen && props.canal[0] === "#") {
-      return (
+    return (
+      <>
         <button className="button-chat" onClick={handleQuitButton}>
           <img
             className="logo-chat"
@@ -85,14 +88,12 @@ export default function ChatClient() {
             title={"Quit channel"}
           />
         </button>
-      );
-    }
-    return <></>;
+      </>
+    );
   }
 
   function Param(props: { canal: string }) {
     const [buttonParam, setButtonParam] = useState(false);
-    const [owner, setOwner] = useState(false);
     const { get } = useFetcher();
     const channel = takeActiveCanal();
 
@@ -147,6 +148,7 @@ export default function ChatClient() {
             onSubmit={handleSubmitParam}
           >
             <Select
+              className="selectName"
               defaultValue={options[0]}
               onChange={handleSelectParam}
               options={options}
@@ -162,13 +164,19 @@ export default function ChatClient() {
                 value={inputParam.pwd}
               />
             </label>
-            <button type="submit" className="submitButton">
+            <button type="submit" className="submitParamButton">
               Change
             </button>
           </form>
         </div>
       );
     }
+
+    const keyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (buttonParam) setButtonParam(false);
+      }
+    };
 
     useEffect(() => {
       async function isOwner() {
@@ -189,24 +197,25 @@ export default function ChatClient() {
       }
 
       isOwner();
+
+      document.addEventListener("keydown", keyPress);
+      return () => document.removeEventListener("keydown", keyPress);
     });
 
     const btnParam = () => {
       buttonParam ? setButtonParam(false) : setButtonParam(true);
     };
 
-    if (!owner) return <></>;
-    else
       return (
         <>
-          <button className="button-chat" onClick={btnParam}>
+          {owner && <button className="button-chat" onClick={btnParam}>
             <img
               className="logo-chat"
               src={ParamLogo}
               alt="Param"
               title={"Channel Param"}
             />
-          </button>
+          </button>}
           {buttonParam && <AffParam />}
         </>
       );
@@ -390,55 +399,25 @@ export default function ChatClient() {
     else setBanForm(true);
   };
 
-  function OpeBtn() {
-    const [state, setState] = useState({
-      senderIsOpe: false,
-      targetIsOpe: false,
-    });
-    const channel = takeActiveCanal();
-
-    useEffect(() => {
-      async function IsOpe() {
-        const channelB = channel.substring(1);
-        const sendUsername =
-          "chat-controller/channel/ope/" +
-          channelB +
-          "/" +
-          username;
-        const sendTarget = "chat-controller/channel/ope/" + channelB + "/" + usr;
-
-        try {
-          const info = await get<boolean>(sendUsername);
-          const bis = await get<boolean>(sendTarget);
-          setState({senderIsOpe: info, targetIsOpe: bis});
-        } catch (error) {}
-      }
-      IsOpe();
-    }, []);
-
-    return (
-      <>
-        {isHere && state.senderIsOpe && username !== usr ? (
-          !state.targetIsOpe ? (
-            <button className="chat-buttons" onClick={handleAddOpe}>
-              Add operator
-            </button>
-          ) : (
-            <button className="chat-buttons" onClick={handleSubOpe}>
-              Sub operator
-            </button>
-          )
-        ) : (
-          <></>
-        )}
-      </>
-    );
-  }
-
   function Buttons() {
-    const [me, setMe] = useState(false);
+    const [targetOp, setTargetOp] = useState(false);
+    const [me, setMe] = useState(true);
+    const userData = useProfileData();
 
     useEffect(() => {
+      function getMyNickname() {
+        if (userData.data === null) return;
+
+        if (usr === userData.data.nickname) {
+          if (!me)
+            setMe(true);
+        } else if (usr !== userData.data.nickname)
+          setMe(false);
+      }
+
+      getMyNickname();
+    }, [userData.data]);
+
       const keyPress = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
           if (buttons) {
@@ -448,6 +427,7 @@ export default function ChatClient() {
         }
       };
 
+    useEffect(() => {
       async function isUsrInChan() {
         let canal = takeActiveCanal();
         if (canal[0] === "#") canal = canal.slice(1);
@@ -490,59 +470,100 @@ export default function ChatClient() {
       }
       getBlockedUsrs();
 
-      if (usr === payload?.nickname) setMe(true);
+      async function IsOpe() {
+        const channel = takeActiveCanal();
+        const channelB = channel.substring(1);
+        const sendTarget = "chat-controller/channel/ope/" + channelB + "/" + usr;
+        get<boolean>(sendTarget)
+        .then((response) => {
+          if (targetOp !== response)
+            setTargetOp(response);
+        });
+      }
+      IsOpe();
+
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
 
+
+    if (me === true)
+    {
+      return (
+        <div className="buttons-form">
+          <form method="get" onSubmit={handleButtonForm}>
+            <h4 className="title-form-chat">
+              Choose your action on {usr}
+            </h4>
+            <div className="ctn-btn-action">
+              <Link to={`/profile/${usr}`}>
+                <button className="chat-buttons">Profile</button>
+              </Link>
+            </div>
+          </form>
+        </div>
+      )
+    }
+
     return (
       <div className="buttons-form">
         <form method="get" onSubmit={handleButtonForm}>
-          <h4>
-            Choose your action <br /> on {usr}
+          <h4 className="title-form-chat">
+            Choose your action on {usr}
           </h4>
           <div className="ctn-btn-action">
-            {isHere && !me && !blocked && (
+            {!me && isHere && !blocked && (
               <button className="chat-buttons" onClick={handleBlock}>
                 Block
               </button>
             )}
-            {isHere && !me && isOpe && (
+            {!me && isHere && isOpe && (
               <button className="chat-buttons" onClick={handleKick}>
                 Kick
               </button>
             )}
-            {isHere && !me && isOpe && !isBan && (
+            {!me && isHere && isOpe && !isBan && (
               <button className="chat-buttons" onClick={handleBanForm}>
                 Ban
               </button>
             )}
-            {isHere && !me && isOpe && !isMute && (
+            {!me && isHere && isOpe && !isMute && (
               <button className="chat-buttons" onClick={handleMute}>
                 Mute
               </button>
             )}
-            {isHere && !me && isOpe && isMute && (
+          </div>
+          <div className="ctn-btn-action">
+            {!me && isHere && isOpe && isMute && (
               <button className="chat-buttons" onClick={handleUnMute}>
                 UnMute
               </button>
             )}
-            {!isHere && !me && isOpe && isBan && (
+            {!me && !isHere && isOpe && isBan && (
               <button className="chat-buttons" onClick={handleUnBan}>
                 UnBan
               </button>
             )}
-            {isHere && !me && blocked && (
+            {!me && isHere && blocked && (
               <button className="chat-buttons" onClick={handleUnBlock}>
                 UnBlock
+              </button>
+            )}
+            {!me && isOpe && isHere && !targetOp && (
+              <button className="chat-buttons" onClick={handleAddOpe}>
+                Add operator
+              </button>
+            )}
+            {!me && isOpe && isHere && targetOp && (
+              <button className="chat-buttons" onClick={handleSubOpe}>
+                Sub operator
               </button>
             )}
             <Link to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
-            <OpeBtn />
-            {banForm && <Ban />}
           </div>
+          {banForm && <Ban />}
         </form>
       </div>
     );
@@ -739,7 +760,7 @@ export default function ChatClient() {
 
     return (
       <div className="join-form">
-        <form method="get" onSubmit={handleSubmitJoin}>
+        <form method="get" className="join-form-form" onSubmit={handleSubmitJoin}>
           <h4>Join a Channel</h4>
           <div className="test">
             {errorInput && <p className="error"> {errorInput} </p>}
@@ -787,6 +808,12 @@ export default function ChatClient() {
     const [buttonInvitation, setButtonInvitation] = useState(false);
     const [usersList, setUsersList] = useState<UserInfo[]>([]);
 
+    const keyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (buttonInvitation) setButtonInvitation(false);
+      }
+    };
+
     const setBtnInvit = () => {
       if (buttonInvitation) setButtonInvitation(false);
       else {
@@ -812,7 +839,10 @@ export default function ChatClient() {
           .catch(() => {});
       }
       requUser();
-    }, []);
+
+      document.addEventListener("keydown", keyPress);
+      return () => document.removeEventListener("keydown", keyPress);
+    }, [buttonInvitation]);
 
     const handleInvite = (target: string) => {
       const id = payload?.id;
@@ -820,6 +850,8 @@ export default function ChatClient() {
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
     };
+
+    console.log("BTN VALUE: ", buttonInvitation);
 
     function ListUsers() {
       const list = usersList.map((user: any) =>
@@ -996,6 +1028,28 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
+    const getChan = async () => {
+      const channel = takeActiveCanal();
+      console.log(channel);
+      if (channel[0] === '#' && channel !== "#general")
+      {
+        if (inGeneral)
+          setInGeneral(false);
+      }
+      else if (!inGeneral && (channel === "#general" || channel[0] !== '#'))
+        setInGeneral(true);
+    }
+    getChan();
+
+    const fetchAllChannels = async () => {
+      get<string[]>('user/myChannels')
+        .then((response) => {
+          setAllChannels(response);
+        }).catch(showErrorInModal);
+    }
+
+    fetchAllChannels();
+
     const messageCallBack = async (data: {
       sender: string;
       msg: string;
@@ -1092,7 +1146,7 @@ export default function ChatClient() {
       ChatClientSocket.offMessageRecieve(messageCallBack);
       ChatClientSocket.offErr(errCallBack);
     };
-  }, [roomChange]);
+  }, [roomChange, username]);
 
   if (!token) {
     return <Navigate to={"/"} />;
@@ -1154,7 +1208,7 @@ export default function ChatClient() {
         <div className="chat-container">
           <div className="list">
             <ChannelList
-              channelList={channelList}
+              channelList={allChannels}
               onStringChange={handleStringChange}
             />
           </div>
@@ -1167,7 +1221,7 @@ export default function ChatClient() {
           <div className="chat-line">
             <h3 id="canal">{defaultChannelGen}</h3>
             <Param canal={takeActiveCanal()} />
-            <Quit canal={takeActiveCanal()} />
+            {!inGeneral && <Quit canal={takeActiveCanal()} />}
           </div>
 
           <div id="rcv-mess-container">

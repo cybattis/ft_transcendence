@@ -5,8 +5,6 @@ import { Link } from "react-router-dom";
 import Logo from "../Logo/Logo";
 import navbarIcon from "../../resource/menu.png";
 import { DisconnectButton, NavButton } from "./NavButton";
-import jwt_decode from "jwt-decode";
-import { TokenData } from "../../type/client.type";
 import { Notification } from "./NavButton";
 import logo from "../../resource/signin-logo.svg";
 import {AuthContext} from "../Auth/auth.context";
@@ -18,20 +16,6 @@ function MobileNavBar() {
   const [sidePanel, setSidePanel] = useState(false);
   const { authed } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
-
-  let username: string = "";
-
-  const token = localStorage.getItem("token");
-  if (token) {
-    try {
-      const decoded: TokenData = jwt_decode(token);
-      if (decoded) username = decoded.nickname;
-      else username = "";
-    } catch (e) {
-      username = "";
-      console.log(e);
-    }
-  }
 
   function handlePageChange() {
     setSidePanel(!sidePanel);
@@ -74,13 +58,18 @@ function MobileNavBar() {
             callback={handlePageChange}
           />
           <NavButton
+            content={"Play"}
+            link={"/"}
+            callback={handlePageChange}
+          />
+          <NavButton
             content={"Ranking"}
             link={"/leaderboard"}
             callback={handlePageChange}
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/nickname/${username}`}
+            link={`/profile/my-profile`}
             callback={handlePageChange}
           />
           <NavButton
