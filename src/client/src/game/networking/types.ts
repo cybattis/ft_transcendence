@@ -20,6 +20,18 @@ export type ServeUpdate = {
   playerNumber: number;
 }
 
+export type MatchmakingJoinMatchmakingCallback = {
+  (): void;
+}
+
+export type MatchmakingLeaveMatchmakingCallback = {
+  (): void;
+}
+
+export type MatchmakingAcceptFoundGameCallback = {
+  (): void;
+}
+
 export type MatchmakingMatchFoundCallback = {
   (acceptTimeout: number): void;
 }

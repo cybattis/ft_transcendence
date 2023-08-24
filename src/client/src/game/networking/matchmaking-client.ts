@@ -2,6 +2,9 @@ import {
   MatchmakingMatchFoundCallback,
   MatchmakingGameStartedCallback,
   PlayerInfos,
+  MatchmakingJoinMatchmakingCallback,
+  MatchmakingLeaveMatchmakingCallback,
+  MatchmakingAcceptFoundGameCallback,
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
 import Config from "../../utils/Config";
@@ -9,7 +12,12 @@ import Config from "../../utils/Config";
 export namespace MatchmakingClient {
   import ManagedSocket = SocketManager.ManagedSocket;
   let socket: ManagedSocket;
+  let joinMatchmakingCasualCallbacks: MatchmakingJoinMatchmakingCallback[] = [];
+  let leaveMatchmakingCasualCallbacks: MatchmakingJoinMatchmakingCallback[] = [];
+  let joinMatchmakingRankedCallbacks: MatchmakingLeaveMatchmakingCallback[] = [];
+  let leaveMatchmakingRankedCallbacks: MatchmakingLeaveMatchmakingCallback[] = [];
   let matchFoundCallbacks: MatchmakingMatchFoundCallback[] = [];
+  let acceptGameCallbacks: MatchmakingAcceptFoundGameCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
   let gameInviteAcceptedCallbacks: MatchmakingGameStartedCallback[] = [];
   let currentOpponentInfos: PlayerInfos = {
@@ -43,9 +51,34 @@ export namespace MatchmakingClient {
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
+    socket.on("sync-join-matchmaking-casual", () => {
+      console.log("sync-join-matchmaking-casual");
+      joinMatchmakingCasualCallbacks.forEach((callback) => callback());
+    })
+
+    socket.on("sync-leave-matchmaking-casual", () => {
+      console.log("sync-leave-matchmaking-casual");
+      leaveMatchmakingCasualCallbacks.forEach((callback) => callback());
+    });
+
+    socket.on("sync-join-matchmaking-ranked", () => {
+      console.log("sync-join-matchmaking-ranked");
+      joinMatchmakingRankedCallbacks.forEach((callback) => callback());
+    });
+
+    socket.on("sync-leave-matchmaking-ranked", () => {
+      console.log("sync-leave-matchmaking-ranked");
+      leaveMatchmakingRankedCallbacks.forEach((callback) => callback());
+    });
+
     socket.on("match-found", (acceptTimeout: number) => {
       console.log("match found");
       matchFoundCallbacks.forEach((callback) => callback(acceptTimeout));
+    });
+
+    socket.on("sync-accept-found-game", () => {
+      console.log("sync-accept-found-game");
+      acceptGameCallbacks.forEach((callback) => callback());
     });
 
     socket.on("game-started", (opponentInfos: PlayerInfos) => {
@@ -180,12 +213,52 @@ export namespace MatchmakingClient {
       throw new Error(result);
   }
 
+  export function onJoinMatchmakingCasual(callback: MatchmakingGameStartedCallback) {
+    joinMatchmakingCasualCallbacks.push(callback);
+  }
+
+  export function offJoinMatchmakingCasual(callback: MatchmakingGameStartedCallback) {
+    joinMatchmakingCasualCallbacks = joinMatchmakingCasualCallbacks.filter((cb) => cb !== callback);
+  }
+
+  export function onLeaveMatchmakingCasual(callback: MatchmakingGameStartedCallback) {
+    leaveMatchmakingCasualCallbacks.push(callback);
+  }
+
+  export function offLeaveMatchmakingCasual(callback: MatchmakingGameStartedCallback) {
+    leaveMatchmakingCasualCallbacks = leaveMatchmakingCasualCallbacks.filter((cb) => cb !== callback);
+  }
+
+  export function onJoinMatchmakingRanked(callback: MatchmakingGameStartedCallback) {
+    joinMatchmakingRankedCallbacks.push(callback);
+  }
+
+  export function offJoinMatchmakingRanked(callback: MatchmakingGameStartedCallback) {
+    joinMatchmakingRankedCallbacks = joinMatchmakingRankedCallbacks.filter((cb) => cb !== callback);
+  }
+
+  export function onLeaveMatchmakingRanked(callback: MatchmakingGameStartedCallback) {
+    leaveMatchmakingRankedCallbacks.push(callback);
+  }
+
+  export function offLeaveMatchmakingRanked(callback: MatchmakingGameStartedCallback) {
+    leaveMatchmakingRankedCallbacks = leaveMatchmakingRankedCallbacks.filter((cb) => cb !== callback);
+  }
+
   export function onMatchFound(callback: MatchmakingMatchFoundCallback) {
     matchFoundCallbacks.push(callback);
   }
 
   export function offMatchFound(callback: MatchmakingMatchFoundCallback) {
     matchFoundCallbacks = matchFoundCallbacks.filter((cb) => cb !== callback);
+  }
+
+  export function onAcceptGame(callback: MatchmakingAcceptFoundGameCallback) {
+    acceptGameCallbacks.push(callback);
+  }
+
+  export function offAcceptGame(callback: MatchmakingAcceptFoundGameCallback) {
+    acceptGameCallbacks = acceptGameCallbacks.filter((cb) => cb !== callback);
   }
 
   export function ongameStarted(callback: MatchmakingGameStartedCallback) {
