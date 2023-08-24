@@ -1,7 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import {
   CasualGameInvite,
-  CasualMatchmakingPlayer, MatchmakingPlayerStatus, MatchmakingPlayerStatusDTO,
+  CasualMatchmakingPlayer,
+  MatchmakingPlayerStatus,
+  MatchmakingPlayerStatusDTO,
   PendingCasualGame,
   PendingRankedGame,
   RankedGameInvite,
@@ -192,7 +194,7 @@ export class MatchmakingService {
     *
     * @param playerId The id of the player
    */
-  public async acceptFoundGame(playerId: number)
+  public async acceptFoundGame(playerId: number, client: AuthedSocket)
     : Promise<Result<true, typeof APIError.GameNotFound>>
   {
     const pendingCasualGame: PendingCasualGame | undefined = this.findPendingCasualGame(playerId);
@@ -204,19 +206,20 @@ export class MatchmakingService {
       // Set the player as ready
       if (pendingCasualGame.player1.id === playerId) {
         pendingCasualGame.player1Ready = true;
+        pendingCasualGame.player1.socket = client;
       } else if (pendingCasualGame.player2.id === playerId) {
         pendingCasualGame.player2Ready = true;
+        pendingCasualGame.player2.socket = client;
       }
 
       // If both players are ready, create the game
       if (pendingCasualGame.player1Ready && pendingCasualGame.player2Ready) {
+        this.removePendingCasualGame(pendingCasualGame);
         await this.sendPlayersToCasualGame(
           pendingCasualGame.player1.id,
           pendingCasualGame.player1.socket,
           pendingCasualGame.player2.id,
           pendingCasualGame.player2.socket);
-
-        this.removePendingCasualGame(pendingCasualGame);
       }
       return success(true);
     } else if (pendingRankedGame) {
@@ -225,19 +228,20 @@ export class MatchmakingService {
       // Set the player as ready
       if (pendingRankedGame.player1.id === playerId) {
         pendingRankedGame.player1Ready = true;
+        pendingRankedGame.player1.socket = client;
       } else if (pendingRankedGame.player2.id === playerId) {
         pendingRankedGame.player2Ready = true;
+        pendingRankedGame.player2.socket = client;
       }
 
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
+        this.removePendingRankedGame(pendingRankedGame);
         await this.sendPlayersToRankedGame(
           pendingRankedGame.player1.id,
           pendingRankedGame.player1.socket,
           pendingRankedGame.player2.id,
           pendingRankedGame.player2.socket);
-
-        this.removePendingRankedGame(pendingRankedGame);
       }
 
       return success(true);
@@ -599,7 +603,7 @@ export class MatchmakingService {
     this.pendingCasualGames.push(pendingGame);
 
     // If the players don't accept the game in matchAcceptTimeout seconds, remove it
-    setTimeout(async () => {
+    pendingGame.timer = setTimeout(async () => {
       this.removePendingCasualGame(pendingGame);
       if (pendingGame.player1Ready) {
         await this.joinMatchmakingCasual(pendingGame.player1.socket, pendingGame.player1.id);
@@ -629,6 +633,8 @@ export class MatchmakingService {
   }
 
   private removePendingCasualGame(pendingGame: PendingCasualGame): void {
+    if (pendingGame.timer)
+      clearTimeout(pendingGame.timer);
     const index: number = this.pendingCasualGames.indexOf(pendingGame);
     if (index >= 0)
       this.pendingCasualGames.splice(index, 1);
@@ -646,7 +652,7 @@ export class MatchmakingService {
     this.pendingRankedGames.push(pendingGame);
 
     // If the players don't accept the game in 30 seconds, remove it
-    setTimeout(async () => {
+    pendingGame.timer = setTimeout(async () => {
       this.removePendingRankedGame(pendingGame);
       if (pendingGame.player1Ready) {
         await this.joinMatchmakingRanked(pendingGame.player1.socket, pendingGame.player1.id);
@@ -676,9 +682,12 @@ export class MatchmakingService {
   }
 
   private removePendingRankedGame(pendingGame: PendingRankedGame): void {
+    if (pendingGame.timer)
+      clearTimeout(pendingGame.timer);
     const index: number = this.pendingRankedGames.indexOf(pendingGame);
-    if (index >= 0)
+    if (index >= 0) {
       this.pendingRankedGames.splice(index, 1);
+    }
   }
 
   private async createCasualGame(player1Id: number, player2Id: number): Promise<boolean> {

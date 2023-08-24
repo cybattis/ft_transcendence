@@ -270,7 +270,7 @@ export class MatchmakingGateway
   async handleAcceptFoundGame(
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
-    const result = await this.matchmakingService.acceptFoundGame(client.userId);
+    const result = await this.matchmakingService.acceptFoundGame(client.userId, client);
     if (result.isErr()) {
       switch(result.error) {
         case APIError.GameNotFound:

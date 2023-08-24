@@ -17,6 +17,7 @@ export type PendingCasualGame = {
   player2: CasualMatchmakingPlayer;
   player2Ready: boolean;
   creationTime: number;
+  timer?: NodeJS.Timeout;
 }
 
 export type PendingRankedGame = {
@@ -25,6 +26,7 @@ export type PendingRankedGame = {
   player2: RankedMatchmakingPlayer;
   player2Ready: boolean;
   creationTime: number;
+  timer?: NodeJS.Timeout;
 }
 
 export type CasualGameInvite = {
