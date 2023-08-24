@@ -207,27 +207,25 @@ function GameLauncher() {
 }
 
 function Result(props: { game: GameStats; userId: number }) {
-  const isWin =
-    (props.game.ids[0] === props.userId &&
-      props.game.scoreP1 > props.game.scoreP2) ||
-    props.game.status === GameStatus.PLAYER2_DISCONNECTED ||
-    (props.game.ids[1] === props.userId &&
-      props.game.scoreP1 < props.game.scoreP2) ||
-    props.game.status === GameStatus.PLAYER1_DISCONNECTED;
+  const isPlayer1 = props.game.ids[0] === props.userId;
+  const isPlayer2 = props.game.ids[1] === props.userId;
+
+  const player1Won = (props.game.scoreP1 > props.game.scoreP2 && props.game.status !== GameStatus.PLAYER1_DISCONNECTED)
+    || props.game.status === GameStatus.PLAYER2_DISCONNECTED;
+
+  const player2Won = (props.game.scoreP1 < props.game.scoreP2 && props.game.status !== GameStatus.PLAYER2_DISCONNECTED)
+    || props.game.status === GameStatus.PLAYER1_DISCONNECTED;
+
+  const isWin = (isPlayer1 && player1Won) || (isPlayer2 && player2Won);
 
   return (
     <div className={"home-game-result"}>
-      {isWin ? (
-        <div>
-          <div className={"home-result-win"}>Win</div>
-          <MatcheScore game={props.game} userId={props.userId} />
+      <div>
+        <div className={isWin ? "home-result-win" : "home-result-loss"}>
+          {isWin ? "Win" : "Loss"}
         </div>
-      ) : (
-        <div>
-          <div className={"home-result-loose"}>Loose</div>
-          <MatcheScore game={props.game} userId={props.userId} />
-        </div>
-      )}
+        <MatcheScore game={props.game} userId={props.userId} />
+      </div>
     </div>
   );
 }
