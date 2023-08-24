@@ -350,10 +350,13 @@ export class UserService implements OnModuleInit {
     return success(TypeConverters.fromUserToUserFriendsData(me));
   }
 
-  async blockFriend(friendId: number, myId: number)
+  async blockFriend(friendUsername: string, myId: number)
     : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
   {
-    const result = await this.removeFriend(friendId, myId);
+    const friend: User | null = await this.usersRepository.findOne({where: { nickname: friendUsername } });
+    if (!friend)
+      return failure(APIError.UserNotFound);
+    const result = await this.removeFriend(friend.id, myId);
     if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
       return failure(result.error);
 
@@ -367,17 +370,6 @@ export class UserService implements OnModuleInit {
     });
     if (!me)
       return failure(APIError.UserNotFound);
-
-    const friend: User | null = await this.usersRepository.findOne({
-      where: { id: friendId },
-      select: {
-        id: true,
-        blockedById: true,
-        blockedChat: true,
-      },
-    });
-    if (!friend)
-      return failure(APIError.OtherUserNotFound);
 
     // Add friend to my blocked list
     me.blockedId.push(friend.id);
@@ -397,7 +389,7 @@ export class UserService implements OnModuleInit {
     return success(TypeConverters.fromUserToUserFriendsData(updated_me));
   }
 
-  async unblockFriend(friendId: number, myId: number)
+  async unblockFriend(friendUsername: string, myId: number)
     : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
   {
     const me: User | null = await this.usersRepository.findOne({
@@ -412,7 +404,7 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     const friend: User | null = await this.usersRepository.findOne({
-      where: { id: friendId },
+      where: { nickname: friendUsername },
       select: {
         id: true,
         blockedById: true,

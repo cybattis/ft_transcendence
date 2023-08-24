@@ -1,15 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import "./Chat.css";
+import "../Profile/Profile.css";
 import ChannelList from "./List/ChannelList";
 import { TokenData } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
 import { ChatClientSocket } from "./Chat-client";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import joinButton from "../../resource/more-logo.png";
 import { Link, Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
 import { ErrorModalChat } from "../../components/Modal/PopUpModal";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import ParamLogo from "../../resource/param-logo.png";
 import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";
@@ -19,6 +22,7 @@ import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
+import { useData } from "../../hooks/UseData";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -38,7 +42,9 @@ export default function ChatClient() {
   const [isMute, setIsMute] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
+  const [inviteGame, setInviteGame] = useState(false);
   const [inGeneral, setInGeneral] = useState(true);
+  const [isInvitedToGame, setIsInvitedToGame] = useState(false);
   const [isPriv, setIsPriv] = useState(false);
   const [owner, setOwner] = useState(false);
   const [allChannels, setAllChannels] = useState<string[]>([]);
@@ -58,6 +64,12 @@ export default function ChatClient() {
       username = UserData.getNickname();
     } catch (e) {
     }
+  }
+
+  interface InviteToGameProps {
+    data: UserInfo;
+    status: boolean,
+    setStatus: (status: boolean) => void;
   }
 
   function takeActiveCanal(): string {
@@ -249,7 +261,7 @@ export default function ChatClient() {
   const handleUnBlock = async () => {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/unblockUsr/${usr}`, {})
+    put<UserFriendsData>(`user/unblock/${usr}`, {})
       .then(res => {
         for (let i = 0; blocedList[i]; i ++) {
           if (blocedList[i] === usr)
@@ -396,10 +408,67 @@ export default function ChatClient() {
     else setBanForm(true);
   };
 
+  function InviteToGame(props: InviteToGameProps) {
+    const { setErrorMessage } = useContext(PopupContext);
+
+    const keyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (props.status) props.setStatus(false);
+        if (isInvitedToGame) setIsInvitedToGame(false);
+      }
+    };
+  
+    function inviteToCasualGame() {
+      props.setStatus(true);
+      MatchmakingClient.inviteUserToCasualGame(props.data.id)
+        .catch((err) => {
+          props.setStatus(false);
+          setErrorMessage(err.message);
+        });
+    }
+  
+    function inviteToRankedGame() {
+      props.setStatus(true);
+      MatchmakingClient.inviteUserToRankedGame(props.data.id)
+        .catch((err) => {
+          props.setStatus(false);
+          setErrorMessage(err.message);
+        });
+    }
+
+    useEffect(() => {
+      document.addEventListener("keydown", keyPress);
+      return () => document.removeEventListener("keydown", keyPress);
+    }, []);
+  
+    if (!props.status) {
+      return (
+        <div className="invites-game">
+          <button className="friendButton" type="button" onClick={inviteToCasualGame}>
+            Invite to casual game
+          </button>
+          <button className="friendButton" type="button" onClick={inviteToRankedGame}>
+            Invite to ranked game
+          </button>
+        </div>
+      );
+    } else {
+      return (
+          <button className="friendButton">Waiting for player to join the game...</button>
+      );
+    }
+  }
+
+  const handleInviteGame = async () => {
+    setInviteGame(!inviteGame);
+  }
+
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
     const [me, setMe] = useState(true);
     const userData = useProfileData();
+
+    const { data } = useData<UserInfo>(`user/profile/nickname/${usr}`, true);
 
     useEffect(() => {
       function getMyNickname() {
@@ -558,8 +627,16 @@ export default function ChatClient() {
             <Link to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
+            {!me && isHere && (
+              <button className="chat-buttons" onClick={handleInviteGame}>
+                Invite to Play
+              </button>
+            )
+
+            }
           </div>
           {banForm && <Ban />}
+          {inviteGame && data && <InviteToGame data={data} status={isInvitedToGame} setStatus={setIsInvitedToGame}/>}
         </form>
       </div>
     );

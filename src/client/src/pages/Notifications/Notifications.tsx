@@ -26,7 +26,6 @@ export default function Notifications() {
   const { get, put, showErrorInModal } = useFetcher();
   const { setErrorMessage } = useContext(PopupContext);
   const navigate = useNavigate();
-  let decoded: TokenData;
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -164,7 +163,9 @@ export default function Notifications() {
       get<UserInfo>("user/profile/id/" + props.invite.invitingPlayerId)
         .then(infos => setUserInfo(infos))
         .catch(() => {});
-    });
+    }, []);
+
+    console.log(userInfo);
 
     return (userInfo === null ? <NotificationElementLoading/> :
       <NotificationElement

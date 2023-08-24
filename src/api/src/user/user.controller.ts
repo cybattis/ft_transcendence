@@ -278,13 +278,13 @@ export class UserController{
   }
 
   @UseGuards(TokenGuard)
-  @Put('block-user/:id')
+  @Put('block-user/:username')
   async blockFriendUsr(
-    @Param('id') id: number,
+    @Param('username') username: string,
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.blockFriend(Number(id), payload.id);
+    const result = await this.userService.blockFriend(username, payload.id);
 
     if (result.isErr()) {
       switch (result.error) {
@@ -299,13 +299,13 @@ export class UserController{
   }
 
   @UseGuards(TokenGuard)
-  @Put('unblock/:id')
+  @Put('unblock/:username')
   async unblockFriend(
-    @Param('id') id: number,
+    @Param('username') username: string,
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.unblockFriend(Number(id), payload.id);
+    const result = await this.userService.unblockFriend(username, payload.id);
 
     if (result.isErr()) {
       switch(result.error) {
