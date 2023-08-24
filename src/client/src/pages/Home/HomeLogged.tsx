@@ -20,7 +20,6 @@ enum MatchmakingAcceptButtonState {
   SEARCHING,
   MATCH_FOUND,
   WAITING_FOR_OPPONENT,
-  GAME_STARTED,
 }
 
 function MatchmakingButton(props: {
@@ -30,6 +29,7 @@ function MatchmakingButton(props: {
   const [state, setState] = useState(MatchmakingAcceptButtonState.SEARCHING);
   const [timeLeft, setTimeLeft] = useState(0);
   const { setErrorMessage } = useContext(PopupContext);
+  const navigate = useNavigate();
   const countdownOffset: number = 10;
 
   useEffect(() => {
@@ -48,10 +48,15 @@ function MatchmakingButton(props: {
     };
 
     const handleGameStarted = () => {
-      setState(MatchmakingAcceptButtonState.GAME_STARTED);
+      navigate("/game");
+    };
+
+    const handleGameAccepted = () => {
+      setState(MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT);
     };
 
     MatchmakingClient.onMatchFound(matchFoundCallback);
+    MatchmakingClient.onAcceptGame(handleGameAccepted)
     MatchmakingClient.ongameStarted(handleGameStarted);
 
     if (timeLeft > 0) {
@@ -90,6 +95,7 @@ function MatchmakingButton(props: {
 
     return () => {
       MatchmakingClient.offMatchFound(matchFoundCallback);
+      MatchmakingClient.offAcceptGame(handleGameAccepted);
       MatchmakingClient.offgameStarted(handleGameStarted);
 
       if (countdownTimeout) clearTimeout(countdownTimeout);
@@ -126,23 +132,17 @@ function MatchmakingButton(props: {
     cssClass += "-waiting";
 
   return (
-    <>
-      {state === MatchmakingAcceptButtonState.GAME_STARTED ? (
-        <Navigate to="game" />
-      ) : (
-        <button onClick={handleClick} className={cssClass}>
-          <div>
-            {state === MatchmakingAcceptButtonState.MATCH_FOUND &&
-              (timeLeft >= countdownOffset
-                ? "Accept " + (timeLeft - countdownOffset).toString() + "..."
-                : "Accept...")}
-            {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT &&
-              "Waiting for opponent..."}
-            {state === MatchmakingAcceptButtonState.SEARCHING && "Searching..."}
-          </div>
-        </button>
-      )}
-    </>
+    <button onClick={handleClick} className={cssClass}>
+      <div>
+        {state === MatchmakingAcceptButtonState.MATCH_FOUND &&
+          (timeLeft >= countdownOffset
+            ? "Accept " + (timeLeft - countdownOffset).toString() + "..."
+            : "Accept...")}
+        {state === MatchmakingAcceptButtonState.WAITING_FOR_OPPONENT &&
+          "Waiting for opponent..."}
+        {state === MatchmakingAcceptButtonState.SEARCHING && "Searching..."}
+      </div>
+    </button>
   );
 }
 
@@ -193,6 +193,25 @@ function PracticeGameMode() {
 function GameLauncher() {
   const [searchingCasual, setSearchingCasual] = useState(false);
   const [searchingRanked, setSearchingRanked] = useState(false);
+
+  useEffect(() => {
+    function handleJoinMatchmakingCasual() { setSearchingCasual(true); }
+    function handleJoinMatchmakingRanked() { setSearchingRanked(true); }
+    function handleLeaveMatchmakingCasual() { setSearchingCasual(false); }
+    function handleLeaveMatchmakingRanked() { setSearchingRanked(false); }
+
+    MatchmakingClient.onJoinMatchmakingCasual(handleJoinMatchmakingCasual);
+    MatchmakingClient.onLeaveMatchmakingCasual(handleLeaveMatchmakingCasual);
+    MatchmakingClient.onJoinMatchmakingRanked(handleJoinMatchmakingRanked);
+    MatchmakingClient.onLeaveMatchmakingRanked(handleLeaveMatchmakingRanked);
+
+    return () => {
+      MatchmakingClient.offJoinMatchmakingCasual(handleJoinMatchmakingCasual);
+      MatchmakingClient.offLeaveMatchmakingCasual(handleLeaveMatchmakingCasual);
+      MatchmakingClient.offJoinMatchmakingRanked(handleJoinMatchmakingRanked);
+      MatchmakingClient.offLeaveMatchmakingRanked(handleLeaveMatchmakingRanked);
+    }
+  });
 
   return (
     <div className="game-launcher">
@@ -403,10 +422,6 @@ export function HomeLogged() {
       UserData.updatePaddleColor(data.paddleColor);
       UserData.updateNickname(data.nickname);
     }
-
-    return () => {
-      MatchmakingClient.leaveMatchmaking().catch(() => {});
-    };
   }, [data]);
 
   return (
