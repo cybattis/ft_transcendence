@@ -99,6 +99,7 @@ export namespace MultiplayerClient {
       console.log("unauthorized");
       const token = localStorage.getItem("token");
       socket.emit("authorization", token ? { token } : {});
+      SocketManager.fireSocketErrorCallback();
     });
 
     return true;

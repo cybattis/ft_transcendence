@@ -219,7 +219,8 @@ export class MatchmakingService {
           pendingCasualGame.player1.id,
           pendingCasualGame.player1.socket,
           pendingCasualGame.player2.id,
-          pendingCasualGame.player2.socket);
+          pendingCasualGame.player2.socket,
+          false);
       }
       return success(true);
     } else if (pendingRankedGame) {
@@ -241,7 +242,8 @@ export class MatchmakingService {
           pendingRankedGame.player1.id,
           pendingRankedGame.player1.socket,
           pendingRankedGame.player2.id,
-          pendingRankedGame.player2.socket);
+          pendingRankedGame.player2.socket,
+          false);
       }
 
       return success(true);
@@ -339,7 +341,7 @@ export class MatchmakingService {
     if (!invite)
       return failure(APIError.GameInviteNotFound);
 
-    await this.sendPlayersToCasualGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket);
+    await this.sendPlayersToCasualGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket, true);
     this.casualGameInvites = this.casualGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
@@ -451,7 +453,7 @@ export class MatchmakingService {
     if (!invite)
       return failure(APIError.GameInviteNotFound);
 
-    await this.sendPlayersToRankedGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket);
+    await this.sendPlayersToRankedGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket, true);
     this.rankedGameInvites = this.rankedGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
@@ -761,7 +763,13 @@ export class MatchmakingService {
       || this.isPlayerInRankedMatchmaking(playerId);
   }
 
-  private async sendPlayersToCasualGame(player1Id: number, player1Socket: AuthedSocket, player2Id: number, player2Socket: AuthedSocket) {
+  private async sendPlayersToCasualGame(
+    player1Id: number,
+    player1Socket: AuthedSocket,
+    player2Id: number,
+    player2Socket: AuthedSocket,
+    fromInvite: boolean)
+  {
     const player1 = await this.getUserFromDb(player1Id);
     const player2 = await this.getUserFromDb(player2Id);
 
@@ -783,18 +791,30 @@ export class MatchmakingService {
     await this.createCasualGame(player1Id, player2Id);
 
     // Sending the game start event to the players
-    player1Socket.emit("game-started", player2Infos);
+    if (fromInvite) {
+      player1Socket.emit("game-started-invite", player2Infos);
+      player2Socket.emit("game-started-invite", player1Infos);
+    } else {
+      player1Socket.emit("game-started", player2Infos);
+      player2Socket.emit("game-started", player1Infos);
+    }
+
     player1Socket
       .to(getSyncRoom(player1Socket))
       .emit("sync", this.getPlayerStatus(player1Id));
 
-    player2Socket.emit("game-started", player1Infos);
     player2Socket
       .to(getSyncRoom(player2Socket))
       .emit("sync", this.getPlayerStatus(player2Id));
   }
 
-  private async sendPlayersToRankedGame(player1Id: number, player1Socket: AuthedSocket, player2Id: number, player2Socket: AuthedSocket) {
+  private async sendPlayersToRankedGame(
+    player1Id: number,
+    player1Socket: AuthedSocket,
+    player2Id: number,
+    player2Socket: AuthedSocket,
+    fromInvite: boolean)
+  {
     const player1 = await this.getUserFromDb(player1Id);
     const player2 = await this.getUserFromDb(player2Id);
 
@@ -816,11 +836,18 @@ export class MatchmakingService {
     await this.createRankedGame(player1Id, player2Id);
 
     // Sending the game start event to the players
-    player1Socket.emit("game-started", player2Infos);
+    if (fromInvite) {
+      player1Socket.emit("game-started-invite", player2Infos);
+      player2Socket.emit("game-started-invite", player1Infos);
+    } else {
+      player1Socket.emit("game-started", player2Infos);
+      player2Socket.emit("game-started", player1Infos);
+    }
+
     player1Socket
       .to(getSyncRoom(player1Socket))
       .emit("sync", this.getPlayerStatus(player1Id));
-    player2Socket.emit("game-started", player1Infos);
+
     player2Socket
       .to(getSyncRoom(player2Socket))
       .emit("sync", this.getPlayerStatus(player2Id));

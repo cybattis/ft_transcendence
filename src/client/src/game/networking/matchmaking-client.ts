@@ -2,6 +2,7 @@ import {
   MatchmakingSyncCallback,
   MatchmakingGameStartedCallback,
   PlayerInfos, MatchmakingPlayerStatusDTO,
+  MatchmakingGameInviteAcceptedCallback,
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
 import Config from "../../utils/Config";
@@ -11,8 +12,7 @@ export namespace MatchmakingClient {
   let socket: ManagedSocket;
   let syncCallbacks: MatchmakingSyncCallback[] = [];
   let gameStartedCallbacks: MatchmakingGameStartedCallback[] = [];
-  let gameStartedSyncCallbacks: MatchmakingGameStartedCallback[] = [];
-  let gameInviteAcceptedCallbacks: MatchmakingGameStartedCallback[] = [];
+  let gameInviteAcceptedCallbacks: MatchmakingGameInviteAcceptedCallback[] = [];
   let currentOpponentInfos: PlayerInfos = {
     id: 0,
     nickname: "",
@@ -52,13 +52,13 @@ export namespace MatchmakingClient {
     socket.on("game-started", (opponentInfos: PlayerInfos) => {
       console.log("game started", opponentInfos);
       currentOpponentInfos = opponentInfos;
-      gameStartedCallbacks.forEach((callback) => callback());
+      gameStartedCallbacks.forEach((callback) => callback(false));
     });
 
-    socket.on("sync-game-started", (opponentInfos: PlayerInfos) => {
-      console.log("sync-game started", opponentInfos);
+    socket.on("game-started-invite", (opponentInfos: PlayerInfos) => {
+      console.log("game started from invite", opponentInfos);
       currentOpponentInfos = opponentInfos;
-      gameStartedSyncCallbacks.forEach((callback) => callback());
+      gameStartedCallbacks.forEach((callback) => callback(true));
     });
 
     socket.on("game-invite-accepted", () => {
@@ -70,6 +70,7 @@ export namespace MatchmakingClient {
       console.log("unauthorized");
       const token = localStorage.getItem("token");
       socket.emit("authorization", token ? { token } : {});
+      SocketManager.fireSocketErrorCallback();
     });
 
     return true;
@@ -212,19 +213,11 @@ export namespace MatchmakingClient {
     gameStartedCallbacks = gameStartedCallbacks.filter((cb) => cb !== callback);
   }
 
-  export function onGameStartedSync(callback: MatchmakingGameStartedCallback) {
-    gameStartedSyncCallbacks.push(callback);
-  }
-
-  export function offGameStartedSync(callback: MatchmakingGameStartedCallback) {
-    gameStartedSyncCallbacks = gameStartedSyncCallbacks.filter((cb) => cb !== callback);
-  }
-
-  export function ongameInviteAccepted(callback: MatchmakingGameStartedCallback) {
+  export function ongameInviteAccepted(callback: MatchmakingGameInviteAcceptedCallback) {
     gameInviteAcceptedCallbacks.push(callback);
   }
 
-  export function offgameInviteAccepted(callback: MatchmakingGameStartedCallback) {
+  export function offgameInviteAccepted(callback: MatchmakingGameInviteAcceptedCallback) {
     gameInviteAcceptedCallbacks = gameInviteAcceptedCallbacks.filter((cb) => cb !== callback);
   }
 }

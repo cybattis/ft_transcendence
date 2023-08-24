@@ -40,6 +40,10 @@ export type MatchmakingSyncCallback = {
 }
 
 export type MatchmakingGameStartedCallback = {
+  (fromInvite: boolean): void;
+}
+
+export type MatchmakingGameInviteAcceptedCallback = {
   (): void;
 }
 

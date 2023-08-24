@@ -6,10 +6,11 @@ import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { AuthContext } from "../Auth/auth.context";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
-import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import { removeMultiplayerGame } from "../../game/PongManager";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { PageLink } from "../Navigation/PageLink";
+import { Fetching } from "../../utils/fetching";
+import put = Fetching.put;
+import { Navigation } from "../../utils/navigation";
 
 export function NavButton(props: {
   link: string;
@@ -37,13 +38,11 @@ export function DisconnectButton(props: { callback?: () => void }) {
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
+    Navigation.disconnect();
+    await MatchmakingClient.leaveMatchmaking();
+    await put<void>("auth/disconnect", {})
+      .catch(() => {});
     setAuthed(false);
-    removeMultiplayerGame();
-    MultiplayerClient.quitGame();
-    ChatClientSocket.disconnect();
-    MultiplayerClient.disconnect();
-    MatchmakingClient.disconnect();
-    localStorage.clear();
     return <Navigate to={'/'} />;
   };
 

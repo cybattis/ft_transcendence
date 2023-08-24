@@ -72,10 +72,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return await response.json();
   }
 
-  async disconnectUser(token: string, id: number): Promise<void> {
+  disconnectUser(token: string): void {
     if (token)
       AuthService.invalidTokens.push(token);
-    await this.userService.changeOnlineStatus(id, false);
   }
 
   async infoUser(token: IntraTokenDto): Promise<IntraSignupDto> {

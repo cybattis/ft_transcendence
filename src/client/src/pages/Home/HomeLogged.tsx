@@ -161,20 +161,22 @@ function GameLauncher() {
 
   useEffect(() => {
     MatchmakingClient.getMatchmakingStatus()
-      .then(setState)
+      .then((res) => {
+        setState(res);
+        MatchmakingState.setMatchmakingState(res);
+      })
       .catch((err) => setErrorMessage(err.message));
     MatchmakingClient.onSync(setState);
 
-    function onGameStarted() { navigate("/game"); }
+    function onGameStarted(fromInvite: boolean) {
+      if (!fromInvite)
+        navigate("/game");
+    }
     MatchmakingClient.onGameStarted(onGameStarted);
-
-    function onGameStartedSync() { setState({ status: MatchmakingPlayerStatus.NONE }); }
-    MatchmakingClient.onGameStartedSync(onGameStartedSync);
 
     return () => {
       MatchmakingClient.offSync(setState);
       MatchmakingClient.offGameStarted(onGameStarted);
-      MatchmakingClient.offGameStartedSync(onGameStartedSync);
     }
   }, []);
 

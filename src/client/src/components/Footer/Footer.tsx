@@ -18,13 +18,11 @@ export default function Footer() {
 
     function resetState() { setState({ status: MatchmakingPlayerStatus.NONE }); }
     MatchmakingClient.onGameStarted(resetState);
-    MatchmakingClient.onGameStartedSync(resetState);
 
     return () => {
       Navigation.offPageChange(resetState);
       MatchmakingClient.offSync(setState);
       MatchmakingClient.offGameStarted(resetState);
-      MatchmakingClient.offGameStartedSync(resetState);
       MatchmakingState.offMatchmakingStateChange(setState);
     }
   }, []);
