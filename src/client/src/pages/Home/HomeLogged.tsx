@@ -17,6 +17,7 @@ import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
 import { Navigation } from "../../utils/navigation";
 import { MatchmakingPlayerStatus, MatchmakingPlayerStatusDTO } from "../../game/networking/types";
+import { MatchmakingState } from "../../utils/matchmaking-states";
 
 function MatchmakingButtonWaiting() {
   return (
@@ -103,49 +104,59 @@ function GameLauncher() {
   function startSearchingCasual() {
     MatchmakingClient.joinMatchmakingCasual()
       .catch((err) => {
+        MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
         setState({ status: MatchmakingPlayerStatus.NONE });
         setErrorMessage(err.message);
       });
     setState({ status: MatchmakingPlayerStatus.SEARCHING_CASUAL });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.SEARCHING_CASUAL });
   }
 
   function startSearchingRanked() {
     MatchmakingClient.joinMatchmakingRanked()
       .catch((err) => {
+        MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
         setState({ status: MatchmakingPlayerStatus.NONE });
         setErrorMessage(err.message);
       });
     setState({ status: MatchmakingPlayerStatus.SEARCHING_RANKED });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.SEARCHING_RANKED });
   }
 
   function cancelCasualSearch() {
     MatchmakingClient.leaveMatchmakingCasual()
       .catch((err) => setErrorMessage(err.message));
     setState({ status: MatchmakingPlayerStatus.NONE });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
   }
 
   function cancelRankedSearch() {
     MatchmakingClient.leaveMatchmakingRanked()
       .catch((err) => setErrorMessage(err.message));
     setState({ status: MatchmakingPlayerStatus.NONE });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
   }
 
   function acceptCasualGame() {
     MatchmakingClient.joinFoundMatch()
       .catch((err) => {
+        MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
         setState({ status: MatchmakingPlayerStatus.NONE });
         setErrorMessage(err.message);
       });
     setState({ status: MatchmakingPlayerStatus.WAITING_CASUAL });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.WAITING_CASUAL });
   }
 
   function acceptRankedGame() {
     MatchmakingClient.joinFoundMatch()
       .catch((err) => {
+        MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.NONE });
         setState({ status: MatchmakingPlayerStatus.NONE });
         setErrorMessage(err.message);
       });
     setState({ status: MatchmakingPlayerStatus.WAITING_RANKED });
+    MatchmakingState.setMatchmakingState({ status: MatchmakingPlayerStatus.WAITING_RANKED });
   }
 
   useEffect(() => {
