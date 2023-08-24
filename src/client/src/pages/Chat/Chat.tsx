@@ -62,6 +62,11 @@ export default function ChatClient() {
     try {
       payload = jwt_decode(token);
       username = UserData.getNickname();
+      if (!username || username === "")
+      {
+        let decoded: any = jwt_decode(token);
+        if (decoded?.nickname) username = decoded.nickname;
+      }
     } catch (e) {
     }
   }
@@ -1093,32 +1098,47 @@ export default function ChatClient() {
 
   useEffect(() => {
       username = UserData.getNickname();
+      if (!username || username === "")
+      {
+        if (token)
+        {
+          let decoded: any = jwt_decode(token);
+          if (decoded?.nickname) username = decoded.nickname;
+        }
+      }
 
+      
       if (takeActiveCanal()[0] !== '#' && isPriv === false)
-        setIsPriv(true);
+      setIsPriv(true);
       else if (takeActiveCanal()[0] === '#' && isPriv === true)
-        setIsPriv(false);
-
+      setIsPriv(false);
+      
       const getChan = async () => {
       const channel = takeActiveCanal();
       if (channel[0] === '#' && channel !== "#general")
       {
         if (inGeneral)
-          setInGeneral(false);
+        setInGeneral(false);
       }
       else if (channel === "#general" || channel[0] !== '#')
-        setInGeneral(true);
+      setInGeneral(true);
     }
     getChan();
-
+    
     const fetchAllChannels = async () => {
       await get<string[]>('user/myChannels')
-        .then((response) => {
-          setAllChannels(response);
-        }).catch(showErrorInModal);
+      .then((response) => {
+        setAllChannels(response);
+      }).catch(showErrorInModal);
     }
-
+    
     fetchAllChannels();
+    
+    if (!channelList.includes(defaultChannelGen)) {
+      const send = { username: username, channel: defaultChannelGen };
+      console.log(send);
+      ChatClientSocket.joinChatServer(send);
+    }
 
     const messageCallBack = async (data: {
       sender: string;
@@ -1129,10 +1149,6 @@ export default function ChatClient() {
     };
 
     ChatClientSocket.onMessageRecieve(messageCallBack);
-    if (!channelList.includes(defaultChannelGen)) {
-      const send = { username: username, channel: defaultChannelGen };
-      ChatClientSocket.joinChatServer(send);
-    }
 
     const joinCallBack = (room: string) => {
       if (room[0] !== "#")
@@ -1154,14 +1170,6 @@ export default function ChatClient() {
     };
 
     ChatClientSocket.addBlockCb(blockedCallBack);
-
-    /*const wasBlockedCallBack = (target: string) => {
-      //Pour que les messages se reload par celui bloque
-    }*/
-
-    //ChatClientSocket.addWasBlockCb(blockedCallBack);
-
-    ChatClientSocket.joinChatServer(joinCallBack);
 
     const changeUsernameCallBack = async (newName: string) => {
       username = UserData.getNickname();

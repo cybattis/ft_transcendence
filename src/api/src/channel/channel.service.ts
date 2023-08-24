@@ -443,15 +443,16 @@ export class ChannelService implements OnModuleInit {
       });
       if (!channelToUpdate) return;
       if (this.checkUserIsHere(channelToUpdate.users, username)) return;
-      channelToUpdate.users.push(username);
-      await this.channelRepository.save(channelToUpdate);
       const user = await this.usersRepository.findOne({where: {nickname: username}});
       if (user)
       {
+        if (user.chans.includes(channel))
+          return ;
         user.chans.push(channel);
         await this.usersRepository.save(user);
       }
-      await socket.join(channel);
+      channelToUpdate.users.push(username);
+      await this.channelRepository.save(channelToUpdate);
       socket.emit('join', channel);
       const sender = 'announce';
       const msg = username + ' just joined the Server!';

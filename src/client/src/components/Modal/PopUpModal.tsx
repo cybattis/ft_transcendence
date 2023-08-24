@@ -76,7 +76,6 @@ export function InfoModal(props: { onClose: () => void }) {
 export function GameNotFoundModal(props: { text: string, onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  
   const closeMenu = async () => {
     props.onClose();
   }
@@ -116,14 +115,6 @@ export function ErrorModalChat(props: {
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-
-  const closeMenu = async () => {
-    props.onClose();
-  }
-
-  useEffect(() => {
-      document.addEventListener("click", closeMenu);
-    }, []);
 
   return (
     <div

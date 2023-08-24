@@ -114,7 +114,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     !data.type ? (type = '') : (type = data.type);
     if (username === '')
       return;
-    await this.channelService.joinOldChannel(socket, username);
+    //await this.channelService.joinOldChannel(socket, username);
 
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
