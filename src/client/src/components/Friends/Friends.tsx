@@ -8,7 +8,6 @@ import { useFetcher } from "../../hooks/UseFetcher";
 import { PageLink } from "../Navigation/PageLink";
 
 function Online(props: { inGame: boolean }) {
-  console.log("inGame: ", props.inGame);
   return (
     <div className="online">
       <div className="status">{props.inGame ? "In game" : "In menu"}</div>

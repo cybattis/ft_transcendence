@@ -78,7 +78,7 @@ export default function Notifications() {
   async function handleAcceptGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
       MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId)
-        .then(() => {navigate("/game"); console.log("callbackkkkkk");})
+        .then(() => navigate("/game"))
         .catch((err) => setErrorMessage(err.message));
     else
       MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId)

@@ -31,7 +31,6 @@ function MobileNavBar() {
       else username = "";
     } catch (e) {
       username = "";
-      console.log(e);
     }
   }
 

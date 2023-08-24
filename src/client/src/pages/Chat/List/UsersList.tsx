@@ -26,9 +26,8 @@ export default function UsersList(props: {
       decoded = jwt_decode(token);
       if (!TypeCheckers.isTokenData(decoded))
         return;
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
+
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;
       setIsOpe(false);

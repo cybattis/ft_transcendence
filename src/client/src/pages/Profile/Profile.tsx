@@ -249,9 +249,7 @@ function PaddleColor(props: {
                 setHue(RGBToHSL(actualColor));
               })
               .catch(showErrorInModal);
-          } catch (error) {
-            console.log("JWT token: ", error);
-          }
+          } catch (error) {}
         }
         else
           showErrorInModal(err);
@@ -292,9 +290,7 @@ function PaddleColor(props: {
                 setHue(RGBToHSL(actualColor));
               })
               .catch(showErrorInModal);
-          } catch (error) {
-            console.log("JWT token: ", error);
-          }
+          } catch (error) {}
         }
         else
           showErrorInModal(err);
@@ -374,9 +370,7 @@ export function Profile(props: {data: UserInfo}) {
       decoded = jwt_decode(token);
       if (!TypeCheckers.isTokenData(decoded))
         return;
-    } catch (error) {
-      console.log("JWT token: ", error);
-    }
+    } catch (error) {}
 
     function checkFriendStatus(meData: UserFriendsData) {
     if (!decoded) return;

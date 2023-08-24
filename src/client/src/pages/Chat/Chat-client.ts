@@ -236,9 +236,6 @@ export namespace ChatClientSocket {
     type: string;
   }) {
     if (!checkChatConnection()) return;
-    console.log(
-      `Join ${sendJoin.username} ${sendJoin.channel} ${sendJoin.password}`
-    );
     socket.emit("join", sendJoin);
   }
 
@@ -274,7 +271,6 @@ export namespace ChatClientSocket {
 
   export function notificationEvent(target: number) {
     if (!checkChatConnection()) return;
-    console.log(`Client send notification event to ${target}`);
     socket.emit("notif-event", target);
   }
 
@@ -291,7 +287,6 @@ export namespace ChatClientSocket {
 
   export function joinGameChat(joinGame: { canal: string }) {
     if (!checkChatConnection()) return;
-    console.log("GAME: ", joinGame);
     socket.emit("joinGame", joinGame);
   }
 

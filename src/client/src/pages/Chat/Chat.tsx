@@ -56,9 +56,7 @@ export default function ChatClient() {
       if (TypeCheckers.isTokenData(payload))
         if (payload?.nickname) username = payload.nickname;
     }
-    catch (e) {
-      console.log(e);
-    }
+    catch (e) {}
   }
 
   function takeActiveCanal(): string {
@@ -485,9 +483,7 @@ export default function ChatClient() {
             if (res.includes(usr))
               setBlocked(true);
           })
-          .catch((error) => {
-            console.log(error);
-          });
+          .catch((error) => {});
       }
       getBlockedUsrs();
 
