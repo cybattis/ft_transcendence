@@ -43,8 +43,6 @@ export namespace SocketManager {
     socket.isConnecting = true;
 
     socket.on("connect_error", (err) => {
-      console.log("connect_error", err);
-      socketErrorCallback();
       socket.isConnecting = false;
       socket.isConnected = false;
     });
