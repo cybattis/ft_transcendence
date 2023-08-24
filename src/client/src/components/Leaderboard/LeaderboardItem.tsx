@@ -1,9 +1,9 @@
 import "./LeaderboardItem.css";
 import { Avatar } from "../Avatar";
 import { UserInfo } from "../../type/user.type";
-import { Link } from "react-router-dom";
 import { calculateWinrate } from "../../utils/calculateWinrate";
 import {GameStatus, GameType} from "../../type/game.type";
+import { PageLink } from "../Navigation/PageLink";
 
 export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
   const winrate = calculateWinrate(props.data);
@@ -11,10 +11,10 @@ export function LeaderboardItem(props: { rank: number; data: UserInfo }) {
   return (
     <div className={"leaderboard-item"}>
       <div id={"pastille"}>{props.rank + 1}</div>
-      <Link to={`/profile/id/${props.data.id}`} id={"LeaderboardProfileLink"}>
+      <PageLink to={`/profile/id/${props.data.id}`} id={"LeaderboardProfileLink"}>
         <Avatar size={"40px"} img={props.data.avatarUrl} />
         <div id={"ldi-nickname"}>{props.data.nickname}</div>
-      </Link>
+      </PageLink>
       <div id={"ldi-winrate"}>{winrate.toFixed(0)}%</div>
       <div id={"ldi-game-played"}>{props.data.games?.filter(
         (game) => game.type === GameType.RANKED &&

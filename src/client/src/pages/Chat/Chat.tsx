@@ -6,7 +6,7 @@ import jwt_decode from "jwt-decode";
 import Select from "react-select";
 import { ChatClientSocket } from "./Chat-client";
 import joinButton from "../../resource/more-logo.png";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
 import { ErrorModalChat } from "../../components/Modal/PopUpModal";
@@ -18,6 +18,7 @@ import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
 import {TypeCheckers} from "../../utils/type-checkers";
+import { PageLink } from "../../components/Navigation/PageLink";
 
 //QUAND CHANGEMENT DE PERMS< BAN ETC PAS RESPONSIVE DANS LISTE ESSAYE DE TOUT METTRE AU MEME ENDROIT POUR SOCKET
 //FAIRE CHANGEMENT DANS DB CHAT QUAND CHANGEMENT NAME PEUT ETRE UTILISE ID ET PAS USERNAME
@@ -537,9 +538,9 @@ export default function ChatClient() {
                 UnBlock
               </button>
             )}
-            <Link to={`/profile/nickname/${usr}`}>
+            <PageLink to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
-            </Link>
+            </PageLink>
             <OpeBtn />
             {banForm && <Ban />}
           </div>

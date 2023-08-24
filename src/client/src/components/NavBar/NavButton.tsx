@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import "./NavButton.css";
 import { useContext, useEffect, useState } from "react";
 import notifsLogo from "../../resource/logo-notifications.png";
@@ -9,6 +9,7 @@ import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { removeMultiplayerGame } from "../../game/PongManager";
 import { useFetcher } from "../../hooks/UseFetcher";
+import { PageLink } from "../Navigation/PageLink";
 
 export function NavButton(props: {
   link: string;
@@ -16,17 +17,17 @@ export function NavButton(props: {
   callback?: () => void;
 }) {
   return (
-    <Link to={props.link} className="navLink" onClick={props.callback}>
+    <PageLink to={props.link} className={"navLink"} onClick={props.callback}>
       {props.content}
-    </Link>
+    </PageLink>
   );
 }
 
 export function PlayButton(props: { text: string; link: string; callback?: () => void;}) {
   return (
-    <Link to={props.link} className="playButton" onClick={props.callback}>
+    <PageLink to={props.link} className="playButton" onClick={props.callback}>
       {props.text}
-    </Link>
+    </PageLink>
   );
 }
 
@@ -47,14 +48,14 @@ export function DisconnectButton(props: { callback?: () => void }) {
   };
 
   return (
-    <Link
+    <PageLink
       to="/"
       className="navLink"
       id={"disconnectButton"}
       onClick={handleDisconnect}
     >
       Disconnect
-    </Link>
+    </PageLink>
   );
 }
 
@@ -97,13 +98,9 @@ export function Notification() {
   const [hasNotifs, setHasNotifs] = useState(false);
 
   return (
-    <Link to={`/notifications`} className="notifs" onClick={() => {
-      setHasNotifs(false)
-      removeMultiplayerGame();
-      MultiplayerClient.quitGame();
-    }} >
+    <PageLink to={`/notifications`} className="notifs" onClick={() => setHasNotifs(false)}>
       <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
       Notifs
-    </Link>
+    </PageLink>
   );
 }

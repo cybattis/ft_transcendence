@@ -10,16 +10,11 @@ function Unlogged() {
 }
 
 function Logged() {
-  function handlePageChange() {
-    removeMultiplayerGame();
-    MultiplayerClient.quitGame();
-  }
-
   return (
     <>
-      <NavButton content={"About"} link={"/about"} callback={handlePageChange} />
-      <PlayButton text={"Play"} link={"/"} callback={handlePageChange} />
-      <NavButton content={"Ranking"} link={"/leaderboard"} callback={handlePageChange} />
+      <NavButton content={"About"} link={"/about"}/>
+      <PlayButton text={"Play"} link={"/"}/>
+      <NavButton content={"Ranking"} link={"/leaderboard"}/>
     </>
   );
 }

@@ -1,7 +1,7 @@
 import "./PopUpModal.css";
-import { MouseEvent, useContext, useRef, useState } from "react";
+import { MouseEvent, useContext, useRef } from "react";
 import { PopupContext } from "./Popup.context";
-import { Link, Navigate } from "react-router-dom";
+import { PageLink } from "../Navigation/PageLink";
 
 export function ErrorModal(props: { onClose: () => void }) {
   const { errorMessage } = useContext(PopupContext);
@@ -132,13 +132,13 @@ export function EndGamePopup(props: { hasWin: boolean }) {
       <dialog id={"win-game-popup"} open>
         {props.hasWin ? <div>YOU WIN!</div> : <div>YOU LOOSE!</div>}
         <form method="dialog">
-          <Link
+          <PageLink
             to={"/"}
             id="close"
             className={"go-home-button"}
           >
             Go home
-          </Link>
+          </PageLink>
         </form>
       </dialog>
     </div>
