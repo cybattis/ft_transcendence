@@ -664,8 +664,6 @@ export default function ChatClient() {
       }
       actifCanal();
 
-      //fetchMessage(channelName);
-
       function scrollbar() {
         const scr = document.getElementById("rcv-mess-container");
         if (scr) scr.scrollTop += scr.clientHeight;
@@ -1281,6 +1279,7 @@ export default function ChatClient() {
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
     fetchMessage(takeActiveCanal());
+    console.log(roomChange);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
