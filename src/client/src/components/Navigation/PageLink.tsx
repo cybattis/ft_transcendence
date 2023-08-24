@@ -12,9 +12,15 @@ export type PageLinkProps = {
 
 export function PageLink(props: PageLinkProps) {
   function callback() {
-    Navigation.handlePageChange();
-    if (props.onClick)
-      props.onClick();
+    Navigation.handlePageChange()
+      .then(() => {
+        if (props.onClick)
+          props.onClick();
+      })
+      .catch((e) => {
+        if (props.onClick)
+          props.onClick();
+      });
   }
 
   return (

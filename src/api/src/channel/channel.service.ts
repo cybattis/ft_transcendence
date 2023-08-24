@@ -892,7 +892,7 @@ export class ChannelService implements OnModuleInit {
     const data = this.jwtService.decode(token) as TokenData;
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (data.nickname === this.usersSocketList[index].username) {
-        console.log('socket already present');
+        //console.log('socket already present');
         return;
       }
     }

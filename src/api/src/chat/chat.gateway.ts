@@ -43,10 +43,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
-        console.log("An authorized user connected to the multiplayer server");
+        //console.log("An authorized user connected to the multiplayer server");
         next();
       } else {
-        console.log("An unauthorized user tried to connect to the multiplayer server");
+        //console.log("An unauthorized user tried to connect to the multiplayer server");
         socket.emit('unauthorized');
         next(new WsException("Unauthorized"));
       }
@@ -54,7 +54,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   async handleConnection(socket: AuthedSocket) {
-    console.log(`Client connected to chat: ${socket.userId}`);
+    //console.log(`Client connected to chat: ${socket.userId}`);
     this.channelService.addUserSocketToList(socket);
     await this.userService.changeOnlineStatus(socket.userId, true);
   }
@@ -64,7 +64,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const authHeaders = socket.handshake?.headers?.authorization;
     const token = auth ? auth : authHeaders;
     await this.userService.changeOnlineStatus(socket.userId, false);
-    console.log(`Client disconnected from chat: ${socket.userId}`);
+    //console.log(`Client disconnected from chat: ${socket.userId}`);
     this.channelService.removeUserSocketFromList(socket);
   }
 

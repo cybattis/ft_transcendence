@@ -13,11 +13,11 @@ export namespace Navigation {
     pageChangeCallbacks = pageChangeCallbacks.filter(cb => cb !== callback);
   }
 
-  export function handlePageChange() {
+  export async function handlePageChange(): Promise<void> {
     pageChangeCallbacks.forEach(cb => cb());
     removeMultiplayerGame();
     MultiplayerClient.quitGame();
-    MatchmakingClient.leaveMatchmaking().catch(() => {});
+    await MatchmakingClient.leaveMatchmaking();
   }
 
 }
