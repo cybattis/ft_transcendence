@@ -30,6 +30,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @WebSocketServer()
   private server: Server;
 
+  private static connections: Map<number, number> = new Map<number, number>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly channelService: ChannelService,
@@ -55,17 +57,25 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   async handleConnection(socket: AuthedSocket) {
     //console.log(`Client connected to chat: ${socket.userId}`);
+    const connectionNumber = ChatGateway.connections.get(socket.userId);
+    if (connectionNumber !== undefined)
+      ChatGateway.connections.set(socket.userId, connectionNumber + 1);
+    else
+      ChatGateway.connections.set(socket.userId, 1);
     this.channelService.addUserSocketToList(socket);
     await this.userService.changeOnlineStatus(socket.userId, true);
   }
 
   async handleDisconnect(socket: AuthedSocket) {
-    const auth = socket.handshake?.auth?.token;
-    const authHeaders = socket.handshake?.headers?.authorization;
-    const token = auth ? auth : authHeaders;
-    await this.userService.changeOnlineStatus(socket.userId, false);
     //console.log(`Client disconnected from chat: ${socket.userId}`);
     this.channelService.removeUserSocketFromList(socket);
+    const connectionNumber = ChatGateway.connections.get(socket.userId);
+    if (connectionNumber !== undefined) {
+      ChatGateway.connections.set(socket.userId, connectionNumber - 1);
+      if (connectionNumber === 1)
+        await this.userService.changeOnlineStatus(socket.userId, false);
+    } else
+      ChatGateway.connections.set(socket.userId, 0);
   }
 
   @SubscribeMessage('send')
