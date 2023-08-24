@@ -17,7 +17,6 @@ export default function Footer() {
     MatchmakingState.onMatchmakingStateChange(setState);
 
     function resetState() { setState({ status: MatchmakingPlayerStatus.NONE }); }
-    Navigation.onPageChange(resetState);
     MatchmakingClient.onGameStarted(resetState);
     MatchmakingClient.onGameStartedSync(resetState);
 

@@ -165,9 +165,6 @@ function GameLauncher() {
       .catch((err) => setErrorMessage(err.message));
     MatchmakingClient.onSync(setState);
 
-    function handlePageChange() { setState({ status: MatchmakingPlayerStatus.NONE }); }
-    Navigation.onPageChange(handlePageChange);
-
     function onGameStarted() { navigate("/game"); }
     MatchmakingClient.onGameStarted(onGameStarted);
 
@@ -175,7 +172,6 @@ function GameLauncher() {
     MatchmakingClient.onGameStartedSync(onGameStartedSync);
 
     return () => {
-      Navigation.offPageChange(handlePageChange);
       MatchmakingClient.offSync(setState);
       MatchmakingClient.offGameStarted(onGameStarted);
       MatchmakingClient.offGameStartedSync(onGameStartedSync);

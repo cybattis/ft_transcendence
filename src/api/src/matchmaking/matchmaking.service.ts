@@ -599,8 +599,20 @@ export class MatchmakingService {
     this.pendingCasualGames.push(pendingGame);
 
     // If the players don't accept the game in matchAcceptTimeout seconds, remove it
-    setTimeout(() => {
+    setTimeout(async () => {
       this.removePendingCasualGame(pendingGame);
+      if (pendingGame.player1Ready) {
+        await this.joinMatchmakingCasual(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
+      if (pendingGame.player2Ready) {
+        await this.joinMatchmakingCasual(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      }
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players
@@ -634,8 +646,20 @@ export class MatchmakingService {
     this.pendingRankedGames.push(pendingGame);
 
     // If the players don't accept the game in 30 seconds, remove it
-    setTimeout(() => {
+    setTimeout(async () => {
       this.removePendingRankedGame(pendingGame);
+      if (pendingGame.player1Ready) {
+        await this.joinMatchmakingRanked(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
+      if (pendingGame.player2Ready) {
+        await this.joinMatchmakingRanked(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      }
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players

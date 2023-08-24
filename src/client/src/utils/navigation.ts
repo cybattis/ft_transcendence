@@ -17,7 +17,6 @@ export namespace Navigation {
     pageChangeCallbacks.forEach(cb => cb());
     removeMultiplayerGame();
     MultiplayerClient.quitGame();
-    await MatchmakingClient.leaveMatchmaking();
   }
 
 }
