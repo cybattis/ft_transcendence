@@ -1,12 +1,13 @@
 import { Socket } from "socket.io";
+import { AuthedSocket } from "../../auth/types/auth.types";
 
 export interface CasualMatchmakingPlayer {
-  socket: Socket;
+  socket: AuthedSocket;
   id: number;
 }
 
 export interface RankedMatchmakingPlayer {
-  socket: Socket;
+  socket: AuthedSocket;
   id: number;
   rankPoints: number;
 }

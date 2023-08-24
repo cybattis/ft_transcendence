@@ -16,6 +16,7 @@ import { MultiplayerService } from "../multiplayer/multiplayer.service";
 import { APIError } from "src/utils/errors";
 import { failure, Result, success } from "../utils/Error";
 import { ChannelService } from "../channel/channel.service";
+import { AuthedSocket } from "../auth/types/auth.types";
 
 @Injectable()
 export class MatchmakingService {
@@ -46,7 +47,7 @@ export class MatchmakingService {
    * @param socket The socket of the player
    * @param playerId The id of the player
    */
-  public async joinMatchmakingCasual(socket: Socket, playerId: number)
+  public async joinMatchmakingCasual(socket: AuthedSocket, playerId: number)
     : Promise<Result<true, typeof APIError.UserNotFound
     | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
   {
@@ -95,7 +96,7 @@ export class MatchmakingService {
     * @param socket The socket of the player
     * @param playerId The id of the player
    */
-  public async joinMatchmakingRanked(socket: Socket, playerId: number)
+  public async joinMatchmakingRanked(socket: AuthedSocket, playerId: number)
     : Promise<Result<true, typeof APIError.UserNotFound
     | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
   {
@@ -215,7 +216,7 @@ export class MatchmakingService {
     * @param invitingId The id of the inviting player
     * @param invitedId The id of the invited player
    */
-  public async inviteUserToCasualGame(client: Socket, invitingId: number, invitedId: number)
+  public async inviteUserToCasualGame(client: AuthedSocket, invitingId: number, invitedId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
   {
@@ -327,7 +328,7 @@ export class MatchmakingService {
       * @param invitingId The id of the inviting player
       * @param invitedId The id of the invited player
      */
-  public async inviteUserToRankedGame(client: Socket, invitingId: number, invitedId: number)
+  public async inviteUserToRankedGame(client: AuthedSocket, invitingId: number, invitedId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
       | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
     {
@@ -533,8 +534,8 @@ export class MatchmakingService {
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players
-    player1.socket.emit("match-found", this.matchAcceptTimeout);
-    player2.socket.emit("match-found", this.matchAcceptTimeout);
+    player1.socket.to(getSyncRoom(player1.socket)).emit("match-found");
+    player2.socket.to(getSyncRoom(player2.socket)).emit("match-found");
   }
 
   private findPendingCasualGame(playerId: number): PendingCasualGame | undefined {
@@ -563,8 +564,8 @@ export class MatchmakingService {
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players
-    player1.socket.emit("match-found", this.matchAcceptTimeout);
-    player2.socket.emit("match-found", this.matchAcceptTimeout);
+    player1.socket.to(getSyncRoom(player1.socket)).emit("match-found");
+    player2.socket.to(getSyncRoom(player2.socket)).emit("match-found");
   }
 
   private findPendingRankedGame(playerId: number): PendingRankedGame | undefined {
@@ -699,4 +700,8 @@ export class MatchmakingService {
     player1Socket.emit("game-started", player2Infos);
     player2Socket.emit("game-started", player1Infos);
   }
+}
+
+function getSyncRoom(socket: AuthedSocket): string {
+  return "matchmaking-sync-" + socket.userId.toString();
 }

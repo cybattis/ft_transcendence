@@ -28,6 +28,8 @@ export class MatchmakingGateway
   @WebSocketServer()
   server: Server;
 
+  private static connections: Map<number, number> = new Map<number, number>();
+
   constructor(
     private matchmakingService: MatchmakingService,
     private authService: AuthService
@@ -52,11 +54,23 @@ export class MatchmakingGateway
 
   handleConnection(socket: AuthedSocket) {
     console.log('A user connected to the matchmaking server');
+    socket.join(getSyncRoom(socket));
+    const connectionNumber = MatchmakingGateway.connections.get(socket.userId);
+    if (connectionNumber !== undefined)
+      MatchmakingGateway.connections.set(socket.userId, connectionNumber + 1);
+    else
+      MatchmakingGateway.connections.set(socket.userId, 1);
   }
 
   handleDisconnect(client: AuthedSocket) {
     console.log('A user disconnected from the matchmaking server');
-    this.matchmakingService.leaveMatchmaking(client.userId);
+    const connectionNumber = MatchmakingGateway.connections.get(client.userId);
+    if (connectionNumber !== undefined) {
+      MatchmakingGateway.connections.set(client.userId, connectionNumber - 1);
+      if (connectionNumber === 1)
+        this.matchmakingService.leaveMatchmaking(client.userId);
+    } else
+      MatchmakingGateway.connections.set(client.userId, 0);
   }
 
   @SubscribeMessage('invite-user-to-casual-game')
@@ -195,6 +209,11 @@ export class MatchmakingGateway
           return "You are already in matchmaking.";
       }
     }
+
+    client
+      .broadcast
+      .to(getSyncRoom(client))
+      .emit("sync-join-matchmaking-casual");
     return "OK";
   }
 
@@ -203,6 +222,11 @@ export class MatchmakingGateway
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
     this.matchmakingService.leaveMatchmakingCasual(client.userId);
+
+    client
+      .broadcast
+      .to(getSyncRoom(client))
+      .emit("sync-leave-matchmaking-casual");
     return "OK";
   }
 
@@ -222,6 +246,11 @@ export class MatchmakingGateway
           return "You are already in matchmaking.";
       }
     }
+
+    client
+      .broadcast
+      .to(getSyncRoom(client))
+      .emit("sync-join-matchmaking-ranked");
     return "OK";
   }
 
@@ -230,6 +259,11 @@ export class MatchmakingGateway
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
     this.matchmakingService.leaveMatchmakingRanked(client.userId);
+
+    client
+      .broadcast
+      .to(getSyncRoom(client))
+      .emit("sync-leave-matchmaking-ranked");
     return "OK";
   }
 
@@ -244,6 +278,11 @@ export class MatchmakingGateway
           return "Couldn't find the game you're trying to accept.";
       }
     }
+
+    client
+      .broadcast
+      .to(getSyncRoom(client))
+      .emit("sync-accept-found-game");
     return "OK";
   }
 
@@ -256,4 +295,8 @@ export class MatchmakingGateway
     client.handshake.auth.token = token;
     return "OK";
   }
+}
+
+function getSyncRoom(socket: AuthedSocket): string {
+  return "matchmaking-sync-" + socket.userId.toString();
 }
