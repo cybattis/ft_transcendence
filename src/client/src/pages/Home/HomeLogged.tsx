@@ -21,9 +21,9 @@ import { MatchmakingState } from "../../utils/matchmaking-states";
 
 function MatchmakingButtonWaiting() {
   return (
-    <div className={'matchmaking-button-waiting'}>
-      Searching...
-    </div>
+    <button className={'matchmaking-button-waiting'}>
+      Waiting...
+    </button>
   );
 }
 
