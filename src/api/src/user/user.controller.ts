@@ -32,22 +32,22 @@ import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
-import {AuthService} from "../auth/auth.service";
 
 @Controller('user')
 export class UserController{
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private authService: AuthService,
   ) {}
 
   @Get()
   async findAll()/*: Promise<UserInfo[]> */{
     const result = await this.userService.findAll();
+    return result;
     const infos: UserInfo[] = [];
     result.forEach((user) => {
-      infos.push(TypeConverters.fromUserToUserInfo(user));
+      if (user.isVerified === true)
+        infos.push(TypeConverters.fromUserToUserInfo(user));
     });
     return infos;
   }
@@ -278,13 +278,13 @@ export class UserController{
   }
 
   @UseGuards(TokenGuard)
-  @Put('block-user/:id')
+  @Put('block-user/:username')
   async blockFriendUsr(
-    @Param('id') id: number,
+    @Param('username') username: string,
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.blockFriend(Number(id), payload.id);
+    const result = await this.userService.blockFriend(username, payload.id);
 
     if (result.isErr()) {
       switch (result.error) {
@@ -299,13 +299,13 @@ export class UserController{
   }
 
   @UseGuards(TokenGuard)
-  @Put('unblock/:id')
+  @Put('unblock/:username')
   async unblockFriend(
-    @Param('id') id: number,
+    @Param('username') username: string,
     @Headers('Authorization') header: Headers,
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
-    const result = await this.userService.unblockFriend(Number(id), payload.id);
+    const result = await this.userService.unblockFriend(username, payload.id);
 
     if (result.isErr()) {
       switch(result.error) {
@@ -327,7 +327,6 @@ export class UserController{
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request accepted by: ', Number(id), payload.id);
     const result = await this.userService.acceptFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
@@ -350,7 +349,6 @@ export class UserController{
   ): Promise<UserFriendsData> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
 
-    console.log('friend request declined by: ', id, payload.id);
     const result = await this.userService.declineFriendRequest(Number(id), payload.id);
     if (result.isErr()) {
       switch(result.error) {
@@ -416,7 +414,6 @@ export class UserController{
   ) : Promise<ChannelInvite[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.fetchInvChannel(payload.id);
-    console.log(result);
     if (result.isErr())
       throw new ForbiddenException();
     return result.value;

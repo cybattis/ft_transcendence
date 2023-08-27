@@ -272,7 +272,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   validateToken(token: string): Result<TokenData, false> {
     if (AuthService.invalidTokens.includes(token)) {
-      console.log('LIST: invalid token: ', token);
       return failure(false);
     }
 
@@ -287,7 +286,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       }
       return success(payload);
     } catch (e) {
-      console.log('Error :', e);
       return failure(false);
     }
   }

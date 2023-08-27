@@ -48,7 +48,7 @@ function BlockUser(props: FriendRequestProps) {
   const { put, showErrorInModal } = useFetcher();
 
   const handleUnblockButton = async () => {
-    put<UserFriendsData>(`user/unblock/${props.data.id}`, {})
+    put<UserFriendsData>(`user/unblock/${props.data.nickname}`, {})
       .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.NONE);
@@ -57,7 +57,7 @@ function BlockUser(props: FriendRequestProps) {
   };
 
   const handleBlockButton = async () => {
-    put<UserFriendsData>(`user/block-user/${props.data.id}`, {})
+    put<UserFriendsData>(`user/block-user/${props.data.nickname}`, {})
       .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.BLOCKED);
@@ -250,7 +250,6 @@ function PaddleColor(props: {
               })
               .catch(showErrorInModal);
           } catch (error) {
-            console.log("JWT token: ", error);
           }
         }
         else
@@ -293,7 +292,6 @@ function PaddleColor(props: {
               })
               .catch(showErrorInModal);
           } catch (error) {
-            console.log("JWT token: ", error);
           }
         }
         else
@@ -375,7 +373,6 @@ export function Profile(props: {data: UserInfo}) {
       if (!TypeCheckers.isTokenData(decoded))
         return;
     } catch (error) {
-      console.log("JWT token: ", error);
     }
 
     function checkFriendStatus(meData: UserFriendsData) {

@@ -15,7 +15,6 @@ import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
-import {TypeCheckers} from "../utils/type-checkers";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -114,15 +113,12 @@ export class ChannelService implements OnModuleInit {
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return false;
     if (!this.checkUserIsHere(channelToUpdate.operator, username)) {
-      console.log(`Ban : ${username} isn't operator`);
       return false;
     }
     if (!this.checkUserIsHere(channelToUpdate.users, target)) {
-      console.log(`Ban : ${target} isn't users`);
       return false;
     }
     if (cmd === 'kick') {
-      console.log(`Kick Target ${target}`);
       await this.kickOp(channelToUpdate, target);
       await this.kickUser(channelToUpdate, target);
       const user = await this.usersRepository.findOne({where: {nickname: target}});
@@ -156,7 +152,6 @@ export class ChannelService implements OnModuleInit {
     if (!this.checkUserIsHere(channelToUpdate.operator, username))
       return `Ban : ${username} isn't operator`;
     const timeBan: number = this.valideTime(time);
-    console.log(`time : ${timeBan}`);
     if (cmd === '+b')
     {
       await this.actBan(channelToUpdate, target, timeBan);
@@ -258,8 +253,6 @@ export class ChannelService implements OnModuleInit {
         blockedUsers.value.blockedChat,
         target,
       );
-    } else {
-      console.log('error invalid cmd');
     }
   }
 
@@ -417,7 +410,6 @@ export class ChannelService implements OnModuleInit {
         server.to(socket.id).emit('err', err);
         return; // bad mpd
       }
-      console.log('Await', await bcrypt.compare(pass, channelToJoin.password));
       channelToJoin.users.push(username);
       await this.channelRepository.save(channelToJoin);
       socket.join(channel);
@@ -433,7 +425,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
-    } else console.log('Aucun type de channel');
+    }
   }
 
   async joinChannel(
@@ -451,15 +443,16 @@ export class ChannelService implements OnModuleInit {
       });
       if (!channelToUpdate) return;
       if (this.checkUserIsHere(channelToUpdate.users, username)) return;
-      channelToUpdate.users.push(username);
-      await this.channelRepository.save(channelToUpdate);
       const user = await this.usersRepository.findOne({where: {nickname: username}});
       if (user)
       {
+        if (user.chans.includes(channel))
+          return ;
         user.chans.push(channel);
         await this.usersRepository.save(user);
       }
-      await socket.join(channel);
+      channelToUpdate.users.push(username);
+      await this.channelRepository.save(channelToUpdate);
       socket.emit('join', channel);
       const sender = 'announce';
       const msg = username + ' just joined the Server!';
@@ -550,45 +543,45 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
   ) {
-    const socketTarget = this.getSocketByUsername(target);
+    const user = await this.usersRepository.findOne({where: {nickname: target}});
+    if (!user)
+      return ;
+    const socketTarget = await this.getSocketById(user.id);
     const channel = username + target;
     const res: string | null = await this.findChannelPrivateMessage(
       username,
       target,
     );
     if (res !== null) return;
-    if (socketTarget) {
-      await this.channelRepository.save({
-        channel: channel,
-        status: 'message',
-        users: [username, target],
-        owner: '',
-        operator: [],
-        ban: [],
-        mute: [],
-        password: '',
-      });
-      const me = await this.usersRepository.findOne({where: {nickname: username}})
-      if (me)
-      {
-        me.chans.push(target);
-        await this.usersRepository.save(me);
-      }
-      const friend = await this.usersRepository.findOne({where: {nickname: target}})
-      if (friend)
-      {
-        friend.chans.push(username);
-        await this.usersRepository.save(friend);
-      }
-      socket.to(socketTarget).emit('inv', { username, target });
-      server.to(socket.id).emit('inv', { username, target });
+    const me = await this.usersRepository.findOne({where: {nickname: username}})
+    if (me)
+    {
+      me.chans.push(target);
+      await this.usersRepository.save(me);
     }
+    if (user)
+    {
+      user.chans.push(username);
+      await this.usersRepository.save(user);
+    }
+    await this.channelRepository.save({
+      channel: channel,
+      status: 'message',
+      users: [username, target],
+      owner: '',
+      operator: [],
+      ban: [],
+      mute: [],
+      password: '',
+    });
+    if (socketTarget)
+      socket.to(socketTarget).emit('inv', { username, target });
+    server.to(socket.id).emit('inv', { username, target });
   }
 
   async sendNotificationEvent(targetID: number) {
     const dest = await this.getSocketById(targetID);
     if (!dest) {
-      console.log('User not connected');
       return;
     }
     this.server.to(dest).emit('notification');
@@ -609,7 +602,10 @@ export class ChannelService implements OnModuleInit {
   }
 
   async blockedUser(server: Server, socket: Socket, target: string) {
-    const targetUser = this.getSocketByUsername(target);
+    const user = await this.usersRepository.findOne({where: {nickname: target}});
+    if (!user)
+      return ;
+    const targetUser = await this.getSocketById(user.id);
     if (targetUser != null) server.to(socket.id).emit('blocked', target);
   }
 
@@ -640,22 +636,26 @@ export class ChannelService implements OnModuleInit {
       socket.broadcast.emit('rcv', send);
       server.to(socket.id).emit('rcv', send);
     } else {
-      const target = this.getSocketByUsername(channel);
+      const user = await this.usersRepository.findOne({where: {nickname: channel}});
+      if (!user)
+        return ;
+      const target = await this.getSocketById(user.id);
       const prv = { sender, msg, channel };
       const find: Channel[] = await this.channelRepository.find({
         where: { status: 'message' },
       });
+      console.log(find);
       for (let index = 0; find[index]; index++) {
         if (
           (find[index].users[0] == sender && find[index].users[1] == channel) ||
           (find[index].users[1] == sender && find[index].users[0] == channel)
-        ) {
-          await this.chatRepository.save({
-            channel: find[index].channel,
-            content: msg,
-            emitter: sender,
-            emitterId: emiter.value.id,
-          });
+          ) {
+            await this.chatRepository.save({
+              channel: find[index].channel,
+              content: msg,
+              emitter: sender,
+              emitterId: emiter.value.id,
+            });
           if (target) {
             server.to(target).emit('rcv', prv);
             server.to(socket.id).emit('rcv', prv);
@@ -676,7 +676,10 @@ export class ChannelService implements OnModuleInit {
     blockedUsers: string[],
   ) {
     const prv = { sender, opponent, msg, channel, blockedUsers };
-    const target = this.getSocketByUsername(opponent);
+    const opp = await this.usersRepository.findOne({where: {nickname: opponent}});
+    if (!opp)
+      return ;
+    const target = await this.getSocketById(opp.id);
     if (target) server.to(target).emit('rcvgame', prv);
     server.to(socket.id).emit('rcvgame', prv);
   }
@@ -989,7 +992,6 @@ export class ChannelService implements OnModuleInit {
     const data = this.jwtService.decode(token) as TokenData;
     for (let index = 0; index < this.usersSocketList.length; index++) {
       if (data.nickname === this.usersSocketList[index].username) {
-        console.log('socket already present');
         return;
       }
     }
@@ -1056,11 +1058,20 @@ export class ChannelService implements OnModuleInit {
       where: { status: 'message' },
     });
     for (const channel of channelsPrv){
-      if (channel.users.includes(past)){
-        const title = channel.channel.replace(past, actual);
-        channel.channel = title;
-        console.log(title);
+      if (channel.users.includes(actual)){
+        channel.channel = channel.users[1] + channel.users[0];
         channel.users = channel.users.map((user: string) => (user === past ? actual : user));
+
+        const other = channel.users[1] == actual ? channel.users[0] : channel.users[1];
+        let user1 = await this.usersRepository.findOne({where : {nickname: other}});
+        if (!user1) return ;
+        for (let i = 0; user1.chans[i]; i ++){
+          if (user1.chans[i] === past){
+            user1.chans.splice(i, 1, actual);
+            break;
+          }
+        }
+        await this.usersRepository.save(user1);
       }
     }
     await this.channelRepository.save(channelsPrv);

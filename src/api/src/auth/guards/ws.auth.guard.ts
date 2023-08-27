@@ -5,10 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { AuthedSocket } from '../types/auth.types';
-import { TokenData } from '../../type/jwt.type';
 import { PUBLIC_DECORATOR_KEY } from './PublicDecorator';
 import { Reflector } from '@nestjs/core';
-import {TypeCheckers} from "../../utils/type-checkers";
 import { AuthService } from "../auth.service";
 
 /*

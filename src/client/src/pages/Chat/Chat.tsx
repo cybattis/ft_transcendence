@@ -1,15 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import "./Chat.css";
+import "../Profile/Profile.css";
 import ChannelList from "./List/ChannelList";
 import { TokenData } from "../../type/client.type";
 import jwt_decode from "jwt-decode";
 import Select from "react-select";
 import { ChatClientSocket } from "./Chat-client";
+import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import joinButton from "../../resource/more-logo.png";
 import { Link, Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
 import { ErrorModalChat } from "../../components/Modal/PopUpModal";
+import { PopupContext } from "../../components/Modal/Popup.context";
 import ParamLogo from "../../resource/param-logo.png";
 import PrvLogo from "../../resource/message-logo.png";
 import QuitLogo from "../../resource/quit-logo.png";
@@ -17,14 +20,12 @@ import InvLogo from "../../resource/invite-logo.png";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
-import {TypeCheckers} from "../../utils/type-checkers";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
+import { useData } from "../../hooks/UseData";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
-
-//FAIRE EN SORTE QUE ID SOIT MIS POUR NOM DE CHANNEL PRV ET PAS LE USERNAME PPUR PAS AVOIR D ERREUR
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +42,10 @@ export default function ChatClient() {
   const [isMute, setIsMute] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
+  const [inviteGame, setInviteGame] = useState(false);
   const [inGeneral, setInGeneral] = useState(true);
+  const [isInvitedToGame, setIsInvitedToGame] = useState(false);
+  const [isPriv, setIsPriv] = useState(false);
   const [owner, setOwner] = useState(false);
   const [allChannels, setAllChannels] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState({
@@ -52,15 +56,25 @@ export default function ChatClient() {
 
   const token = localStorage.getItem("token");
   let payload: TokenData;
-  let username = "";
+  let username = UserData.getNickname();;
 
-  if (username === "" && token) {
+  if (token) {
     try {
       payload = jwt_decode(token);
       username = UserData.getNickname();
+      if (!username || username === "")
+      {
+        let decoded: any = jwt_decode(token);
+        if (decoded?.nickname) username = decoded.nickname;
+      }
     } catch (e) {
-      console.log(`Decode error ${e}`);
     }
+  }
+
+  interface InviteToGameProps {
+    data: UserInfo;
+    status: boolean,
+    setStatus: (status: boolean) => void;
   }
 
   function takeActiveCanal(): string {
@@ -180,7 +194,7 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function isOwner() {
-        if (props.canal[0] != "#") {
+        if (props.canal[0] !== "#" || props.canal === "#general") {
           setOwner(false);
           return;
         }
@@ -252,7 +266,7 @@ export default function ChatClient() {
   const handleUnBlock = async () => {
     const sendBlock = { target: usr };
     ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/unblockUsr/${usr}`, {})
+    put<UserFriendsData>(`user/unblock/${usr}`, {})
       .then(res => {
         for (let i = 0; blocedList[i]; i ++) {
           if (blocedList[i] === usr)
@@ -399,10 +413,67 @@ export default function ChatClient() {
     else setBanForm(true);
   };
 
+  function InviteToGame(props: InviteToGameProps) {
+    const { setErrorMessage } = useContext(PopupContext);
+
+    const keyPress = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (props.status) props.setStatus(false);
+        if (isInvitedToGame) setIsInvitedToGame(false);
+      }
+    };
+  
+    function inviteToCasualGame() {
+      props.setStatus(true);
+      MatchmakingClient.inviteUserToCasualGame(props.data.id)
+        .catch((err) => {
+          props.setStatus(false);
+          setErrorMessage(err.message);
+        });
+    }
+  
+    function inviteToRankedGame() {
+      props.setStatus(true);
+      MatchmakingClient.inviteUserToRankedGame(props.data.id)
+        .catch((err) => {
+          props.setStatus(false);
+          setErrorMessage(err.message);
+        });
+    }
+
+    useEffect(() => {
+      document.addEventListener("keydown", keyPress);
+      return () => document.removeEventListener("keydown", keyPress);
+    }, []);
+  
+    if (!props.status) {
+      return (
+        <div className="invites-game">
+          <button className="friendButton" type="button" onClick={inviteToCasualGame}>
+            Invite to casual game
+          </button>
+          <button className="friendButton" type="button" onClick={inviteToRankedGame}>
+            Invite to ranked game
+          </button>
+        </div>
+      );
+    } else {
+      return (
+          <button className="friendButton">Waiting for player to join the game...</button>
+      );
+    }
+  }
+
+  const handleInviteGame = async () => {
+    setInviteGame(!inviteGame);
+  }
+
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
     const [me, setMe] = useState(true);
     const userData = useProfileData();
+
+    const { data } = useData<UserInfo>(`user/profile/nickname/${usr}`, true);
 
     useEffect(() => {
       function getMyNickname() {
@@ -465,7 +536,6 @@ export default function ChatClient() {
               setBlocked(true);
           })
           .catch((error) => {
-            console.log(error);
           });
       }
       getBlockedUsrs();
@@ -562,8 +632,16 @@ export default function ChatClient() {
             <Link to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
             </Link>
+            {!me && isHere && (
+              <button className="chat-buttons" onClick={handleInviteGame}>
+                Invite to Play
+              </button>
+            )
+
+            }
           </div>
           {banForm && <Ban />}
+          {inviteGame && data && <InviteToGame data={data} status={isInvitedToGame} setStatus={setIsInvitedToGame}/>}
         </form>
       </div>
     );
@@ -590,8 +668,6 @@ export default function ChatClient() {
         } else setChannelName(channel);
       }
       actifCanal();
-
-      //fetchMessage(channelName);
 
       function scrollbar() {
         const scr = document.getElementById("rcv-mess-container");
@@ -709,46 +785,41 @@ export default function ChatClient() {
         }
       }
       if (state.pwd[0]) {
-        try {
-          await get<true>(
-            "chat-controller/channel/find/" +
-            state.channel +
-            "/" +
-            state.pwd);
-        } catch (error) {
-          if (!Fetching.isFetchingError(error))
-            return;
-
-          if (error.isRequestError()) {
-            if (error.code === 404)
-              sendForm(state.channel, state.pwd, state.selectedOption);
-            else if (error.code === 400)
-              setErrorInput("Password mismatch.");
-          } else if (error.isServerError()) {
-            setErrorInput("Server busy, try again later");
-          } else if (error.isTransportError()) {
-            setErrorInput("Network error, try again later");
-          }
-        }
-
+        await get<true>(
+            "chat-controller/channel/find/" + state.channel + "/" + state.pwd)
+          .then(() => {
+            sendForm(state.channel, state.pwd, state.selectedOption);
+          })
+          .catch ((error) => {
+            if (!Fetching.isFetchingError(error))
+              return;
+            if (error.isRequestError()) {   
+              if (error.code === 400)
+                setErrorInput("Password mismatch.");
+            } else if (error.isServerError()) {
+              setErrorInput("Server busy, try again later");
+            } else if (error.isTransportError()) {
+              setErrorInput("Network error, try again later");
+            }
+          })
       } else {
-        try {
-          await get<true>("chat-controller/channel/findName/" + state.channel);
-        } catch (error) {
+        await get<true>(
+          "chat-controller/channel/findName/" + state.channel)
+        .then(() => {
+          sendForm(state.channel, state.pwd, state.selectedOption);
+        })
+        .catch ((error) => {
           if (!Fetching.isFetchingError(error))
             return;
-
-          if (error.isRequestError()) {
-            if (error.code === 404)
-              sendForm(state.channel, state.pwd, state.selectedOption);
-            else if (error.code === 400)
+          if (error.isRequestError()) {   
+            if (error.code === 400)
               setErrorInput("Password mismatch.");
           } else if (error.isServerError()) {
             setErrorInput("Server busy, try again later");
           } else if (error.isTransportError()) {
             setErrorInput("Network error, try again later");
           }
-        }
+        })
       }
     };
 
@@ -850,8 +921,6 @@ export default function ChatClient() {
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
     };
-
-    console.log("BTN VALUE: ", buttonInvitation);
 
     function ListUsers() {
       const list = usersList.map((user: any) =>
@@ -1028,27 +1097,48 @@ export default function ChatClient() {
   };
 
   useEffect(() => {
-    const getChan = async () => {
+      username = UserData.getNickname();
+      if (!username || username === "")
+      {
+        if (token)
+        {
+          let decoded: any = jwt_decode(token);
+          if (decoded?.nickname) username = decoded.nickname;
+        }
+      }
+
+      
+      if (takeActiveCanal()[0] !== '#' && isPriv === false)
+      setIsPriv(true);
+      else if (takeActiveCanal()[0] === '#' && isPriv === true)
+      setIsPriv(false);
+      
+      const getChan = async () => {
       const channel = takeActiveCanal();
-      console.log(channel);
       if (channel[0] === '#' && channel !== "#general")
       {
         if (inGeneral)
-          setInGeneral(false);
+        setInGeneral(false);
       }
-      else if (!inGeneral && (channel === "#general" || channel[0] !== '#'))
-        setInGeneral(true);
+      else if (channel === "#general" || channel[0] !== '#')
+      setInGeneral(true);
     }
     getChan();
-
+    
     const fetchAllChannels = async () => {
-      get<string[]>('user/myChannels')
-        .then((response) => {
-          setAllChannels(response);
-        }).catch(showErrorInModal);
+      await get<string[]>('user/myChannels')
+      .then((response) => {
+        setAllChannels(response);
+      }).catch(showErrorInModal);
     }
-
+    
     fetchAllChannels();
+    
+    if (!channelList.includes(defaultChannelGen)) {
+      const send = { username: username, channel: defaultChannelGen };
+      console.log(send);
+      ChatClientSocket.joinChatServer(send);
+    }
 
     const messageCallBack = async (data: {
       sender: string;
@@ -1059,10 +1149,6 @@ export default function ChatClient() {
     };
 
     ChatClientSocket.onMessageRecieve(messageCallBack);
-    if (!channelList.includes(defaultChannelGen)) {
-      const send = { username: username, channel: defaultChannelGen };
-      ChatClientSocket.joinChatServer(send);
-    }
 
     const joinCallBack = (room: string) => {
       if (room[0] !== "#")
@@ -1085,13 +1171,21 @@ export default function ChatClient() {
 
     ChatClientSocket.addBlockCb(blockedCallBack);
 
-    /*const wasBlockedCallBack = (target: string) => {
-      //Pour que les messages se reload par celui bloque
-    }*/
+    const changeUsernameCallBack = async (newName: string) => {
+      username = UserData.getNickname();
+      await fetchMessage(takeActiveCanal());
+      await fetchAllChannels();
+      if (takeActiveCanal()[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(takeActiveCanal()))
+      {
+        const canal = document.getElementById("canal");
+        if (canal) {
+          canal.innerHTML = newName;
+          setRoomChange(newName);
+        }
+      }
+    }
 
-    //ChatClientSocket.addWasBlockCb(blockedCallBack);
-
-    ChatClientSocket.joinChatServer(joinCallBack);
+    ChatClientSocket.onChangeUsername(changeUsernameCallBack);
 
     const quitCallBack = (room: string) => {
       for (let index = 0; index < channelList.length; index++) {
@@ -1144,6 +1238,7 @@ export default function ChatClient() {
       ChatClientSocket.offQuit(quitCallBack);
       ChatClientSocket.offInv(inviteCallBack);
       ChatClientSocket.offMessageRecieve(messageCallBack);
+      ChatClientSocket.offChange(changeUsernameCallBack);
       ChatClientSocket.offErr(errCallBack);
     };
   }, [roomChange, username]);
@@ -1192,6 +1287,7 @@ export default function ChatClient() {
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
     fetchMessage(takeActiveCanal());
+    console.log(roomChange);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1240,13 +1336,13 @@ export default function ChatClient() {
             </button>
           </div>
         </div>
-        <div className="user-lists">
+        {!isPriv && (<div className="user-lists">
           <UsersList
             messages={messages}
             channel={takeActiveCanal()}
             handleButton={handleButton}
           />
-        </div>
+        </div>)}
         <ErrorModalChat
           msg={errorMessage}
           onClose={() => setErrorMessage({ channel: "", error: "" })}

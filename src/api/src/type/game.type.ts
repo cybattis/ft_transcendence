@@ -1,5 +1,3 @@
-import { UserInfo } from './user.type';
-
 export enum GameType {
   PRACTICE = 'Practice',
   CASUAL = 'Casual',

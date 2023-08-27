@@ -8,6 +8,7 @@ import { AuthContext } from "../Auth/auth.context";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { removeMultiplayerGame } from "../../game/PongManager";
+import { GameInvite } from "../../type/game.type";
 import { useFetcher } from "../../hooks/UseFetcher";
 
 export function NavButton(props: {
@@ -69,9 +70,14 @@ function BellNotif({
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      get<boolean>("user/notifs")
+      await get<boolean>("user/notifs")
       .then((res) => {
         if (res) setHasNotifs(true);
+      })
+      .catch(() => {});
+      await get<GameInvite[]>("game-invites")
+      .then((res) => {
+        if (res && res[0]) setHasNotifs(true);
       })
       .catch(() => {});
     };

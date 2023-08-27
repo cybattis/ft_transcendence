@@ -10,6 +10,7 @@ import { LoadingPage } from "../Loading/LoadingPage";
 import { useData } from "../../hooks/UseData";
 import { PopupContext } from "../../components/Modal/Popup.context";
 import { useFetcher } from "../../hooks/UseFetcher";
+import { ChatClientSocket } from "../Chat/Chat-client";
 
 export function Settings() {
   const { data} = useData<UserSettings>("user/settings", true);
@@ -69,6 +70,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
       .then((updatedUser) => {
         UserData.updateNickname(updatedUser.nickname);
         setInfoMessage("Update successful!");
+        ChatClientSocket.changedUsername(updatedUser.nickname);
       })
       .catch(showErrorInModal);
   };

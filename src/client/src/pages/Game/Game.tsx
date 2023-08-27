@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { MultiplayerPong } from "../../game/components/MultiplayerPong";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { UserData } from "../Profile/user-data";
@@ -17,7 +17,6 @@ import "./Game.css";
 import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { EndGamePopup, GameNotFoundModal, InfoModal } from "../../components/Modal/PopUpModal";
 import { GameStatus } from "../../type/game.type";
-import { PopupContext } from "../../components/Modal/Popup.context";
 import { PongManagerOffGameNotFound, PongManagerOnGameNotFound } from "../../game/PongManager";
 import { useNavigate } from "react-router-dom";
 

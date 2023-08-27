@@ -1,4 +1,4 @@
-import {BadRequestException, ForbiddenException} from "@nestjs/common";
+import { ForbiddenException } from "@nestjs/common";
 import {TokenData} from "../type/jwt.type";
 import {JwtService} from "@nestjs/jwt";
 import {TypeCheckers} from "./type-checkers";
