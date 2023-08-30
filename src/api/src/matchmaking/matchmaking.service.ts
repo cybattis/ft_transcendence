@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import {
   CasualGameInvite,
   CasualMatchmakingPlayer,
+  MatchmakingPlayerStatus,
+  MatchmakingPlayerStatusDTO,
   PendingCasualGame,
   PendingRankedGame,
   RankedGameInvite,
@@ -11,14 +13,17 @@ import { GameService } from "../game/game.service";
 import { GameBodyDto, GameInvite, GameMode, GameStatus, GameType } from "../type/game.type";
 import { UserService } from "../user/user.service";
 import { User } from "../user/entity/Users.entity";
-import { Socket } from "socket.io";
 import { MultiplayerService } from "../multiplayer/multiplayer.service";
 import { APIError } from "src/utils/errors";
 import { failure, Result, success } from "../utils/Error";
 import { ChannelService } from "../channel/channel.service";
+import { AuthedSocket } from "../auth/types/auth.types";
+import { Server } from "socket.io";
 
 @Injectable()
 export class MatchmakingService {
+
+  private server: Server;
 
   private casualMatchmakingQueue: CasualMatchmakingPlayer[] = [];
   private rankedMatchmakingQueue: RankedMatchmakingPlayer[] = [];
@@ -41,12 +46,19 @@ export class MatchmakingService {
    */
 
   /*
+    * Set the server of the matchmaking service
+   */
+  public setServer(server: Server): void {
+    this.server = server;
+  }
+
+  /*
    * Add a player to the casual matchmaking queue
    *
    * @param socket The socket of the player
    * @param playerId The id of the player
    */
-  public async joinMatchmakingCasual(socket: Socket, playerId: number)
+  public async joinMatchmakingCasual(socket: AuthedSocket, playerId: number)
     : Promise<Result<true, typeof APIError.UserNotFound
     | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
   {
@@ -71,6 +83,7 @@ export class MatchmakingService {
     // Make him join the matchmaking
     await this.addPlayerToCasualQueue(player);
 
+    console.log("A registered player joined the casual matchmaking server. ID: ", playerId);
     return success(true);
   }
 
@@ -79,11 +92,26 @@ export class MatchmakingService {
    *
    * @param playerId The id of the player
    */
-  public leaveMatchmakingCasual(playerId: number): void {
+  public async leaveMatchmakingCasual(playerId: number): Promise<void> {
     // If the player is in the ranked matchmaking queue, remove him
     const player: CasualMatchmakingPlayer | undefined = this.findPlayerInCasualMatchmaking(playerId);
-    if (player) {
+    if (player)
       this.removePlayerFromCasualQueue(player);
+
+    const pendingGame = this.findPendingCasualGame(playerId);
+    if (pendingGame) {
+      this.removePendingCasualGame(pendingGame);
+      if (playerId === pendingGame.player1.id) {
+        await this.joinMatchmakingCasual(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      } else {
+        await this.joinMatchmakingCasual(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
     }
   }
 
@@ -93,7 +121,7 @@ export class MatchmakingService {
     * @param socket The socket of the player
     * @param playerId The id of the player
    */
-  public async joinMatchmakingRanked(socket: Socket, playerId: number)
+  public async joinMatchmakingRanked(socket: AuthedSocket, playerId: number)
     : Promise<Result<true, typeof APIError.UserNotFound
     | typeof APIError.UserAlreadyInGame | typeof APIError.UserInMatchmaking>>
   {
@@ -119,6 +147,7 @@ export class MatchmakingService {
     // Make him join the matchmaking
     await this.addPlayerToRankedQueue(player);
 
+    console.log("A registered player joined the ranked matchmaking server");
     return success(true);
   }
 
@@ -127,11 +156,26 @@ export class MatchmakingService {
     *
     * @param playerId The id of the player
    */
-  public leaveMatchmakingRanked(playerId: number): void {
+  public async leaveMatchmakingRanked(playerId: number): Promise<void> {
     // If the player is in the ranked matchmaking queue, remove him
     const player: RankedMatchmakingPlayer | undefined = this.findPlayerInRankedMatchmaking(playerId);
-    if (player) {
+    if (player)
       this.removePlayerFromRankedQueue(player);
+
+    const pendingGame = this.findPendingRankedGame(playerId);
+    if (pendingGame) {
+      this.removePendingRankedGame(pendingGame);
+      if (playerId === pendingGame.player1.id) {
+        await this.joinMatchmakingRanked(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      } else {
+        await this.joinMatchmakingRanked(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
     }
   }
 
@@ -140,9 +184,9 @@ export class MatchmakingService {
     *
     * @param playerId The id of the player
    */
-  public leaveMatchmaking(playerId: number): void {
-    this.leaveMatchmakingCasual(playerId);
-    this.leaveMatchmakingRanked(playerId);
+  public async leaveMatchmaking(playerId: number): Promise<void> {
+    await this.leaveMatchmakingCasual(playerId);
+    await this.leaveMatchmakingRanked(playerId);
   }
 
   /*
@@ -150,47 +194,55 @@ export class MatchmakingService {
     *
     * @param playerId The id of the player
    */
-  public async acceptFoundGame(playerId: number)
+  public async acceptFoundGame(playerId: number, client: AuthedSocket)
     : Promise<Result<true, typeof APIError.GameNotFound>>
   {
     const pendingCasualGame: PendingCasualGame | undefined = this.findPendingCasualGame(playerId);
     const pendingRankedGame: PendingRankedGame | undefined = this.findPendingRankedGame(playerId);
 
+    console.log("Player " + playerId + " accepted the game");
     if (pendingCasualGame) {
       // Set the player as ready
       if (pendingCasualGame.player1.id === playerId) {
         pendingCasualGame.player1Ready = true;
+        pendingCasualGame.player1.socket = client;
       } else if (pendingCasualGame.player2.id === playerId) {
         pendingCasualGame.player2Ready = true;
+        pendingCasualGame.player2.socket = client;
       }
 
       // If both players are ready, create the game
       if (pendingCasualGame.player1Ready && pendingCasualGame.player2Ready) {
+        this.removePendingCasualGame(pendingCasualGame);
         await this.sendPlayersToCasualGame(
           pendingCasualGame.player1.id,
           pendingCasualGame.player1.socket,
           pendingCasualGame.player2.id,
-          pendingCasualGame.player2.socket);
-
-        this.removePendingCasualGame(pendingCasualGame);
+          pendingCasualGame.player2.socket,
+          false);
       }
       return success(true);
     } else if (pendingRankedGame) {
+      console.log("Player " + playerId + " accepted the ranked game");
+
       // Set the player as ready
       if (pendingRankedGame.player1.id === playerId) {
         pendingRankedGame.player1Ready = true;
+        pendingRankedGame.player1.socket = client;
       } else if (pendingRankedGame.player2.id === playerId) {
         pendingRankedGame.player2Ready = true;
+        pendingRankedGame.player2.socket = client;
       }
+
       // If both players are ready, create the game
       if (pendingRankedGame.player1Ready && pendingRankedGame.player2Ready) {
+        this.removePendingRankedGame(pendingRankedGame);
         await this.sendPlayersToRankedGame(
           pendingRankedGame.player1.id,
           pendingRankedGame.player1.socket,
           pendingRankedGame.player2.id,
-          pendingRankedGame.player2.socket);
-
-        this.removePendingRankedGame(pendingRankedGame);
+          pendingRankedGame.player2.socket,
+          false);
       }
 
       return success(true);
@@ -206,7 +258,7 @@ export class MatchmakingService {
     * @param invitingId The id of the inviting player
     * @param invitedId The id of the invited player
    */
-  public async inviteUserToCasualGame(client: Socket, invitingId: number, invitedId: number)
+  public async inviteUserToCasualGame(client: AuthedSocket, invitingId: number, invitedId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
   {
@@ -250,7 +302,7 @@ export class MatchmakingService {
     * @param invitedId The id of the invited player
     * @param invitingId The id of the inviting player
    */
-  public async acceptCasualGameInvite(invitedSocket: Socket, invitedId: number, invitingId: number)
+  public async acceptCasualGameInvite(invitedSocket: AuthedSocket, invitedId: number, invitingId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.GameInviteNotFound | typeof APIError.OtherUserNotFound | typeof APIError.OtherUserAlreadyInGame
     | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking>>
@@ -288,7 +340,7 @@ export class MatchmakingService {
     if (!invite)
       return failure(APIError.GameInviteNotFound);
 
-    await this.sendPlayersToCasualGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket);
+    await this.sendPlayersToCasualGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket, true);
     this.casualGameInvites = this.casualGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
@@ -318,7 +370,7 @@ export class MatchmakingService {
       * @param invitingId The id of the inviting player
       * @param invitedId The id of the invited player
      */
-  public async inviteUserToRankedGame(client: Socket, invitingId: number, invitedId: number)
+  public async inviteUserToRankedGame(client: AuthedSocket, invitingId: number, invitedId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
       | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
     {
@@ -362,7 +414,7 @@ export class MatchmakingService {
   * @param invitedId The id of the invited player
   * @param invitingId The id of the inviting player
  */
-  public async acceptRankedGameInvite(invitedSocket: Socket, invitedId: number, invitingId: number)
+  public async acceptRankedGameInvite(invitedSocket: AuthedSocket, invitedId: number, invitingId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.GameInviteNotFound | typeof APIError.OtherUserNotFound | typeof APIError.OtherUserAlreadyInGame
     | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking>>
@@ -400,7 +452,7 @@ export class MatchmakingService {
     if (!invite)
       return failure(APIError.GameInviteNotFound);
 
-    await this.sendPlayersToRankedGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket);
+    await this.sendPlayersToRankedGame(invitedId, invitedSocket, invitingId, invite.invitingPlayer.socket, true);
     this.rankedGameInvites = this.rankedGameInvites.filter((invite) => {
       return invite.invitedPlayerId !== invitedId || invite.invitingPlayer.id !== invitingId;
     });
@@ -449,6 +501,37 @@ export class MatchmakingService {
       || (this.rankedGameInvites.find((invite) => {
       return invite.invitingPlayer.id === invitingPlayerId && invite.invitedPlayerId === invitedPlayerId;
     }) !== undefined);
+  }
+
+  public getPlayerStatus(userId: number): MatchmakingPlayerStatusDTO {
+    const pendingCasual = this.findPendingCasualGame(userId);
+    if (pendingCasual) {
+      if ((pendingCasual.player1.id === userId && pendingCasual.player1Ready) ||
+        (pendingCasual.player2.id === userId && pendingCasual.player2Ready))
+        return { status: MatchmakingPlayerStatus.WAITING_CASUAL };
+      return {
+        status: MatchmakingPlayerStatus.FOUND_CASUAL,
+        timeLeft: Math.floor((pendingCasual.creationTime - Date.now() + this.matchAcceptTimeout * 1000) / 1000),
+      };
+    }
+
+    const pendingRanked = this.findPendingRankedGame(userId);
+    if (pendingRanked) {
+      if ((pendingRanked.player1.id === userId && pendingRanked.player1Ready) ||
+        (pendingRanked.player2.id === userId && pendingRanked.player2Ready))
+        return { status: MatchmakingPlayerStatus.WAITING_RANKED };
+      return {
+        status: MatchmakingPlayerStatus.FOUND_RANKED,
+        timeLeft: Math.floor((pendingRanked.creationTime - Date.now() + this.matchAcceptTimeout * 1000) / 1000),
+      };
+    }
+
+    if (this.isPlayerInCasualMatchmaking(userId))
+      return { status: MatchmakingPlayerStatus.SEARCHING_CASUAL };
+    if (this.isPlayerInRankedMatchmaking(userId))
+      return { status: MatchmakingPlayerStatus.SEARCHING_RANKED };
+
+    return { status: MatchmakingPlayerStatus.NONE };
   }
 
   /*
@@ -514,18 +597,35 @@ export class MatchmakingService {
       player1Ready: false,
       player2: player2,
       player2Ready: false,
+      creationTime: Date.now(),
     };
 
     this.pendingCasualGames.push(pendingGame);
 
     // If the players don't accept the game in matchAcceptTimeout seconds, remove it
-    setTimeout(() => {
+    pendingGame.timer = setTimeout(async () => {
       this.removePendingCasualGame(pendingGame);
+      if (pendingGame.player1Ready) {
+        await this.joinMatchmakingCasual(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
+      if (pendingGame.player2Ready) {
+        await this.joinMatchmakingCasual(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      }
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players
-    player1.socket.emit("match-found", this.matchAcceptTimeout);
-    player2.socket.emit("match-found", this.matchAcceptTimeout);
+    this.server
+      .to(getSyncRoom(player1.socket))
+      .emit("sync", this.getPlayerStatus(player1.id));
+    this.server
+      .to(getSyncRoom(player2.socket))
+      .emit("sync", this.getPlayerStatus(player2.id));
   }
 
   private findPendingCasualGame(playerId: number): PendingCasualGame | undefined {
@@ -533,6 +633,8 @@ export class MatchmakingService {
   }
 
   private removePendingCasualGame(pendingGame: PendingCasualGame): void {
+    if (pendingGame.timer)
+      clearTimeout(pendingGame.timer);
     const index: number = this.pendingCasualGames.indexOf(pendingGame);
     if (index >= 0)
       this.pendingCasualGames.splice(index, 1);
@@ -544,18 +646,35 @@ export class MatchmakingService {
       player1Ready: false,
       player2: player2,
       player2Ready: false,
+      creationTime: Date.now(),
     };
 
     this.pendingRankedGames.push(pendingGame);
 
     // If the players don't accept the game in 30 seconds, remove it
-    setTimeout(() => {
+    pendingGame.timer = setTimeout(async () => {
       this.removePendingRankedGame(pendingGame);
+      if (pendingGame.player1Ready) {
+        await this.joinMatchmakingRanked(pendingGame.player1.socket, pendingGame.player1.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player1.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player1.id));
+      }
+      if (pendingGame.player2Ready) {
+        await this.joinMatchmakingRanked(pendingGame.player2.socket, pendingGame.player2.id);
+        this.server
+          .to(getSyncRoom(pendingGame.player2.socket))
+          .emit("sync", this.getPlayerStatus(pendingGame.player2.id));
+      }
     }, this.matchAcceptTimeout * 1000);
 
     // Send the invitation to the players
-    player1.socket.emit("match-found", this.matchAcceptTimeout);
-    player2.socket.emit("match-found", this.matchAcceptTimeout);
+    this.server
+      .to(getSyncRoom(player1.socket))
+      .emit("sync", this.getPlayerStatus(player1.id));
+    this.server
+      .to(getSyncRoom(player2.socket))
+      .emit("sync", this.getPlayerStatus(player2.id));
   }
 
   private findPendingRankedGame(playerId: number): PendingRankedGame | undefined {
@@ -563,9 +682,12 @@ export class MatchmakingService {
   }
 
   private removePendingRankedGame(pendingGame: PendingRankedGame): void {
+    if (pendingGame.timer)
+      clearTimeout(pendingGame.timer);
     const index: number = this.pendingRankedGames.indexOf(pendingGame);
-    if (index >= 0)
+    if (index >= 0) {
       this.pendingRankedGames.splice(index, 1);
+    }
   }
 
   private async createCasualGame(player1Id: number, player2Id: number): Promise<boolean> {
@@ -583,6 +705,7 @@ export class MatchmakingService {
       if (newGame.isErr())
         return false;
       this.multiplayerService.createRoom(newGame.value, player1Id, player2Id);
+      console.log("Casual game created");
       return true;
     } catch (e) {
       return false;
@@ -604,6 +727,7 @@ export class MatchmakingService {
       if (newGame.isErr())
         return false;
       this.multiplayerService.createRoom(newGame.value, player1Id, player2Id);
+      console.log("Ranked game created");
       return true;
     } catch (e) {
       return false;
@@ -637,7 +761,13 @@ export class MatchmakingService {
       || this.isPlayerInRankedMatchmaking(playerId);
   }
 
-  private async sendPlayersToCasualGame(player1Id: number, player1Socket: Socket, player2Id: number, player2Socket: Socket) {
+  private async sendPlayersToCasualGame(
+    player1Id: number,
+    player1Socket: AuthedSocket,
+    player2Id: number,
+    player2Socket: AuthedSocket,
+    fromInvite: boolean)
+  {
     const player1 = await this.getUserFromDb(player1Id);
     const player2 = await this.getUserFromDb(player2Id);
 
@@ -659,11 +789,30 @@ export class MatchmakingService {
     await this.createCasualGame(player1Id, player2Id);
 
     // Sending the game start event to the players
-    player1Socket.emit("game-started", player2Infos);
-    player2Socket.emit("game-started", player1Infos);
+    if (fromInvite) {
+      player1Socket.emit("game-started-invite", player2Infos);
+      player2Socket.emit("game-started-invite", player1Infos);
+    } else {
+      player1Socket.emit("game-started", player2Infos);
+      player2Socket.emit("game-started", player1Infos);
+    }
+
+    player1Socket
+      .to(getSyncRoom(player1Socket))
+      .emit("sync", this.getPlayerStatus(player1Id));
+
+    player2Socket
+      .to(getSyncRoom(player2Socket))
+      .emit("sync", this.getPlayerStatus(player2Id));
   }
 
-  private async sendPlayersToRankedGame(player1Id: number, player1Socket: Socket, player2Id: number, player2Socket: Socket) {
+  private async sendPlayersToRankedGame(
+    player1Id: number,
+    player1Socket: AuthedSocket,
+    player2Id: number,
+    player2Socket: AuthedSocket,
+    fromInvite: boolean)
+  {
     const player1 = await this.getUserFromDb(player1Id);
     const player2 = await this.getUserFromDb(player2Id);
 
@@ -685,7 +834,24 @@ export class MatchmakingService {
     await this.createRankedGame(player1Id, player2Id);
 
     // Sending the game start event to the players
-    player1Socket.emit("game-started", player2Infos);
-    player2Socket.emit("game-started", player1Infos);
+    if (fromInvite) {
+      player1Socket.emit("game-started-invite", player2Infos);
+      player2Socket.emit("game-started-invite", player1Infos);
+    } else {
+      player1Socket.emit("game-started", player2Infos);
+      player2Socket.emit("game-started", player1Infos);
+    }
+
+    player1Socket
+      .to(getSyncRoom(player1Socket))
+      .emit("sync", this.getPlayerStatus(player1Id));
+
+    player2Socket
+      .to(getSyncRoom(player2Socket))
+      .emit("sync", this.getPlayerStatus(player2Id));
   }
+}
+
+function getSyncRoom(socket: AuthedSocket): string {
+  return "matchmaking-sync-" + socket.userId.toString();
 }

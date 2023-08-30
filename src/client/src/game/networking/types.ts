@@ -20,11 +20,30 @@ export type ServeUpdate = {
   playerNumber: number;
 }
 
-export type MatchmakingMatchFoundCallback = {
-  (acceptTimeout: number): void;
+export enum MatchmakingPlayerStatus {
+  NONE = "NONE",
+  SEARCHING_CASUAL = "SEARCHING_CASUAL",
+  SEARCHING_RANKED = "SEARCHING_RANKED",
+  FOUND_CASUAL = "FOUND_CASUAL",
+  FOUND_RANKED = "FOUND_RANKED",
+  WAITING_CASUAL = "WAITING_CASUAL",
+  WAITING_RANKED = "WAITING_RANKED",
+}
+
+export type MatchmakingPlayerStatusDTO = {
+  status: MatchmakingPlayerStatus;
+  timeLeft?: number;
+}
+
+export type MatchmakingSyncCallback = {
+  (status: MatchmakingPlayerStatusDTO): void;
 }
 
 export type MatchmakingGameStartedCallback = {
+  (fromInvite: boolean): void;
+}
+
+export type MatchmakingGameInviteAcceptedCallback = {
   (): void;
 }
 

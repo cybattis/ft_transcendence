@@ -6,7 +6,13 @@ import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    forbidUnknownValues: true,
+    validationError: { value: false },
+    transform: true,
+  }));
 
   app.use('/avatar', express.static(join(process.cwd(), 'avatar')));
   await app.listen(5400);

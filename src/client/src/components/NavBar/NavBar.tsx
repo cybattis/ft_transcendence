@@ -1,7 +1,7 @@
 import RightMenu from "./RightMenu";
 import LeftMenu from "./LeftMenu";
-import React, { useContext, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+
 import Logo from "../Logo/Logo";
 import navbarIcon from "../../resource/menu.png";
 import { DisconnectButton, NavButton } from "./NavButton";
@@ -11,43 +11,48 @@ import {AuthContext} from "../Auth/auth.context";
 import {FormContext, FormState} from "../Auth/form.context";
 import {removeMultiplayerGame} from "../../game/PongManager";
 import {MultiplayerClient} from "../../game/networking/multiplayer-client";
+import { PageLink } from "../Navigation/PageLink";
+import { Navigation } from "../../utils/navigation";
 
 function MobileNavBar() {
   const [sidePanel, setSidePanel] = useState(false);
   const { authed } = useContext(AuthContext);
   const { setFormState } = useContext(FormContext);
 
-  function handlePageChange() {
-    setSidePanel(!sidePanel);
-    removeMultiplayerGame();
-    MultiplayerClient.quitGame();
+  function hideSidePanel() {
+    setSidePanel(false);
   }
 
   function toggleLoginForm() {
     setFormState(FormState.LOGIN);
-    setSidePanel(!sidePanel);
+    setSidePanel(false);
   }
 
   function toggleSignupForm() {
     setFormState(FormState.SIGNUP);
-    setSidePanel(!sidePanel);
+    setSidePanel(false);
   }
+
+  useEffect(() => {
+    Navigation.onPageChange(hideSidePanel);
+
+    return () => {
+      Navigation.offPageChange(hideSidePanel);
+    }
+  });
 
   return (
     <nav className={"nav-style-mobile"}>
-      <Link to="/" onClick={() => {
-        removeMultiplayerGame();
-        MultiplayerClient.quitGame();
-      }}>
+      <PageLink to={"/"}>
         <Logo />
-      </Link>
+      </PageLink>
       <div className={"navbar-mobile-div"}></div>
       {authed ? (
         <>
           <Notification />
         </>
       ) : null}
-      <button className={"navbar-button"} onClick={handlePageChange}>
+      <button className={"navbar-button"} onClick={() => setSidePanel(!sidePanel)}>
         <img src={navbarIcon} alt="navbar icon" width={25} height={25} />
       </button>
       {sidePanel && authed ? (
@@ -55,27 +60,22 @@ function MobileNavBar() {
           <NavButton
             content={"About"}
             link={"/about"}
-            callback={handlePageChange}
           />
           <NavButton
             content={"Play"}
             link={"/"}
-            callback={handlePageChange}
           />
           <NavButton
             content={"Ranking"}
             link={"/leaderboard"}
-            callback={handlePageChange}
           />
           <NavButton
             content={"Profile"}
             link={`/profile/my-profile`}
-            callback={handlePageChange}
           />
           <NavButton
             content={"Settings"}
             link={"/settings"}
-            callback={handlePageChange}
           />
           <div
             style={{
@@ -85,7 +85,7 @@ function MobileNavBar() {
               margin: "10px 0",
             }}
           >
-            <DisconnectButton callback={handlePageChange} />
+            <DisconnectButton/>
           </div>
         </div>
       ) : !authed && sidePanel ? (
@@ -93,7 +93,6 @@ function MobileNavBar() {
           <NavButton
             content={"About"}
             link={"/about"}
-            callback={handlePageChange}
           />
           <div
             style={{
@@ -118,18 +117,13 @@ function MobileNavBar() {
 }
 
 export default function NavBar() {
-  function handlePageChange() {
-    removeMultiplayerGame();
-    MultiplayerClient.quitGame();
-  }
-
   return (
     <>
       <MobileNavBar />
       <nav className={"nav-style"}>
-        <Link to="/" onClick={handlePageChange}>
+        <PageLink to="/">
           <Logo />
-        </Link>
+        </PageLink>
         <LeftMenu />
         <RightMenu />
       </nav>

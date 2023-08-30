@@ -4,6 +4,8 @@ import {JwtService} from "@nestjs/jwt";
 import {TypeCheckers} from "./type-checkers";
 
 export function getTokenOrThrow(header: Headers): string {
+  if (header === undefined)
+    throw new ForbiddenException('Invalid token');
   const str = header.toString();
   if (str.startsWith('Bearer '))
     return str.slice(7);

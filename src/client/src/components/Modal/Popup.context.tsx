@@ -1,5 +1,9 @@
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { ErrorModal, InfoModal } from "./PopUpModal";
+import { SocketManager } from "../../utils/socketManager";
+import { Navigation } from "../../utils/navigation";
+import { AuthContext } from "../Auth/auth.context";
+import { useNavigate } from "react-router-dom";
 
 interface PopupContextType {
   errorMessage: string;
@@ -21,6 +25,21 @@ export const PopupContext =
 export function PopupProvider({ children }: { children: ReactNode }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const { setAuthed } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    SocketManager.onSocketErrorCallback(() => {
+      Navigation.disconnect();
+      setAuthed(false);
+      setErrorMessage("Your session has expired, please log in again.");
+      navigate("/");
+    });
+
+    return () => {
+      SocketManager.offSocketErrorCallback();
+    }
+  });
 
   return (
     <PopupContext.Provider

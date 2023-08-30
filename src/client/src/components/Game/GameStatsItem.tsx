@@ -1,10 +1,11 @@
 import { GameStats, GameType } from "../../type/game.type";
 import "./GameStatsItem.css";
-import { Link } from "react-router-dom";
+
 import { Avatar } from "../Avatar";
 import { MatcheScore } from "./MatcheScore";
 import { useData } from "../../hooks/UseData";
 import { UserInfo } from "../../type/user.type";
+import { PageLink } from "../Navigation/PageLink";
 
 export function GameStatsHeader() {
   return (
@@ -44,12 +45,12 @@ function GameStatsItemLoaded(props: { game: GameStats; id: number; player1: User
     }
 
     return (
-      <Link to={`/profile/nickname/${name}`} className={"opponent-profile"}>
+      <PageLink to={`/profile/nickname/${name}`} className={"opponent-profile"}>
         <div id={"opponent-name"}>
           <Avatar size={"30px"} img={opponentAvatar}/>
           <div id={"gi-name"}>{name}</div>
         </div>
-      </Link>
+      </PageLink>
     );
   }
 

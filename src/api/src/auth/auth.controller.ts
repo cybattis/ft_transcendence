@@ -188,4 +188,10 @@ export class AuthController {
       throw new ForbiddenException();
     }
   }
+
+  @Put('disconnect')
+  async handleDisconnect(@Headers('Authorization') header: Headers): Promise<void> {
+    const token = getTokenOrThrow(header);
+    this.authService.disconnectUser(token);
+  }
 }

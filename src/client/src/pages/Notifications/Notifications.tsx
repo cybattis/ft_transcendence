@@ -70,7 +70,7 @@ export default function Notifications() {
     if (token)
     {
       const myToken: TokenData = jwt_decode(token);
-      if (!myToken)
+      if (!TypeCheckers.isTokenData(myToken))
         return;
       const data = {
           channel: channel,
@@ -97,7 +97,7 @@ export default function Notifications() {
   async function handleAcceptGame(invitingPlayerId: number, type: GameType) {
     if (type === GameType.CASUAL)
       MatchmakingClient.acceptInviteToCasualGame(invitingPlayerId)
-        .then(() => {navigate("/game");})
+        .then(() => navigate("/game"))
         .catch((err) => setErrorMessage(err.message));
     else
       MatchmakingClient.acceptInviteToRankedGame(invitingPlayerId)
@@ -164,8 +164,6 @@ export default function Notifications() {
         .then(infos => setUserInfo(infos))
         .catch(() => {});
     }, []);
-
-    console.log(userInfo);
 
     return (userInfo === null ? <NotificationElementLoading/> :
       <NotificationElement

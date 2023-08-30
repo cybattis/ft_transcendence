@@ -15,6 +15,20 @@ export namespace SocketManager {
     needsToConnect: () => boolean;
   };
 
+  let socketErrorCallback: () => void = () => {};
+
+  export function onSocketErrorCallback(callback: () => void): void {
+    socketErrorCallback = callback;
+  }
+
+  export function offSocketErrorCallback(): void {
+    socketErrorCallback = () => {};
+  }
+
+  export function fireSocketErrorCallback(): void {
+    socketErrorCallback();
+  }
+
   export function configureSocket(
     endpoint: string,
     parameters: SocketParameters

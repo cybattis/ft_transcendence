@@ -8,7 +8,7 @@ import Select from "react-select";
 import { ChatClientSocket } from "./Chat-client";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import joinButton from "../../resource/more-logo.png";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Avatar } from "../../components/Avatar";
 import UsersList from "./List/UsersList";
 import { ErrorModalChat } from "../../components/Modal/PopUpModal";
@@ -22,7 +22,9 @@ import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
+import {TypeCheckers} from "../../utils/type-checkers";
 import { useData } from "../../hooks/UseData";
+import { PageLink } from "../../components/Navigation/PageLink";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
@@ -60,15 +62,14 @@ export default function ChatClient() {
 
   if (token) {
     try {
-      payload = jwt_decode(token);
       username = UserData.getNickname();
-      if (!username || username === "")
-      {
-        let decoded: any = jwt_decode(token);
-        if (decoded?.nickname) username = decoded.nickname;
+      if (!username || username === "") {
+        payload = jwt_decode(token);
+        if (TypeCheckers.isTokenData(payload))
+          if (payload?.nickname) username = payload.nickname;
       }
-    } catch (e) {
     }
+    catch (e) {}
   }
 
   interface InviteToGameProps {
@@ -422,7 +423,7 @@ export default function ChatClient() {
         if (isInvitedToGame) setIsInvitedToGame(false);
       }
     };
-  
+
     function inviteToCasualGame() {
       props.setStatus(true);
       MatchmakingClient.inviteUserToCasualGame(props.data.id)
@@ -431,7 +432,7 @@ export default function ChatClient() {
           setErrorMessage(err.message);
         });
     }
-  
+
     function inviteToRankedGame() {
       props.setStatus(true);
       MatchmakingClient.inviteUserToRankedGame(props.data.id)
@@ -445,7 +446,7 @@ export default function ChatClient() {
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
-  
+
     if (!props.status) {
       return (
         <div className="invites-game">
@@ -535,8 +536,7 @@ export default function ChatClient() {
             if (res.includes(usr))
               setBlocked(true);
           })
-          .catch((error) => {
-          });
+          .catch((error) => {});
       }
       getBlockedUsrs();
 
@@ -566,9 +566,9 @@ export default function ChatClient() {
               Choose your action on {usr}
             </h4>
             <div className="ctn-btn-action">
-              <Link to={`/profile/${usr}`}>
+              <PageLink to={`/profile/${usr}`}>
                 <button className="chat-buttons">Profile</button>
-              </Link>
+              </PageLink>
             </div>
           </form>
         </div>
@@ -629,9 +629,9 @@ export default function ChatClient() {
                 Sub operator
               </button>
             )}
-            <Link to={`/profile/nickname/${usr}`}>
+            <PageLink to={`/profile/nickname/${usr}`}>
               <button className="chat-buttons">Profile</button>
-            </Link>
+            </PageLink>
             {!me && isHere && (
               <button className="chat-buttons" onClick={handleInviteGame}>
                 Invite to Play
@@ -793,7 +793,7 @@ export default function ChatClient() {
           .catch ((error) => {
             if (!Fetching.isFetchingError(error))
               return;
-            if (error.isRequestError()) {   
+            if (error.isRequestError()) {
               if (error.code === 400)
                 setErrorInput("Password mismatch.");
             } else if (error.isServerError()) {
@@ -811,7 +811,7 @@ export default function ChatClient() {
         .catch ((error) => {
           if (!Fetching.isFetchingError(error))
             return;
-          if (error.isRequestError()) {   
+          if (error.isRequestError()) {
             if (error.code === 400)
               setErrorInput("Password mismatch.");
           } else if (error.isServerError()) {
@@ -1107,12 +1107,12 @@ export default function ChatClient() {
         }
       }
 
-      
+
       if (takeActiveCanal()[0] !== '#' && isPriv === false)
       setIsPriv(true);
       else if (takeActiveCanal()[0] === '#' && isPriv === true)
       setIsPriv(false);
-      
+
       const getChan = async () => {
       const channel = takeActiveCanal();
       if (channel[0] === '#' && channel !== "#general")
@@ -1124,16 +1124,16 @@ export default function ChatClient() {
       setInGeneral(true);
     }
     getChan();
-    
+
     const fetchAllChannels = async () => {
       await get<string[]>('user/myChannels')
       .then((response) => {
         setAllChannels(response);
       }).catch(showErrorInModal);
     }
-    
+
     fetchAllChannels();
-    
+
     if (!channelList.includes(defaultChannelGen)) {
       const send = { username: username, channel: defaultChannelGen };
       console.log(send);
@@ -1287,7 +1287,6 @@ export default function ChatClient() {
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
     fetchMessage(takeActiveCanal());
-    console.log(roomChange);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

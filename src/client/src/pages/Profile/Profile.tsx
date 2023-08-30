@@ -249,8 +249,7 @@ function PaddleColor(props: {
                 setHue(RGBToHSL(actualColor));
               })
               .catch(showErrorInModal);
-          } catch (error) {
-          }
+          } catch (error) {}
         }
         else
           showErrorInModal(err);
@@ -291,8 +290,7 @@ function PaddleColor(props: {
                 setHue(RGBToHSL(actualColor));
               })
               .catch(showErrorInModal);
-          } catch (error) {
-          }
+          } catch (error) {}
         }
         else
           showErrorInModal(err);
@@ -372,8 +370,7 @@ export function Profile(props: {data: UserInfo}) {
       decoded = jwt_decode(token);
       if (!TypeCheckers.isTokenData(decoded))
         return;
-    } catch (error) {
-    }
+    } catch (error) {}
 
     function checkFriendStatus(meData: UserFriendsData) {
     if (!decoded) return;

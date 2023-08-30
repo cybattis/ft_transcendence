@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import "./Friends.css";
 import { Avatar } from "../Avatar";
-import { Link } from "react-router-dom";
+
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { UserFriend } from "../../type/user.type";
 import { useFetcher } from "../../hooks/UseFetcher";
+import { PageLink } from "../Navigation/PageLink";
 
 function Online(props: { inGame: boolean }) {
   return (
@@ -45,7 +46,7 @@ function FriendsList() {
           {friendsStatus.map((friendData) => {
             return (
               <div className="friends" key={friendData.nickname}>
-                <Link
+                <PageLink
                   to={`/profile/nickname/${friendData.nickname}`}
                   className="friendLink"
                 >
@@ -56,7 +57,7 @@ function FriendsList() {
                     {friendData.online ? <Online inGame={friendData.inGame} /> : <Offline />}
                   </div>
                   <p className="nickname">{friendData.nickname}</p>
-                </Link>
+                </PageLink>
               </div>
             );
           })}

@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import "./NavButton.css";
 import { useContext, useEffect, useState } from "react";
 import notifsLogo from "../../resource/logo-notifications.png";
@@ -10,6 +10,10 @@ import { MultiplayerClient } from "../../game/networking/multiplayer-client";
 import { removeMultiplayerGame } from "../../game/PongManager";
 import { GameInvite } from "../../type/game.type";
 import { useFetcher } from "../../hooks/UseFetcher";
+import { PageLink } from "../Navigation/PageLink";
+import { Fetching } from "../../utils/fetching";
+import put = Fetching.put;
+import { Navigation } from "../../utils/navigation";
 
 export function NavButton(props: {
   link: string;
@@ -17,17 +21,17 @@ export function NavButton(props: {
   callback?: () => void;
 }) {
   return (
-    <Link to={props.link} className="navLink" onClick={props.callback}>
+    <PageLink to={props.link} className={"navLink"} onClick={props.callback}>
       {props.content}
-    </Link>
+    </PageLink>
   );
 }
 
 export function PlayButton(props: { text: string; link: string; callback?: () => void;}) {
   return (
-    <Link to={props.link} className="playButton" onClick={props.callback}>
+    <PageLink to={props.link} className="playButton" onClick={props.callback}>
       {props.text}
-    </Link>
+    </PageLink>
   );
 }
 
@@ -37,25 +41,23 @@ export function DisconnectButton(props: { callback?: () => void }) {
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
+    Navigation.disconnect();
+    await MatchmakingClient.leaveMatchmaking();
+    await put<void>("auth/disconnect", {})
+      .catch(() => {});
     setAuthed(false);
-    removeMultiplayerGame();
-    MultiplayerClient.quitGame();
-    ChatClientSocket.disconnect();
-    MultiplayerClient.disconnect();
-    MatchmakingClient.disconnect();
-    localStorage.clear();
     return <Navigate to={'/'} />;
   };
 
   return (
-    <Link
+    <PageLink
       to="/"
       className="navLink"
       id={"disconnectButton"}
       onClick={handleDisconnect}
     >
       Disconnect
-    </Link>
+    </PageLink>
   );
 }
 
@@ -69,13 +71,14 @@ function BellNotif({
   const { get } = useFetcher();
 
   useEffect(() => {
-    const fetchNotifs = async () => {
-      await get<boolean>("user/notifs")
+    const fetchNotifs = () => {
+      get<boolean>("user/notifs")
       .then((res) => {
         if (res) setHasNotifs(true);
       })
       .catch(() => {});
-      await get<GameInvite[]>("game-invites")
+
+      get<GameInvite[]>("game-invites")
       .then((res) => {
         if (res && res[0]) setHasNotifs(true);
       })
@@ -103,13 +106,9 @@ export function Notification() {
   const [hasNotifs, setHasNotifs] = useState(false);
 
   return (
-    <Link to={`/notifications`} className="notifs" onClick={() => {
-      setHasNotifs(false)
-      removeMultiplayerGame();
-      MultiplayerClient.quitGame();
-    }} >
+    <PageLink to={`/notifications`} className="notifs" onClick={() => setHasNotifs(false)}>
       <BellNotif hasNotifs={hasNotifs} setHasNotifs={setHasNotifs}/>
       Notifs
-    </Link>
+    </PageLink>
   );
 }

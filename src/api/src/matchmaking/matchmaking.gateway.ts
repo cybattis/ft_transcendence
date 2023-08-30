@@ -6,7 +6,8 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer, WsException
+  WebSocketServer,
+  WsException
 } from "@nestjs/websockets";
 import { Server } from "socket.io";
 import { MatchmakingService } from "./matchmaking.service";
@@ -16,6 +17,7 @@ import { AuthedSocket } from "../auth/types/auth.types";
 import { Public } from "../auth/guards/PublicDecorator";
 import { AuthService } from "../auth/auth.service";
 import { APIError } from "../utils/errors";
+import { MatchmakingPlayerStatusDTO } from "./types/matchmaking.type";
 
 @UseGuards(WsAuthGuard)
 @WebSocketGateway({
@@ -28,6 +30,8 @@ export class MatchmakingGateway
   @WebSocketServer()
   server: Server;
 
+  private static connections: Map<number, number> = new Map<number, number>();
+
   constructor(
     private matchmakingService: MatchmakingService,
     private authService: AuthService
@@ -35,11 +39,16 @@ export class MatchmakingGateway
 
   afterInit(server: Server) {
     this.server = server;
+    this.matchmakingService.setServer(server);
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
+        console.log('An authorized user connected to the matchmaking server');
         next();
       } else {
+        console.log(
+          'An unauthorized user tried to connect to the matchmaking server',
+        );
         socket.emit('unauthorized');
         next(new WsException('Unauthorized'));
       }
@@ -47,10 +56,24 @@ export class MatchmakingGateway
   }
 
   handleConnection(socket: AuthedSocket) {
+    console.log('A user connected to the matchmaking server');
+    socket.join(getSyncRoom(socket));
+    const connectionNumber = MatchmakingGateway.connections.get(socket.userId);
+    if (connectionNumber !== undefined)
+      MatchmakingGateway.connections.set(socket.userId, connectionNumber + 1);
+    else
+      MatchmakingGateway.connections.set(socket.userId, 1);
   }
 
-  handleDisconnect(client: AuthedSocket) {
-    this.matchmakingService.leaveMatchmaking(client.userId);
+  async handleDisconnect(client: AuthedSocket): Promise<void> {
+    console.log('A user disconnected from the matchmaking server');
+    const connectionNumber = MatchmakingGateway.connections.get(client.userId);
+    if (connectionNumber !== undefined) {
+      MatchmakingGateway.connections.set(client.userId, connectionNumber - 1);
+      if (connectionNumber === 1)
+        await this.matchmakingService.leaveMatchmaking(client.userId);
+    } else
+      MatchmakingGateway.connections.set(client.userId, 0);
   }
 
   @SubscribeMessage('invite-user-to-casual-game')
@@ -189,6 +212,10 @@ export class MatchmakingGateway
           return "You are already in matchmaking.";
       }
     }
+
+    client
+      .to(getSyncRoom(client))
+      .emit("sync", this.matchmakingService.getPlayerStatus(client.userId));
     return "OK";
   }
 
@@ -196,7 +223,11 @@ export class MatchmakingGateway
   async handleLeaveMatchmakingCasual(
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
-    this.matchmakingService.leaveMatchmakingCasual(client.userId);
+    await this.matchmakingService.leaveMatchmakingCasual(client.userId);
+
+    client
+      .to(getSyncRoom(client))
+      .emit("sync", this.matchmakingService.getPlayerStatus(client.userId));
     return "OK";
   }
 
@@ -216,6 +247,10 @@ export class MatchmakingGateway
           return "You are already in matchmaking.";
       }
     }
+
+    client
+      .to(getSyncRoom(client))
+      .emit("sync", this.matchmakingService.getPlayerStatus(client.userId));
     return "OK";
   }
 
@@ -223,7 +258,11 @@ export class MatchmakingGateway
   async handleLeaveMatchmakingRanked(
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
-    this.matchmakingService.leaveMatchmakingRanked(client.userId);
+    await this.matchmakingService.leaveMatchmakingRanked(client.userId);
+
+    client
+      .to(getSyncRoom(client))
+      .emit("sync", this.matchmakingService.getPlayerStatus(client.userId));
     return "OK";
   }
 
@@ -231,14 +270,25 @@ export class MatchmakingGateway
   async handleAcceptFoundGame(
     @ConnectedSocket() client: AuthedSocket,
   ): Promise<string> {
-    const result = await this.matchmakingService.acceptFoundGame(client.userId);
+    const result = await this.matchmakingService.acceptFoundGame(client.userId, client);
     if (result.isErr()) {
       switch(result.error) {
         case APIError.GameNotFound:
           return "Couldn't find the game you're trying to accept.";
       }
     }
+
+    client
+      .to(getSyncRoom(client))
+      .emit("sync", this.matchmakingService.getPlayerStatus(client.userId));
     return "OK";
+  }
+
+  @SubscribeMessage('get-status')
+  async handleGetStatus(
+    @ConnectedSocket() client: AuthedSocket,
+  ): Promise<MatchmakingPlayerStatusDTO> {
+    return this.matchmakingService.getPlayerStatus(client.userId);
   }
 
   @Public()
@@ -250,4 +300,8 @@ export class MatchmakingGateway
     client.handshake.auth.token = token;
     return "OK";
   }
+}
+
+function getSyncRoom(socket: AuthedSocket): string {
+  return "matchmaking-sync-" + socket.userId.toString();
 }

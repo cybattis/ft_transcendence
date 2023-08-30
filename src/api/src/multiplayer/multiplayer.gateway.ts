@@ -45,8 +45,12 @@ export class MultiplayerGateway
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
+        console.log('An authorized user connected to the multiplayer server');
         next();
       } else {
+        console.log(
+          'An unauthorized user tried to connect to the multiplayer server',
+        );
         socket.emit('unauthorized');
         next(new WsException('Unauthorized'));
       }
@@ -54,9 +58,11 @@ export class MultiplayerGateway
   }
 
   handleConnection(client: AuthedSocket): void {
+    console.log('A user connected to the multiplayer server');
   }
 
   async handleDisconnect(client: AuthedSocket): Promise<void> {
+    console.log('A user disconnected from the multiplayer server');
     const user = await this.userService.findByID(client.userId);
     if (user.isErr()) return;
 
@@ -76,6 +82,7 @@ export class MultiplayerGateway
 
   @SubscribeMessage('quit')
   async handleQuit(@ConnectedSocket() client: AuthedSocket): Promise<string> {
+    console.log("A user quit the game: ", client.userId);
     await this.multiplayerService.disconnectPlayerFromGame(client);
     return "OK";
   }
