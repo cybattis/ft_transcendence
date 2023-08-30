@@ -140,7 +140,8 @@ export class AuthController {
     const token = getTokenOrThrow(header);
     const decoded = decodeTokenOrThrow(header, this.jwtService);
 
-    await this.authService.checkCode(body.code, decoded.email);
+    if (!await this.authService.checkCode(body.code, decoded.email))
+      throw new ForbiddenException();
     const result = await this.userService.updateUser2FAstatus(token);
     if (result.isErr())
       throw new NotFoundException();

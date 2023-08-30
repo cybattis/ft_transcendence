@@ -350,10 +350,13 @@ export class UserService implements OnModuleInit {
     return success(TypeConverters.fromUserToUserFriendsData(me));
   }
 
-  async blockFriend(friendId: number, myId: number)
+  async blockFriend(friendUsername: string, myId: number)
     : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
   {
-    const result = await this.removeFriend(friendId, myId);
+    const friend: User | null = await this.usersRepository.findOne({where: { nickname: friendUsername } });
+    if (!friend)
+      return failure(APIError.UserNotFound);
+    const result = await this.removeFriend(friend.id, myId);
     if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
       return failure(result.error);
 
@@ -367,17 +370,6 @@ export class UserService implements OnModuleInit {
     });
     if (!me)
       return failure(APIError.UserNotFound);
-
-    const friend: User | null = await this.usersRepository.findOne({
-      where: { id: friendId },
-      select: {
-        id: true,
-        blockedById: true,
-        blockedChat: true,
-      },
-    });
-    if (!friend)
-      return failure(APIError.OtherUserNotFound);
 
     // Add friend to my blocked list
     me.blockedId.push(friend.id);
@@ -397,7 +389,7 @@ export class UserService implements OnModuleInit {
     return success(TypeConverters.fromUserToUserFriendsData(updated_me));
   }
 
-  async unblockFriend(friendId: number, myId: number)
+  async unblockFriend(friendUsername: string, myId: number)
     : Promise<Result<UserFriendsData, typeof APIError.UserNotFound | typeof APIError.OtherUserNotFound>>
   {
     const me: User | null = await this.usersRepository.findOne({
@@ -412,7 +404,7 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     const friend: User | null = await this.usersRepository.findOne({
-      where: { id: friendId },
+      where: { nickname: friendUsername },
       select: {
         id: true,
         blockedById: true,
@@ -605,7 +597,7 @@ export class UserService implements OnModuleInit {
   }
 
   async updateUserSettings(body: UserSettings, token: string)
-    : Promise<Result<User, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
+    : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     if (body.nickname.length == 0 || body.nickname.length > 15)
@@ -622,12 +614,13 @@ export class UserService implements OnModuleInit {
         return failure(APIError.NicknameAlreadyTaken);
 
       user.nickname = body.nickname;
+      await this.channelService.updateNickname(body, token);
     }
 
     user.firstname = body.firstname;
     user.lastname = body.lastname;
     await this.usersRepository.save(user);
-    return success(user);
+    return success(TypeConverters.fromUserToUserSettings(user));
   }
 
   async getUserFromToken(token: string)
@@ -704,7 +697,7 @@ export class UserService implements OnModuleInit {
       return failure(APIError.UserNotFound);
 
     const result: ChannelInvite[] = [];
-    for (let i = 0; user.invites.length; i++) {
+    for (let i = 0; user.invitesId[i]; i++) {
       const sender = await this.usersRepository.findOne({
         select: ['nickname', 'avatarUrl', 'id'],
         where: { id: user.invitesId[i] },
@@ -713,7 +706,7 @@ export class UserService implements OnModuleInit {
         continue;
 
       const temp: ChannelInvite = {
-        joinChannel: user.invites[i],
+        joinChannel: user.joinChannel[i],
         invitedByAvatar: sender.avatarUrl,
         invitedByUsername: sender.nickname,
       };
@@ -726,5 +719,12 @@ export class UserService implements OnModuleInit {
   async updateUserGameStatus(user: User) {
     user.inGame = false;
     await this.usersRepository.save(user);
+  }
+
+  async fetchAllMyChannels(id: number) {
+    const channels = await this.usersRepository.findOne({where: {id: id}});
+    if (channels)
+      return channels.chans;
+    return null;
   }
 }

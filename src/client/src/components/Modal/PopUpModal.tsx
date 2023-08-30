@@ -1,11 +1,23 @@
 import "./PopUpModal.css";
-import { MouseEvent, useContext, useRef } from "react";
+import { MouseEvent, useContext, useRef, useEffect } from "react";
 import { PopupContext } from "./Popup.context";
 import { PageLink } from "../Navigation/PageLink";
 
 export function ErrorModal(props: { onClose: () => void }) {
   const { errorMessage } = useContext(PopupContext);
   const ref = useRef<HTMLDivElement>(null);
+
+  const closeMenu = async () => {
+    props.onClose();
+  }
+
+  useEffect(() => {
+      document.addEventListener("click", closeMenu);
+
+      return () => {
+        document.removeEventListener("click", closeMenu);
+      }
+  }, []);
 
   return (
     <div
@@ -34,6 +46,18 @@ export function InfoModal(props: { onClose: () => void }) {
   const { infoMessage } = useContext(PopupContext);
   const ref = useRef<HTMLDivElement>(null);
 
+  const closeMenu = async () => {
+    props.onClose();
+  }
+
+  useEffect(() => {
+      document.addEventListener("click", closeMenu);
+
+      return () => {
+        document.removeEventListener("click", closeMenu);
+      }
+  }, []);
+
   return (
     <div
       ref={ref}
@@ -59,6 +83,18 @@ export function InfoModal(props: { onClose: () => void }) {
 
 export function GameNotFoundModal(props: { text: string, onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  const closeMenu = async () => {
+    props.onClose();
+  }
+
+  useEffect(() => {
+    document.addEventListener("click", closeMenu);
+
+    return () => {
+      document.removeEventListener("click", closeMenu);
+    }
+  }, []);
 
   if (props.text === "")
     return null;

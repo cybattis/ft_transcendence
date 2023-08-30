@@ -16,7 +16,6 @@ import { MultiplayerService } from "./multiplayer.service";
 import { BallUpdate, MovementUpdate } from "./types/multiplayer.types";
 import { UseGuards } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
-import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { APIError } from "../utils/errors";
 
@@ -46,12 +45,12 @@ export class MultiplayerGateway
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
-        //console.log('An authorized user connected to the multiplayer server');
+        console.log('An authorized user connected to the multiplayer server');
         next();
       } else {
-        //console.log(
-        //  'An unauthorized user tried to connect to the multiplayer server',
-        //);
+        console.log(
+          'An unauthorized user tried to connect to the multiplayer server',
+        );
         socket.emit('unauthorized');
         next(new WsException('Unauthorized'));
       }
@@ -59,11 +58,11 @@ export class MultiplayerGateway
   }
 
   handleConnection(client: AuthedSocket): void {
-    //console.log('A user connected to the multiplayer server');
+    console.log('A user connected to the multiplayer server');
   }
 
   async handleDisconnect(client: AuthedSocket): Promise<void> {
-    //console.log('A user disconnected from the multiplayer server');
+    console.log('A user disconnected from the multiplayer server');
     const user = await this.userService.findByID(client.userId);
     if (user.isErr()) return;
 

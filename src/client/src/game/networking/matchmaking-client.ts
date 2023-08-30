@@ -27,8 +27,6 @@ export namespace MatchmakingClient {
   export function connect(): boolean {
     if (socket && !socket.needsToConnect()) return true;
 
-    console.log("connecting to matchmaking server");
-
     const token = localStorage.getItem("token");
 
     const socketOptions = {
@@ -45,29 +43,24 @@ export namespace MatchmakingClient {
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
     socket.on("sync", (status: MatchmakingPlayerStatusDTO) => {
-      console.log("sync", status);
       syncCallbacks.forEach((callback) => callback(status));
     });
 
     socket.on("game-started", (opponentInfos: PlayerInfos) => {
-      console.log("game started", opponentInfos);
       currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback(false));
     });
 
     socket.on("game-started-invite", (opponentInfos: PlayerInfos) => {
-      console.log("game started from invite", opponentInfos);
       currentOpponentInfos = opponentInfos;
       gameStartedCallbacks.forEach((callback) => callback(true));
     });
 
     socket.on("game-invite-accepted", () => {
-      console.log("game invite accepted");
       gameInviteAcceptedCallbacks.forEach((callback) => callback());
     });
 
     socket.on("unauthorized", () => {
-      console.log("unauthorized");
       const token = localStorage.getItem("token");
       socket.emit("authorization", token ? { token } : {});
       SocketManager.fireSocketErrorCallback();

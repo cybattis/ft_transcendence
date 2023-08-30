@@ -202,7 +202,6 @@ export class MatchmakingService {
 
     console.log("Player " + playerId + " accepted the game");
     if (pendingCasualGame) {
-
       // Set the player as ready
       if (pendingCasualGame.player1.id === playerId) {
         pendingCasualGame.player1Ready = true;
@@ -542,7 +541,6 @@ export class MatchmakingService {
   private async addPlayerToCasualQueue(player: CasualMatchmakingPlayer): Promise<void> {
     // If there is at least one player in the queue, match them together
     if (this.casualMatchmakingQueue.length >= 1) {
-      console.log("Match!");
       this.createNewPendingCasualGame(this.casualMatchmakingQueue[0], player);
       this.removePlayerFromCasualQueue(this.casualMatchmakingQueue[0]);
       return;

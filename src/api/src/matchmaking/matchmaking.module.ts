@@ -10,7 +10,6 @@ import { AuthModule } from '../auth/auth.module';
 import { MultiplayerModule } from '../multiplayer/multiplayer.module';
 import { MatchmakingController } from "./matchmaking.controller";
 import { ChannelModule } from "../channel/channel.module";
-import { ChannelService } from "../channel/channel.service";
 import { Channel } from "../channel/entity/Channel.entity";
 import { Chat } from "../channel/entity/Chat.entity";
 

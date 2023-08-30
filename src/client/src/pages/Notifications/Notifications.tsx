@@ -8,6 +8,9 @@ import { GameInvite, GameType } from "../../type/game.type";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
 import { useNavigate } from "react-router-dom";
 import { PopupContext } from "../../components/Modal/Popup.context";
+import {TypeCheckers} from "../../utils/type-checkers";
+import jwt_decode from "jwt-decode";
+import {TokenData} from "../../type/client.type";
 
 interface NotificationItemProps {
   avatar: string | undefined,
@@ -23,6 +26,18 @@ export default function Notifications() {
   const { get, put, showErrorInModal } = useFetcher();
   const { setErrorMessage } = useContext(PopupContext);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (token === null) return;
+    try {
+      const decoded: TokenData = jwt_decode(token);
+      if (!TypeCheckers.isTokenData(decoded))
+        return;
+    } catch (error) {
+      return;
+    }
+  }, []);
 
   async function handleAccept(id: number) {
     if (id === undefined) return;
@@ -52,22 +67,26 @@ export default function Notifications() {
   }
 
   async function handleAcceptChannel(channel: string){
-    const oldChannel = channel;
-    if (channel[0] === '#')
-      channel = channel.substring(1);
-    put("chat-controller/request/" + channel, {})
-      .then(res => {
-        const newInvits: ChannelInvite[] = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
-        setChannelInvits(newInvits);
-      })
-      .catch(showErrorInModal);
+    if (token)
+    {
+      const myToken: TokenData = jwt_decode(token);
+      if (!TypeCheckers.isTokenData(myToken))
+        return;
+      const data = {
+          channel: channel,
+          targetID: myToken.id,
+      }
+      ChatClientSocket.AcceptInvitationChannel(data);
+      const newInvits: ChannelInvite[] = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== channel);
+      setChannelInvits(newInvits);
+    }
   }
 
   async function handleDeclineChannel(channel: string) {
     const oldChannel = channel;
     if (channel[0] === '#')
       channel = channel.substring(1);
-    put("chat-controller/decline/" + channel, {})
+    put<void>("chat-controller/decline/" + channel, {})
       .then(res =>{
         const newInvits: any = channelInvits.filter((channelInvits) => channelInvits.joinChannel !== oldChannel);
         setChannelInvits(newInvits);
@@ -144,7 +163,7 @@ export default function Notifications() {
       get<UserInfo>("user/profile/id/" + props.invite.invitingPlayerId)
         .then(infos => setUserInfo(infos))
         .catch(() => {});
-    });
+    }, []);
 
     return (userInfo === null ? <NotificationElementLoading/> :
       <NotificationElement

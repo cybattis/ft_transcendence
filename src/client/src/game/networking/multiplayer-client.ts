@@ -46,8 +46,6 @@ export namespace MultiplayerClient {
   export function connect(): boolean {
     if (socket && !socket.needsToConnect()) return true;
 
-    console.log("connecting to multiplayer server");
-
     const token = localStorage.getItem("token");
 
     const socketOptions: SocketParameters = {
@@ -64,12 +62,10 @@ export namespace MultiplayerClient {
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
     socket.on("update-score", (scoreUpdate: ScoreUpdate) => {
-      console.log("update-score");
       scoreUpdateCallback(scoreUpdate);
     });
 
     socket.on("game-start", (serveUpdate: ServeUpdate) => {
-      console.log("game started");
       gameStartedCallback(serveUpdate);
     });
 
@@ -86,17 +82,14 @@ export namespace MultiplayerClient {
     });
 
     socket.on("game-ended", () => {
-      console.log("game ended");
       gameEndedCallback.forEach((callback) => callback());
     });
 
     socket.on("ready-ack", (playerNumber: number) => {
-      console.log("ready ack");
       readyAckCallback(playerNumber);
     });
 
     socket.on("unauthorized", () => {
-      console.log("unauthorized");
       const token = localStorage.getItem("token");
       socket.emit("authorization", token ? { token } : {});
       SocketManager.fireSocketErrorCallback();

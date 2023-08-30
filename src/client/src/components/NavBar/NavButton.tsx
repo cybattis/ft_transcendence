@@ -6,6 +6,9 @@ import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { AuthContext } from "../Auth/auth.context";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
+import { MultiplayerClient } from "../../game/networking/multiplayer-client";
+import { removeMultiplayerGame } from "../../game/PongManager";
+import { GameInvite } from "../../type/game.type";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { PageLink } from "../Navigation/PageLink";
 import { Fetching } from "../../utils/fetching";
@@ -68,10 +71,16 @@ function BellNotif({
   const { get } = useFetcher();
 
   useEffect(() => {
-    const fetchNotifs = async () => {
+    const fetchNotifs = () => {
       get<boolean>("user/notifs")
       .then((res) => {
         if (res) setHasNotifs(true);
+      })
+      .catch(() => {});
+
+      get<GameInvite[]>("game-invites")
+      .then((res) => {
+        if (res && res[0]) setHasNotifs(true);
       })
       .catch(() => {});
     };

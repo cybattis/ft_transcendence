@@ -40,6 +40,10 @@ export type notificationEventCallback = {
   (): void;
 };
 
+export type newUsername = {
+  (newName: string): void;
+};
+
 export type newErrCallBack = {
   (data: { channel: string; reason: string }): void;
 };
@@ -55,6 +59,7 @@ export namespace ChatClientSocket {
   let newQuitCallBack: newQuitCallBack[] = [];
   let newInvCallBack: newInvCallBack[] = [];
   let notificationEventCallbacks: notificationEventCallback[] = [];
+  let changesCallBack: newUsername[] = [];
   let newErrCallBack: newErrCallBack[] = [];
 
   export function checkChatConnection(): boolean {
@@ -77,7 +82,6 @@ export namespace ChatClientSocket {
     };
 
     socket = SocketManager.configureSocket(wsBaseURL, socketOptions);
-    console.log("Client connect to chat server");
 
     socket.on("join", (room: string) => {
       newJoinChannel.forEach((callback) => callback(room));
@@ -121,13 +125,15 @@ export namespace ChatClientSocket {
     });
 
     socket.on("notification", () => {
-      console.log("Client receive notification event");
       notificationEventCallbacks.forEach((callback) => callback());
     });
 
     socket.on("err", (data: { channel: string; reason: string }) => {
-      console.log("recu err", data);
       newErrCallBack.forEach((callback) => callback(data));
+    });
+
+    socket.on("change-username", (newName: string) => {
+      changesCallBack.forEach((callback) => callback(newName));
     });
 
     return true;
@@ -274,6 +280,19 @@ export namespace ChatClientSocket {
     socket.emit("notif-event", target);
   }
 
+  export function changedUsername(newName: string) {
+    if (!checkChatConnection()) return;
+    socket.emit("change-username", newName);
+  }
+
+  export function AcceptInvitationChannel(data: {
+    channel: string;
+    targetID: number;
+  }) {
+    if (!checkChatConnection()) return;
+    socket.emit("acc", data);
+  }
+
   export function sendGameChat(send: {
     username: string;
     opponent: string;
@@ -298,6 +317,10 @@ export namespace ChatClientSocket {
 
   export function onGameMessageRecieve(callback: newGameMessageCallBack) {
     newGameMessageCallBack.push(callback);
+  }
+
+  export function onChangeUsername(callback: newUsername) {
+    changesCallBack.push(callback);
   }
 
   export function onJoinChan(callback: newChannelCallBack) {
@@ -344,6 +367,12 @@ export namespace ChatClientSocket {
 
   export function offInv(callback: newInvCallBack) {
     newInvCallBack = newInvCallBack.filter((cb) => cb !== callback);
+  }
+
+  export function offChange(callback: newUsername) {
+    changesCallBack = changesCallBack.filter(
+      (cb) => cb !== callback
+    );
   }
 
   export function offErr(callback: newErrCallBack) {

@@ -12,7 +12,6 @@ import { Server, Socket } from 'socket.io';
 import { ChannelService } from '../channel/channel.service';
 import { UserService } from '../user/user.service';
 import {WsAuthGuard} from "../auth/guards/ws.auth.guard";
-import {JwtService} from "@nestjs/jwt";
 import { AuthedSocket } from "../auth/types/auth.types";
 import {AuthService} from "../auth/auth.service";
 
@@ -33,7 +32,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   private static connections: Map<number, number> = new Map<number, number>();
 
   constructor(
-    private readonly jwtService: JwtService,
     private readonly channelService: ChannelService,
     private readonly userService: UserService,
     private readonly authService: AuthService,
@@ -45,10 +43,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     this.server.use((socket: AuthedSocket, next) => {
       if (WsAuthGuard.validateSocketToken(socket, this.authService)) {
-        //console.log("An authorized user connected to the multiplayer server");
         next();
       } else {
-        //console.log("An unauthorized user tried to connect to the multiplayer server");
         socket.emit('unauthorized');
         next(new WsException("Unauthorized"));
       }
@@ -56,7 +52,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   async handleConnection(socket: AuthedSocket) {
-    //console.log(`Client connected to chat: ${socket.userId}`);
     const connectionNumber = ChatGateway.connections.get(socket.userId);
     if (connectionNumber !== undefined)
       ChatGateway.connections.set(socket.userId, connectionNumber + 1);
@@ -67,7 +62,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   async handleDisconnect(socket: AuthedSocket) {
-    //console.log(`Client disconnected from chat: ${socket.userId}`);
     this.channelService.removeUserSocketFromList(socket);
     const connectionNumber = ChatGateway.connections.get(socket.userId);
     if (connectionNumber !== undefined) {
@@ -86,7 +80,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
       return;
-
     await this.channelService.sendMessage(
       this.server,
       socket,
@@ -131,7 +124,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     !data.type ? (type = '') : (type = data.type);
     if (username === '')
       return;
-    await this.channelService.joinOldChannel(socket, username);
+    //await this.channelService.joinOldChannel(socket, username);
 
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
@@ -364,7 +357,6 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   @SubscribeMessage('ping')
   handlePing() {
-    console.log(`Ping`);
     this.server.emit('pong');
   }
 
@@ -372,10 +364,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   async notifyEvent(@MessageBody() target: number) {
     const targetSocket = await this.channelService.getSocketById(target);
     if (!targetSocket) {
-      console.log(`socket not found`);
       return;
     }
     this.server.to(targetSocket).emit('notification');
+  }
+
+  @SubscribeMessage('change-username')
+  async changeUsernameUpdate(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody() newName: string,
+  ) {
+    socket.broadcast.emit('change-username', newName);
   }
 
   @SubscribeMessage('inv')
@@ -389,12 +388,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('acc')
   async AcceptInvitationChannel(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { channel: string; target: string },
+    @MessageBody() data: { channel: string; targetID: number },
   ) {
     await this.channelService.AcceptInvitationChannel(
+      socket,
       this.server,
       data.channel,
-      data.target,
+      data.targetID,
     );
   }
 }

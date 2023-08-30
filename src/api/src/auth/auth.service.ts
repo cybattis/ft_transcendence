@@ -131,7 +131,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       return failure(APIError.UserIsIntra);
 
     const isVerified = await this.userService.isVerified(user.email);
-    if (isVerified.isErr())
+    if (isVerified.isErr() || isVerified.value == false)
       return failure(APIError.UserNotVerified);
 
     const authActivated = await this.userService.authActivated(user.email);
@@ -271,7 +271,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   validateToken(token: string): Result<TokenData, false> {
     if (AuthService.invalidTokens.includes(token)) {
-      console.log('LIST: invalid token: ', token);
       return failure(false);
     }
 
@@ -286,7 +285,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       }
       return success(payload);
     } catch (e) {
-      console.log('Error :', e);
       return failure(false);
     }
   }
