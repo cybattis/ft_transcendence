@@ -637,7 +637,6 @@ export class ChannelService implements OnModuleInit {
       const find: Channel[] = await this.channelRepository.find({
         where: { status: 'message' },
       });
-      console.log(find);
       for (let index = 0; find[index]; index++) {
         if (
           (find[index].users[0] == sender && find[index].users[1] == channel) ||

@@ -46,6 +46,7 @@ export interface ChannelInvite {
   joinChannel: string,
   invitedByAvatar?: string,
   invitedByUsername: string,
+  
 }
 
 export interface Channel {

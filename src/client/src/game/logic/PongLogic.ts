@@ -120,8 +120,8 @@ export class PongLogic {
     return this.rightPaddle;
   }
 
-  public setBackgroundColor(color: string): void {
-    this.backgroundColor = color;
+  public setBackgroundColor(color: RgbColor): void {
+    this.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`;
   }
 
   public setLeftPaddleColor(color: string): void {

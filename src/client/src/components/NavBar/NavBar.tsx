@@ -71,7 +71,7 @@ function MobileNavBar() {
           />
           <NavButton
             content={"Profile"}
-            link={`/profile/my-profile`}
+            link={`/my-profile`}
           />
           <NavButton
             content={"Settings"}

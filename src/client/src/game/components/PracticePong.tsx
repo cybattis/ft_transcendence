@@ -10,15 +10,16 @@ export type PracticePongProps = {
   height: number;
   aiDifficulty: AIDifficulty;
   paddleColor: RgbColor;
+  backgroundColor: RgbColor;
 }
 
-export function PracticePong({name, width, height, aiDifficulty, paddleColor}: PracticePongProps) {
+export function PracticePong({name, width, height, aiDifficulty, paddleColor, backgroundColor}: PracticePongProps) {
   let canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!canvasRef || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    createNewPracticeGame(new PracticePongState(name, canvas, aiDifficulty, paddleColor));
+    createNewPracticeGame(new PracticePongState(name, canvas, aiDifficulty, paddleColor, backgroundColor));
 
     return () => removePracticeGame(name);
   }, [name, height, aiDifficulty, width]);

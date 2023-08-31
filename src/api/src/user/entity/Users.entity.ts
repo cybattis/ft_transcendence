@@ -112,4 +112,7 @@ export class User {
   // ============================================================
   @Column({ type: 'varchar', length: 6, default: 'ffffff' })
   paddleColor: string;
+
+  @Column({ type: 'varchar', default: 'Normal' })
+  backgroundColor: string;
 }

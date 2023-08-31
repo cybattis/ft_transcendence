@@ -134,8 +134,8 @@ export class MultiplayerPongLogic {
     return this.playerPaddle;
   }
 
-  public setBackgroundColor(color: string): void {
-    this.backgroundColor = color;
+  public setBackgroundColor(color: RgbColor): void {
+    this.backgroundColor = `rgba(${color.r}, ${color.g}, ${color.b}, 1)`;
   }
 
   public setOpponentPaddleColor(color: RgbColor): void {

@@ -17,6 +17,7 @@ export default function Home() {
 
 export function HomeUnlogged() {
   const paddleColor: RgbColor = stringToRGB("ffffff");
+  const backgroundColor: RgbColor = stringToRGB("000000");
 
   return (
     <div className={"homeUnlogged"}>
@@ -31,6 +32,7 @@ export function HomeUnlogged() {
           height={400}
           aiDifficulty={"Medium"}
           paddleColor={paddleColor}
+          backgroundColor={backgroundColor}
         />
       </div>
     </div>

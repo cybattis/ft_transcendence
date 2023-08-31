@@ -399,6 +399,40 @@ export class UserController{
   }
 
   @UseGuards(TokenGuard)
+  @Get('customization/backgroundColor/:id')
+  async getBackgroundColor(@Param('id') id: number): Promise<string> {
+    const result = await this.userService.getBackgroundColor(Number(id));
+    if (result.isErr())
+      throw new NotFoundException();
+    return result.value;
+  }
+
+  @UseGuards(TokenGuard)
+  @Put('customization/backgroundColor')
+  async updateBackgroundColor(
+    @Body() body: { color: string },
+    @Headers('Authorization') header: Headers,
+  ): Promise<void> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const clientId = payload.id;
+
+    const result = await this.userService.updateBackgroundColor(
+      clientId,
+      body.color,
+    );
+
+    if (result.isErr()) {
+      switch (result.error) {
+        case APIError.UserNotFound:
+          throw new ForbiddenException();
+        case APIError.InvalidColor: {
+          throw new BadRequestException('Invalid color');
+        }
+      }
+    }
+  }
+
+  @UseGuards(TokenGuard)
   @Get('customization/paddleColor/:id')
   async getPaddleColor(@Param('id') id: number): Promise<string> {
     const result = await this.userService.getPaddleColor(Number(id));

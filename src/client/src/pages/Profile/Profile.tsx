@@ -187,6 +187,121 @@ function InviteToGame(props: InviteToGameProps) {
   }
 }
 
+function BackgroundColor() {
+  const { setErrorMessage, setInfoMessage } = useContext(PopupContext);
+  const [color, setColor] = useState<string>("");
+  const { get, put, showErrorInModal } = useFetcher();
+
+  function updateBackground(): void {
+    put("user/customization/backgroundColor",
+      { color: color },
+      "application/json")
+      .then(() => {
+        if (color === "Normal")
+          UserData.updateBackgroundColor("000000");
+        else if (color === "Grass")
+          UserData.updateBackgroundColor("279630");
+        else if (color === "Dirt")
+          UserData.updateBackgroundColor("914C0A");
+        setInfoMessage("Color updated successfully!");
+      })
+      .catch((err) => {
+        if (!Fetching.isFetchingError(err))
+          return;
+        if (err.isRequestError() && err.code === 400) {
+          setErrorMessage(err.message);
+
+          let decoded: TokenData;
+          const token = localStorage.getItem("token");
+          if (!token)
+            return;
+          try {
+            decoded = jwt_decode(token);
+            if (!TypeCheckers.isTokenData(decoded))
+              return;
+            get<string>("user/customization/backgroundColor/" + decoded.id)
+              .then(serverColor => {
+                setColor(serverColor);
+              })
+              .catch(showErrorInModal);
+          } catch (error) {}
+        }
+        else
+          showErrorInModal(err);
+      });
+  }
+
+  function resetBackground(): void {
+    put("user/customization/backgroundColor",
+        { color: "Normal" },
+        "application/json")
+      .then(() => {
+        UserData.updateBackgroundColor("000000");
+        setInfoMessage("Color reset successfully!");
+        setColor("Normal");
+      })
+      .catch((err) => {
+        if (!Fetching.isFetchingError(err))
+          return;
+        if (err.isRequestError() && err.code === 400) {
+          setErrorMessage(err.message);
+
+          let decoded: TokenData;
+          const token = localStorage.getItem("token");
+          if (!token)
+            return;
+          try {
+            decoded = jwt_decode(token);
+            if (!TypeCheckers.isTokenData(decoded))
+              return;
+            get<string>("user/customization/backgroundColor/" + decoded.id)
+              .then(serverColor => {
+                setColor(serverColor);
+              })
+              .catch(showErrorInModal);
+          } catch (error) {}
+        }
+        else
+          showErrorInModal(err);
+      });
+  }
+
+  const handleChange = async (color: string) => {
+    setColor(color);
+  }
+
+  return (
+    <>
+      <div className={"customization-content"}>
+        <h5>Customize your background</h5>
+        <div className={"customization-box"}>
+          <div className="background-custom">
+            <div className="bg-color">
+              <button className="btn-color-bg-n" onClick={() => {handleChange("Normal")}}>Normal</button>
+              <button className="btn-color-bg-g" onClick={() => {handleChange("Grass")}}>Grass</button>
+              <button className="btn-color-bg-d" onClick={() => {handleChange("Dirt")}}>Dirt</button>
+            </div>
+            <div className={"customization-button-box"}>
+              <button
+                className={"update-color-button"}
+                onClick={updateBackground}
+              >
+                Update background
+              </button>
+              <button
+                className={"update-color-button"}
+                onClick={resetBackground}
+              >
+                Reset background
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function PaddleColor(props: {
   oldColor: RgbColor;
   setOldColor: (value: RgbColor) => void;
@@ -457,7 +572,10 @@ export function Profile(props: {data: UserInfo}) {
         </div>
       </div>
       {customization ? (
-        <PaddleColor oldColor={oldColor} setOldColor={setOldColor} />
+        <div>
+          <PaddleColor oldColor={oldColor} setOldColor={setOldColor} />
+          <BackgroundColor />
+        </div>
       ) : null}
       <div className={"profile-stats"}>
         <div id={"level"}>

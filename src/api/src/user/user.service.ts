@@ -682,11 +682,35 @@ export class UserService implements OnModuleInit {
     return success(true);
   }
 
+  async updateBackgroundColor(id: number, color: string)
+    : Promise<Result<true, typeof APIError.InvalidColor | typeof APIError.UserNotFound>>
+  {
+    if (color !== "Normal" && color !== "Grass" && color !== "Dirt") {
+      return failure(APIError.InvalidColor);
+    }
+
+    const user = await this.usersRepository.findOneBy({id: id});
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    user.backgroundColor = color;
+    await this.usersRepository.save(user);
+
+    return success(true);
+  }
+
   async getPaddleColor(id: number)
     : Promise<Result<string, typeof APIError.UserNotFound>>
   {
     const user = await this.usersRepository.findOneBy({ id: id });
     return user !== null ? success(user.paddleColor) : failure(APIError.UserNotFound);
+  }
+
+  async getBackgroundColor(id: number)
+    : Promise<Result<string, typeof APIError.UserNotFound>>
+  {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    return user !== null ? success(user.backgroundColor) : failure(APIError.UserNotFound);
   }
 
   async fetchInvChannel(id : number)
