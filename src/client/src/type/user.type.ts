@@ -55,7 +55,7 @@ export interface Channel {
   users: string[],
   owner: string,
   operator: string[],
-  ban: string[],
+  ban: [string, Date],
   mute: string[],
   password: string,
 }

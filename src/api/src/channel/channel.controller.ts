@@ -16,11 +16,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, In } from 'typeorm';
 import { ChannelService } from './channel.service';
 import { JwtService } from '@nestjs/jwt';
-import { User } from 'src/user/entity/Users.entity';
 import { TokenGuard } from 'src/guard/token.guard';
 import { UserService } from 'src/user/user.service';
 import { TokenData } from 'src/type/jwt.type';
-import { UserSettings } from 'src/type/user.type';
 import { decodeTokenOrThrow } from "../utils/tokenUtils";
 import { APIError } from "../utils/errors";
 

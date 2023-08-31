@@ -17,7 +17,6 @@ import InvLogo from "../../resource/invite-logo.png";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
 import { Fetching } from "../../utils/fetching";
-import {TypeCheckers} from "../../utils/type-checkers";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
 
@@ -375,7 +374,7 @@ export default function ChatClient() {
           {errors ? <p className="error"> {errors} </p> : null}
           <div className="test">
             <label>
-              Time of ban(in ms)
+              Time of ban(m)
               <br />
               <input
                 type="text"
@@ -450,7 +449,12 @@ export default function ChatClient() {
           .then(channel => {
             if (!channel) return;
             if (channel.operator.includes(payload?.nickname)) setIsOpe(true);
-            if (channel.ban.includes(usr)) setIsBan(true);
+            for (let index = 0; index <= channel.ban.length; index++)
+            {
+              if (channel.ban[index] === usr){
+                setIsBan(true);
+              }
+            }
             if (channel.mute.includes(usr)) setIsMute(true);
           })
           .catch(() => {});

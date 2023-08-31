@@ -1,5 +1,5 @@
 import {BadRequestException, Injectable, NotFoundException, OnModuleInit} from '@nestjs/common';
-import {ChannelStructure} from './channel.structure';
+import {BanType, ChannelStructure} from './channel.structure';
 import {Server, Socket} from 'socket.io';
 import * as bcrypt from 'bcrypt';
 import {Chat} from './entity/Chat.entity';
@@ -15,7 +15,6 @@ import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
-import {TypeCheckers} from "../utils/type-checkers";
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -114,15 +113,12 @@ export class ChannelService implements OnModuleInit {
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return false;
     if (!this.checkUserIsHere(channelToUpdate.operator, username)) {
-      console.log(`Ban : ${username} isn't operator`);
       return false;
     }
     if (!this.checkUserIsHere(channelToUpdate.users, target)) {
-      console.log(`Ban : ${target} isn't users`);
       return false;
     }
     if (cmd === 'kick') {
-      console.log(`Kick Target ${target}`);
       await this.kickOp(channelToUpdate, target);
       await this.kickUser(channelToUpdate, target);
       const user = await this.usersRepository.findOne({where: {nickname: target}});
@@ -156,7 +152,6 @@ export class ChannelService implements OnModuleInit {
     if (!this.checkUserIsHere(channelToUpdate.operator, username))
       return `Ban : ${username} isn't operator`;
     const timeBan: number = this.valideTime(time);
-    console.log(`time : ${timeBan}`);
     if (cmd === '+b')
     {
       await this.actBan(channelToUpdate, target, timeBan);
@@ -186,7 +181,7 @@ export class ChannelService implements OnModuleInit {
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
-    if (!this.checkUserIsHere(channelToUpdate.ban, target))
+    if (!this.checkUserIsBanHere(channelToUpdate.ban, target))
       return `Ban : ${username} isn't banned.`;
     if (cmd === '-b') await this.actUnban(channelToUpdate, target);
     await this.deleteChannel(channelToUpdate);
@@ -202,15 +197,24 @@ export class ChannelService implements OnModuleInit {
         channelToUpdate.operator.splice(index, 1);
     }
     for (let index = 0; channelToUpdate.ban[index]; index++) {
-      if (channelToUpdate.ban[index] === target) return;
+      if (channelToUpdate.ban[index][0] === target) return;
     }
-    channelToUpdate.ban.push(target);
+    const date = new Date();
+    if (time === 0)
+      date.setMinutes(date.getMinutes() + 100000000);
+    else
+      date.setMinutes(date.getMinutes() + time);
+    
+    const banType: BanType = [target, date];
+    console.log("Date ban", date);
+    channelToUpdate.ban.push(banType);
     await this.channelRepository.save(channelToUpdate);
+    console.log(channelToUpdate);
   }
 
   async actUnban(channelToUpdate: Channel, target: string) {
     for (let index = 0; channelToUpdate.ban[index]; index++) {
-      if (channelToUpdate.ban[index] === target)
+      if (channelToUpdate.ban[index][0] === target)
         channelToUpdate.ban.splice(index, 1);
     }
     await this.channelRepository.save(channelToUpdate);
@@ -352,6 +356,13 @@ export class ChannelService implements OnModuleInit {
     return false;
   }
 
+  checkUserIsBanHere(liste: BanType[], username: string): boolean {
+    for (let index = 0; index < liste.length; index++) {
+      if (username === liste[index][0]) return true;
+    }
+    return false;
+  }
+
   async tryJoin(
     server: Server,
     socket: Socket,
@@ -365,19 +376,32 @@ export class ChannelService implements OnModuleInit {
       where: { channel: channel },
     });
     if (!channelToJoin) return;
+    if (this.checkUserIsBanHere(channelToJoin.ban, username)) {
+      for (let index = 0; index < channelToJoin.ban.length; index++){
+        if (channelToJoin.ban[index][0] === username){
+          const date : Date = new Date();
+          const comp : Date = new Date(channelToJoin.ban[index][1]);
+          if (date.getTime() - comp.getMinutes() < 0){
+            channelToJoin.ban.splice(index, 1);
+            await this.channelRepository.save(channelToJoin);
+            break;
+          }
+          else {
+            const reason = 'You are banned.';
+            const err = { channel, reason };
+            server.to(socket.id).emit('err', err);
+            return;
+          }
+        }
+      }
+    }
+    if (this.checkUserIsHere(channelToJoin.users, username)) {
+      const reason = 'You are aleready present';
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return;
+    }
     if (channelToJoin.status === 'public') {
-      if (this.checkUserIsHere(channelToJoin.ban, username)) {
-        const reason = 'You are banned.';
-        const err = { channel, reason };
-        server.to(socket.id).emit('err', err);
-        return;
-      }
-      if (this.checkUserIsHere(channelToJoin.users, username)) {
-        const reason = 'You are aleready present';
-        const err = { channel, reason };
-        server.to(socket.id).emit('err', err);
-        return;
-      }
       channelToJoin.users.push(username);
       await this.channelRepository.save(channelToJoin);
       socket.join(channel);
@@ -399,18 +423,6 @@ export class ChannelService implements OnModuleInit {
       server.to(socket.id).emit('err', err);
       return; // Only invitation
     } else if (channelToJoin.status === 'private') {
-      if (this.checkUserIsHere(channelToJoin.ban, username)) {
-        const reason = 'You are banned.';
-        const data = { channel, reason };
-        server.to(socket.id).emit('err', data);
-        return; // Send message pour deja liste banni
-      }
-      if (this.checkUserIsHere(channelToJoin.users, username)) {
-        const reason = 'You are already present.';
-        const err = { channel, reason };
-        server.to(socket.id).emit('err', err);
-        return; // deja present
-      }
       if (!(await bcrypt.compare(pass, channelToJoin.password))) {
         const reason = 'Bad password';
         const err = { channel, reason };
@@ -924,7 +936,7 @@ export class ChannelService implements OnModuleInit {
       channel: channel,
     });
     if (!channetToJoin) return; // Channel inexistant
-    if (channetToJoin.ban.includes(target)) return; // Target is Ban
+    if (this.checkUserIsBanHere(channetToJoin.ban, target)) return; // Target is Ban
     if (channetToJoin.users.includes(target)) return; // Is already present
     find.joinChannel.push(channel);
     find.invitesId.push(id);
@@ -948,7 +960,7 @@ export class ChannelService implements OnModuleInit {
       });
       if (!channelToUpdate) return; // Channel n'existe pas
       if (channelToUpdate.users.includes(find.nickname)) return; // Deja present
-      if (channelToUpdate.ban.includes(find.nickname)) return; // Il est banni
+      if (this.checkUserIsBanHere(channelToUpdate.ban, find.nickname)) return; // Il est banni
       channelToUpdate.users.push(find.nickname);
       const pos: number = find.joinChannel.indexOf(channel);
       find.joinChannel.splice(pos, 1);
@@ -1045,7 +1057,7 @@ export class ChannelService implements OnModuleInit {
         channel.owner === actual;
       channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       channel.operator = channel.operator.map((user: string) => (user === past ? actual : user));
-      channel.ban = channel.ban.map((user: string) => (user === past ? actual : user));
+      //channel.ban = channel.ban.map((user: banStructure) => (user.name === past ? actual : user.name));
       channel.mute = channel.mute.map((user: string) => (user === past ? actual : user));
     }
     await this.channelRepository.save(channels);
