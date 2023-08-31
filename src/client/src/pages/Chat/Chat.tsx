@@ -1107,6 +1107,10 @@ export default function ChatClient() {
         }
       }
 
+      if (!channelList.includes(defaultChannelGen)) {
+        const send = { username: username, channel: defaultChannelGen };
+        ChatClientSocket.joinChatServer(send);
+      }
 
       if (takeActiveCanal()[0] !== '#' && isPriv === false)
       setIsPriv(true);
@@ -1133,12 +1137,6 @@ export default function ChatClient() {
     }
 
     fetchAllChannels();
-
-    if (!channelList.includes(defaultChannelGen)) {
-      const send = { username: username, channel: defaultChannelGen };
-      console.log(send);
-      ChatClientSocket.joinChatServer(send);
-    }
 
     const messageCallBack = async (data: {
       sender: string;

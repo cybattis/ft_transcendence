@@ -41,8 +41,8 @@ export function DisconnectButton(props: { callback?: () => void }) {
   const handleDisconnect = async () => {
     if (props.callback) props.callback();
 
-    Navigation.disconnect();
     await MatchmakingClient.leaveMatchmaking();
+    Navigation.disconnect();
     await put<void>("auth/disconnect", {})
       .catch(() => {});
     setAuthed(false);

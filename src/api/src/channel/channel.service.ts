@@ -454,16 +454,6 @@ export class ChannelService implements OnModuleInit {
       channelToUpdate.users.push(username);
       await this.channelRepository.save(channelToUpdate);
       socket.emit('join', channel);
-      const sender = 'announce';
-      const msg = username + ' just joined the Server!';
-      const send = { sender, msg, channel, blockedChat };
-      await this.chatRepository.save({
-        channel: channel,
-        content: msg,
-        emitter: sender,
-        emitterId: 0,
-      });
-      socket.broadcast.emit('rcv', send);
     } else {
       const channelToJoin = await this.channelRepository.findOne({
         where: { channel: channel },
