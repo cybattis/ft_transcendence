@@ -203,6 +203,7 @@ export namespace ChatClientSocket {
 
   export function mute(sendMute: {
     cmd: string;
+    //time: string;
     username: string;
     target: string;
     channel: string;

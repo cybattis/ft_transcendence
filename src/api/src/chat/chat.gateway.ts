@@ -200,6 +200,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     await this.channelService.muteUser(
       socket,
       data.username,
+      //data.time,
       data.target,
       data.channel,
       blockedUsers.value.blockedChat,
@@ -283,6 +284,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
       await this.channelService.channelAnnoucement(
         socket,
+        this.server,
         data.channel,
         'banned',
         data.username,
@@ -311,6 +313,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       );
       await this.channelService.channelAnnoucement(
         socket,
+        this.server,
         data.channel,
         'unbanned',
         data.username,
@@ -345,6 +348,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
         await this.channelService.channelAnnoucement(
           socket,
+          this.server,
           data.channel,
           'kicked',
           data.username,

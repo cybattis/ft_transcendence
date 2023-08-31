@@ -233,6 +233,7 @@ export class ChannelService implements OnModuleInit {
 
       await this.channelAnnoucementOp(
         socket,
+        this.server,
         channel,
         'op',
         author,
@@ -247,6 +248,7 @@ export class ChannelService implements OnModuleInit {
 
       await this.channelAnnoucementOp(
         socket,
+        this.server,
         channel,
         'deop',
         author,
@@ -454,6 +456,7 @@ export class ChannelService implements OnModuleInit {
       channelToUpdate.users.push(username);
       await this.channelRepository.save(channelToUpdate);
       socket.emit('join', channel);
+      socket.broadcast.emit('change-username', username);
     } else {
       const channelToJoin = await this.channelRepository.findOne({
         where: { channel: channel },
@@ -712,6 +715,7 @@ export class ChannelService implements OnModuleInit {
 
   async channelAnnoucement(
     socket: Socket,
+    server: Server,
     channel: string,
     msg: string,
     sender: string,
@@ -729,11 +733,13 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
+      server.to(socket.id).emit('rcv', send);
     }
   }
 
   async channelAnnoucementOp(
     socket: Socket,
+    server: Server,
     channel: string,
     action: string,
     sender: string,
@@ -759,6 +765,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
+      server.to(socket.id).emit('rcv', send);
     }
   }
 

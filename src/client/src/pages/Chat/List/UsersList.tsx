@@ -9,6 +9,7 @@ import {TypeCheckers} from "../../../utils/type-checkers";
 export default function UsersList(props: {
   channel: string;
   messages: Chat[];
+  list: string[];
   handleButton: (target: string) => void;
 }) {
   const [usersList, setUsersList] = useState<string[]>([]);

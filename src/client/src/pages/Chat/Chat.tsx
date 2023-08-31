@@ -33,9 +33,11 @@ export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [roomChange, setRoomChange] = useState("");
   const [messages, setMessages] = useState<Chat[]>([]);
+  const [list, setList] = useState<string[]>([]);
   const blocedList: string[] = [];
   const [joinForm, setJoinForm] = useState(false);
   const [banForm, setBanForm] = useState(false);
+  const [muteForm, setMuteForm] = useState(false);
   const [messagePrivateForm, setMessagePrivateForm] = useState(false);
   const [buttons, setButtons] = useState(false);
   const [usr, setUsr] = useState("");
@@ -321,17 +323,6 @@ export default function ChatClient() {
     ChatClientSocket.unBan(sendBan);
   };
 
-  const handleMute = async () => {
-    const channel = takeActiveCanal();
-    const sendMute = {
-      cmd: "mute",
-      username: username,
-      target: usr,
-      channel: channel,
-    };
-    ChatClientSocket.mute(sendMute);
-  };
-
   const handleUnMute = async () => {
     const channel = takeActiveCanal();
     const sendMute = {
@@ -409,9 +400,80 @@ export default function ChatClient() {
     );
   }
 
+  function Mute() {
+    const [time, setTime] = useState("");
+    const [errors, setErrors] = useState("");
+
+    const isValidTime = async (time: string) => {
+      for (let i = 0; time[i]; i++) {
+        if (time[i] < "0" || time[i] > "9") return false;
+      }
+      return true;
+    };
+
+    const handleMute = async (e: any) => {
+      e.preventDefault();
+
+      if (!time || !time[0]) setTime("30000");
+      else if (time[0] === "-" || !isValidTime(time)) {
+        setErrors("Enter a valid time.");
+        return;
+      }
+
+      const channel = takeActiveCanal();
+      const sendMute = {
+        cmd: "mute",
+        //time: time,
+        username: username,
+        target: usr,
+        channel: channel,
+      };
+      ChatClientSocket.mute(sendMute);
+      setMuteForm(false);
+      setButtons(false);
+    };
+
+    function handleChange(e: any) {
+      e.preventDefault();
+
+      const value = e.target.value;
+      setTime(value);
+    }
+
+    return (
+      <div className="ban-form">
+        <form>
+          <h4>Mute {usr}</h4>
+          {errors ? <p className="error"> {errors} </p> : null}
+          <div className="test">
+            <label>
+              Time of mute(in ms)
+              <br />
+              <input
+                type="text"
+                name="time"
+                value={time}
+                className="input-join"
+                onChange={handleChange}
+              />
+            </label>
+          </div>
+          <button className="add" onClick={handleMute}>
+            Mute
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   const handleBanForm = async () => {
     if (banForm) setBanForm(false);
     else setBanForm(true);
+  };
+
+  const handleMuteForm = async () => {
+    if (muteForm) setMuteForm(false);
+    else setMuteForm(true);
   };
 
   function InviteToGame(props: InviteToGameProps) {
@@ -471,7 +533,8 @@ export default function ChatClient() {
 
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
-    const [me, setMe] = useState(true);
+    const [me, setMe] = useState<boolean>(false);
+    const [chanOwner, setChanOwner] = useState(false);
     const userData = useProfileData();
 
     const { data } = useData<UserInfo>(`user/profile/nickname/${usr}`, true);
@@ -504,7 +567,7 @@ export default function ChatClient() {
         let canal = takeActiveCanal();
         if (canal[0] === "#") canal = canal.slice(1);
 
-        get<Channel | null>("chat-controller/channelName/" + canal)
+        await get<Channel | null>("chat-controller/channelName/" + canal)
           .then(channel => {
             if (channel && channel.users.includes(usr)) setIsHere(true);
             else setIsHere(false);
@@ -518,10 +581,10 @@ export default function ChatClient() {
         if (name === defaultChannelGen) return;
         if (name[0] === "#") name = name.slice(1);
 
-        get<Channel | null>("chat-controller/channelName/" + name)
+        await get<Channel | null>("chat-controller/channelName/" + name)
           .then(channel => {
             if (!channel) return;
-            if (channel.operator.includes(payload?.nickname)) setIsOpe(true);
+            if (channel.operator.includes(username)) setIsOpe(true);
             if (channel.ban.includes(usr)) setIsBan(true);
             if (channel.mute.includes(usr)) setIsMute(true);
           })
@@ -529,12 +592,30 @@ export default function ChatClient() {
       }
       getOpeList();
 
+      async function isOwner() {
+        let name = takeActiveCanal();
+        if (name === defaultChannelGen) return;
+        if (name[0] === "#")
+          name = name.slice(1);
+        try {
+          await get<Channel | null>("chat-controller/channelName/" + name)
+          .then(channel => {
+            if (!channel) return;
+            if (channel.owner === usr) setChanOwner(true);
+            else if (chanOwner === true && channel.owner !== usr) setChanOwner(false);
+          })
+          .catch(() => {});
+        } catch (error) {}
+      }
+      isOwner();
+
       async function getBlockedUsrs() {
-          get<string[]>("user/blockedList")
+          await get<string[]>("user/blockedList")
           .then((res) => {
-            setBlocked(false);
             if (res.includes(usr))
               setBlocked(true);
+            else if (!res.includes(usr) && blocked === true)
+              setBlocked(false);
           })
           .catch((error) => {});
       }
@@ -544,7 +625,7 @@ export default function ChatClient() {
         const channel = takeActiveCanal();
         const channelB = channel.substring(1);
         const sendTarget = "chat-controller/channel/ope/" + channelB + "/" + usr;
-        get<boolean>(sendTarget)
+        await get<boolean>(sendTarget)
         .then((response) => {
           if (targetOp !== response)
             setTargetOp(response);
@@ -556,91 +637,98 @@ export default function ChatClient() {
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
 
-
-    if (me === true)
-    {
-      return (
-        <div className="buttons-form">
-          <form method="get" onSubmit={handleButtonForm}>
-            <h4 className="title-form-chat">
-              Choose your action on {usr}
-            </h4>
-            <div className="ctn-btn-action">
-              <PageLink to={`/profile/${usr}`}>
-                <button className="chat-buttons">Profile</button>
-              </PageLink>
-            </div>
-          </form>
-        </div>
-      )
-    }
-
     return (
       <div className="buttons-form">
         <form method="get" onSubmit={handleButtonForm}>
           <h4 className="title-form-chat">
             Choose your action on {usr}
           </h4>
-          <div className="ctn-btn-action">
-            {!me && isHere && !blocked && (
-              <button className="chat-buttons" onClick={handleBlock}>
-                Block
-              </button>
+          <div>
+            {me === false ? (
+              <div>
+                {isOpe === false ? (
+                  <div className="ctn-btn-action">
+                    <PageLink to={`/profile/nickname/${usr}`}>
+                      <button className="chat-buttons">Profile</button>
+                    </PageLink>
+                    {isHere && (
+                      <button className="chat-buttons" onClick={handleInviteGame}>
+                        Invite to Play
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                  <div className="ctn-btn-action">
+                          {!chanOwner && isHere && !blocked && (
+                            <button className="chat-buttons" onClick={handleBlock}>
+                              Block
+                            </button>
+                          )}
+                          {!chanOwner && isHere && isOpe && (
+                            <button className="chat-buttons" onClick={handleKick}>
+                              Kick
+                            </button>
+                          )}
+                          {!chanOwner && isHere && isOpe && !isBan && (
+                            <button className="chat-buttons" onClick={handleBanForm}>
+                              Ban
+                            </button>
+                          )}
+                          {!chanOwner && isHere && isOpe && !isMute && (
+                            <button className="chat-buttons" onClick={handleMuteForm}>
+                              Mute
+                            </button>
+                          )}
+                        </div>
+                        <div className="ctn-btn-action">
+                          {!chanOwner && isHere && isOpe && isMute && (
+                            <button className="chat-buttons" onClick={handleUnMute}>
+                              UnMute
+                            </button>
+                          )}
+                          {!chanOwner && !isHere && isOpe && isBan && (
+                            <button className="chat-buttons" onClick={handleUnBan}>
+                              UnBan
+                            </button>
+                          )}
+                          {!chanOwner && isHere && blocked && (
+                            <button className="chat-buttons" onClick={handleUnBlock}>
+                              UnBlock
+                            </button>
+                          )}
+                          {!chanOwner && isOpe && isHere && !targetOp && (
+                            <button className="chat-buttons" onClick={handleAddOpe}>
+                              Add operator
+                            </button>
+                          )}
+                          {!chanOwner && isOpe && isHere && targetOp && (
+                            <button className="chat-buttons" onClick={handleSubOpe}>
+                              Sub operator
+                            </button>
+                          )}
+                          <PageLink to={`/profile/nickname/${usr}`}>
+                            <button className="chat-buttons">Profile</button>
+                          </PageLink>
+                          {isHere && (
+                            <button className="chat-buttons" onClick={handleInviteGame}>
+                              Invite to Play
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                )}
+                </div>
+              ) : (
+              <div className="ctn-btn-action">
+                <PageLink to={`/profile/${usr}`}>
+                  <button className="chat-buttons">Profile</button>
+                </PageLink>
+              </div>
             )}
-            {!me && isHere && isOpe && (
-              <button className="chat-buttons" onClick={handleKick}>
-                Kick
-              </button>
-            )}
-            {!me && isHere && isOpe && !isBan && (
-              <button className="chat-buttons" onClick={handleBanForm}>
-                Ban
-              </button>
-            )}
-            {!me && isHere && isOpe && !isMute && (
-              <button className="chat-buttons" onClick={handleMute}>
-                Mute
-              </button>
-            )}
-          </div>
-          <div className="ctn-btn-action">
-            {!me && isHere && isOpe && isMute && (
-              <button className="chat-buttons" onClick={handleUnMute}>
-                UnMute
-              </button>
-            )}
-            {!me && !isHere && isOpe && isBan && (
-              <button className="chat-buttons" onClick={handleUnBan}>
-                UnBan
-              </button>
-            )}
-            {!me && isHere && blocked && (
-              <button className="chat-buttons" onClick={handleUnBlock}>
-                UnBlock
-              </button>
-            )}
-            {!me && isOpe && isHere && !targetOp && (
-              <button className="chat-buttons" onClick={handleAddOpe}>
-                Add operator
-              </button>
-            )}
-            {!me && isOpe && isHere && targetOp && (
-              <button className="chat-buttons" onClick={handleSubOpe}>
-                Sub operator
-              </button>
-            )}
-            <PageLink to={`/profile/nickname/${usr}`}>
-              <button className="chat-buttons">Profile</button>
-            </PageLink>
-            {!me && isHere && (
-              <button className="chat-buttons" onClick={handleInviteGame}>
-                Invite to Play
-              </button>
-            )
-
-            }
           </div>
           {banForm && <Ban />}
+          {muteForm && <Mute />}
           {inviteGame && data && <InviteToGame data={data} status={isInvitedToGame} setStatus={setIsInvitedToGame}/>}
         </form>
       </div>
@@ -1135,7 +1223,6 @@ export default function ChatClient() {
         setAllChannels(response);
       }).catch(showErrorInModal);
     }
-
     fetchAllChannels();
 
     const messageCallBack = async (data: {
@@ -1173,6 +1260,7 @@ export default function ChatClient() {
       username = UserData.getNickname();
       await fetchMessage(takeActiveCanal());
       await fetchAllChannels();
+      await fetchList(takeActiveCanal());
       if (takeActiveCanal()[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(takeActiveCanal()))
       {
         const canal = document.getElementById("canal");
@@ -1193,12 +1281,13 @@ export default function ChatClient() {
           if (canal) {
             canal.innerHTML = defaultChannelGen;
             setRoomChange(defaultChannelGen);
+            fetchAllChannels();
+            fetchMessage(takeActiveCanal());
           }
           return;
         }
       }
     };
-
     ChatClientSocket.addQuitCb(quitCallBack);
 
     const inviteCallBack = (data: { username: string; target: string }) => {
@@ -1207,7 +1296,6 @@ export default function ChatClient() {
           channelList.push(data.username);
           setRoomChange(data.username);
           const canal = document.getElementById("canal");
-          //if (canal) canal.innerHTML = data.username;
         }
       }
       if (data.username === username) {
@@ -1275,6 +1363,23 @@ export default function ChatClient() {
     }
   }
 
+  async function fetchList(channelFetch: string) {
+    if (channelFetch[0] !== "#") {
+      let addressInfo = "chat-controller/channelName/" + channelFetch;
+
+      await get<Channel | null>(addressInfo)
+        .then(chats => {if(chats) setList(chats.users)})
+        .catch(() => {});
+    } else {
+      channelFetch = channelFetch.substring(1);
+      let addressInfo = "chat-controller/channelName/" + channelFetch;
+
+      await get<Channel | null>(addressInfo)
+        .then(chats => {if(chats) setList(chats.users)})
+        .catch(() => {});
+    }
+  }
+
   async function doCmd(cmd: string, msg: string) {
     let channel = takeActiveCanal();
     const send = { username: username, channel: channel, msg: msg };
@@ -1293,6 +1398,8 @@ export default function ChatClient() {
       sendMessage();
     }
   };
+
+  //FAIRE EN SORTE QUE BOUTONS SOIT FIXS PAS DE CLIGNOTEMENT
 
   return (
     <div className="chat-div">
@@ -1335,6 +1442,7 @@ export default function ChatClient() {
         </div>
         {!isPriv && (<div className="user-lists">
           <UsersList
+            list={list}
             messages={messages}
             channel={takeActiveCanal()}
             handleButton={handleButton}
