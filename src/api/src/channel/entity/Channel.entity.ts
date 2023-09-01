@@ -22,6 +22,9 @@ export class Channel {
   operator: string[];
 
   @Column('text', { array: true })
+  banName: string[];
+
+  @Column('text', { array: true })
   ban: BanType[];
 
   @Column('text', { array: true })

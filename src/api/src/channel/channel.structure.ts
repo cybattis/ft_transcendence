@@ -6,6 +6,7 @@ export class ChannelStructure {
     public owner: string;
     public operator: string[];
     public pswd: string;
+    public banName: string[];
     public ban: BanType[];
     public mute: string[];
 
@@ -16,6 +17,7 @@ export class ChannelStructure {
         this.owner = username;
         this.operator = [];
         this.operator.push(username);
+        this.banName = [];
         this.ban = [];
         this.mute= [];
         this.pswd = "";
@@ -40,11 +42,10 @@ export class ChannelStructure {
 
     public isBan(username: string): boolean{
         for (let index = 0; index < this.ban.length; index++){
-            if (username === this.ban[index][0])
+            if (username === this.ban[index][0] || username === this.banName[index])
             {
                 const actualDate: Date = new Date();
                 if (this.ban[index][1] < actualDate){
-                    console.log(`ban ttrop grand`);
                     this.ban.splice(index, 1);
                     return false;
                 } else

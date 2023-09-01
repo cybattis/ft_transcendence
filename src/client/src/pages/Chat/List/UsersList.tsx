@@ -12,7 +12,7 @@ export default function UsersList(props: {
   handleButton: (target: string) => void;
 }) {
   const [usersList, setUsersList] = useState<string[]>([]);
-  const [banList, setBanList] = useState<[string, Date]>(['', new Date (0)]);
+  const [banList, setBanList] = useState<string[]>([]);
   const [muteList, setMuteList] = useState<string[]>([]);
   const [isOpe, setIsOpe] = useState(false);
   const { get } = useFetcher();
@@ -41,9 +41,8 @@ export default function UsersList(props: {
           if (!channel) return;
           if (channel.operator.includes(decoded.nickname)) setIsOpe(true);
           setUsersList(channel.users);
-          setBanList(channel.ban);
-          console.log("channel ban", channel.ban);
           setMuteList(channel.mute);
+          setBanList(channel.banName);
         })
         .catch(() => {});
     }
@@ -56,8 +55,8 @@ export default function UsersList(props: {
       return (
         <>
           <h4>Ban</h4>
-          {banList.map((username : [string, Date]) => (
-            <button className="user-list" key={username[0]} value={username} onClick={() => props.handleButton(username)}>
+          {banList.map((username) => (
+            <button className="user-list" key={username} value={username} onClick={() => props.handleButton(username)}>
               {username}
             </button>
           ))}

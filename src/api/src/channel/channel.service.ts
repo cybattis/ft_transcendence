@@ -49,6 +49,7 @@ export class ChannelService implements OnModuleInit {
         users: [],
         owner: '',
         operator: [],
+        banName: [],
         ban: [],
         mute: [],
         password: '',
@@ -206,14 +207,15 @@ export class ChannelService implements OnModuleInit {
       date.setMinutes(date.getMinutes() + time);
     
     const banType: BanType = [target, date];
-    console.log("Date ban", date);
     channelToUpdate.ban.push(banType);
+    channelToUpdate.banName.push(target);
     await this.channelRepository.save(channelToUpdate);
-    console.log(channelToUpdate);
   }
 
   async actUnban(channelToUpdate: Channel, target: string) {
     for (let index = 0; channelToUpdate.ban[index]; index++) {
+      if (channelToUpdate.banName[index] === target)
+        channelToUpdate.ban.splice(index, 1);
       if (channelToUpdate.ban[index][0] === target)
         channelToUpdate.ban.splice(index, 1);
     }
@@ -378,7 +380,7 @@ export class ChannelService implements OnModuleInit {
     if (!channelToJoin) return;
     if (this.checkUserIsBanHere(channelToJoin.ban, username)) {
       for (let index = 0; index < channelToJoin.ban.length; index++){
-        if (channelToJoin.ban[index][0] === username){
+        if (channelToJoin.ban[index][0] === username || channelToJoin.banName[index] === username){
           const date : Date = new Date();
           const comp : Date = new Date(channelToJoin.ban[index][1]);
           if (date.getTime() - comp.getMinutes() < 0){
@@ -514,6 +516,7 @@ export class ChannelService implements OnModuleInit {
           users: [username],
           owner: username,
           operator: [username],
+          banName: [],
           ban: [],
           mute: [],
           password: hash,
@@ -577,6 +580,7 @@ export class ChannelService implements OnModuleInit {
         owner: '',
         operator: [],
         ban: [],
+        banName: [],
         mute: [],
         password: '',
       });
@@ -1057,8 +1061,9 @@ export class ChannelService implements OnModuleInit {
         channel.owner === actual;
       channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       channel.operator = channel.operator.map((user: string) => (user === past ? actual : user));
-      //channel.ban = channel.ban.map((user: banStructure) => (user.name === past ? actual : user.name));
+      //channel.ban = channel.ban.map((user: BanType) => (user[0] === past ? actual : user[0]));
       channel.mute = channel.mute.map((user: string) => (user === past ? actual : user));
+      channel.banName = channel.banName.map((user: string) => (user === past ? actual : user));
     }
     await this.channelRepository.save(channels);
   }
@@ -1071,7 +1076,6 @@ export class ChannelService implements OnModuleInit {
       if (channel.users.includes(past)){
         const title = channel.channel.replace(past, actual);
         channel.channel = title;
-        console.log(title);
         channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       }
     }
