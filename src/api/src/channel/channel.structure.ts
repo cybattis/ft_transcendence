@@ -1,21 +1,4 @@
-export class banStructure {
-    public name: string;
-    public date: Date;
-
-    constructor(username: string, time: number) {
-        this.name = username;
-        this.date = new Date();
-        this.date = this.addMinutes(this.date, time);
-    }
-
-    public addMinutes(date: Date, minutes: number) {
-        if (minutes === 0)
-            date.setMinutes(date.getMinutes() + 100000000);
-        else
-            date.setMinutes(date.getMinutes() + minutes)
-        return date;
-    }
-}
+export type BanType = [string, Date];
 
 export class ChannelStructure {
     public name: string;
@@ -23,7 +6,8 @@ export class ChannelStructure {
     public owner: string;
     public operator: string[];
     public pswd: string;
-    public ban: banStructure[];
+    public banName: string[];
+    public ban: BanType[];
     public mute: string[];
 
     constructor (channelName: string, username: string, pass: string) {
@@ -33,6 +17,7 @@ export class ChannelStructure {
         this.owner = username;
         this.operator = [];
         this.operator.push(username);
+        this.banName = [];
         this.ban = [];
         this.mute= [];
         this.pswd = pass;
@@ -57,10 +42,10 @@ export class ChannelStructure {
 
     public isBan(username: string): boolean{
         for (let index = 0; index < this.ban.length; index++){
-            if (username === this.ban[index].name)
+            if (username === this.ban[index][0] || username === this.banName[index])
             {
                 const actualDate: Date = new Date();
-                if (this.ban[index].date < actualDate){
+                if (this.ban[index][1] < actualDate){
                     this.ban.splice(index, 1);
                     return false;
                 } else

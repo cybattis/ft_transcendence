@@ -46,6 +46,13 @@ export class UserService implements OnModuleInit {
     return result !== null ? success(result) : failure(APIError.UserNotFound);
   }
 
+  async findByUsername(nickname: string)
+    : Promise<User | null>
+  {
+    const result = await this.usersRepository.findOneBy({nickname: nickname });
+    return result;
+  }
+
   async findByID(id: number)
     : Promise<Result<User, typeof APIError.UserNotFound>>
   {

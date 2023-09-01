@@ -270,8 +270,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.channel,
       data.time,
     );
-    const targetSocket = await this.channelService.getSocketByUsername(
-      data.target,
+    const user = await this.userService.findByUsername(data.target);
+    if (!user) return;
+    const targetSocket = await this.channelService.getSocketById(
+      user.id,
     );
     const channel = data.channel;
     if (targetSocket) {
@@ -291,6 +293,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         blockedUsers.value.blockedChat,
         data.target,
       );
+      socket.broadcast.emit('change-username', data.target);
     }
   }
 
@@ -302,8 +305,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.target,
       data.channel,
     );
-    const targetSocket = await this.channelService.getSocketByUsername(
-      data.target,
+    const user = await this.userService.findByUsername(data.username);
+    if (!user) return;
+    const targetSocket = await this.channelService.getSocketById(
+      user.id,
     );
     const channel = data.channel;
     if (targetSocket) {
@@ -355,6 +360,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
           blockedUsers.value.blockedChat,
           data.target,
         );
+        socket.broadcast.emit('change-username', data.username);
       }
     }
   }

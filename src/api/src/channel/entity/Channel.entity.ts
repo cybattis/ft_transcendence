@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { BanType } from '../channel.structure';
 
 @Entity()
 export class Channel {
@@ -21,7 +22,10 @@ export class Channel {
   operator: string[];
 
   @Column('text', { array: true })
-  ban: string[];
+  banName: string[];
+
+  @Column('text', { array: true })
+  ban: BanType[];
 
   @Column('text', { array: true })
   mute: string[];

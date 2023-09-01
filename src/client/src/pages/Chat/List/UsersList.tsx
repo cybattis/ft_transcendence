@@ -41,8 +41,8 @@ export default function UsersList(props: {
           if (!channel) return;
           if (channel.operator.includes(decoded.nickname)) setIsOpe(true);
           setUsersList(channel.users);
-          setBanList(channel.ban);
           setMuteList(channel.mute);
+          setBanList(channel.banName);
         })
         .catch(() => {});
     }
