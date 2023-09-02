@@ -205,7 +205,6 @@ export class ChannelService implements OnModuleInit {
       date.setMinutes(date.getMinutes() + 100000000);
     else
       date.setMinutes(date.getMinutes() + time);
-    
     const banType: BanType = [target, date];
     channelToUpdate.ban.push(banType);
     channelToUpdate.banName.push(target);
@@ -383,9 +382,11 @@ export class ChannelService implements OnModuleInit {
         if (channelToJoin.ban[index][0] === username || channelToJoin.banName[index] === username){
           const date : Date = new Date();
           const comp : Date = new Date(channelToJoin.ban[index][1]);
-          if (date.getTime() - comp.getMinutes() < 0){
+          if (date.getTime() - comp.getTime() > 0){
             channelToJoin.ban.splice(index, 1);
+            channelToJoin.banName.splice(index, 1);
             await this.channelRepository.save(channelToJoin);
+            console.log(channelToJoin);
             break;
           }
           else {
