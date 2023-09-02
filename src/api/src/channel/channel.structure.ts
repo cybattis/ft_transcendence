@@ -9,6 +9,7 @@ export class ChannelStructure {
     public banName: string[];
     public ban: BanType[];
     public mute: string[];
+    public muteTime: Date[];
 
     constructor (channelName: string, username: string, pass: string) {
         this.name = channelName;
@@ -20,6 +21,7 @@ export class ChannelStructure {
         this.banName = [];
         this.ban = [];
         this.mute= [];
+        this.muteTime = [];
         this.pswd = pass;
     }
 

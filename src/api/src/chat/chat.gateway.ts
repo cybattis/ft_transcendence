@@ -200,9 +200,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     await this.channelService.muteUser(
       socket,
       data.username,
-      //data.time,
       data.target,
       data.channel,
+      data.time,
       blockedUsers.value.blockedChat,
     );
   }

@@ -52,6 +52,7 @@ export class ChannelService implements OnModuleInit {
         banName: [],
         ban: [],
         mute: [],
+        muteTime: [],
         password: '',
       });
   }
@@ -372,28 +373,27 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     pass: string,
     blockedChat: string[],
-  ) {
+  ): Promise<boolean> {
     const channelToJoin = await this.channelRepository.findOne({
       where: { channel: channel },
     });
-    if (!channelToJoin) return;
+    if (!channelToJoin) return false;
     if (this.checkUserIsBanHere(channelToJoin.ban, channelToJoin.banName, username)) {
       for (let index = 0; index < channelToJoin.ban.length; index++){
         if (channelToJoin.ban[index][0] === username || channelToJoin.banName[index] === username){
           const date : Date = new Date();
           const comp : Date = new Date(channelToJoin.ban[index][1]);
           if (date.getTime() - comp.getTime() > 0){
-            channelToJoin.ban.splice(index, 1);
-            channelToJoin.banName.splice(index, 1);
+            channelToJoin.ban = channelToJoin.ban.splice(index, 1);
+            channelToJoin.banName = channelToJoin.banName.splice(index, 1);
             await this.channelRepository.save(channelToJoin);
-            console.log(channelToJoin);
             break;
           }
           else {
             const reason = 'You are banned.';
             const err = { channel, reason };
             server.to(socket.id).emit('err', err);
-            return;
+            return false;
           }
         }
       }
@@ -402,7 +402,7 @@ export class ChannelService implements OnModuleInit {
       const reason = 'You are aleready present';
       const err = { channel, reason };
       server.to(socket.id).emit('err', err);
-      return;
+      return false;
     }
     if (channelToJoin.status === 'public') {
       channelToJoin.users.push(username);
@@ -420,17 +420,18 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
+      console.log(channelToJoin);
     } else if (channelToJoin.status === 'protected') {
       const reason = 'The channel is protected, you have to be invited.';
       const err = { channel, reason };
       server.to(socket.id).emit('err', err);
-      return; // Only invitation
+      return false; // Only invitation
     } else if (channelToJoin.status === 'private') {
       if (!(await bcrypt.compare(pass, channelToJoin.password))) {
         const reason = 'Bad password';
         const err = { channel, reason };
         server.to(socket.id).emit('err', err);
-        return; // bad mpd
+        return false; // bad mpd
       }
       channelToJoin.users.push(username);
       await this.channelRepository.save(channelToJoin);
@@ -448,6 +449,7 @@ export class ChannelService implements OnModuleInit {
       });
       socket.broadcast.emit('rcv', send);
     }
+    return true;
   }
 
   async joinChannel(
@@ -483,7 +485,7 @@ export class ChannelService implements OnModuleInit {
       });
       if (channelToJoin)
       {
-        await this.tryJoin(
+        if (await this.tryJoin(
           server,
           socket,
           type,
@@ -491,12 +493,14 @@ export class ChannelService implements OnModuleInit {
           channel,
           pass,
           blockedChat,
-        );
-        const user = await this.usersRepository.findOne({where: {nickname: username}});
-        if (user)
-        {
-          user.chans.push(channel);
-          await this.usersRepository.save(user);
+        )){
+          const user = await this.usersRepository.findOne({where: {nickname: username}});
+          if (user)
+          {
+            if (user.chans.includes(channel)) return;
+            user.chans.push(channel);
+            await this.usersRepository.save(user);
+          }
         }
       }
       else {
@@ -511,6 +515,7 @@ export class ChannelService implements OnModuleInit {
           banName: [],
           ban: [],
           mute: [],
+          muteTime: [],
           password: hash,
         });
         socket.emit('join', channel);
@@ -656,6 +661,7 @@ export class ChannelService implements OnModuleInit {
       where: { channel: channel },
     });
     if (chan && chan.mute.includes(sender)) return;
+    console.log(chan);
     const send = { sender, msg, channel, blockedChat };
     const emiter = await this.userService.findByLogin(sender);
     if (emiter.isErr())
@@ -856,6 +862,7 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
     channel: string,
+    time: number,
     blockedChat: string[],
   ) {
     const chan = await this.channelRepository.findOne({
@@ -864,8 +871,14 @@ export class ChannelService implements OnModuleInit {
     if (chan) {
       if (!chan.mute.includes(target)) {
         chan.mute.push(target);
+        const date = new Date();
+        if (!time)
+          date.setMinutes(date.getMinutes() + 100000000);
+        else
+          date.setMinutes(date.getMinutes() + time);
+        chan.muteTime.push(date);
         await this.channelRepository.save(chan);
-        const msg = target + ' has been muted by ' + username;
+        const msg = !time ? target + ' has been muted by ' + username : target + ' has been muted ' + time + 'm by ' + username 
         const emitter = 'server';
         const send = { emitter, msg, channel, blockedChat };
         await this.chatRepository.save({
@@ -894,8 +907,10 @@ export class ChannelService implements OnModuleInit {
         for (let i = 0; chan.mute[i]; i++) {
           if (chan.mute[i] === target) {
             const newMute: string[] = chan.mute.splice(i, 1);
+            const dateMute: Date[] = chan.muteTime.splice(i,1);
             await this.channelRepository.update(chan.id, {
               mute: newMute,
+              muteTime: dateMute,
             });
             await this.channelRepository.save(chan);
             break;
@@ -1129,4 +1144,45 @@ export class ChannelService implements OnModuleInit {
     await this.updateChannel(result.value.nickname, body.nickname);
     await this.updatePrvChannel(result.value.nickname, body.nickname);
   }
+
+  async checkMuteBan(channelFind : string){
+    const channel = await this.channelRepository.findOne({
+      where: { channel: channelFind },
+    });
+    if (!channel) return ;
+    const actualDate = new Date();
+    const emitter = 'server';
+    for (let index = 0; index < channel.mute.length; index++){
+      const muteDate = new Date(channel.muteTime[index]);
+      console.log("Inside unmute time",actualDate.getTime() - muteDate.getTime() > 0, muteDate.getTime(), actualDate.getTime());
+      if (actualDate.getTime() - muteDate.getTime() > 0){
+        console.log("inside");
+        const msg = channel.mute[index] + ' is unmute';
+        channel.mute = channel.mute.splice(index, 1);
+        channel.muteTime = channel.muteTime.splice(index, 1);
+        await this.chatRepository.save({
+          channel: channel.channel,
+          content: msg,
+          emitter: emitter,
+          emitterId: 0,
+        });
+      }
+    }
+    for (let index = 0; index < channel.banName.length; index++){
+      const dateBan = new Date(channel.ban[index][1]);
+      if (actualDate.getTime() - dateBan.getTime() > 0){
+        const msg = channel.mute[index] + ' is unban';
+        channel.ban = channel.ban.splice(index, 1);
+        channel.banName = channel.banName.splice(index, 1);
+        await this.chatRepository.save({
+          channel: channel.channel,
+          content: msg,
+          emitter: emitter,
+          emitterId: 0,
+        });
+      }
+    }
+    await this.channelRepository.save(channel);
+  }
+
 }

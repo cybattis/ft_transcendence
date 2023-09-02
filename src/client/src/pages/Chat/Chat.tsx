@@ -429,7 +429,7 @@ export default function ChatClient() {
       const channel = takeActiveCanal();
       const sendMute = {
         cmd: "mute",
-        //time: time,
+        time: time,
         username: username,
         target: usr,
         channel: channel,
@@ -453,7 +453,7 @@ export default function ChatClient() {
           {errors ? <p className="error"> {errors} </p> : null}
           <div className="test">
             <label>
-              Time of mute(in ms)
+              Time of mute(m)
               <br />
               <input
                 type="text"
@@ -1232,6 +1232,7 @@ export default function ChatClient() {
       await get<string[]>('user/myChannels')
       .then((response) => {
         setAllChannels(response);
+        console.log(response);
       }).catch(showErrorInModal);
     }
     fetchAllChannels();
