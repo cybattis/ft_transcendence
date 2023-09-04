@@ -23,4 +23,5 @@ export enum APIError {
   OtherUserInMatchmaking,
   GameInviteNotFound,
   GameNotFound,
+  SelfInvite,
 }

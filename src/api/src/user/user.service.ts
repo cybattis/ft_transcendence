@@ -723,7 +723,7 @@ export class UserService implements OnModuleInit {
   async fetchInvChannel(id : number)
     : Promise<Result<ChannelInvite[], typeof APIError.UserNotFound>>
   {
-    const user =  await this.usersRepository.findOneBy({id :Number(id)});
+    const user = await this.usersRepository.findOneBy({id :Number(id)});
     if (!user)
       return failure(APIError.UserNotFound);
 

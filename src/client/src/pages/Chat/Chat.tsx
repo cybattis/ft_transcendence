@@ -732,7 +732,7 @@ export default function ChatClient() {
                 </div>
               ) : (
               <div className="ctn-btn-action">
-                <PageLink to={`/profile/${usr}`}>
+                <PageLink to={`/profile/nickname/${usr}`}>
                   <button className="chat-buttons">Profile</button>
                 </PageLink>
               </div>

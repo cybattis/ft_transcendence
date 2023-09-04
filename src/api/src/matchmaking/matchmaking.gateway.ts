@@ -93,6 +93,8 @@ export class MatchmakingGateway
           return "You can't invite someone while you are in a game.";
         case APIError.UserInMatchmaking:
           return "You can't invite someone while you are in matchmaking.";
+        case APIError.SelfInvite:
+          return "You can't invite yourself to a game.";
       }
     }
     return "OK";
@@ -121,6 +123,8 @@ export class MatchmakingGateway
           return "The other user is currently in matchmaking.";
         case APIError.GameInviteNotFound:
           return "Couldn't find the game invite you're trying to accept.";
+        case APIError.SelfInvite:
+          return "You can't invite yourself to a game.";
       }
     }
     return "OK";
@@ -153,6 +157,8 @@ export class MatchmakingGateway
           return "You can't invite someone while you are in a game.";
         case APIError.UserInMatchmaking:
           return "You can't invite someone while you are in matchmaking.";
+        case APIError.SelfInvite:
+          return "You can't invite yourself to a game.";
       }
     }
     return "OK";
@@ -181,6 +187,8 @@ export class MatchmakingGateway
           return "The other user is currently in matchmaking.";
         case APIError.GameInviteNotFound:
           return "Couldn't find the game invite you're trying to accept.";
+        case APIError.SelfInvite:
+          return "You can't invite yourself to a game.";
       }
     }
     return "OK";
