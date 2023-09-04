@@ -201,11 +201,11 @@ export class ChannelService implements OnModuleInit {
     for (let index = 0; channelToUpdate.ban[index]; index++) {
       if (channelToUpdate.ban[index][0] === target) return;
     }
-    const date = new Date();
+    let date = new Date();
     if (time === 0)
-      date.setMinutes(date.getMinutes() + 100000000);
+      console.log("+ inf", date);
     else
-      date.setMinutes(date.getMinutes() + time);
+      date = new Date(date.getTime() + (time * 60000));
     const banType: BanType = [target, date];
     channelToUpdate.ban.push(banType);
     channelToUpdate.banName.push(target);
@@ -420,7 +420,6 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
-      console.log(channelToJoin);
     } else if (channelToJoin.status === 'protected') {
       const reason = 'The channel is protected, you have to be invited.';
       const err = { channel, reason };
@@ -660,8 +659,38 @@ export class ChannelService implements OnModuleInit {
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
+    if(!chan) return;
+    if (this.checkUserIsHere(chan.mute, sender)) {
+      console.log("Mute");
+      for (let index = 0; index < chan.mute.length; index++){
+        if (chan.mute[index] === sender){
+          const date : Date = new Date();
+          const comp : Date = new Date(chan.muteTime[index]);
+          if (date.getTime() - comp.getTime() > 0){
+            console.log("Chan" , chan.mute, chan.muteTime);
+            if (chan.mute.length === 1){
+              chan.mute = [];
+              chan.muteTime = [];
+            }else {
+              chan.mute = chan.mute.splice(index - 1, 1);
+              chan.muteTime = chan.muteTime.splice(index - 1, 1);
+            }
+            const emitter = 'server';
+            const msg = sender + ' is unmute.'
+            await this.chatRepository.save({
+              channel: channel,
+              content: msg,
+              emitter: emitter,
+              emitterId: 0,
+            });
+            console.log("Chan" , chan.mute, chan.muteTime);
+            await this.channelRepository.save(chan);
+            break;
+          }
+        }
+      }
+    }
     if (chan && chan.mute.includes(sender)) return;
-    console.log(chan);
     const send = { sender, msg, channel, blockedChat };
     const emiter = await this.userService.findByLogin(sender);
     if (emiter.isErr())
@@ -870,13 +899,13 @@ export class ChannelService implements OnModuleInit {
     });
     if (chan) {
       if (!chan.mute.includes(target)) {
-        chan.mute.push(target);
-        const date = new Date();
-        if (!time)
-          date.setMinutes(date.getMinutes() + 100000000);
+        let actu = new Date();
+        if (time === 0)
+          actu = new Date(actu.getTime() + 100000000);
         else
-          date.setMinutes(date.getMinutes() + time);
-        chan.muteTime.push(date);
+          actu = new Date(actu.getTime() + (time * 60000));
+        chan.mute.push(target);
+        chan.muteTime.push(actu);
         await this.channelRepository.save(chan);
         const msg = !time ? target + ' has been muted by ' + username : target + ' has been muted ' + time + 'm by ' + username 
         const emitter = 'server';
@@ -1151,38 +1180,21 @@ export class ChannelService implements OnModuleInit {
     });
     if (!channel) return ;
     const actualDate = new Date();
-    const emitter = 'server';
     for (let index = 0; index < channel.mute.length; index++){
-      const muteDate = new Date(channel.muteTime[index]);
-      console.log("Inside unmute time",actualDate.getTime() - muteDate.getTime() > 0, muteDate.getTime(), actualDate.getTime());
+      const muteDate: Date = new Date(channel.muteTime[index]);
       if (actualDate.getTime() - muteDate.getTime() > 0){
-        console.log("inside");
-        const msg = channel.mute[index] + ' is unmute';
         channel.mute = channel.mute.splice(index, 1);
         channel.muteTime = channel.muteTime.splice(index, 1);
-        await this.chatRepository.save({
-          channel: channel.channel,
-          content: msg,
-          emitter: emitter,
-          emitterId: 0,
-        });
+        await this.channelRepository.save(channel);
       }
     }
     for (let index = 0; index < channel.banName.length; index++){
-      const dateBan = new Date(channel.ban[index][1]);
+      const dateBan: Date = new Date(channel.ban[index][1]);
       if (actualDate.getTime() - dateBan.getTime() > 0){
-        const msg = channel.mute[index] + ' is unban';
         channel.ban = channel.ban.splice(index, 1);
         channel.banName = channel.banName.splice(index, 1);
-        await this.chatRepository.save({
-          channel: channel.channel,
-          content: msg,
-          emitter: emitter,
-          emitterId: 0,
-        });
+        await this.channelRepository.save(channel);
       }
     }
-    await this.channelRepository.save(channel);
   }
-
 }
