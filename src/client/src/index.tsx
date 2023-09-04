@@ -65,7 +65,7 @@ const router = createBrowserRouter([
           },
           {
             path: "my-profile",
-            element: <ProfileLoader profileType={ProfileType.MyProfile}/>,
+            element: <AuthedRoute component={<ProfileLoader profileType={ProfileType.MyProfile}/>} />,
           },
           {
             path: "notifications",
@@ -81,7 +81,7 @@ const router = createBrowserRouter([
           },
           {
             path: "game",
-            element: <Game />,
+            element: <AuthedRoute component={<Game />} />,
           },
           {
             path: "iagame",
