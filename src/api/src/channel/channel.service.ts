@@ -453,7 +453,8 @@ export class ChannelService implements OnModuleInit {
   }
 
   isValidChannel(channel : string){
-    if (channel.length > 20) return false;
+    console.log(channel, channel.length);
+    if (!(channel.length > 20 && channel.length < 1)) return false;
     for (let index = 1; index < channel.length; index++){
       if  (!(channel[index] >= 'a' && channel[index] <= 'z')
         && !(channel[index] >= 'A' && channel[index] <= 'Z')
@@ -462,6 +463,12 @@ export class ChannelService implements OnModuleInit {
           return false;
     }
     return true;
+  }
+
+  isValidType(type: string){
+    if (type === "protected" || type === "public" || type === "private")
+      return true;
+    return false
   }
 
   async joinChannel(
@@ -473,6 +480,12 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
+    if (!this.isValidType(type)){
+      const reason = "Invalid type channel";
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    }
     if (!this.isValidChannel(channel)){
       const reason = "Invalid name channel";
       const err = { channel, reason };
@@ -970,11 +983,19 @@ export class ChannelService implements OnModuleInit {
   }
 
   async changeParam(
+    server: Server,
+    socket: Socket,
     channel: string,
     type: string,
     pwd: string,
     username: string,
   ) {
+    if (!this.isValidType(type)){
+      const reason = "Invalid type channel";
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    }
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOne({ where: { channel: channel } });
     if (!channelToUpdate) return;

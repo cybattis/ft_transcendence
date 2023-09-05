@@ -123,8 +123,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     !data.password ? (pass = '') : (pass = data.password);
     !data.type ? (type = '') : (type = data.type);
     if (username === '')
-      return;
-    //await this.channelService.joinOldChannel(socket, username);
+      return
 
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
@@ -160,6 +159,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     data: { channel: string; type: string; pwd: string; username: string },
   ) {
     await this.channelService.changeParam(
+      this.server,
+      socket,
       data.channel,
       data.type,
       data.pwd,
