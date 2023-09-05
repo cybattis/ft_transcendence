@@ -15,6 +15,9 @@ import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
+const limPwd = 50;
+const limInput = 15;
+const limMsg = 126;
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -57,18 +60,9 @@ export class ChannelService implements OnModuleInit {
       });
   }
 
-  /*
-   * == API ==
-  */
-
-  /*
-   * Set the server
-   *
-   * @param server The server
-   */
-    public setServer(server: Server): void {
-      this.server = server;
-    }
+  public setServer(server: Server): void {
+    this.server = server;
+  }
 
   listUsersChannel(channel: string) {
     for (let index = 0; index < this.channelStruct.length; index++) {
@@ -79,7 +73,27 @@ export class ChannelService implements OnModuleInit {
     return null;
   }
 
+  limiteInput(message: string, type: number){
+    if (message === undefined ) return false;
+    if (type === 0){
+      if (message.length > limMsg)
+        return false;
+    }
+    if (type === 1){
+      if (message.length > limPwd)
+        return false;
+    }
+    if (type === 2){
+      if (message.length > limInput)
+        return false; 
+    }
+    return true;
+  }
+
   async quitChannel(cmd: string, username: string, channel: string) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -111,6 +125,10 @@ export class ChannelService implements OnModuleInit {
     target: string,
     channel: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return false;
@@ -148,6 +166,10 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     time: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -180,6 +202,10 @@ export class ChannelService implements OnModuleInit {
     target: string,
     channel: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -202,9 +228,7 @@ export class ChannelService implements OnModuleInit {
       if (channelToUpdate.ban[index][0] === target) return;
     }
     let date = new Date();
-    if (time === 0)
-      console.log("+ inf", date);
-    else
+    if (time !== 0)
       date = new Date(date.getTime() + (time * 60000));
     const banType: BanType = [target, date];
     channelToUpdate.ban.push(banType);
@@ -229,11 +253,14 @@ export class ChannelService implements OnModuleInit {
     author: string,
     target: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(author, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
     if (!this.checkUserIsHere(channelToUpdate.operator, author)) {
-      //Send error message
       return;
     }
     if (cmd === '+o') {
@@ -391,10 +418,20 @@ export class ChannelService implements OnModuleInit {
           }
           else {
             const time = new Date(comp.getTime() - date.getTime());
-            const reason = time.getMinutes() < 1 ? 'You are ban for '+ time.getSeconds() + ' s.' : 'You are ban for '+ time.getMinutes() + ' min.';
-            const err = { channel, reason };
-            server.to(socket.id).emit('err', err);
-            return false;
+            if (time.getMinutes() < 60)
+            {
+              const reason = time.getMinutes() < 1 ? 'You are ban for '+ time.getSeconds() + ' s.' : 'You are ban for '+ time.getMinutes() + ' min.';
+              const err = { channel, reason };
+              server.to(socket.id).emit('err', err);
+              return false;
+            }
+            else
+            {
+              const reason = 'You are banned.';
+              const err = { channel, reason };
+              server.to(socket.id).emit('err', err);
+              return false;
+            }
           }
         }
       }
@@ -453,15 +490,21 @@ export class ChannelService implements OnModuleInit {
   }
 
   isValidChannel(channel : string){
-    if (channel.length > 20) return false;
+    if (!(channel.length < limInput && channel.length > 1)) return false;
     for (let index = 1; index < channel.length; index++){
       if  (!(channel[index] >= 'a' && channel[index] <= 'z')
-        && !(channel[index] >= 'A' && channel[index] <= 'Z')
-        && !(channel[index] >= '0' && channel[index] <= '9')
+      && !(channel[index] >= 'A' && channel[index] <= 'Z')
+      && !(channel[index] >= '0' && channel[index] <= '9')
       )
-          return false;
+      return false;
     }
     return true;
+  }
+
+  isValidType(type: string){
+    if (type === "protected" || type === "public" || type === "private")
+      return true;
+    return false
   }
 
   async joinChannel(
@@ -473,6 +516,15 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
+      if (!this.limiteInput(username, 2)) return;
+      if (!this.limiteInput(channel, 2)) return;
+      if (pass && !this.limiteInput(pass, 1)) return;
+      if (channel !== "#general" && !this.isValidType(type)){
+      const reason = "Invalid type channel";  
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    }
     if (!this.isValidChannel(channel)){
       const reason = "Invalid name channel";
       const err = { channel, reason };
@@ -579,6 +631,8 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
     const user = await this.usersRepository.findOne({where: {nickname: target}});
     if (!user)
       return ;
@@ -661,12 +715,28 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  async blockedUser(server: Server, socket: Socket, target: string) {
+  async blockedUser(server: Server, socket: Socket, username: string, target: string, cmd: string) {
+    if (!this.limiteInput(target, 2)) return;
     const user = await this.usersRepository.findOne({where: {nickname: target}});
     if (!user)
       return ;
     const targetUser = await this.getSocketById(user.id);
-    if (targetUser != null) server.to(socket.id).emit('blocked', target);
+    if (targetUser)
+    {
+      if (cmd === "+blocked")
+      {
+        server.to(socket.id).emit('blocked', target);
+        const reason = username + ' just blocked you.';
+        const err = { reason };
+        server.to(targetUser).emit('err', err);
+      }
+      else if (cmd === "-blocked")
+      {
+        const reason = username + ' just unblocked you.';
+        const err = { reason };
+        server.to(targetUser).emit('err', err);
+      }
+    }
   }
 
   async sendMessage(
@@ -677,12 +747,13 @@ export class ChannelService implements OnModuleInit {
     sender: string,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(msg, 0)) return ;
+    if (!this.limiteInput(sender, 2)) return ;
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
     if(!chan) return;
     if (this.checkUserIsHere(chan.mute, sender)) {
-      console.log("Mute");
       for (let index = 0; index < chan.mute.length; index++){
         if (chan.mute[index] === sender){
           const date : Date = new Date();
@@ -700,10 +771,20 @@ export class ChannelService implements OnModuleInit {
           }
           else {
             const time = new Date(comp.getTime() - date.getTime());
-            const reason = time.getMinutes() < 1 ? 'You are mute for '+ time.getSeconds() + ' s.' : 'You are mute for '+ time.getMinutes() + ' min.';
-            const err = { channel, reason };
-            server.to(socket.id).emit('err', err);
-            return false;
+            if (time.getMinutes() < 60)
+            {
+              const reason = time.getMinutes() < 1 ? 'You are mute for '+ time.getSeconds() + ' s.' : 'You are mute for '+ time.getMinutes() + ' min.';
+              const err = { channel, reason };
+              server.to(socket.id).emit('err', err);
+              return false;
+            }
+            else
+            {
+              const reason = 'You are muted.';
+              const err = { channel, reason };
+              server.to(socket.id).emit('err', err);
+              return false;
+            }
           }
         }
       }
@@ -762,6 +843,10 @@ export class ChannelService implements OnModuleInit {
     opponent: string,
     blockedUsers: string[],
   ) {
+    if (!this.limiteInput(msg, 0)) return;
+    if (!this.limiteInput(channel, 1)) return;
+    if (!this.limiteInput(sender, 2)) return;
+    if (!this.limiteInput(opponent, 2)) return;
     const prv = { sender, opponent, msg, channel, blockedUsers };
     const opp = await this.usersRepository.findOne({where: {nickname: opponent}});
     if (!opp)
@@ -816,6 +901,11 @@ export class ChannelService implements OnModuleInit {
     blockedChat: string[],
     target: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(msg, 0)) return;
+    if (!this.limiteInput(sender, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const emitter = 'server';
     const newMsg = target + ' has been ' + msg + ' by ' + sender + '.';
     const send = { emitter, newMsg, channel, blockedChat };
@@ -905,6 +995,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async muteUser(
+    server: Server,
     socket: Socket,
     username: string,
     target: string,
@@ -912,6 +1003,9 @@ export class ChannelService implements OnModuleInit {
     time: number,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -925,17 +1019,24 @@ export class ChannelService implements OnModuleInit {
         chan.mute.push(target);
         chan.muteTime.push(actu);
         await this.channelRepository.save(chan);
+        const err = "You've been muted on " + chan.channel + ".";
+        server.to(socket.id).emit('err', err);
       }
     }
   }
 
   async unmuteUser(
+    server: Server,
     socket: Socket,
     username: string,
     target: string,
     channel: string,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -950,6 +1051,8 @@ export class ChannelService implements OnModuleInit {
               muteTime: dateMute,
             });
             await this.channelRepository.save(chan);
+            const err = "You've been unmuted on " + chan.channel + ".";
+            server.to(socket.id).emit('err', err);
             break;
           }
         }
@@ -973,11 +1076,22 @@ export class ChannelService implements OnModuleInit {
   }
 
   async changeParam(
+    server: Server,
+    socket: Socket,
     channel: string,
     type: string,
     pwd: string,
     username: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(pwd, 1)) return;
+    if (!this.isValidType(type)){
+      const reason = "Invalid type channel";
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    }
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOne({ where: { channel: channel } });
     if (!channelToUpdate) return;
@@ -1000,7 +1114,9 @@ export class ChannelService implements OnModuleInit {
     target: string,
     id: number,
   ) {
-    console.log(id);
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const find = await this.usersRepository.findOneBy({ nickname: target });
     if (!find) return;
     if (find.joinChannel.includes(channel)) return;
@@ -1022,6 +1138,7 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     targetID: number,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
     const find = await this.usersRepository.findOne({
       where: { id: targetID },
     });
@@ -1160,7 +1277,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async updateNickname(body: UserSettings, token: string){
-    if (body.nickname.length == 0 || body.nickname.length > 15)
+    if (body.nickname.length == 0 || body.nickname.length > limInput)
       throw new BadRequestException('nickname must be between 1 and 15 chars');
 
     const result = await this.userService.getUserFromToken(token);

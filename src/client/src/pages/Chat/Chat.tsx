@@ -19,7 +19,6 @@ import QuitLogo from "../../resource/quit-logo.png";
 import InvLogo from "../../resource/invite-logo.png";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { Channel, Chat, UserFriendsData, UserInfo } from "../../type/user.type";
-import { Fetching } from "../../utils/fetching";
 import {useProfileData} from "../../hooks/UseProfileData";
 import {UserData} from "../Profile/user-data";
 import {TypeCheckers} from "../../utils/type-checkers";
@@ -269,14 +268,14 @@ export default function ChatClient() {
   };
 
   const handleBlock = () => {
-    const sendBlock = { target: usr };
+    const sendBlock = { username: username, target: usr, cmd: "+blocked" };
     ChatClientSocket.blocked(sendBlock);
     put<UserFriendsData>(`user/block-user/${usr}`, {})
       .catch(showErrorInModal);
   };
 
   const handleUnBlock = async () => {
-    const sendBlock = { target: usr };
+    const sendBlock = { username: username, target: usr , cmd: "-blocked"};
     ChatClientSocket.blocked(sendBlock);
     put<UserFriendsData>(`user/unblock/${usr}`, {})
       .then(res => {
@@ -597,11 +596,11 @@ export default function ChatClient() {
           .then(channel => {
             if (!channel) return;
             if (channel.operator.includes(username)) setIsOpe(true);
-            else if (!channel.operator.includes(username)) setIsOpe(false);
+            else if (isOpe && !channel.operator.includes(username)) setIsOpe(false);
             if (channel.banName.includes(usr)) setIsBan(true);
-            else if (!channel.banName.includes(usr)) setIsBan(false);
+            else if (isBan && !channel.banName.includes(usr)) setIsBan(false);
             if (channel.mute.includes(usr)) setIsMute(true);
-            else if (!channel.mute.includes(usr)) setIsMute(false);
+            else if (isMute && !channel.mute.includes(usr)) setIsMute(false);
           })
           .catch(() => {});
       }
@@ -617,10 +616,7 @@ export default function ChatClient() {
           .then(channel => {
             if (!channel) return;
             if (channel.owner === usr)
-            {
               setChanOwner(true);
-              setIsOpe(true);
-            }
             else if (chanOwner === true && channel.owner !== usr) setChanOwner(false);
           })
           .catch(() => {});
@@ -670,6 +666,16 @@ export default function ChatClient() {
                     <PageLink to={`/profile/nickname/${usr}`}>
                       <button className="chat-buttons">Profile</button>
                     </PageLink>
+                    {isHere && !blocked && (
+                      <button className="chat-buttons" onClick={handleBlock}>
+                        Block
+                      </button>
+                    )}
+                    {!chanOwner && isHere && blocked && (
+                      <button className="chat-buttons" onClick={handleUnBlock}>
+                        UnBlock
+                      </button>
+                    )}
                     {isHere && (
                       <button className="chat-buttons" onClick={handleInviteGame}>
                         Invite to Play
@@ -679,11 +685,6 @@ export default function ChatClient() {
                 ) : (
                   <div>
                   <div className="ctn-btn-action">
-                          {!chanOwner && isHere && !blocked && (
-                            <button className="chat-buttons" onClick={handleBlock}>
-                              Block
-                            </button>
-                          )}
                           {!chanOwner && isHere && isOpe && (
                             <button className="chat-buttons" onClick={handleKick}>
                               Kick
@@ -692,6 +693,16 @@ export default function ChatClient() {
                           {!chanOwner && isHere && isOpe && !isBan && (
                             <button className="chat-buttons" onClick={handleBanForm}>
                               Ban
+                            </button>
+                          )}
+                          {isHere && !blocked && (
+                            <button className="chat-buttons" onClick={handleBlock}>
+                              Block
+                            </button>
+                          )}
+                          {!chanOwner && isHere && blocked && (
+                            <button className="chat-buttons" onClick={handleUnBlock}>
+                              UnBlock
                             </button>
                           )}
                           {!chanOwner && isHere && isOpe && !isMute && (
@@ -709,11 +720,6 @@ export default function ChatClient() {
                           {!chanOwner && !isHere && isOpe && isBan && (
                             <button className="chat-buttons" onClick={handleUnBan}>
                               UnBan
-                            </button>
-                          )}
-                          {!chanOwner && isHere && blocked && (
-                            <button className="chat-buttons" onClick={handleUnBlock}>
-                              UnBlock
                             </button>
                           )}
                           {!chanOwner && isOpe && isHere && !targetOp && (
@@ -893,7 +899,11 @@ export default function ChatClient() {
       }
 
       try {
-        const path = "chat-controller/channel/find" + (state.pwd[0] ? "Name": "") + state.channel + (state.pwd[0] ? "/" + state.pwd : "");
+        let path = "";
+        if (state.pwd && state.pwd[0])
+          path = "chat-controller/channel/find/" + state.channel + "/" + state.pwd;
+        else
+          path = "chat-controller/channel/findName/" + state.channel;
         await get<true>(path);
         sendForm(state.channel, state.pwd, state.selectedOption);
       } catch (error) {
@@ -1193,9 +1203,9 @@ export default function ChatClient() {
       }
 
       if (roomChange[0] !== '#' && isPriv === false)
-      setIsPriv(true);
+        setIsPriv(true);
       else if (roomChange[0] === '#' && isPriv === true)
-      setIsPriv(false);
+        setIsPriv(false);
 
       const getChan = async () => {
       const channel = roomChange;
@@ -1213,7 +1223,6 @@ export default function ChatClient() {
       await get<string[]>('user/myChannels')
       .then((response) => {
         setAllChannels(response);
-        console.log(response);
       }).catch(showErrorInModal);
     }
     fetchAllChannels();
@@ -1235,9 +1244,14 @@ export default function ChatClient() {
           : (room = room.substring(0, room.length - username.length));
       if (!channelList.includes(room)) {
         channelList.push(room);
-        setRoomChange(room);
         const canal = document.getElementById("canal");
         if (canal) canal.innerHTML = room;
+        if (roomChange === "#general")
+          fetchList(roomChange);
+        else
+          setRoomChange(room);
+        fetchAllChannels();
+        fetchMessage(roomChange);
       }
     };
 
@@ -1272,6 +1286,7 @@ export default function ChatClient() {
       if (index >= 0)
         channelList.splice(index, 1);
       setRoomChange(defaultChannelGen);
+      fetchMessage(roomChange);
     };
     ChatClientSocket.addQuitCb(quitCallBack);
 
@@ -1388,7 +1403,7 @@ export default function ChatClient() {
     }
   };
 
-  //FAIRE MUTE ET UNMUTE COMME POUR BAN
+  //FAIRE POP UP POUR TOUTES ACTIONS DANS LE CHANNEL (KICK, ADD ET SUB OP)
 
   return (
     <div className="chat-div">

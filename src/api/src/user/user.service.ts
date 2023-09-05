@@ -744,7 +744,6 @@ export class UserService implements OnModuleInit {
 
       result.push(temp);
     }
-    console.log(user);
     return success(result);
   }
 

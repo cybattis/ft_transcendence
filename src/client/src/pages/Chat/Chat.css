@@ -82,7 +82,7 @@
     text-align: right;
     margin: 5px;
     overflow-wrap: break-word;
-    color: rgb(227, 21, 21);
+    color: var(--grey);
 }
 
 .Announce {

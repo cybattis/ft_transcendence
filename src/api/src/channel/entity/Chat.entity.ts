@@ -15,7 +15,7 @@ export class Chat {
     @Column({ type: 'varchar'})
     content: string;
   
-    @Column({ type: 'varchar', length: 40})
+    @Column({ type: 'varchar'})
     emitter: string;
 
     @Column({type: 'integer'})

@@ -6,13 +6,13 @@ export class Channel {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar'})
   channel: string;
 
   @Column({ type: 'varchar' })
   status: string;
   
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar'})
   owner: string;
 
   @Column('text', { array: true })
@@ -33,6 +33,6 @@ export class Channel {
   @Column('text', { array: true })
   muteTime: Date[];
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar'})
   password: string;
 }
