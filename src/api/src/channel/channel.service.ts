@@ -517,13 +517,13 @@ export class ChannelService implements OnModuleInit {
           muteTime: [],
           password: hash,
         });
-        socket.emit('join', channel);
         const user = await this.usersRepository.findOne({where: {nickname: username}});
         if (user)
         {
           user.chans.push(channel);
           await this.usersRepository.save(user);
         }
+        socket.emit('join', channel);
         const sender = 'announce';
         const msg =
           username + ' just joined the channel. Welcome him/her nicely.';

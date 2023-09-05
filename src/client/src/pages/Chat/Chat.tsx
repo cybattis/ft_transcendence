@@ -31,7 +31,7 @@ const channelList: string[] = [];
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [roomChange, setRoomChange] = useState("");
+  const [roomChange, setRoomChange] = useState(defaultChannelGen);
   const [messages, setMessages] = useState<Chat[]>([]);
   const [list, setList] = useState<string[]>([]);
   const blocedList: string[] = [];
@@ -80,11 +80,6 @@ export default function ChatClient() {
     setStatus: (status: boolean) => void;
   }
 
-  function takeActiveCanal(): string {
-    const canal = document.getElementById("canal");
-    return canal ? canal.innerHTML : defaultChannelGen;
-  }
-
   function Quit(props: { canal: string }) {
     const handleQuitButton = () => {
       const sendQuit = {
@@ -112,7 +107,7 @@ export default function ChatClient() {
   function Param(props: { canal: string }) {
     const [buttonParam, setButtonParam] = useState(false);
     const { get } = useFetcher();
-    const channel = takeActiveCanal();
+    const channel = roomChange;
 
     function AffParam() {
       const [inputParam, setInputForm] = useState({
@@ -122,7 +117,7 @@ export default function ChatClient() {
 
       const handleSubmitParam = async (e: React.SyntheticEvent) => {
         e.preventDefault();
-        const channel = takeActiveCanal();
+        const channel = roomChange;
         const sendParam = {
           channel: channel,
           type: inputParam.selectedOption,
@@ -292,7 +287,7 @@ export default function ChatClient() {
   const handleAddOpe = () => {
     const ope = {
       op: "op",
-      channel: takeActiveCanal(),
+      channel: roomChange,
       author: username,
       cmd: "+o",
       target: usr,
@@ -303,7 +298,7 @@ export default function ChatClient() {
   const handleSubOpe = async () => {
     const ope = {
       op: "op",
-      channel: takeActiveCanal(),
+      channel: roomChange,
       author: username,
       cmd: "-o",
       target: usr,
@@ -312,7 +307,7 @@ export default function ChatClient() {
   };
 
   const handleKick = async () => {
-    const channel = takeActiveCanal();
+    const channel = roomChange;
     const sendKick = {
       cmd: "kick",
       username: username,
@@ -323,7 +318,7 @@ export default function ChatClient() {
   };
 
   const handleUnBan = async () => {
-    const channel = takeActiveCanal();
+    const channel = roomChange;
     const sendBan = {
       cmd: "-b",
       username: username,
@@ -334,7 +329,7 @@ export default function ChatClient() {
   };
 
   const handleUnMute = async () => {
-    const channel = takeActiveCanal();
+    const channel = roomChange;
     const sendMute = {
       cmd: "mute",
       username: username,
@@ -364,7 +359,7 @@ export default function ChatClient() {
         return;
       }
 
-      const channel = takeActiveCanal();
+      const channel = roomChange;
       const sendBan = {
         cmd: "+b",
         username: username,
@@ -430,7 +425,7 @@ export default function ChatClient() {
         return;
       }
 
-      const channel = takeActiveCanal();
+      const channel = roomChange;
       const sendMute = {
         cmd: "mute",
         time: time,
@@ -575,7 +570,7 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function isUsrInChan() {
-        let canal = takeActiveCanal();
+        let canal = roomChange;
         if (canal[0] === "#") canal = canal.slice(1);
 
         get<Channel | null>("chat-controller/channelName/" + canal)
@@ -588,7 +583,7 @@ export default function ChatClient() {
       isUsrInChan();
 
       async function getOpeList() {
-        let name = takeActiveCanal();
+        let name = roomChange;
         if (name === defaultChannelGen) return;
         if (name[0] === "#") name = name.slice(1);
 
@@ -607,7 +602,7 @@ export default function ChatClient() {
       getOpeList();
 
       async function isOwner() {
-        let name = takeActiveCanal();
+        let name = roomChange;
         if (name === defaultChannelGen) return;
         if (name[0] === "#")
           name = name.slice(1);
@@ -640,7 +635,7 @@ export default function ChatClient() {
       getBlockedUsrs();
 
       async function IsOpe() {
-        const channel = takeActiveCanal();
+        const channel = roomChange;
         const channelB = channel.substring(1);
         const sendTarget = "chat-controller/channel/ope/" + channelB + "/" + usr;
         await get<boolean>(sendTarget)
@@ -756,7 +751,7 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function actifCanal() {
-        let channel = takeActiveCanal();
+        let channel = roomChange;
         if (channel[0] !== "#") {
           let addressInfo =
             "chat-controller/channel/private/" +
@@ -792,7 +787,7 @@ export default function ChatClient() {
               &&
               channelName
                 ? messages.channel === channelName
-                : messages.channel === takeActiveCanal()
+                : messages.channel === roomChange
             )
             .map((messages) =>
               messages.emitter === username ? (
@@ -880,50 +875,23 @@ export default function ChatClient() {
       if (!state.channel || !state.channel[0]) {
         setErrorInput("Enter a channel Name");
       }
-      if (state.channel[0]) {
-        for (let i = 0; state.channel[i]; i++) {
-          if (state.channel[i] === "#") {
-            setErrorInput("Can't contain '#'.");
-            return;
-          }
-        }
+
+      if (state.channel.length === 0) {
+        setErrorInput("The name must not be empty.");
+        return;
       }
-      if (state.pwd[0]) {
-        await get<true>(
-            "chat-controller/channel/find/" + state.channel + "/" + state.pwd)
-          .then(() => {
-            sendForm(state.channel, state.pwd, state.selectedOption);
-          })
-          .catch ((error) => {
-            if (!Fetching.isFetchingError(error))
-              return;
-            if (error.isRequestError()) {
-              if (error.code === 400)
-                setErrorInput("Password mismatch.");
-            } else if (error.isServerError()) {
-              setErrorInput("Server busy, try again later");
-            } else if (error.isTransportError()) {
-              setErrorInput("Network error, try again later");
-            }
-          })
-      } else {
-        await get<true>(
-          "chat-controller/channel/findName/" + state.channel)
-        .then(() => {
-          sendForm(state.channel, state.pwd, state.selectedOption);
-        })
-        .catch ((error) => {
-          if (!Fetching.isFetchingError(error))
-            return;
-          if (error.isRequestError()) {
-            if (error.code === 400)
-              setErrorInput("Password mismatch.");
-          } else if (error.isServerError()) {
-            setErrorInput("Server busy, try again later");
-          } else if (error.isTransportError()) {
-            setErrorInput("Network error, try again later");
-          }
-        })
+
+      if (!state.channel.match(/^[a-zA-Z0-9]+$/)) {
+        setErrorInput("Can only contain alphanumeric characters.");
+        return;
+      }
+
+      try {
+        const path = "chat-controller/channel/find" + (state.pwd[0] ? "Name": "") + state.channel + (state.pwd[0] ? "/" + state.pwd : "");
+        await get<true>(path);
+        sendForm(state.channel, state.pwd, state.selectedOption);
+      } catch (error) {
+        showErrorInModal(error);
       }
     };
 
@@ -1021,7 +989,7 @@ export default function ChatClient() {
 
     const handleInvite = (target: string) => {
       const id = payload?.id;
-      const sendInv = { channel: takeActiveCanal(), target: target, id: id };
+      const sendInv = { channel: roomChange, target: target, id: id };
       ChatClientSocket.inviteToChannel(sendInv);
       setButtonInvitation(false);
     };
@@ -1216,13 +1184,13 @@ export default function ChatClient() {
         ChatClientSocket.joinChatServer(send);
       }
 
-      if (takeActiveCanal()[0] !== '#' && isPriv === false)
+      if (roomChange[0] !== '#' && isPriv === false)
       setIsPriv(true);
-      else if (takeActiveCanal()[0] === '#' && isPriv === true)
+      else if (roomChange[0] === '#' && isPriv === true)
       setIsPriv(false);
 
       const getChan = async () => {
-      const channel = takeActiveCanal();
+      const channel = roomChange;
       if (channel[0] === '#' && channel !== "#general")
       {
         if (inGeneral)
@@ -1247,7 +1215,7 @@ export default function ChatClient() {
       msg: string;
       channel: string;
     }) => {
-      await fetchMessage(takeActiveCanal());
+      await fetchMessage(roomChange);
     };
 
     ChatClientSocket.onMessageRecieve(messageCallBack);
@@ -1269,17 +1237,17 @@ export default function ChatClient() {
 
     const blockedCallBack = (target: string) => {
       if (!blocedList.includes(target)) blocedList.push(target);
-      fetchMessage(takeActiveCanal());
+      fetchMessage(roomChange);
     };
 
     ChatClientSocket.addBlockCb(blockedCallBack);
 
     const changeUsernameCallBack = async (newName: string) => {
       username = UserData.getNickname();
-      await fetchMessage(takeActiveCanal());
+      await fetchMessage(roomChange);
       await fetchAllChannels();
-      await fetchList(takeActiveCanal());
-      if (takeActiveCanal()[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(takeActiveCanal()))
+      await fetchList(roomChange);
+      if (roomChange[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(roomChange))
       {
         const canal = document.getElementById("canal");
         if (canal) {
@@ -1292,19 +1260,10 @@ export default function ChatClient() {
     ChatClientSocket.onChangeUsername(changeUsernameCallBack);
 
     const quitCallBack = (room: string) => {
-      for (let index = 0; index < channelList.length; index++) {
-        if (room === channelList[index]) {
-          channelList.splice(index, 1);
-          const canal = document.getElementById("canal");
-          if (canal) {
-            canal.innerHTML = defaultChannelGen;
-            setRoomChange(defaultChannelGen);
-            fetchAllChannels();
-            fetchMessage(takeActiveCanal());
-          }
-          return;
-        }
-      }
+      const index = channelList.indexOf(room);
+      if (index >= 0)
+        channelList.splice(index, 1);
+      setRoomChange(defaultChannelGen);
     };
     ChatClientSocket.addQuitCb(quitCallBack);
 
@@ -1334,7 +1293,7 @@ export default function ChatClient() {
 
     ChatClientSocket.addErr(errCallBack);
 
-    fetchMessage(takeActiveCanal());
+    fetchMessage(roomChange);
 
     return () => {
       ChatClientSocket.offJoinChan(joinCallBack);
@@ -1399,7 +1358,7 @@ export default function ChatClient() {
   }
 
   async function doCmd(cmd: string, msg: string) {
-    let channel = takeActiveCanal();
+    let channel = roomChange;
     const send = { username: username, channel: channel, msg: msg };
     ChatClientSocket.send(send);
     fetchMessage(channel);
@@ -1407,7 +1366,7 @@ export default function ChatClient() {
 
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
-    fetchMessage(takeActiveCanal());
+    fetchMessage(roomChange);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -1433,13 +1392,13 @@ export default function ChatClient() {
           <div className="chat-line">
             <Join />
             <PrivateMessage />
-            <Invitation canal={takeActiveCanal()} />
+            <Invitation canal={roomChange} />
           </div>
           {buttons && <Buttons />}
           <div className="chat-line">
-            <h3 id="canal">{defaultChannelGen}</h3>
-            <Param canal={takeActiveCanal()} />
-            {!inGeneral && <Quit canal={takeActiveCanal()} />}
+            <h3 id="canal">{roomChange}</h3>
+            <Param canal={roomChange} />
+            {!inGeneral && <Quit canal={roomChange} />}
           </div>
 
           <div id="rcv-mess-container">
@@ -1462,7 +1421,7 @@ export default function ChatClient() {
           <UsersList
             list={list}
             messages={messages}
-            channel={takeActiveCanal()}
+            channel={roomChange}
             handleButton={handleButton}
           />
         </div>)}
