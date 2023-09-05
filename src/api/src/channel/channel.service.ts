@@ -15,7 +15,9 @@ import {User} from 'src/user/entity/Users.entity';
 import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
-
+const limPwd = 50;
+const limInput = 15;
+const limMsg = 126;
 
 @Injectable()
 export class ChannelService implements OnModuleInit {
@@ -74,15 +76,15 @@ export class ChannelService implements OnModuleInit {
   limiteInput(message: string, type: number){
     if (message === undefined ) return false;
     if (type === 0){
-      if (message.length > 126)
+      if (message.length > limMsg)
         return false;
     }
     if (type === 1){
-      if (message.length > 50)
+      if (message.length > limPwd)
         return false;
     }
     if (type === 2){
-      if (message.length > 15)
+      if (message.length > limInput)
         return false; 
     }
     return true;
@@ -481,7 +483,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   isValidChannel(channel : string){
-    if (!(channel.length < 20 && channel.length > 1)) return false;
+    if (!(channel.length < limInput && channel.length > 1)) return false;
     for (let index = 1; index < channel.length; index++){
       if  (!(channel[index] >= 'a' && channel[index] <= 'z')
       && !(channel[index] >= 'A' && channel[index] <= 'Z')
@@ -1235,7 +1237,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async updateNickname(body: UserSettings, token: string){
-    if (body.nickname.length == 0 || body.nickname.length > 15)
+    if (body.nickname.length == 0 || body.nickname.length > limInput)
       throw new BadRequestException('nickname must be between 1 and 15 chars');
 
     const result = await this.userService.getUserFromToken(token);
