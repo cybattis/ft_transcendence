@@ -30,6 +30,9 @@ export class Channel {
   @Column('text', { array: true })
   mute: string[];
 
+  @Column('text', { array: true })
+  muteTime: Date[];
+
   @Column({ type: 'varchar' })
   password: string;
 }

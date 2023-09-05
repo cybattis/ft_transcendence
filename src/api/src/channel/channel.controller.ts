@@ -110,6 +110,7 @@ export class ChannelController {
     @Headers('token') header: Headers,
   ): Promise<Channel | null> {
     const decodedName = '#' + name;
+    this.channelService.checkMuteBan(decodedName);
     return await this.channelRepository.findOne({
       where: { channel: decodedName },
     });
