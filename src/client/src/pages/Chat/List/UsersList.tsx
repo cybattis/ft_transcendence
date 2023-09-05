@@ -31,7 +31,6 @@ export default function UsersList(props: {
 
     async function fecthLists() {
       if (!props.channel || !props.channel[0]) return;
-      setIsOpe(false);
       let canal = props.channel;
       if (canal[0] === "#") canal = canal.slice(1);
       else return <></>;
@@ -40,6 +39,7 @@ export default function UsersList(props: {
         .then(channel => {
           if (!channel) return;
           if (channel.operator.includes(decoded.nickname)) setIsOpe(true);
+          else if (!channel.operator.includes(decoded.nickname) && isOpe) setIsOpe(false);
           setUsersList(channel.users);
           setMuteList(channel.mute);
           setBanList(channel.banName);

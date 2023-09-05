@@ -244,10 +244,12 @@ export default function ChatClient() {
       {
         setButtons(false);
         setBanForm(false);
+        setMuteForm(false);
       }
     }
     setUsr(user);
     setBanForm(false);
+    setMuteForm(false);
     if (!buttons) {
       setButtons(true);
       setJoinForm(false);
@@ -257,10 +259,12 @@ export default function ChatClient() {
   const handleButtonForm = () => {
     if (buttons) {
       setBanForm(false);
+      setMuteForm(false);
       setButtons(false);
     } else {
       setButtons(true);
       setBanForm(false);
+      setMuteForm(false);
       setJoinForm(false);
     }
   };
@@ -564,6 +568,7 @@ export default function ChatClient() {
           if (buttons) {
             setButtons(false);
             setBanForm(false);
+            setMuteForm(false);
           }
         }
       };
@@ -693,13 +698,13 @@ export default function ChatClient() {
                               Mute
                             </button>
                           )}
-                        </div>
-                        <div className="ctn-btn-action">
                           {!chanOwner && isHere && isOpe && isMute && (
                             <button className="chat-buttons" onClick={handleUnMute}>
                               UnMute
                             </button>
                           )}
+                        </div>
+                        <div className="ctn-btn-action">
                           {!chanOwner && !isHere && isOpe && isBan && (
                             <button className="chat-buttons" onClick={handleUnBan}>
                               UnBan

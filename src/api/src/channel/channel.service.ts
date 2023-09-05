@@ -907,16 +907,6 @@ export class ChannelService implements OnModuleInit {
         chan.mute.push(target);
         chan.muteTime.push(actu);
         await this.channelRepository.save(chan);
-        const msg = !time ? target + ' has been muted by ' + username : target + ' has been muted ' + time + 'm by ' + username 
-        const emitter = 'server';
-        const send = { emitter, msg, channel, blockedChat };
-        await this.chatRepository.save({
-          channel: channel,
-          content: msg,
-          emitter: emitter,
-          emitterId: 0,
-        });
-        socket.broadcast.emit('rcv', send);
       }
     }
   }
@@ -945,16 +935,6 @@ export class ChannelService implements OnModuleInit {
             break;
           }
         }
-        const msg = target + ' has been unmuted by ' + username;
-        const emitter = 'server';
-        const send = { emitter, msg, channel, blockedChat };
-        await this.chatRepository.save({
-          channel: channel,
-          content: msg,
-          emitter: emitter,
-          emitterId: 0,
-        });
-        socket.broadcast.emit('rcv', send);
       }
     }
   }

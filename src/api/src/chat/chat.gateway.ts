@@ -205,6 +205,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.time,
       blockedUsers.value.blockedChat,
     );
+    await this.channelService.channelAnnoucement(
+      socket,
+      this.server,
+      data.channel,
+      'muted',
+      data.username,
+      blockedUsers.value.blockedChat,
+      data.target,
+    );
+    socket.broadcast.emit('change-username', data.target);
   }
 
   @SubscribeMessage('unmute')
@@ -223,6 +233,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.channel,
       blockedUsers.value.blockedChat,
     );
+    await this.channelService.channelAnnoucement(
+      socket,
+      this.server,
+      data.channel,
+      'unmuted',
+      data.username,
+      blockedUsers.value.blockedChat,
+      data.target,
+    );
+    socket.broadcast.emit('change-username', data.target);
   }
 
   @SubscribeMessage('op')
