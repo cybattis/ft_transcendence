@@ -452,6 +452,18 @@ export class ChannelService implements OnModuleInit {
     return true;
   }
 
+  isValidChannel(channel : string){
+    if (channel.length > 20) return false;
+    for (let index = 1; index < channel.length; index++){
+      if  (!(channel[index] >= 'a' && channel[index] <= 'z')
+        && !(channel[index] >= 'A' && channel[index] <= 'Z')
+        && !(channel[index] >= '0' && channel[index] <= '9')
+      )
+          return false;
+    }
+    return true;
+  }
+
   async joinChannel(
     server: Server,
     socket: Socket,
@@ -461,6 +473,12 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
+    if (!this.isValidChannel(channel)){
+      const reason = "Invalid name channel";
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    } 
     if (channel === '#general') {
       const channelToUpdate = await this.channelRepository.findOne({
         where: { channel: channel },
@@ -483,8 +501,7 @@ export class ChannelService implements OnModuleInit {
       const channelToJoin = await this.channelRepository.findOne({
         where: { channel: channel },
       });
-      if (channelToJoin)
-      {
+      if (channelToJoin) {
         if (await this.tryJoin(
           server,
           socket,
