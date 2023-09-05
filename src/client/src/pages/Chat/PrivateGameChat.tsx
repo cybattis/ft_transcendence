@@ -6,6 +6,8 @@ import unmuteLogo from "../../resource/unmuted-logo.png";
 import "./PrivateGameChat.css";
 const allMessages: any = [];
 
+const maxMessage: number = 126;
+
 export default function PrivateGameChat(props: {
   playerOne: string;
   playerTwo: string;
@@ -165,6 +167,7 @@ export default function PrivateGameChat(props: {
               ref={inputRef}
               onKeyDown={handleKeyDown}
               type="text"
+              maxLength={maxMessage}
             />
             <button className="btn-gamechat-principal" onClick={sendMessage}>
               Send

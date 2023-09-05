@@ -12,6 +12,10 @@ import { PopupContext } from "../../components/Modal/Popup.context";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { ChatClientSocket } from "../Chat/Chat-client";
 
+const maxUrl: number = 1000;
+const maxUsername: number = 15;
+const maxFullname: number = 30;
+
 export function Settings() {
   const { data} = useData<UserSettings>("user/settings", true);
 
@@ -104,6 +108,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
             accept="image/png, image/jpeg"
             alt={"Change avatar"}
             onChange={submitImage}
+            maxLength={maxUrl}
           />
         </div>
         <div className={"settingPage_form"}>
@@ -112,6 +117,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
               name={"Nickname"}
               type={"text"}
               value={nickname ?? ""}
+              maxLength={maxUsername}
               onChange={(event) => {
                 setNickname(event.target.value);
               }}
@@ -120,6 +126,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
               name={"First Name"}
               type={"text"}
               value={firstName ?? ""}
+              maxLength={maxFullname}
               onChange={(event) => {
                 setFirstName(event.target.value);
               }}
@@ -128,6 +135,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
               name={"Last Name"}
               type={"text"}
               value={lastName ?? ""}
+              maxLength={maxFullname}
               onChange={(event) => {
                 setLastName(event.target.value);
               }}

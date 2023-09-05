@@ -10,6 +10,7 @@ interface LabelProps {
   value?: string;
   label?: string;
   half?: boolean;
+  maxLength?: number;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -46,6 +47,7 @@ export default function InputForm(props: LabelProps) {
         name={props.name}
         value={props.value}
         onChange={props.onChange}
+        maxLength={props.maxLength}
       />
     </label>
   );

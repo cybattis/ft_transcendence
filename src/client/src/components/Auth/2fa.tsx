@@ -7,6 +7,8 @@ import {AuthContext} from "./auth.context";
 import {FormContext, FormState} from "./form.context";
 import { useFetcher } from "../../hooks/UseFetcher";
 
+const maxCode: number = 10;
+
 export default function FaCode() {
   const [errorMessage, setErrorMessage] = useState("");
   const { tfaActivated, setAuthed, setTfaActivated } = useContext(AuthContext);
@@ -84,7 +86,7 @@ export default function FaCode() {
         </div>
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="code" />
+          <InputForm type="text" name="code" maxLength={maxCode} />
           <br />
           <button type="submit" className="submitButton">
             Confirm

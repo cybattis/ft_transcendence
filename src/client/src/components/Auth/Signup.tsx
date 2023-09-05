@@ -17,6 +17,10 @@ interface UserCredential {
   password: string;
 }
 
+const maxUsername: number = 15;
+const maxFullName: number = 30;
+const maxInput: number = 50;
+
 export default function Signup() {
   const { setFormState } = useContext(FormContext);
   const [errorInput, setErrorInput] = useState("");
@@ -145,28 +149,31 @@ export default function Signup() {
           <div className="desc">Join the Fever</div>
           {errorInput ? <p className="error"> {errorInput} </p> : null}
           <form method="post" onSubmit={handleSubmit}>
-            <InputForm type="text" name="nickname" />
+            <InputForm type="text" name="nickname" maxLength={maxUsername} />
             <div className="halfInput">
               <InputForm
                 type="text"
                 name="firstname"
                 label="First name"
                 half={true}
+                maxLength={maxFullName}
               />
               <InputForm
                 type="text"
                 name="lastname"
                 label="Last name"
                 half={true}
+                maxLength={maxFullName}
               />
             </div>
-            <InputForm type="text" name="email" />
-            <InputForm type="text" name="confirmEmail" label="Confirm Email" />
-            <InputForm type="password" name="password" />
+            <InputForm type="text" name="email" maxLength={maxInput} />
+            <InputForm type="text" name="confirmEmail" label="Confirm Email" maxLength={maxInput} />
+            <InputForm type="password" name="password" maxLength={maxInput} />
             <InputForm
               type="password"
               name="confirmPassword"
               label="Confirm Password"
+              maxLength={maxInput}
             />
             <button type="submit" className="submitButton">
               Signup

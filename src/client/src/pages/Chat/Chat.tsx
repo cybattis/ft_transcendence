@@ -28,6 +28,9 @@ import { PageLink } from "../../components/Navigation/PageLink";
 
 const defaultChannelGen: string = "#general";
 const channelList: string[] = [];
+const maxMessage: number = 126;
+const maxPwd: number = 50;
+const maxInput: number = 15;
 
 export default function ChatClient() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -174,6 +177,7 @@ export default function ChatClient() {
                 className="input-join"
                 onChange={handleParam}
                 value={inputParam.pwd}
+                maxLength={maxPwd}
               />
             </label>
             <button type="submit" className="submitParamButton">
@@ -394,6 +398,7 @@ export default function ChatClient() {
                 value={time}
                 className="input-join"
                 onChange={handleChange}
+                maxLength={maxInput}
               />
             </label>
           </div>
@@ -460,6 +465,7 @@ export default function ChatClient() {
                 value={time}
                 className="input-join"
                 onChange={handleChange}
+                maxLength={maxInput}
               />
             </label>
           </div>
@@ -923,6 +929,7 @@ export default function ChatClient() {
               value={state.channel}
               className="input-join"
               onChange={handleChange}
+              maxLength={maxInput}
             />
           </div>
           <div>
@@ -935,6 +942,7 @@ export default function ChatClient() {
                 className="input-join"
                 value={state.pwd}
                 onChange={handleChange}
+                maxLength={maxPwd}
               />
             </label>
           </div>
@@ -1414,6 +1422,7 @@ export default function ChatClient() {
               ref={inputRef}
               onKeyDown={handleKeyDown}
               type="text"
+              maxLength={maxMessage}
             />
             <button className="btn-chat-principal" onClick={sendMessage}>
               Send
