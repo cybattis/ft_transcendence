@@ -16,6 +16,7 @@ import {UserSettings} from 'src/type/user.type';
 import {APIError} from "../utils/errors";
 import {failure, Result, success} from "../utils/Error";
 
+
 @Injectable()
 export class ChannelService implements OnModuleInit {
   private jwtService: JwtService;
@@ -57,18 +58,9 @@ export class ChannelService implements OnModuleInit {
       });
   }
 
-  /*
-   * == API ==
-  */
-
-  /*
-   * Set the server
-   *
-   * @param server The server
-   */
-    public setServer(server: Server): void {
-      this.server = server;
-    }
+  public setServer(server: Server): void {
+    this.server = server;
+  }
 
   listUsersChannel(channel: string) {
     for (let index = 0; index < this.channelStruct.length; index++) {
@@ -79,7 +71,27 @@ export class ChannelService implements OnModuleInit {
     return null;
   }
 
+  limiteInput(message: string, type: number){
+    if (message === undefined ) return false;
+    if (type === 0){
+      if (message.length > 126)
+        return false;
+    }
+    if (type === 1){
+      if (message.length > 50)
+        return false;
+    }
+    if (type === 2){
+      if (message.length > 15)
+        return false; 
+    }
+    return true;
+  }
+
   async quitChannel(cmd: string, username: string, channel: string) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -111,6 +123,10 @@ export class ChannelService implements OnModuleInit {
     target: string,
     channel: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return false;
@@ -148,6 +164,10 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     time: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -180,6 +200,10 @@ export class ChannelService implements OnModuleInit {
     target: string,
     channel: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -229,6 +253,10 @@ export class ChannelService implements OnModuleInit {
     author: string,
     target: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(author, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const channelToUpdate: Channel | null =
       await this.channelRepository.findOneBy({ channel: channel });
     if (!channelToUpdate) return;
@@ -453,14 +481,13 @@ export class ChannelService implements OnModuleInit {
   }
 
   isValidChannel(channel : string){
-    console.log(channel, channel.length);
-    if (!(channel.length > 20 && channel.length < 1)) return false;
+    if (!(channel.length < 20 && channel.length > 1)) return false;
     for (let index = 1; index < channel.length; index++){
       if  (!(channel[index] >= 'a' && channel[index] <= 'z')
-        && !(channel[index] >= 'A' && channel[index] <= 'Z')
-        && !(channel[index] >= '0' && channel[index] <= '9')
+      && !(channel[index] >= 'A' && channel[index] <= 'Z')
+      && !(channel[index] >= '0' && channel[index] <= '9')
       )
-          return false;
+      return false;
     }
     return true;
   }
@@ -480,6 +507,9 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(pass, 1)) return;
     if (!this.isValidType(type)){
       const reason = "Invalid type channel";
       const err = { channel, reason };
@@ -592,6 +622,8 @@ export class ChannelService implements OnModuleInit {
     username: string,
     target: string,
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
     const user = await this.usersRepository.findOne({where: {nickname: target}});
     if (!user)
       return ;
@@ -672,6 +704,7 @@ export class ChannelService implements OnModuleInit {
   }
 
   async blockedUser(server: Server, socket: Socket, target: string) {
+    if (!this.limiteInput(target, 2)) return;
     const user = await this.usersRepository.findOne({where: {nickname: target}});
     if (!user)
       return ;
@@ -687,6 +720,8 @@ export class ChannelService implements OnModuleInit {
     sender: string,
     blockedChat: string[],
   ) {
+    if (this.limiteInput(msg, 0)) return ;
+    if (this.limiteInput(sender, 2)) return ;
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -772,6 +807,10 @@ export class ChannelService implements OnModuleInit {
     opponent: string,
     blockedUsers: string[],
   ) {
+    if (!this.limiteInput(msg, 0)) return;
+    if (!this.limiteInput(channel, 1)) return;
+    if (!this.limiteInput(sender, 2)) return;
+    if (!this.limiteInput(opponent, 2)) return;
     const prv = { sender, opponent, msg, channel, blockedUsers };
     const opp = await this.usersRepository.findOne({where: {nickname: opponent}});
     if (!opp)
@@ -826,6 +865,11 @@ export class ChannelService implements OnModuleInit {
     blockedChat: string[],
     target: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(msg, 0)) return;
+    if (!this.limiteInput(sender, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const emitter = 'server';
     const newMsg = target + ' has been ' + msg + ' by ' + sender + '.';
     const send = { emitter, newMsg, channel, blockedChat };
@@ -922,6 +966,9 @@ export class ChannelService implements OnModuleInit {
     time: number,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -946,6 +993,10 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     blockedChat: string[],
   ) {
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+    if (!this.limiteInput(channel, 2)) return;
+
     const chan = await this.channelRepository.findOne({
       where: { channel: channel },
     });
@@ -990,6 +1041,9 @@ export class ChannelService implements OnModuleInit {
     pwd: string,
     username: string,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(username, 2)) return;
+    if (!this.limiteInput(pwd, 1)) return;
     if (!this.isValidType(type)){
       const reason = "Invalid type channel";
       const err = { channel, reason };
@@ -1018,6 +1072,9 @@ export class ChannelService implements OnModuleInit {
     target: string,
     id: number,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
+    if (!this.limiteInput(target, 2)) return;
+
     const find = await this.usersRepository.findOneBy({ nickname: target });
     if (!find) return;
     if (find.joinChannel.includes(channel)) return;
@@ -1039,6 +1096,7 @@ export class ChannelService implements OnModuleInit {
     channel: string,
     targetID: number,
   ) {
+    if (!this.limiteInput(channel, 2)) return;
     const find = await this.usersRepository.findOne({
       where: { id: targetID },
     });

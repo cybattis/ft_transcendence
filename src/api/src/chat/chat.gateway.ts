@@ -116,26 +116,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @MessageBody()
     data: { username: string; channel: string; password: string; type: string },
   ) {
-    let type, pass, username, channel: string;
     if (!data) return;
-    !data.channel ? (channel = '#general') : (channel = data.channel);
-    !data.username ? (username = '') : (username = data.username);
-    !data.password ? (pass = '') : (pass = data.password);
-    !data.type ? (type = '') : (type = data.type);
-    if (username === '')
-      return
-
+    let type;
+    if (data.channel === "#general") {type = "public"} else type = data.type
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
       return;
-
     await this.channelService.joinChannel(
       this.server,
       socket,
       type,
-      username,
-      channel,
-      pass,
+      data.username,
+      data.channel,
+      data.password,
       blockedUsers.value.blockedChat,
     );
   }
