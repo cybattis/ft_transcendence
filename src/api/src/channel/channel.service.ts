@@ -390,7 +390,8 @@ export class ChannelService implements OnModuleInit {
             break;
           }
           else {
-            const reason = 'You are banned.';
+            const time = new Date(comp.getTime() - date.getTime());
+            const reason = time.getMinutes() < 1 ? 'You are ban for '+ time.getSeconds() + ' s.' : 'You are ban for '+ time.getMinutes() + ' min.';
             const err = { channel, reason };
             server.to(socket.id).emit('err', err);
             return false;
@@ -451,6 +452,18 @@ export class ChannelService implements OnModuleInit {
     return true;
   }
 
+  isValidChannel(channel : string){
+    if (channel.length > 20) return false;
+    for (let index = 1; index < channel.length; index++){
+      if  (!(channel[index] >= 'a' && channel[index] <= 'z')
+        && !(channel[index] >= 'A' && channel[index] <= 'Z')
+        && !(channel[index] >= '0' && channel[index] <= '9')
+      )
+          return false;
+    }
+    return true;
+  }
+
   async joinChannel(
     server: Server,
     socket: Socket,
@@ -460,6 +473,12 @@ export class ChannelService implements OnModuleInit {
     pass: string,
     blockedChat: string[],
   ) {
+    if (!this.isValidChannel(channel)){
+      const reason = "Invalid name channel";
+      const err = { channel, reason };
+      server.to(socket.id).emit('err', err);
+      return ;
+    } 
     if (channel === '#general') {
       const channelToUpdate = await this.channelRepository.findOne({
         where: { channel: channel },
@@ -482,8 +501,7 @@ export class ChannelService implements OnModuleInit {
       const channelToJoin = await this.channelRepository.findOne({
         where: { channel: channel },
       });
-      if (channelToJoin)
-      {
+      if (channelToJoin) {
         if (await this.tryJoin(
           server,
           socket,
@@ -670,7 +688,6 @@ export class ChannelService implements OnModuleInit {
           const date : Date = new Date();
           const comp : Date = new Date(chan.muteTime[index]);
           if (date.getTime() - comp.getTime() > 0){
-            console.log("Chan" , chan.mute, chan.muteTime);
             if (chan.mute.length === 1){
               chan.mute = [];
               chan.muteTime = [];
@@ -678,17 +695,15 @@ export class ChannelService implements OnModuleInit {
               chan.mute = chan.mute.splice(index - 1, 1);
               chan.muteTime = chan.muteTime.splice(index - 1, 1);
             }
-            const emitter = 'server';
-            const msg = sender + ' is unmute.'
-            await this.chatRepository.save({
-              channel: channel,
-              content: msg,
-              emitter: emitter,
-              emitterId: 0,
-            });
-            console.log("Chan" , chan.mute, chan.muteTime);
             await this.channelRepository.save(chan);
             break;
+          }
+          else {
+            const time = new Date(comp.getTime() - date.getTime());
+            const reason = time.getMinutes() < 1 ? 'You are mute for '+ time.getSeconds() + ' s.' : 'You are mute for '+ time.getMinutes() + ' min.';
+            const err = { channel, reason };
+            server.to(socket.id).emit('err', err);
+            return false;
           }
         }
       }
@@ -1113,7 +1128,6 @@ export class ChannelService implements OnModuleInit {
         channel.owner === actual;
       channel.users = channel.users.map((user: string) => (user === past ? actual : user));
       channel.operator = channel.operator.map((user: string) => (user === past ? actual : user));
-      //channel.ban = channel.ban.map((user: BanType) => (user[0] === past ? actual : user[0]));
       channel.mute = channel.mute.map((user: string) => (user === past ? actual : user));
       channel.banName = channel.banName.map((user: string) => (user === past ? actual : user));
     }
@@ -1156,29 +1170,5 @@ export class ChannelService implements OnModuleInit {
     await this.updateChat(result.value.nickname, body.nickname);
     await this.updateChannel(result.value.nickname, body.nickname);
     await this.updatePrvChannel(result.value.nickname, body.nickname);
-  }
-
-  async checkMuteBan(channelFind : string){
-    const channel = await this.channelRepository.findOne({
-      where: { channel: channelFind },
-    });
-    if (!channel) return ;
-    const actualDate = new Date();
-    for (let index = 0; index < channel.mute.length; index++){
-      const muteDate: Date = new Date(channel.muteTime[index]);
-      if (actualDate.getTime() - muteDate.getTime() > 0){
-        channel.mute = channel.mute.splice(index, 1);
-        channel.muteTime = channel.muteTime.splice(index, 1);
-        await this.channelRepository.save(channel);
-      }
-    }
-    for (let index = 0; index < channel.banName.length; index++){
-      const dateBan: Date = new Date(channel.ban[index][1]);
-      if (actualDate.getTime() - dateBan.getTime() > 0){
-        channel.ban = channel.ban.splice(index, 1);
-        channel.banName = channel.banName.splice(index, 1);
-        await this.channelRepository.save(channel);
-      }
-    }
   }
 }
