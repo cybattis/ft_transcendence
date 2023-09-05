@@ -581,6 +581,7 @@ export class ChannelService implements OnModuleInit {
         ban: [],
         banName: [],
         mute: [],
+        muteTime: [],
         password: '',
       });
       const me = await this.usersRepository.findOne({where: {nickname: username}})
@@ -609,8 +610,10 @@ export class ChannelService implements OnModuleInit {
       users: [username, target],
       owner: '',
       operator: [],
+      banName: [],
       ban: [],
       mute: [],
+      muteTime: [],
       password: '',
     });
     if (socketTarget)
@@ -982,6 +985,7 @@ export class ChannelService implements OnModuleInit {
     target: string,
     id: number,
   ) {
+    console.log(id);
     const find = await this.usersRepository.findOneBy({ nickname: target });
     if (!find) return;
     if (find.joinChannel.includes(channel)) return;

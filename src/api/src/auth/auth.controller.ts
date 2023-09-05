@@ -95,6 +95,8 @@ export class AuthController {
     if (nicknameExist.isErr()) {
       const emailExist = await this.userService.findByEmail(body.email);
       if (emailExist.isErr()) {
+        if (!body.nickname.match(/^[a-zA-Z0-9]+$/) || (body.firstname && !body.firstname.match(/^[a-zA-Z0-9]+$/)) || (body.lastname && !body.lastname.match(/^[a-zA-Z0-9]+$/)))
+          throw new BadRequestException("Invalid characters");
         await this.authService.createUser(body);
         return;
       }

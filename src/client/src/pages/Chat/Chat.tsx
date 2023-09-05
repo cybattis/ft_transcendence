@@ -1366,6 +1366,10 @@ export default function ChatClient() {
 
   async function handleStringChange(newString: string) {
     setRoomChange(newString);
+    if (newString[0] !== '#' && isPriv === false)
+      setIsPriv(true);
+    else if (newString[0] === '#' && isPriv === true)
+      setIsPriv(false);
     fetchMessage(roomChange);
   }
 
@@ -1396,11 +1400,10 @@ export default function ChatClient() {
           </div>
           {buttons && <Buttons />}
           <div className="chat-line">
-            <h3 id="canal">{roomChange}</h3>
-            <Param canal={roomChange} />
+            <h3 className="canal" id="canal">{roomChange}</h3>
+            {!inGeneral && <Param canal={roomChange} />}
             {!inGeneral && <Quit canal={roomChange} />}
           </div>
-
           <div id="rcv-mess-container">
             <ChatMap messages={messages} />
           </div>

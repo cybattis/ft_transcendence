@@ -410,9 +410,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('inv')
   async handleInvitation(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { channel: string; target: string, id: number },
+    @MessageBody() data: { channel: string; target: string },
   ) {
-    await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, data.id);
+    const user = await this.userService.findByUsername(data.target);
+    if (!user) return;
+    await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, user.id);
   }
 
   @SubscribeMessage('acc')

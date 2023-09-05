@@ -64,6 +64,9 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
     } else if (user.nickname.length > 15) {
       setErrorMessage("Your Nickname can't be longer than 15 characters!");
       return;
+    } else if (!user.nickname.match(/^[a-zA-Z0-9]+$/)) {
+      setErrorMessage("Can only contain alphanumeric characters.");
+      return;
     }
 
     put<UserSettings>("user/update", user, "application/json")

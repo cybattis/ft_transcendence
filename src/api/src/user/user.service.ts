@@ -607,7 +607,7 @@ export class UserService implements OnModuleInit {
     : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
-    if (body.nickname.length == 0 || body.nickname.length > 15)
+    if (body.nickname.length == 0 || body.nickname.length > 15 || !body.nickname.match(/^[a-zA-Z0-9]+$/))
       return failure(APIError.InvalidNickname);
 
     const result = await this.getUserFromToken(token);
@@ -744,6 +744,7 @@ export class UserService implements OnModuleInit {
 
       result.push(temp);
     }
+    console.log(user);
     return success(result);
   }
 

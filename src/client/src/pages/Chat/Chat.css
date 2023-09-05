@@ -498,6 +498,13 @@
     color: black;
 }
 
+.canal {
+    max-width: 220px;
+    height: 80%;
+    justify-content: center;
+    overflow-x: auto;
+}
+
 .invites-game {
     display: flex;
     flex-direction: column;

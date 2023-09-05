@@ -59,14 +59,20 @@ export default function Signup() {
     if (!inputs.nickname) {
       setErrorInput("Please enter a Nickname.");
       isValid = false;
-    } else if (!validator.isAlpha(inputs.nickname)) {
-      setErrorInput("Can't have any special chracters in your Nickname.");
+    } else if (!inputs.nickname.match(/^[a-zA-Z0-9]+$/)) {
+      setErrorInput("Your nickname can only contain alphanumeric characters.");
       isValid = false;
     } else if (inputs.nickname.length > 15) {
       setErrorInput("Nickname is too long. (max 15 characters)");
       isValid = false;
     } else if (await inUse("login", inputs.nickname)) {
       setErrorInput("Nickname already in use.");
+      isValid = false;
+    } else if (inputs.firstname && !inputs.firstname.match(/^[a-zA-Z0-9]+$/)) {
+      setErrorInput("Your firstname can only contain alphanumeric characters.");
+      isValid = false;
+    } else if (inputs.lastname && !inputs.lastname.match(/^[a-zA-Z0-9]+$/)) {
+      setErrorInput("Your lastnamme can only contain alphanumeric characters.");
       isValid = false;
     } else if (!inputs.email) {
       setErrorInput("Please enter an Email.");

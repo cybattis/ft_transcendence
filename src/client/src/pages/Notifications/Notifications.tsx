@@ -185,6 +185,7 @@ export default function Notifications() {
         setInvits(friendInvites);
         setChannelInvits(channelInvites);
         setGameInvites(gameInvites);
+        console.log(channelInvites);
       } catch (error) {}
     }
 
