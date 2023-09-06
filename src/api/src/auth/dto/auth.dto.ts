@@ -53,3 +53,16 @@ export class SigninDto {
   @IsString()
   password: string;
 }
+
+export class TFAValidationDto {
+  @IsString()
+  code: string;
+}
+
+export class TFASigninDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  code: string;
+}

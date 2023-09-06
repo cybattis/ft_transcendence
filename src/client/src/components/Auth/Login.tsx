@@ -14,6 +14,8 @@ interface SigninDto {
   password: string;
 }
 
+const maxInput: number = 50;
+
 export default function Login() {
   const [errorMessage, setErrorMessage] = React.useState("");
   const { setFormState } = useContext(FormContext);
@@ -80,9 +82,9 @@ export default function Login() {
         <div className="desc">Sign in to your account</div>
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="email" />
+          <InputForm type="text" name="email" maxLength={maxInput}/>
           <br />
-          <InputForm type="password" name="password" />
+          <InputForm type="password" name="password" maxLength={maxInput}/>
           <button type="submit" className="submitButton">
             Login
           </button>

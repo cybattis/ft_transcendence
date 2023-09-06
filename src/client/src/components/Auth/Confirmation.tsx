@@ -7,6 +7,8 @@ import "./Auth.css";
 import { AuthContext } from "./auth.context";
 import { useFetcher } from "../../hooks/UseFetcher";
 
+const maxCode: number = 10;
+
 export default function ConfirmEmail() {
   const [errorInput, setErrorInput] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
@@ -56,7 +58,7 @@ export default function ConfirmEmail() {
         {errorInput && <p className="error"> {errorInput} </p>}
         {errorMessage && <p className="error"> {errorMessage} </p>}
         <form method="post" onSubmit={handleSubmit}>
-          <InputForm type="text" name="Confirmation Code" />
+          <InputForm type="text" name="Confirmation Code" maxLength={maxCode}/>
           <br />
           <button type="submit" className="submitButton">
             Confirm

@@ -20,6 +20,7 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
+import { UserSettingsDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -603,11 +604,20 @@ export class UserService implements OnModuleInit {
     return success(user.value.avatarUrl);
   }
 
+  async changePrvChannel(old : string, actual : string){
+    const users = await this.usersRepository.find();
+    if (!users) return ;
+    for (const user of users){
+      user.chans = user.chans.map((user: string) => (user === old ? actual : user));
+    }
+    await this.usersRepository.save(users);
+  }
+
   async updateUserSettings(body: UserSettings, token: string)
     : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
-    if (body.nickname.length == 0 || body.nickname.length > 15)
+    if (body.nickname.length == 0 || body.nickname.length > 15 || !body.nickname.match(/^[a-zA-Z0-9]+$/))
       return failure(APIError.InvalidNickname);
 
     const result = await this.getUserFromToken(token);
@@ -620,6 +630,7 @@ export class UserService implements OnModuleInit {
       if (otherUser.isOk())
         return failure(APIError.NicknameAlreadyTaken);
 
+      await this.changePrvChannel(user.nickname, body.nickname);
       user.nickname = body.nickname;
       await this.channelService.updateNickname(body, token);
     }

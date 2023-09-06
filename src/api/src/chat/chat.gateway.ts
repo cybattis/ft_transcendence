@@ -116,6 +116,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     @MessageBody()
     data: { username: string; channel: string; password: string; type: string },
   ) {
+    if (!data) return;
     let type, pass, username, channel: string;
     if (!data) return;
     !data.channel ? (channel = '#general') : (channel = data.channel);
@@ -124,19 +125,16 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     !data.type ? (type = '') : (type = data.type);
     if (username === '')
       return;
-    //await this.channelService.joinOldChannel(socket, username);
-
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
       return;
-
     await this.channelService.joinChannel(
       this.server,
       socket,
       type,
-      username,
-      channel,
-      pass,
+      data.username,
+      data.channel,
+      data.password,
       blockedUsers.value.blockedChat,
     );
   }
@@ -160,6 +158,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     data: { channel: string; type: string; pwd: string; username: string },
   ) {
     await this.channelService.changeParam(
+      this.server,
+      socket,
       data.channel,
       data.type,
       data.pwd,
@@ -183,9 +183,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('blocked')
   async handleBlocked(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { target: string },
+    @MessageBody() data: { username: string, target: string, cmd: string },
   ) {
-    await this.channelService.blockedUser(this.server, socket, data.target);
+    await this.channelService.blockedUser(this.server, socket, data.username, data.target, data.cmd);
   }
 
   @SubscribeMessage('mute')
@@ -198,6 +198,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       return;
 
     await this.channelService.muteUser(
+      this.server,
       socket,
       data.username,
       data.target,
@@ -227,6 +228,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       return;
 
     await this.channelService.unmuteUser(
+      this.server,
       socket,
       data.username,
       data.target,
@@ -248,6 +250,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('op')
   async handleOpe(@ConnectedSocket() socket: AuthedSocket, @MessageBody() data: any) {
     await this.channelService.opChannel(
+      this.server,
       socket,
       data.channel,
       data.cmd,
@@ -267,7 +270,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.channel,
     );
     const channel = data.channel;
-    this.server.to(socket.id).emit('quit', channel);
+    socket.emit('quit', channel);
     const blockedUsers = await this.userService.findByLogin(data.username);
     if (blockedUsers.isErr())
       return;
@@ -298,6 +301,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const channel = data.channel;
     if (targetSocket) {
       this.server.to(targetSocket).emit('quit', channel);
+      const reason = "You've been banned by " + data.username + ".";
+      const err = { channel, reason };
+      this.server.to(targetSocket).emit('err', err);
       const blockedUsers = await this.userService.findByLogin(
         data.username,
       );
@@ -325,7 +331,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.target,
       data.channel,
     );
-    const user = await this.userService.findByUsername(data.username);
+    const user = await this.userService.findByUsername(data.target);
     if (!user) return;
     const targetSocket = await this.channelService.getSocketById(
       user.id,
@@ -333,6 +339,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const channel = data.channel;
     if (targetSocket) {
       this.server.to(targetSocket).emit('unban', channel);
+      const reason = "You've been unbanned by " + data.username + ".";
+      const err = { channel, reason };
+      this.server.to(targetSocket).emit('err', err);
       const blockedUsers: any = await this.userService.findByLogin(
         data.username,
       );
@@ -362,9 +371,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
         data.channel,
       )
     ) {
-      const target = this.channelService.getSocketByUsername(data.target);
+      const user = await this.userService.findByUsername(data.target);
+      if (!user) return ;
+      const target: any = await this.channelService.getSocketById(user.id);
       if (target) {
         this.server.to(target).emit('quit', data.channel);
+        const reason = "You've been kicked by " + data.username + ".";  
+        const channel = data.channel;
+        const err = { channel, reason };
+        this.server.to(target).emit('err', err);
         const blockedUsers = await this.userService.findByLogin(
           data.username,
         );
@@ -410,9 +425,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('inv')
   async handleInvitation(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { channel: string; target: string, id: number },
+    @MessageBody() data: { channel: string; target: string },
   ) {
-    await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, data.id);
+    const user = await this.userService.findByUsername(data.target);
+    if (!user) return;
+    await this.channelService.JoinWithInvitation(this.server, data.channel, data.target, user.id);
   }
 
   @SubscribeMessage('acc')
