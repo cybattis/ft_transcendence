@@ -20,12 +20,14 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
+import { CloudinaryService } from 'src/auth/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
   private channelService: ChannelService;
+  private cloudinary: CloudinaryService;
   @InjectRepository(User)
   private usersRepository: Repository<User>;
 
@@ -599,17 +601,22 @@ export class UserService implements OnModuleInit {
     return success(false);
   }
 
-  async updateAvatar(path: string, token: string)
+  async updateAvatar(file: Express.Multer.File, token: string)
     : Promise<Result<string, typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     const user = await this.getUserFromToken(token);
     if (user.isErr())
       return failure(user.error);
 
-    user.value.avatarUrl = apiBaseURL + path;
-    await this.usersRepository.save(user.value);
+      try {
+        const image = await this.cloudinary.uploadFile(file);
+        user.value.avatarUrl = apiBaseURL + image.secure_url;
+        await this.usersRepository.save(user.value);
 
-    return success(user.value.avatarUrl);
+        return success(user.value.avatarUrl);
+      } catch (error) {
+        return error
+      }
   }
 
   async changePrvChannel(old : string, actual : string){

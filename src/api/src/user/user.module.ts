@@ -11,6 +11,7 @@ import { MailService } from '../mail/mail.service';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelModule } from 'src/channel/channel.module';
 import { Channel } from 'src/channel/entity/Channel.entity';
+import { CloudinaryModule } from 'src/auth/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Channel } from 'src/channel/entity/Channel.entity';
     forwardRef(() => ChannelModule),
     TypeOrmModule.forFeature([User, Game, Channel]),
     MulterModule.register({ dest: './avatar' }),
+    CloudinaryModule,
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService, JwtService],

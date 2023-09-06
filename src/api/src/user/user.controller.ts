@@ -171,7 +171,7 @@ export class UserController{
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
     const token = getTokenOrThrow(header);
-    const result = await this.userService.updateAvatar(file.path, token);
+    const result = await this.userService.updateAvatar(file, token);
     if (result.isErr())
         throw new ForbiddenException();
     return result.value;
