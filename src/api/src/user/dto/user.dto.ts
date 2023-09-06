@@ -20,3 +20,9 @@ export class UserSettingsDto {
   @MaxLength(30)
   lastname: string;
 }
+
+export class PaddleColorDto {
+  @IsString()
+  @IsNotEmpty()
+  color: string;
+}
