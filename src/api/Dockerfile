@@ -44,4 +44,6 @@ COPY . .
 
 COPY --from=build /usr/src/app/dist ./dist
 
+RUN chmod 777 ./secret/fullchain.pem && chmod 777 ./secret/ssl_keychain.pem && chmod 777 ./secret/
+
 CMD ["npm", "start"]

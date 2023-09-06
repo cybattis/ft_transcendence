@@ -36,4 +36,6 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx/nginx.conf /etc/nginx/conf.d
 COPY secret/* /etc/nginx/ssl/
 
+RUN chmod 777 ./etc/nginx/ssl/fullchain.pem && chmod 777 ./etc/nginx/ssl/ssl_keychain.pem
+
 CMD ["nginx", "-g", "daemon off;"]
