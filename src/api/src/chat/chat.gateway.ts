@@ -93,21 +93,14 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('sendGame')
   async handleGameMessage(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: any,
+    @MessageBody() data: { gameId: number, sender: string, content: string },
   ) {
-    let blockedUsers = await this.userService.findByLogin(data.username);
-    if (blockedUsers.isErr())
-      return;
+    const message = {
+      sender: data.sender,
+      content: data.content,
+    }
 
-    await this.channelService.sendGameMessage(
-      this.server,
-      socket,
-      data.channel,
-      data.msg,
-      data.username,
-      data.opponent,
-      blockedUsers.value.blockedChat,
-    );
+    this.server.to('game-chat-' + data.gameId).emit('rcvgame', message);
   }
 
   @SubscribeMessage('join')
@@ -142,13 +135,19 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('joinGame')
   async joinGameChat(
     @ConnectedSocket() socket: AuthedSocket,
-    @MessageBody() data: { canal: string },
+    @MessageBody() gameId: number,
   ) {
-    if (!data) return;
-    await this.channelService.joinGameChannel(
-      socket,
-      data.canal,
-    );
+    if (!gameId) return;
+    socket.join('game-chat-' + gameId);
+  }
+
+  @SubscribeMessage('leaveGame')
+  async leaveGameChat(
+    @ConnectedSocket() socket: AuthedSocket,
+    @MessageBody()  gameId: number ,
+  ) {
+    if (!gameId) return;
+    socket.leave('game-chat-' + gameId);
   }
 
   @SubscribeMessage('change')
