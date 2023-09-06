@@ -372,7 +372,9 @@ export class UserService implements OnModuleInit {
     if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
       return failure(result.error);
 
-    console.log(friend);
+    const new_friend: User | null = await this.usersRepository.findOne({where: { nickname: friendUsername } });
+    if (!new_friend)
+      return failure(APIError.UserNotFound);
 
     const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
@@ -390,11 +392,11 @@ export class UserService implements OnModuleInit {
     me.blockedChat.push(friend.nickname);
 
     // Add me to friend's blocked list
-    friend.blockedById.push(me.id);
-    friend.blockedChat.push(me.nickname);
+    new_friend.blockedById.push(me.id);
+    new_friend.blockedChat.push(me.nickname);
 
     // Update the friend's blocked list in the database
-    await this.usersRepository.save(friend);
+    await this.usersRepository.save(new_friend);
 
     // Update my blocked list in the database
     const updated_me = await this.usersRepository.save(me);
