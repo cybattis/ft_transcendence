@@ -8,18 +8,22 @@ const allMessages: any = [];
 
 const maxMessage: number = 126;
 
-export default function PrivateGameChat(props: {
-  playerOne: string;
-  playerTwo: string;
-  canal: string;
-  myUsername: string;
-}) {
+export interface PrivateGameChatProps {
+  playerNickname: string;
+  opponentNickname: string;
+  gameId: number;
+}
+
+type Message = {
+  id: number;
+  sender: string;
+  content: string;
+}
+
+export default function PrivateGameChat(props: PrivateGameChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [all, setAll] = useState<GameChatInterface[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isMute, setIsMute] = useState(false);
-  const [me, setMe] = useState("");
-  const [other, setOther] = useState("");
-  const [msgNum, setMsgNum] = useState(0);
 
   const handleMute = async () => {
     setIsMute(!isMute);
@@ -50,7 +54,7 @@ export default function PrivateGameChat(props: {
     );
   }
 
-  function ChatMap({ messages }: { messages: GameChatInterface[] }) {
+  function ChatMap({ messages }: { messages: Message[] }) {
     useEffect(() => {
       function scrollbar() {
         const scr = document.getElementById("list-gamemsg-container");
@@ -63,20 +67,16 @@ export default function PrivateGameChat(props: {
     return (
       <>
         <ul id="list-gamemsg-container" className="list-gamemsg-container">
-          {messages
-            .filter((messages) =>
-              props.canal ? messages.channel === props.canal : null
-            )
-            .map((messages) =>
-              messages.sender === props.myUsername ? (
+          {messages.map((messages) =>
+              messages.sender === props.playerNickname ? (
                 <li className="GameEmt" key={messages.id}>
                   <div className="contain-game-emt">{messages.sender}</div>
-                  <div className="contain-game-msg">{messages.msg}</div>
+                  <div className="contain-game-msg">{messages.content}</div>
                 </li>
               ) : (
                 <li className="GameRcv" key={messages.id}>
                   <div className="contain-game-emt">{messages.sender}</div>
-                  <div className="contain-game-msg">{messages.msg}</div>
+                  <div className="contain-game-msg">{messages.content}</div>
                 </li>
               )
             )}
@@ -92,10 +92,9 @@ export default function PrivateGameChat(props: {
       inputRef.current.value[0]
     ) {
       const send = {
-        username: me,
-        opponent: other,
-        channel: props.canal,
-        msg: inputRef.current.value,
+        gameId: props.gameId,
+        sender: props.playerNickname,
+        content: inputRef.current.value,
       };
       ChatClientSocket.sendGameChat(send);
       inputRef.current.value = "";
@@ -110,55 +109,31 @@ export default function PrivateGameChat(props: {
   };
 
   useEffect(() => {
-    const fetchgameInfo = async () => {
-      if (props.playerOne === props.myUsername) {
-        setMe(props.playerOne);
-        setOther(props.playerTwo);
-      } else {
-        setOther(props.playerOne);
-        setMe(props.playerTwo);
+    function receiveMessage(message: {sender: string, content: string}) {
+      const newMessage: Message = {
+        id: allMessages.length,
+        sender: message.sender,
+        content: message.content,
       }
-    };
+      allMessages.push(newMessage);
+      setMessages([...allMessages]);
+    }
 
-    fetchgameInfo();
-
-    ChatClientSocket.joinGameChat({ canal: props.canal });
-
-    const gameMessageCallBack = async (data: {
-      sender: string;
-      opponent: string;
-      msg: string;
-      channel: string;
-      blockedUsers: any;
-    }) => {
-      const newObj = {
-        id: msgNum,
-        sender: data.sender,
-        opponent: data.opponent,
-        msg: data.msg,
-        channel: data.channel,
-        blockedUsers: data.blockedUsers,
-      };
-      if (!isMute || (isMute && data.sender === me)) allMessages.push(newObj);
-      const newData: GameChatInterface[] = [];
-      for (let i = 0; allMessages[i]; i++) newData.push(allMessages[i]);
-      setAll(newData);
-      if (!isMute || (isMute && data.sender === me)) setMsgNum(msgNum + 1);
-    };
-
-    ChatClientSocket.onGameMessageRecieve(gameMessageCallBack);
+    ChatClientSocket.onGameMessageRecieve(receiveMessage);
+    ChatClientSocket.joinGameChat(props.gameId);
 
     return () => {
-      ChatClientSocket.offGameMessageRecieve(gameMessageCallBack);
+      ChatClientSocket.offGameMessageRecieve(receiveMessage);
+      ChatClientSocket.leaveGameChat(props.gameId);
     };
-  }, [msgNum, me, other, props, isMute]);
+  }, [props.gameId]);
 
   return (
     <div className="gamechat-div">
       <div className="gamechat">
         <div className="gamechat-container">
           <div className="rcv-gamemess-container" id="rcv-gamemess-container">
-            <ChatMap messages={all} />
+            {!isMute ? <ChatMap messages={messages} /> : null}
           </div>
           <div className="send-gamemess-container">
             <input
