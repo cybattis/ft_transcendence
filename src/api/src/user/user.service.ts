@@ -20,6 +20,7 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
+import { UserSettingsDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService implements OnModuleInit {

@@ -32,6 +32,7 @@ import { TypeCheckers } from '../utils/type-checkers';
 import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
+import { PaddleColorDto, UserSettingsDto } from "./dto/user.dto";
 
 @Controller('user')
 export class UserController{
@@ -179,7 +180,7 @@ export class UserController{
   @UseGuards(TokenGuard)
   @Put('update')
   async updateSettings(
-    @Body() body: UserSettings,
+    @Body() body: UserSettingsDto,
     @Headers('Authorization') header: Headers,
   ): Promise<UserSettings> {
     const token = getTokenOrThrow(header);
@@ -376,7 +377,7 @@ export class UserController{
   @UseGuards(TokenGuard)
   @Put('customization/paddleColor')
   async updatePaddleColor(
-    @Body() body: { color: string },
+    @Body() body: PaddleColorDto,
     @Headers('Authorization') header: Headers,
   ): Promise<void> {
     const payload = decodeTokenOrThrow(header, this.jwtService);

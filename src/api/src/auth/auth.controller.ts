@@ -16,7 +16,7 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SigninDto, SignupDto } from './dto/auth.dto';
+import { SigninDto, SignupDto, TFASigninDto, TFAValidationDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
@@ -124,7 +124,7 @@ export class AuthController {
   }
 
   @Post('2fa')
-  async twoFactorAuth(@Body() body: { email: string, code: string }): Promise<string> {
+  async twoFactorAuth(@Body() body: TFASigninDto): Promise<string> {
     if (!await this.authService.checkCode(body.code, body.email))
       throw new ForbiddenException("Wrong code!");
     const result = await this.authService.logUser(body.email);
@@ -136,7 +136,7 @@ export class AuthController {
   @UseGuards(TokenGuard)
   @Post('2fa/validate')
   async validate2fa(
-    @Body() body: {code: string},
+    @Body() body: TFAValidationDto,
     @Headers('Authorization') header: Headers,
   ): Promise<true> {
     const token = getTokenOrThrow(header);
