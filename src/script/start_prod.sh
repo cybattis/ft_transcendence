@@ -11,7 +11,7 @@ if (uname -a | grep -q Darwin); then
     while IFS= read -r varname; do
       if [[ $varname == "CLIENT_PORT"* || $varname == "PROTOCOL"* \
             || $varname == "API_UID"* || $varname == "API_PORT"* \
-            || $varname == "HOST_IP"* ]]; then
+            || $varname == "HOST_IP"* || $varname == "WS_PROTOCOL"* ]]; then
             echo "REACT_APP_$varname" >> src/client/.env.local
       elif [[ $varname == "API_URL"* ]]; then
             echo 'REACT_APP_API_URL=${REACT_APP_PROTOCOL}://${REACT_APP_HOST_IP}:${REACT_APP_API_PORT}/auth/42' >> src/client/.env.local
@@ -35,6 +35,9 @@ else
             echo "REACT_APP_$varname" >> src/client/.env.local
             ;;
         HOST_IP*)
+            echo "REACT_APP_$varname" >> src/client/.env.local
+            ;;
+        WS_PROTOCOL*)
             echo "REACT_APP_$varname" >> src/client/.env.local
             ;;
         API_URL*)
