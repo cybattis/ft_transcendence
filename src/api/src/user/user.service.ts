@@ -37,7 +37,6 @@ export class UserService implements OnModuleInit {
     this.gameService = this.moduleRef.get(GameService, { strict: false });
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
     this.channelService = this.moduleRef.get(ChannelService, { strict: false });
-    console.log("HELLO FROM USER SERVICE ");
   }
 
   async findByLogin(nickname: string)
