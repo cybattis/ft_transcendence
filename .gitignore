@@ -114,3 +114,7 @@ dist
 ./src/client/secret
 ./src/client/secret/
 ./src/client/secret/*
+/src/api/secret/fullchain.pem
+/src/client/secret/fullchain.pem
+/src/api/secret/ssl_keychain.pem
+/src/client/secret/ssl_keychain.pem
