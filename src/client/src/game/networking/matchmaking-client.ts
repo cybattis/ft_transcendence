@@ -6,6 +6,7 @@ import {
 } from "./types";
 import { SocketManager } from "../../utils/socketManager";
 import Config from "../../utils/Config";
+import { wsBaseURL } from "../../utils/constant";
 
 export namespace MatchmakingClient {
   import ManagedSocket = SocketManager.ManagedSocket;
@@ -38,9 +39,7 @@ export namespace MatchmakingClient {
       path: "/matchmaking",
     };
 
-    const endpoint: string = "ws://" + Config.host_ip + ":" + Config.api_port;
-
-    socket = SocketManager.configureSocket(endpoint, socketOptions);
+    socket = SocketManager.configureSocket(wsBaseURL, socketOptions);
 
     socket.on("sync", (status: MatchmakingPlayerStatusDTO) => {
       syncCallbacks.forEach((callback) => callback(status));

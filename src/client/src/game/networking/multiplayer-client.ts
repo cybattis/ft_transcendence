@@ -57,7 +57,7 @@ export namespace MultiplayerClient {
       path: "/multiplayer",
     };
 
-    const endpoint: string = "ws://" + Config.host_ip + ":" + Config.api_port;
+    const endpoint: string = Config.ws_protocol + "://" + Config.host_ip + ":" + Config.api_port;
 
     socket = SocketManager.configureSocket(endpoint, socketOptions);
 
