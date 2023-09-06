@@ -16,7 +16,7 @@ import {
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SigninDto, SignupDto, TFADto } from './dto/auth.dto';
+import { SigninDto, SignupDto, TFAValidationDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
@@ -134,7 +134,7 @@ export class AuthController {
   @UseGuards(TokenGuard)
   @Post('2fa/validate')
   async validate2fa(
-    @Body() body: TFADto,
+    @Body() body: TFAValidationDto,
     @Headers('Authorization') header: Headers,
   ): Promise<true> {
     const token = getTokenOrThrow(header);

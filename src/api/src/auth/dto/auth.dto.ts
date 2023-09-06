@@ -54,7 +54,7 @@ export class SigninDto {
   password: string;
 }
 
-export class TFADto {
+export class TFAValidationDto {
   @IsString()
   code: string;
 }
