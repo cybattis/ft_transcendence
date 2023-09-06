@@ -54,20 +54,6 @@ services:
     networks:
       - net0
 
-#  nginx:
-#    container_name: ft_transcendence-nginx
-#    build:
-#      context: ./nginx
-#    ports:
-#      - "${NGINX_PORT}:${NGINX_PORT}"
-#    networks:
-#      - net0
-#    env_file:
-#      - .env
-#    depends_on:
-#      - client
-#      - api
-
 volumes:
   postgres:
 
