@@ -15,7 +15,6 @@ import { calculateWinrate } from "../../utils/calculateWinrate";
 import { useProfileData } from "../../hooks/UseProfileData";
 import { PopupContext } from "../../components/Modal/Popup.context";
 import { ChatClientSocket } from "../Chat/Chat-client";
-import { Navigation } from "../../utils/navigation";
 import { MatchmakingPlayerStatus, MatchmakingPlayerStatusDTO } from "../../game/networking/types";
 import { MatchmakingState } from "../../utils/matchmaking-states";
 
@@ -387,6 +386,12 @@ export function HomeLogged() {
     if (data) {
       UserData.updatePaddleColor(data.paddleColor);
       UserData.updateNickname(data.nickname);
+      if (data.backgroundColor === "Normal")
+        UserData.updateBackgroundColor("000000");
+      else if (data.backgroundColor === "Grass")
+        UserData.updateBackgroundColor("279630");
+      else if (data.backgroundColor === "Dirt")
+        UserData.updateBackgroundColor("914C0A");
     }
   }, [data]);
 

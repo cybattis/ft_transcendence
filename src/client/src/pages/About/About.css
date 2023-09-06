@@ -4,9 +4,21 @@
     text-align: center;
 
     flex-direction: column;
-    width: 100%;
     height: var(--vp-size);
     overflow-y: auto;
+}
+
+.about-dev-cards {
+    align-items: center;
+    text-align: center;
+
+    flex-direction: row;
+    height: fit-content;
+    justify-content: center;
+    gap: 20px;
+    @media screen and (width > 1100px) {
+        display: flex;
+    }
 }
 
 .about-main-title {
@@ -37,33 +49,15 @@
     object-fit: cover;
 }
 
-.about-left {
+.about-dev-card {
     display: flex;
-    flex-direction: row;
-    justify-content: left;
-}
-
-.about-right {
-    display: flex;
-    flex-direction: row;
-    justify-content: right;
+    flex-direction: column;
+    align-items: center;
 }
 
 .about-dev-title {
     text-align: center;
     font-size: max(1vw, 25px);
-}
-
-.about-description {
-    display: flex;
-
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    overflow-wrap: break-word;
-    font-size: max(0.6vw, 15px);
-
-    text-justify: distribute;
 }
 
 @media screen and (width <= 800px) {
@@ -80,30 +74,12 @@
         font-size: max(1vw, 20px);
         max-width: 400px;
     }
-
-    .about-left {
-        padding-top: 25px;
-    }
-
-    .about-right {
-        padding-top: 25px;
-        gap: 5px;
-    }
-
-    .about-description {
-        max-width: 215px;
-        gap: 5px;
-    }
 }
 
 @media screen and (width > 800px) {
     .about-img {
         width: 250px;
         height: 250px;
-    }
-
-    .about-description {
-        max-width: 500px;
     }
 
     .about-main-title {
@@ -113,15 +89,5 @@
     .about-title {
         font-size: max(1vw, 25px);
         max-width: 1000px;
-    }
-
-    .about-left {
-        padding-top: 15px;
-        gap: 10px;
-    }
-
-    .about-right {
-        padding-top: 15px;
-        gap: 10px;
     }
 }

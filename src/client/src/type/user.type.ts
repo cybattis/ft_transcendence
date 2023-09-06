@@ -14,6 +14,7 @@ export interface UserInfo {
   blockedById: number[];
   totalGameWon?: number;
   paddleColor: string;
+  backgroundColor: string;
 }
 
 export interface UserSettings {
@@ -46,6 +47,7 @@ export interface ChannelInvite {
   joinChannel: string,
   invitedByAvatar?: string,
   invitedByUsername: string,
+  
 }
 
 export interface Channel {
@@ -55,7 +57,8 @@ export interface Channel {
   users: string[],
   owner: string,
   operator: string[],
-  ban: string[],
+  banName: string[],
+  ban: [string, Date],
   mute: string[],
   password: string,
 }

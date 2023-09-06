@@ -126,6 +126,7 @@ export function Game() {
 
 function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
   const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
+  const bg: RgbColor = stringToRGB(UserData.getBackgroundColor());
 
   return (
     <div className="game-page">
@@ -137,6 +138,7 @@ function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
           width={1600}
           height={800}
           paddleColor={rgb}
+          backgroundColor={bg}
         />
       </div>
       <div className="game-extra">

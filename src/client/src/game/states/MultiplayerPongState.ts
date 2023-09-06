@@ -11,12 +11,13 @@ export default class MultiplayerPongState {
   private readonly playerSpeed: number;
 
   constructor(canvas: HTMLCanvasElement,
-              paddleColor: RgbColor, opponentPaddleColor: RgbColor)
+              paddleColor: RgbColor, opponentPaddleColor: RgbColor, backgroundColor: RgbColor)
   {
     this.canvas = canvas;
     this.state = new MultiplayerPongLogic(canvas);
     this.state.setPlayerPaddleColor(paddleColor);
     this.state.setOpponentPaddleColor(opponentPaddleColor);
+    this.state.setBackgroundColor(backgroundColor);
     this.playerSpeed = canvas.height * 0.8;
 
     MultiplayerClient.checkConnection();

@@ -9,10 +9,11 @@ export type MultiplayerPongProps = {
   width: number;
   height: number;
   paddleColor: RgbColor;
+  backgroundColor: RgbColor;
 };
 
 export function MultiplayerPong({
-  width, height, paddleColor,
+  width, height, paddleColor, backgroundColor,
 }: MultiplayerPongProps) {
   let canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -22,7 +23,7 @@ export function MultiplayerPong({
 
     const opponentInfos: PlayerInfos = MatchmakingClient.getOpponentInfos();
     createNewMultiplayerGame(new MultiplayerPongState(canvas,
-      paddleColor, stringToRGB(opponentInfos.paddleColor)));
+      paddleColor, stringToRGB(opponentInfos.paddleColor), backgroundColor));
   }, [width, height, paddleColor]);
 
   return (

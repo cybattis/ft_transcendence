@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import {Injectable} from "@nestjs/common";
 import {
   CasualGameInvite,
   CasualMatchmakingPlayer,
@@ -9,16 +9,16 @@ import {
   RankedGameInvite,
   RankedMatchmakingPlayer
 } from "./types/matchmaking.type";
-import { GameService } from "../game/game.service";
-import { GameBodyDto, GameInvite, GameMode, GameStatus, GameType } from "../type/game.type";
-import { UserService } from "../user/user.service";
-import { User } from "../user/entity/Users.entity";
-import { MultiplayerService } from "../multiplayer/multiplayer.service";
-import { APIError } from "src/utils/errors";
-import { failure, Result, success } from "../utils/Error";
-import { ChannelService } from "../channel/channel.service";
-import { AuthedSocket } from "../auth/types/auth.types";
-import { Server } from "socket.io";
+import {GameService} from "../game/game.service";
+import {GameBodyDto, GameInvite, GameMode, GameStatus, GameType} from "../type/game.type";
+import {UserService} from "../user/user.service";
+import {User} from "../user/entity/Users.entity";
+import {MultiplayerService} from "../multiplayer/multiplayer.service";
+import {APIError} from "src/utils/errors";
+import {failure, Result, success} from "../utils/Error";
+import {ChannelService} from "../channel/channel.service";
+import {AuthedSocket} from "../auth/types/auth.types";
+import {Server} from "socket.io";
 
 @Injectable()
 export class MatchmakingService {
@@ -76,6 +76,13 @@ export class MatchmakingService {
     // Check if the user is already in matchmaking
     if (this.isPlayerInMatchmaking(playerId))
       return failure(APIError.UserInMatchmaking);
+
+    const games = await this.gameService.findUserGames(playerId);
+    for (const game of games) {
+      if ((game.ids[0] === playerId || game.ids[1] === playerId) &&
+          (game.status === GameStatus.IN_PROGRESS || game.status === GameStatus.WAITING_FOR_PLAYERS))
+        return failure(APIError.UserAlreadyInGame);
+    }
 
     // Create a new player object
     const player: CasualMatchmakingPlayer = {socket: socket, id: playerId};
@@ -140,6 +147,13 @@ export class MatchmakingService {
     // Check if the user is already in matchmaking
     if (this.isPlayerInMatchmaking(playerId))
       return failure(APIError.UserInMatchmaking);
+
+    const games = await this.gameService.findUserGames(playerId);
+    for (const game of games) {
+      if ((game.ids[0] === playerId || game.ids[1] === playerId) &&
+          (game.status === GameStatus.IN_PROGRESS || game.status === GameStatus.WAITING_FOR_PLAYERS))
+        return failure(APIError.UserAlreadyInGame);
+    }
 
     // Create a new player object
     const player: RankedMatchmakingPlayer = {socket: socket, id: playerId, rankPoints: user.value.ranking};
@@ -260,7 +274,7 @@ export class MatchmakingService {
    */
   public async inviteUserToCasualGame(client: AuthedSocket, invitingId: number, invitedId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
-    | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
+    | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite>>
   {
     // Get the inviting user
     const invitingUser = await this.getUserFromDb(invitingId);
@@ -279,6 +293,9 @@ export class MatchmakingService {
     const invitedUser = await this.getUserFromDb(invitedId);
     if (invitedUser.isErr())
       return failure(APIError.OtherUserNotFound);
+
+    if (invitingId === invitedId)
+      return failure(APIError.SelfInvite);
 
     const invitingPlayer: CasualMatchmakingPlayer = {
       id: invitingId,
@@ -305,7 +322,7 @@ export class MatchmakingService {
   public async acceptCasualGameInvite(invitedSocket: AuthedSocket, invitedId: number, invitingId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.GameInviteNotFound | typeof APIError.OtherUserNotFound | typeof APIError.OtherUserAlreadyInGame
-    | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking>>
+    | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking | typeof APIError.SelfInvite>>
   {
     // Get the invited user
     const invitedUser = await this.getUserFromDb(invitedId);
@@ -324,6 +341,9 @@ export class MatchmakingService {
     const invitingUser = await this.getUserFromDb(invitingId);
     if (invitingUser.isErr())
       return failure(APIError.OtherUserNotFound);
+
+    if (invitingId === invitedId)
+      return failure(APIError.SelfInvite);
 
     // If the inviting player is in game, return
     if (this.multiplayerService.isPlayerInGame(invitingId))
@@ -372,7 +392,7 @@ export class MatchmakingService {
      */
   public async inviteUserToRankedGame(client: AuthedSocket, invitingId: number, invitedId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
-      | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking>>
+      | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite>>
     {
       // Get the inviting user
       const invitingUser = await this.getUserFromDb(invitingId);
@@ -391,6 +411,9 @@ export class MatchmakingService {
       const invitedUser = await this.getUserFromDb(invitedId);
       if (invitedUser.isErr())
         return failure(APIError.OtherUserNotFound);
+
+      if (invitingId === invitedId)
+        return failure(APIError.SelfInvite);
 
       const invitingPlayer: RankedMatchmakingPlayer = {
         id: invitingId,
@@ -417,7 +440,7 @@ export class MatchmakingService {
   public async acceptRankedGameInvite(invitedSocket: AuthedSocket, invitedId: number, invitingId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
     | typeof APIError.GameInviteNotFound | typeof APIError.OtherUserNotFound | typeof APIError.OtherUserAlreadyInGame
-    | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking>>
+    | typeof APIError.UserInMatchmaking | typeof APIError.OtherUserInMatchmaking | typeof APIError.SelfInvite>>
   {
     // Get the invited user
     const invitedUser = await this.getUserFromDb(invitedId);
@@ -436,6 +459,9 @@ export class MatchmakingService {
     const invitingUser = await this.getUserFromDb(invitingId);
     if (invitingUser.isErr())
       return failure(APIError.OtherUserNotFound);
+
+    if (invitingId === invitedId)
+      return failure(APIError.SelfInvite);
 
     // If the inviting player is in game, return
     if (this.multiplayerService.isPlayerInGame(invitingId))

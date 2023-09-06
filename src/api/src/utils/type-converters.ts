@@ -37,6 +37,7 @@ export namespace TypeConverters {
       blockedById: user.blockedById,
       totalGameWon: user.totalGameWon,
       paddleColor: user.paddleColor,
+      backgroundColor: user.backgroundColor,
     }
   }
 

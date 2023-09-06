@@ -82,7 +82,7 @@
     text-align: right;
     margin: 5px;
     overflow-wrap: break-word;
-    color: rgb(227, 21, 21);
+    color: var(--grey);
 }
 
 .Announce {
@@ -496,6 +496,13 @@
 .selectName {
     width: 100%;
     color: black;
+}
+
+.canal {
+    max-width: 220px;
+    height: 80%;
+    justify-content: center;
+    overflow-x: auto;
 }
 
 .invites-game {

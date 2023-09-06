@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { PracticePong } from "../../game/components/PracticePong";
 import { RgbColor, stringToRGB } from "../../utils/colors";
 import { AIDifficulty } from "../../game/logic/PongAi";
+import { UserData } from "../Profile/user-data";
 import "./IAGame.css";
 
 export function IAGame() {
@@ -9,7 +10,8 @@ export function IAGame() {
   const [title, setTitle] = useState("");
   const [ready, setReady] = useState(false);
 
-  const paddleColor: RgbColor = stringToRGB("ffffff");
+  const paddleColor: RgbColor = stringToRGB(UserData.getPaddleColor());
+  const backgroundColor: RgbColor = stringToRGB(UserData.getBackgroundColor());
 
   const handleMode = async (mode: string) => {
     if (mode === "Easy") {
@@ -67,6 +69,7 @@ export function IAGame() {
               height={400}
               aiDifficulty={mode}
               paddleColor={paddleColor}
+              backgroundColor={backgroundColor}
             />
           </div>
         </div>

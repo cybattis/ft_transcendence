@@ -47,6 +47,13 @@ export class UserService implements OnModuleInit {
     return result !== null ? success(result) : failure(APIError.UserNotFound);
   }
 
+  async findByUsername(nickname: string)
+    : Promise<User | null>
+  {
+    const result = await this.usersRepository.findOneBy({nickname: nickname });
+    return result;
+  }
+
   async findByID(id: number)
     : Promise<Result<User, typeof APIError.UserNotFound>>
   {
@@ -597,11 +604,20 @@ export class UserService implements OnModuleInit {
     return success(user.value.avatarUrl);
   }
 
-  async updateUserSettings(body: UserSettingsDto, token: string)
+  async changePrvChannel(old : string, actual : string){
+    const users = await this.usersRepository.find();
+    if (!users) return ;
+    for (const user of users){
+      user.chans = user.chans.map((user: string) => (user === old ? actual : user));
+    }
+    await this.usersRepository.save(users);
+  }
+
+  async updateUserSettings(body: UserSettings, token: string)
     : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
-    if (body.nickname.length == 0 || body.nickname.length > 15)
+    if (body.nickname.length == 0 || body.nickname.length > 15 || !body.nickname.match(/^[a-zA-Z0-9]+$/))
       return failure(APIError.InvalidNickname);
 
     const result = await this.getUserFromToken(token);
@@ -614,6 +630,7 @@ export class UserService implements OnModuleInit {
       if (otherUser.isOk())
         return failure(APIError.NicknameAlreadyTaken);
 
+      await this.changePrvChannel(user.nickname, body.nickname);
       user.nickname = body.nickname;
       await this.channelService.updateNickname(body, token);
     }
@@ -683,6 +700,23 @@ export class UserService implements OnModuleInit {
     return success(true);
   }
 
+  async updateBackgroundColor(id: number, color: string)
+    : Promise<Result<true, typeof APIError.InvalidColor | typeof APIError.UserNotFound>>
+  {
+    if (color !== "Normal" && color !== "Grass" && color !== "Dirt") {
+      return failure(APIError.InvalidColor);
+    }
+
+    const user = await this.usersRepository.findOneBy({id: id});
+    if (!user)
+      return failure(APIError.UserNotFound);
+
+    user.backgroundColor = color;
+    await this.usersRepository.save(user);
+
+    return success(true);
+  }
+
   async getPaddleColor(id: number)
     : Promise<Result<string, typeof APIError.UserNotFound>>
   {
@@ -690,10 +724,17 @@ export class UserService implements OnModuleInit {
     return user !== null ? success(user.paddleColor) : failure(APIError.UserNotFound);
   }
 
+  async getBackgroundColor(id: number)
+    : Promise<Result<string, typeof APIError.UserNotFound>>
+  {
+    const user = await this.usersRepository.findOneBy({ id: id });
+    return user !== null ? success(user.backgroundColor) : failure(APIError.UserNotFound);
+  }
+
   async fetchInvChannel(id : number)
     : Promise<Result<ChannelInvite[], typeof APIError.UserNotFound>>
   {
-    const user =  await this.usersRepository.findOneBy({id :Number(id)});
+    const user = await this.usersRepository.findOneBy({id :Number(id)});
     if (!user)
       return failure(APIError.UserNotFound);
 

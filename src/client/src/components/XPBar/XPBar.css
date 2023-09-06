@@ -8,7 +8,20 @@ progress[value] {
     border-color: var(--cyan);
 }
 
-progress {
+progress[value]::-webkit-progress-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    width: auto;
+    height: 15px;
+    background-color: var(--black);
+    border-radius: 20px;
+    border-color: var(--cyan);
+}
+
+
+progress::-webkit-progress-value {
+    border-radius: 20px;
+    border-color: var(--cyan);
     background-color: var(--cyan);
 }
 
