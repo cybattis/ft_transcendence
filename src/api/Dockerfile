@@ -34,6 +34,8 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
+RUN apk update && apk add --no-cache openssl
+
 RUN npm install -g @nestjs/cli
 RUN npm ci
 RUN mkdir -p avatar

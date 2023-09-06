@@ -27,9 +27,13 @@ RUN npm run build
 # Production stage
 FROM nginx:stable-alpine as production
 
+RUN apk update && apk add --no-cache openssl \
+    && mkdir /etc/nginx/ssl
+
 COPY --from=build /usr/src/app/build /usr/share/nginx/html
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx/nginx.conf /etc/nginx/conf.d
+COPY secret/* /etc/nginx/ssl/
 
 CMD ["nginx", "-g", "daemon off;"]

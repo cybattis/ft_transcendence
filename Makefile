@@ -1,4 +1,4 @@
-NAME		=	ft_transcendance
+NAME		=	ft_transcendence
 
 VOLUME_PATH	=
 COMPOSE 	=	docker compose -f ./src/Docker-compose.yml
