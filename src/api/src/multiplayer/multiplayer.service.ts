@@ -84,9 +84,13 @@ export class MultiplayerService {
     const room = this.getRoomByPlayerId(client.userId);
     if (room) {
       if (room.player1Id === client.userId) {
+        if (room.player1Ready)
+          return failure(APIError.GameNotFound);
         room.player1Ready = true;
         client.emit('ready-ack', 1);
       } else if (room.player2Id === client.userId) {
+        if (room.player2Ready)
+          return failure(APIError.GameNotFound);
         room.player2Ready = true;
         client.emit('ready-ack', 2);
       } else {
