@@ -20,6 +20,7 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
+import { UserSettingsDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -596,7 +597,7 @@ export class UserService implements OnModuleInit {
     return success(user.value.avatarUrl);
   }
 
-  async updateUserSettings(body: UserSettings, token: string)
+  async updateUserSettings(body: UserSettingsDto, token: string)
     : Promise<Result<UserSettings, typeof APIError.InvalidNickname | typeof APIError.NicknameAlreadyTaken
     | typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
