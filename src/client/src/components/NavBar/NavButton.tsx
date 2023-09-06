@@ -42,9 +42,9 @@ export function DisconnectButton(props: { callback?: () => void }) {
     if (props.callback) props.callback();
 
     await MatchmakingClient.leaveMatchmaking();
-    Navigation.disconnect();
     await put<void>("auth/disconnect", {})
       .catch(() => {});
+    Navigation.disconnect();
     setAuthed(false);
     return <Navigate to={'/'} />;
   };

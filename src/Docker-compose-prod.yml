@@ -1,4 +1,4 @@
-name: ft_transcendance
+name: ft_transcendence
 
 services:
   postgres:
@@ -16,7 +16,7 @@ services:
       - postgres:/var/lib/postgresql/data/
 
   client:
-    container_name: ft_transcendance-client-prod
+    container_name: ft_transcendence-client-prod
     build:
       context: ./client
       target: production
@@ -28,7 +28,7 @@ services:
       - client/.env.local
 
   api:
-    container_name: ft_transcendance-api-prod
+    container_name: ft_transcendence-api-prod
     build:
       context: ./api
       target: production

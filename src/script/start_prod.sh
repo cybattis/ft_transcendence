@@ -47,4 +47,17 @@ else
     done < "$file"
 fi
 
+mkdir -p src/script/secret
+
+openssl req -x509 -outform pem \
+    -out src/script/secret/fullchain.pem \
+    -keyout src/script/secret/ssl_keychain.pem \
+    -newkey rsa:4096 -nodes -sha256 -days 3650 \
+    -subj '/CN=FR'
+
+cp -r src/script/secret src/client/
+cp -r src/script/secret src/api/
+
+rm -r src/script/secret
+
 echo "Done."

@@ -1,4 +1,4 @@
-NAME		=	ft_transcendance
+NAME		=	ft_transcendence
 
 VOLUME_PATH	=
 COMPOSE 	=	docker compose -f ./src/Docker-compose.yml
@@ -22,6 +22,7 @@ clean: stop _clean
 
 fclean: clean
 	$(COMPOSE) down --volumes
+	$(PRODUCTION) down --volumes
 	rm -rf ./src/api/avatar
 
 restart: _restart clean build start

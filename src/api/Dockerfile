@@ -34,6 +34,8 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
+RUN apk update && apk add --no-cache openssl
+
 RUN npm install -g @nestjs/cli
 RUN npm ci
 RUN mkdir -p avatar
@@ -41,5 +43,7 @@ RUN mkdir -p avatar
 COPY . .
 
 COPY --from=build /usr/src/app/dist ./dist
+
+RUN chmod 777 ./secret/fullchain.pem && chmod 777 ./secret/ssl_keychain.pem && chmod 777 ./secret/
 
 CMD ["npm", "start"]
