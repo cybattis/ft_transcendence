@@ -30,7 +30,8 @@ export interface GameProps {
   playerOne: PlayerInterface,
   playerTwo: PlayerInterface,
   canal: string,
-  myUsername: string
+  myUsername: string,
+  gameId: number
 }
 
 export function Game() {
@@ -64,7 +65,8 @@ export function Game() {
           playerOne: gameInfos.playerOne,
           playerTwo: gameInfos.playerTwo,
           canal: gameInfos.id + gameInfos.mode + gameInfos.type,
-          myUsername: profileInfos.nickname
+          myUsername: profileInfos.nickname,
+          gameId: gameInfos.id
         }
 
         if (gameInfos.status === GameStatus.FINISHED
@@ -115,6 +117,7 @@ export function Game() {
             myUsername={gameProps.myUsername}
             endGame={endGame}
             hasWin={hasWin}
+            gameId={gameProps.gameId}
           />
         )
          :
@@ -124,7 +127,7 @@ export function Game() {
   );
 }
 
-function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
+function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean, gameId: number}) {
   const rgb: RgbColor = stringToRGB(UserData.getPaddleColor());
   const bg: RgbColor = stringToRGB(UserData.getBackgroundColor());
 
@@ -132,23 +135,23 @@ function GameLoaded(props: GameProps & {endGame: boolean, hasWin: boolean}) {
     <div className="game-page">
       {props.endGame ? (
         <EndGamePopup hasWin={props.hasWin}/>
-      ) : null}
-      <div className="game-box">
-        <MultiplayerPong
-          width={1600}
-          height={800}
-          paddleColor={rgb}
-          backgroundColor={bg}
-        />
-      </div>
+      ) : (
+        <div className="game-box">
+          <MultiplayerPong
+            width={1600}
+            height={800}
+            paddleColor={rgb}
+            backgroundColor={bg}
+          />
+        </div>
+      )}
       <div className="game-extra">
         <div className="game-chat-box">
           <PlayerList playerOne={props.playerOne} playerTwo={props.playerTwo} />
           <PrivateGameChat
-              playerOne={props.playerOne.username}
-              playerTwo={props.playerTwo.username}
-              canal={props.canal}
-              myUsername={props.myUsername}
+              playerNickname={props.myUsername}
+              opponentNickname={props.myUsername === props.playerOne.username ? props.playerTwo.username : props.playerOne.username}
+              gameId={props.gameId}
           />
         </div>
       </div>

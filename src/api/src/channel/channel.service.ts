@@ -834,28 +834,6 @@ export class ChannelService implements OnModuleInit {
     }
   }
 
-  async sendGameMessage(
-    server: Server,
-    socket: Socket,
-    channel: string,
-    msg: string,
-    sender: string,
-    opponent: string,
-    blockedUsers: string[],
-  ) {
-    if (!this.limiteInput(msg, 0)) return;
-    if (!this.limiteInput(channel, 1)) return;
-    if (!this.limiteInput(sender, 2)) return;
-    if (!this.limiteInput(opponent, 2)) return;
-    const prv = { sender, opponent, msg, channel, blockedUsers };
-    const opp = await this.usersRepository.findOne({where: {nickname: opponent}});
-    if (!opp)
-      return ;
-    const target = await this.getSocketById(opp.id);
-    if (target) server.to(target).emit('rcvgame', prv);
-    server.to(socket.id).emit('rcvgame', prv);
-  }
-
   async findChannel(channel: string, pwd: string)
   : Promise<Result<true, typeof APIError.InvalidPassword | typeof APIError.ChannelNotFound>>
   {
