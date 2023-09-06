@@ -20,17 +20,16 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
-import { UserSettingsDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
   private channelService: ChannelService;
+  @InjectRepository(User)
+  private usersRepository: Repository<User>;
 
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
     private moduleRef: ModuleRef,
   ) {}
 
@@ -38,6 +37,7 @@ export class UserService implements OnModuleInit {
     this.gameService = this.moduleRef.get(GameService, { strict: false });
     this.jwtService = this.moduleRef.get(JwtService, { strict: false });
     this.channelService = this.moduleRef.get(ChannelService, { strict: false });
+    console.log("HELLO FROM USER SERVICE ");
   }
 
   async findByLogin(nickname: string)
@@ -330,7 +330,6 @@ export class UserService implements OnModuleInit {
     if (!friend)
       return failure(APIError.OtherUserNotFound);
 
-
     for (let i = 0; i < me.friendsId.length; i++) {
       if (me.friendsId[i] === friend.id) {
         // Create a new array without the friend and update the database
@@ -341,8 +340,13 @@ export class UserService implements OnModuleInit {
         for (let j = 0; j < friend.friendsId.length; j++) {
           if (friend.friendsId[j] === me.id) {
             // Create a new array without me and update the database
+            console.log(friend.friendsId);
             friend.friendsId.splice(j, 1);
-            await this.usersRepository.save(friend);
+            const updated_friend = await this.usersRepository.save(friend);
+            console.log(friend.friendsId);
+            console.log(updated_friend.friendsId);
+
+            console.log("friends nuked !");
 
             // Both users are not friends anymore
             return success(TypeConverters.fromUserToUserFriendsData(updated_me));
@@ -367,6 +371,8 @@ export class UserService implements OnModuleInit {
     const result = await this.removeFriend(friend.id, myId);
     if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
       return failure(result.error);
+
+    console.log(friend);
 
     const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {Injectable, OnModuleInit} from '@nestjs/common';
 import {
   BallUpdate,
   GameRoom,
@@ -14,11 +14,13 @@ import { Server } from 'socket.io';
 import { UserService } from '../user/user.service';
 import { APIError } from "../utils/errors";
 import { failure, Result, success } from "../utils/Error";
+import {ModuleRef} from "@nestjs/core";
 
 @Injectable()
-export class MultiplayerService {
+export class MultiplayerService implements OnModuleInit {
   private readonly rooms: GameRoom[] = [];
   private server: Server;
+  private userService: UserService;
 
   // Game constants
   private readonly BALL_SPEED: number = 0.5; // Traveling half of the board in 1 second
@@ -26,8 +28,11 @@ export class MultiplayerService {
 
   constructor(
     private readonly gameService: GameService,
-    private readonly userService: UserService,
-  ) {
+    private moduleRef: ModuleRef,
+  ) {}
+
+  onModuleInit(): void {
+    this.userService = this.moduleRef.get(UserService, { strict: false });
   }
 
   /*

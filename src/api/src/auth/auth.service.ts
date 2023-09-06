@@ -21,26 +21,29 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {UserCredentials} from "../type/user.type";
+import {ModuleRef} from "@nestjs/core";
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
   private timer: NodeJS.Timer;
   private static invalidTokens: string[] = [];
+  private userService: UserService;
 
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
-    private userService: UserService,
     private mailService: MailService,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
+    private moduleRef: ModuleRef,
   ) {}
 
   onModuleInit(): void {
     this.timer = setInterval(async () => {
       await this.checkTokenInvalidationList();
     }, 60 * 1000);
+    this.userService = this.moduleRef.get(UserService, { strict: false });
   }
 
   onModuleDestroy(): void {

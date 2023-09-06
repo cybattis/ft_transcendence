@@ -33,6 +33,7 @@ services:
       - REACT_APP_PROTOCOL=$PROTOCOL
       - REACT_APP_HOST_IP=$HOST_IP
       - REACT_APP_REDIR_URL=$REDIR_URL
+      - REACT_APP_WS_PROTOCOL=$WS_PROTOCOL
 
   api:
     container_name: ft_transcendance-api
