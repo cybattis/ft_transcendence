@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -14,13 +14,13 @@ import { Channel } from 'src/channel/entity/Channel.entity';
 
 @Module({
   imports: [
-    AuthModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => ChannelModule),
     TypeOrmModule.forFeature([User, Game, Channel]),
     MulterModule.register({ dest: './avatar' }),
-    ChannelModule
   ],
   controllers: [UserController],
   providers: [UserService, GameService, MailService, JwtService],
-  exports: [UserService]
+  exports: [UserService],
 })
 export class UserModule {}

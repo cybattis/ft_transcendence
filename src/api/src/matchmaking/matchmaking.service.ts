@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {Injectable, OnModuleInit} from "@nestjs/common";
 import {
   CasualGameInvite,
   CasualMatchmakingPlayer,
@@ -19,11 +19,12 @@ import {failure, Result, success} from "../utils/Error";
 import {ChannelService} from "../channel/channel.service";
 import {AuthedSocket} from "../auth/types/auth.types";
 import {Server} from "socket.io";
+import {ModuleRef} from "@nestjs/core";
 
 @Injectable()
-export class MatchmakingService {
-
+export class MatchmakingService implements OnModuleInit {
   private server: Server;
+  private userService: UserService;
 
   private casualMatchmakingQueue: CasualMatchmakingPlayer[] = [];
   private rankedMatchmakingQueue: RankedMatchmakingPlayer[] = [];
@@ -36,15 +37,20 @@ export class MatchmakingService {
 
   private readonly matchAcceptTimeout: number = 20; // 20 seconds
 
-  constructor(private readonly gameService: GameService,
-              private readonly userService: UserService,
-              private readonly multiplayerService: MultiplayerService,
-              private readonly channelService: ChannelService) {}
+  constructor(
+    private readonly gameService: GameService,
+    private readonly multiplayerService: MultiplayerService,
+    private readonly channelService: ChannelService,
+    private moduleRef: ModuleRef,
+  ) {}
+
+  onModuleInit(): void {
+    this.userService = this.moduleRef.get(UserService, { strict: false });
+  }
 
   /*
     == API ==
    */
-
   /*
     * Set the server of the matchmaking service
    */

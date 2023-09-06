@@ -11,27 +11,33 @@ import {
   Put,
   Headers,
   UseGuards,
-  ForbiddenException, NotFoundException, InternalServerErrorException,
+  ForbiddenException,
+  NotFoundException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { SigninDto, SignupDto, TFASigninDto, TFAValidationDto } from './dto/auth.dto';
+import {
+  SigninDto,
+  SignupDto,
+  TFASigninDto,
+  TFAValidationDto,
+} from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { TokenGuard } from '../guard/token.guard';
 import { clientBaseURL } from '../utils/constant';
-import { APIError } from "../utils/errors";
-import { decodeTokenOrThrow, getTokenOrThrow } from "../utils/tokenUtils";
-import { GlobalService } from "./global.service";
+import { APIError } from '../utils/errors';
+import { decodeTokenOrThrow, getTokenOrThrow } from '../utils/tokenUtils';
+import { GlobalService } from './global.service';
 
 @Controller('auth')
 export class AuthController {
-  @Inject(AuthService)
-  private readonly authService: AuthService;
-  @Inject(UserService)
-  private readonly userService: UserService;
-  @Inject(JwtService)
-  private readonly jwtService: JwtService;
+  constructor(
+      private readonly authService: AuthService,
+      private readonly userService: UserService,
+      private readonly jwtService: JwtService,
+  ) {}
 
   @Get('error400')
   async error400(): Promise<void> {

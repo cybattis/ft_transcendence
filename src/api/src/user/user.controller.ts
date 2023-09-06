@@ -42,7 +42,7 @@ export class UserController{
   ) {}
 
   @Get()
-  async findAll()/*: Promise<UserInfo[]> */{
+  async findAll() /*: Promise<UserInfo[]> */ {
     const result = await this.userService.findAll();
     return result;
     const infos: UserInfo[] = [];
