@@ -53,3 +53,8 @@ export class SigninDto {
   @IsString()
   password: string;
 }
+
+export class TFADto {
+  @IsString()
+  code: string;
+}
