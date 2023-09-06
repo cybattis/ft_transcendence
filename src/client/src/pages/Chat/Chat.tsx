@@ -589,7 +589,12 @@ export default function ChatClient() {
 
       async function getOpeList() {
         let name = roomChange;
-        if (name === defaultChannelGen) return;
+        if (name === defaultChannelGen) {
+          setIsBan(false);
+          setIsOpe(false);
+          setIsMute(false);
+          return; 
+        }
         if (name[0] === "#") name = name.slice(1);
 
         get<Channel | null>("chat-controller/channelName/" + name)
@@ -651,6 +656,8 @@ export default function ChatClient() {
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
+
+    console.log(isOpe);
 
     return (
       <div className="buttons-form">
@@ -1242,16 +1249,14 @@ export default function ChatClient() {
         room.indexOf(username) === 0
           ? (room = room.substring(username.length))
           : (room = room.substring(0, room.length - username.length));
-      if (!channelList.includes(room)) {
-        channelList.push(room);
-        const canal = document.getElementById("canal");
-        if (canal) canal.innerHTML = room;
-        if (roomChange === "#general")
-          fetchList(roomChange);
-        else
+        if (!channelList.includes(room)) {
+          channelList.push(room);
+          const canal = document.getElementById("canal");
+          if (canal) canal.innerHTML = room;
           setRoomChange(room);
-        fetchAllChannels();
-        fetchMessage(roomChange);
+          fetchList(roomChange);
+          fetchMessage(roomChange);
+          fetchAllChannels();
       }
     };
 
@@ -1266,9 +1271,6 @@ export default function ChatClient() {
 
     const changeUsernameCallBack = async (newName: string) => {
       username = UserData.getNickname();
-      await fetchMessage(roomChange);
-      await fetchAllChannels();
-      await fetchList(roomChange);
       if (roomChange[0] !== '#' && !allChannels.includes(newName) && allChannels.includes(roomChange))
       {
         const canal = document.getElementById("canal");
@@ -1276,6 +1278,9 @@ export default function ChatClient() {
           canal.innerHTML = newName;
           setRoomChange(newName);
         }
+        await fetchMessage(roomChange);
+        await fetchAllChannels();
+        await fetchList(roomChange);
       }
     }
 
@@ -1388,12 +1393,14 @@ export default function ChatClient() {
   }
 
   async function handleStringChange(newString: string) {
+    setButtons(false);
     setRoomChange(newString);
     if (newString[0] !== '#' && isPriv === false)
       setIsPriv(true);
     else if (newString[0] === '#' && isPriv === true)
       setIsPriv(false);
     fetchMessage(roomChange);
+    fetchList(roomChange);
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

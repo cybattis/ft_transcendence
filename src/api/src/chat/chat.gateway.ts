@@ -250,6 +250,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   @SubscribeMessage('op')
   async handleOpe(@ConnectedSocket() socket: AuthedSocket, @MessageBody() data: any) {
     await this.channelService.opChannel(
+      this.server,
       socket,
       data.channel,
       data.cmd,
@@ -300,6 +301,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const channel = data.channel;
     if (targetSocket) {
       this.server.to(targetSocket).emit('quit', channel);
+      const reason = "You've been banned by " + data.username + ".";
+      const err = { channel, reason };
+      this.server.to(targetSocket).emit('err', err);
       const blockedUsers = await this.userService.findByLogin(
         data.username,
       );
@@ -327,7 +331,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.target,
       data.channel,
     );
-    const user = await this.userService.findByUsername(data.username);
+    const user = await this.userService.findByUsername(data.target);
     if (!user) return;
     const targetSocket = await this.channelService.getSocketById(
       user.id,
@@ -335,6 +339,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const channel = data.channel;
     if (targetSocket) {
       this.server.to(targetSocket).emit('unban', channel);
+      const reason = "You've been unbanned by " + data.username + ".";
+      const err = { channel, reason };
+      this.server.to(targetSocket).emit('err', err);
       const blockedUsers: any = await this.userService.findByLogin(
         data.username,
       );
@@ -366,12 +373,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     ) {
       const user = await this.userService.findByUsername(data.target);
       if (!user) return ;
-      const target: any = this.channelService.getSocketById(user.id);
+      const target: any = await this.channelService.getSocketById(user.id);
       if (target) {
-        socket.to(target).emit('quit', data.channel);
-        const reason = "You've been kicked from " + data.channel + ".";
-        const err = { reason };
-        socket.emit('err', err);
+        this.server.to(target).emit('quit', data.channel);
+        const reason = "You've been kicked by " + data.username + ".";  
+        const channel = data.channel;
+        const err = { channel, reason };
+        this.server.to(target).emit('err', err);
         const blockedUsers = await this.userService.findByLogin(
           data.username,
         );
