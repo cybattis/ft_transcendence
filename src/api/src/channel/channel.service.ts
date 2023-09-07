@@ -1148,7 +1148,10 @@ export class ChannelService implements OnModuleInit {
       if (this.checkUserIsBanHere(channelToUpdate.ban, channelToUpdate.banName, find.nickname)) return; // Il est banni
       channelToUpdate.users.push(find.nickname);
       const pos: number = find.joinChannel.indexOf(channel);
+      if (pos < 0)
+        return ;
       find.joinChannel.splice(pos, 1);
+      find.invitesId.splice(pos, 1);
       await this.channelRepository.update(
           channelToUpdate.id,
           channelToUpdate,
@@ -1172,9 +1175,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
-      //Envoyer un message dans le chat pour dire qu'il a rejoint
     }
-    // Channel n'existe plus
   }
 
   addUserSocketToList(socket: Socket) {
@@ -1216,6 +1217,8 @@ export class ChannelService implements OnModuleInit {
         });
         if (channelToUpdate) {
           const pos: number = user.joinChannel.indexOf(channel);
+          if (pos < 0)
+            return ;
           user.joinChannel.splice(pos, 1);
           user.invitesId.splice(pos, 1);
           await this.usersRepository.save(user);

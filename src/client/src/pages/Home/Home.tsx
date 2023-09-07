@@ -8,6 +8,8 @@ import { AuthContext } from "../../components/Auth/auth.context";
 export default function Home() {
   const { authed } = useContext(AuthContext);
 
+  if (!authed) localStorage.removeItem("token");
+
   return (
     <div className="full">
       {!authed  ? <HomeUnlogged /> : <HomeLogged />}

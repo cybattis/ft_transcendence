@@ -4,10 +4,8 @@ import { MatchmakingClient } from "../game/networking/matchmaking-client";
 import { MatchmakingState } from "./matchmaking-states";
 import { MatchmakingPlayerStatus } from "../game/networking/types";
 import { ChatClientSocket } from "../pages/Chat/Chat-client";
-import { Fetching } from "./fetching";
 
 export namespace Navigation {
-  import put = Fetching.put;
   let pageChangeCallbacks: (() => void)[] = [];
 
   export function onPageChange(callback: () => void) {

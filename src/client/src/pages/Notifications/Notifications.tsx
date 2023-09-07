@@ -237,7 +237,6 @@ export default function Notifications() {
     );
   }
 
-  //Faire une map pour afficher toutes invites a la suite
   if (invits.length > 0 || channelInvits.length > 0 || gameInvites.length > 0) {
     return (
       <>

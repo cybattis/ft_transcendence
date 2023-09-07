@@ -65,8 +65,8 @@ export default function ChatClient() {
   if (token) {
     try {
       username = UserData.getNickname();
+      payload = jwt_decode(token);
       if (!username || username === "") {
-        payload = jwt_decode(token);
         if (TypeCheckers.isTokenData(payload))
           if (payload?.nickname) username = payload.nickname;
       }
@@ -206,7 +206,7 @@ export default function ChatClient() {
         try {
           const bool = await get<boolean>(sendOwner);
           bool ? setOwner(true) : setOwner(false);
-        } catch (error) {} // Silently fail
+        } catch (error) {}
       }
 
       isOwner();
@@ -997,17 +997,6 @@ export default function ChatClient() {
         setButtonInvitation(true);
       }
     };
-
-    // const keyPress = (event: KeyboardEvent) => {
-    //   if (event.key === "Escape") {
-    //     setMessagePrivateForm(false);
-    //   }
-    // };
-    //
-    // useEffect(() => {
-    //   document.addEventListener("keydown", keyPress);
-    //   return () => document.removeEventListener("keydown", keyPress);
-    // });
 
     useEffect(() => {
       async function requUser() {
