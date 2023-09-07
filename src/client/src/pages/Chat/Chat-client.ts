@@ -148,6 +148,7 @@ export namespace ChatClientSocket {
   export function inviteToChannel(sendInv: {
     channel: string;
     target: string;
+    id: number;
   }) {
     if (!checkChatConnection()) return;
     socket.emit("inv", sendInv);
