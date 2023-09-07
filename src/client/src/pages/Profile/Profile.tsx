@@ -139,13 +139,16 @@ function FriendRequest(props: FriendRequestProps) {
         </button>
       </>
     );
-  } else {
+  } else if (props.status === relationStatus.REQUESTED) {
     return (
       <>
-        <button className="friendButton">PENDING...</button>
+        <button className="friendButton">
+          PENDING...
+        </button>
       </>
     );
   }
+  return <></>;
 }
 
 function InviteToGame(props: InviteToGameProps) {
@@ -546,9 +549,9 @@ export function Profile(props: {data: UserInfo}) {
           {friendStatus === relationStatus.UNKNOWN ? null : friendStatus !== relationStatus.ME ? (
             <div id={"friend-request"}>
                 <FriendRequest
-                data={props.data}
-                status={friendStatus}
-                setStatus={setFriendStatus}
+                  data={props.data}
+                  status={friendStatus}
+                  setStatus={setFriendStatus}
                 />
                 <BlockUser
                   data={props.data}
@@ -584,7 +587,9 @@ export function Profile(props: {data: UserInfo}) {
         </div>
         <div id={"xp"}>
           <div>XP</div>
-          <div>{props.data.xp}</div>
+          <div>{props.data.level > 1
+            ? (props.data.xp - (1000 * (props.data.level - 1) + (props.data.level - 2) * 100))
+            : props.data.xp}</div>
         </div>
         <div id={"elo"}>
           <div>ELO</div>

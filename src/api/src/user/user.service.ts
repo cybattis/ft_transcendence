@@ -20,17 +20,16 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
-import { UserSettingsDto } from "./dto/user.dto";
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
   private channelService: ChannelService;
+  @InjectRepository(User)
+  private usersRepository: Repository<User>;
 
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
     private moduleRef: ModuleRef,
   ) {}
 
@@ -330,7 +329,6 @@ export class UserService implements OnModuleInit {
     if (!friend)
       return failure(APIError.OtherUserNotFound);
 
-
     for (let i = 0; i < me.friendsId.length; i++) {
       if (me.friendsId[i] === friend.id) {
         // Create a new array without the friend and update the database
@@ -341,8 +339,13 @@ export class UserService implements OnModuleInit {
         for (let j = 0; j < friend.friendsId.length; j++) {
           if (friend.friendsId[j] === me.id) {
             // Create a new array without me and update the database
+            console.log(friend.friendsId);
             friend.friendsId.splice(j, 1);
-            await this.usersRepository.save(friend);
+            const updated_friend = await this.usersRepository.save(friend);
+            console.log(friend.friendsId);
+            console.log(updated_friend.friendsId);
+
+            console.log("friends nuked !");
 
             // Both users are not friends anymore
             return success(TypeConverters.fromUserToUserFriendsData(updated_me));
@@ -368,6 +371,10 @@ export class UserService implements OnModuleInit {
     if (result.isErr() && (result.error === APIError.UserNotFound || result.error === APIError.OtherUserNotFound))
       return failure(result.error);
 
+    const new_friend: User | null = await this.usersRepository.findOne({where: { nickname: friendUsername } });
+    if (!new_friend)
+      return failure(APIError.UserNotFound);
+
     const me: User | null = await this.usersRepository.findOne({
       where: { id: myId },
       select: {
@@ -384,11 +391,11 @@ export class UserService implements OnModuleInit {
     me.blockedChat.push(friend.nickname);
 
     // Add me to friend's blocked list
-    friend.blockedById.push(me.id);
-    friend.blockedChat.push(me.nickname);
+    new_friend.blockedById.push(me.id);
+    new_friend.blockedChat.push(me.nickname);
 
     // Update the friend's blocked list in the database
-    await this.usersRepository.save(friend);
+    await this.usersRepository.save(new_friend);
 
     // Update my blocked list in the database
     const updated_me = await this.usersRepository.save(me);

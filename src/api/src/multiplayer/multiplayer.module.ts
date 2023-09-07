@@ -6,12 +6,12 @@ import { User } from '../user/entity/Users.entity';
 import { MultiplayerService } from './multiplayer.service';
 import { MultiplayerGateway } from './multiplayer.gateway';
 import { GameService } from '../game/game.service';
-import { UserService } from '../user/user.service';
+import { UserModule } from "../user/user.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Game, User]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Game, User]), AuthModule, UserModule],
   controllers: [],
-  providers: [MultiplayerGateway, MultiplayerService, GameService, UserService],
+  providers: [MultiplayerGateway, MultiplayerService, GameService],
   exports: [MultiplayerService],
 })
 export class MultiplayerModule {}

@@ -16,7 +16,7 @@ export class MatchmakingController {
     @Headers('Authorization') header: Headers,
   ): GameInvite[] {
     const decoded = decodeTokenOrThrow(header, this.jwtService);
-   return this.matchmakingService.getGameInvitesForPlayer(decoded.id);
+    return this.matchmakingService.getGameInvitesForPlayer(decoded.id);
   }
 
   @Get('has-invited/:id')

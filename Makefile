@@ -71,12 +71,6 @@ else
 	$(BUILD)
 endif
 
-.PHONY: _prod
-_prod:
-	@echo 'starting all in production mode'
-	@src/script/start_prod.sh
-	$(PRODUCTION) up -d
-
 START	=	$(COMPOSE) up -d
 .PHONY: _start
 _start:
@@ -93,6 +87,12 @@ else
 	@echo 'starting all'
 	$(START)
 endif
+
+.PHONY: _prod
+_prod:
+	@echo 'starting all in production mode'
+	@src/script/start_prod.sh
+	$(PRODUCTION) up -d
 
 STOP	=	$(COMPOSE) stop
 .PHONY: _stop
