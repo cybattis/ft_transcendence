@@ -512,10 +512,10 @@ export default function ChatClient() {
       getMyNickname();
 
       function fetchInvitedStatus() {
-        if (!userData.data)
+        if (!data)
           return;
 
-        get<boolean>(`game-invites/has-invited/${userData.data.id}`)
+        get<boolean>(`game-invites/has-invited/${data.id}`)
           .then((res) => setIsInvitedToGame(res))
           .catch(() => {});
       }
