@@ -1,4 +1,4 @@
-name: ft_transcendance
+name: ft_transcendence
 
 services:
   postgres:
@@ -16,7 +16,7 @@ services:
       - postgres:/var/lib/postgresql/data/
 
   client:
-    container_name: ft_transcendance-client
+    container_name: ft_transcendence-client
     build:
       context: ./client
       target: development
@@ -36,7 +36,7 @@ services:
       - REACT_APP_WS_PROTOCOL=$WS_PROTOCOL
 
   api:
-    container_name: ft_transcendance-api
+    container_name: ft_transcendence-api
     build:
       context: ./api
       target: development
@@ -51,6 +51,7 @@ services:
       - POSTGRES_DB=$POSTGRES_DB
       - API_UID=$API_UID
       - JWT_SECRET=$JWT_SECRET
+      - API_SECRET=$API_SECRET
       - API_URL=$API_URL
       - EMAIL_HOST=$EMAIL_HOST
       - EMAIL_USR=$EMAIL_USR

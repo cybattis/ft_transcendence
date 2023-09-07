@@ -45,7 +45,7 @@ export function SettingsLoaded({data }: { data: UserSettings }) {
     const formData = new FormData();
     formData.append("avatar", event.target.files[0]);
 
-    post<string>("user/upload/avatar", formData, "multipart/form-data")
+    post<string>("user/upload/avatar", formData, "image/gif;image/jpg;image/png")
       .then((res) => {
         setInfoMessage("Avatar updated!");
         setAvatarUrl(res);

@@ -598,14 +598,14 @@ export class UserService implements OnModuleInit {
     return success(false);
   }
 
-  async updateAvatar(path: string, token: string)
+  async updateAvatar(file: Express.Multer.File, token: string)
     : Promise<Result<string, typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     const user = await this.getUserFromToken(token);
     if (user.isErr())
       return failure(user.error);
 
-    user.value.avatarUrl = apiBaseURL + path;
+    user.value.avatarUrl = apiBaseURL + file.path;
     await this.usersRepository.save(user.value);
 
     return success(user.value.avatarUrl);
