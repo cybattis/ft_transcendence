@@ -19,7 +19,6 @@ import { AuthService } from "../auth/auth.service";
 import { UserService } from '../user/user.service';
 import { APIError } from "../utils/errors";
 
-@UseGuards(WsAuthGuard)
 @WebSocketGateway({
   cors: {
     origin: '*',
