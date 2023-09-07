@@ -187,6 +187,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     user.email = body.email;
     user.password = hash;
     user.IsIntra = false;
+    user.chans.push("#general");
 
     const newUser = await this.userRepository.save(user);
     await this.mailService.sendUserConfirmation(newUser);
@@ -213,6 +214,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     user.isVerified = true;
 
     user.avatarUrl = body.image.link;
+
+    user.chans.push("#general");
 
     return success(await this.userRepository.save(user));
   }
