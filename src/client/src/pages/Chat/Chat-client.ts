@@ -148,6 +148,7 @@ export namespace ChatClientSocket {
   export function inviteToChannel(sendInv: {
     channel: string;
     target: string;
+    id: number;
   }) {
     if (!checkChatConnection()) return;
     socket.emit("inv", sendInv);
@@ -197,7 +198,6 @@ export namespace ChatClientSocket {
 
   export function mute(sendMute: {
     cmd: string;
-    //time: string;
     username: string;
     target: string;
     channel: string;

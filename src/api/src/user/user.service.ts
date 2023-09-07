@@ -339,13 +339,12 @@ export class UserService implements OnModuleInit {
         for (let j = 0; j < friend.friendsId.length; j++) {
           if (friend.friendsId[j] === me.id) {
             // Create a new array without me and update the database
-            console.log(friend.friendsId);
             friend.friendsId.splice(j, 1);
             const updated_friend = await this.usersRepository.save(friend);
 
             await this.channelService.sendNotificationEvent(friendId);
             // Both users are not friends anymore
-            return success(TypeConverters.fromUserToUserFriendsData(updated_me));
+            return success(TypeConverters.fromUserToUserFriendsData(updated_friend));
           }
         }
         // The friend does not have me in his friends list
@@ -378,18 +377,33 @@ export class UserService implements OnModuleInit {
         nickname: true,
         blockedId: true,
         blockedChat: true,
+        chans: true,
       },
     });
     if (!me)
       return failure(APIError.UserNotFound);
 
     // Add friend to my blocked list
-    me.blockedId.push(friend.id);
-    me.blockedChat.push(friend.nickname);
+    me.blockedId.push(new_friend.id);
+    me.blockedChat.push(new_friend.nickname);
+    for (let i = 0; me.chans[i]; i ++) {
+      if (me.chans[i] === new_friend.nickname)
+      {
+        me.chans.splice(i, 1);
+      }
+    }
 
     // Add me to friend's blocked list
     new_friend.blockedById.push(me.id);
     new_friend.blockedChat.push(me.nickname);
+    for (let i = 0; new_friend.chans[i]; i ++) {
+      if (new_friend.chans[i] === me.nickname)
+      {
+        new_friend.chans.splice(i, 1);
+      }
+    }
+
+    await this.channelService.deletePrivateChan(me.nickname, new_friend.nickname);
 
     // Update the friend's blocked list in the database
     await this.usersRepository.save(new_friend);
@@ -410,6 +424,7 @@ export class UserService implements OnModuleInit {
         id: true,
         nickname: true,
         blockedId: true,
+        blockedById: true,
         blockedChat: true,
       },
     });
@@ -499,6 +514,7 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         friendsId: true,
+        blockedId: true,
       },
     });
     if (!me)
@@ -511,10 +527,13 @@ export class UserService implements OnModuleInit {
     for (let i = 0; i < me.requestedId.length; i++) {
       if (me.requestedId[i] === friend.id) {
         me.requestedId.splice(i, 1);
-        me.friendsId.push(friend.id);
-        friend.friendsId.push(me.id);
 
-        await this.usersRepository.save(friend);
+        if (!me.blockedId.includes(friend.id) && !friend.blockedId.includes(me.id)) {
+          me.friendsId.push(friend.id);
+          friend.friendsId.push(me.id);
+          await this.usersRepository.save(friend);
+        }
+
         const updated_me = await this.usersRepository.save(me);
         return success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }
@@ -574,6 +593,30 @@ export class UserService implements OnModuleInit {
       blockedUsernames.push(user.nickname);
     }
 
+    return success(blockedUsernames);
+  }
+
+  async getBlockedByList(myId: number)
+    : Promise<Result<string[], typeof APIError.UserNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOneBy({ id: myId });
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    let blockedUsernames: string[] = [];
+    for (const otherId of me.blockedById) {
+      const user: User | null = await this.usersRepository.findOne({
+        where: { id: otherId },
+        select: ['id', 'nickname'],
+      });
+      if (!user) {
+        me.blockedById = me.blockedById.filter((id) => id !== otherId);
+        await this.usersRepository.save(me);
+        continue;
+      }
+
+      blockedUsernames.push(user.nickname);
+    }
     return success(blockedUsernames);
   }
 

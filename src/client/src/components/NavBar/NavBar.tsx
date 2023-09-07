@@ -9,8 +9,6 @@ import { Notification } from "./NavButton";
 import logo from "../../resource/signin-logo.svg";
 import {AuthContext} from "../Auth/auth.context";
 import {FormContext, FormState} from "../Auth/form.context";
-import {removeMultiplayerGame} from "../../game/PongManager";
-import {MultiplayerClient} from "../../game/networking/multiplayer-client";
 import { PageLink } from "../Navigation/PageLink";
 import { Navigation } from "../../utils/navigation";
 

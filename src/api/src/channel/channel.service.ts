@@ -635,15 +635,12 @@ export class ChannelService implements OnModuleInit {
     return ;
     const socketTarget = await this.getSocketById(user.id);
     const channel = username + target;
-    console.log("Channel :", channel);
     const res: string | null = await this.findChannelPrivateMessage(
       username,
       target,
       );
-    console.log(res);
     if (res) return;
     if (socketTarget) {
-      console.log("creer");
       await this.channelRepository.save({
         channel: channel,
         status: 'message',
@@ -729,6 +726,8 @@ export class ChannelService implements OnModuleInit {
         const reason = username + ' just blocked you.';
         const err = { reason };
         server.to(targetUser).emit('err', err);
+        server.to(targetUser).emit("quit", username);
+        server.to(targetUser).emit("change-username", username);
       }
       else if (cmd === "-blocked")
       {
@@ -1063,6 +1062,15 @@ export class ChannelService implements OnModuleInit {
     return null;
   }
 
+  async deletePrivateChan(userOne: string, userTwo: string) {
+    const findChan = await this.findChannelPrivateMessage(userOne, userTwo);
+    if (!findChan) return;
+    const chan = await this.channelRepository.findOne({where: {channel: findChan}});
+    if (!chan) return;
+    await this.chatRepository.delete({ channel: chan.channel });
+    await this.channelRepository.delete({ channel: chan.channel });
+  }
+
   async changeParam(
     server: Server,
     socket: Socket,
@@ -1140,7 +1148,10 @@ export class ChannelService implements OnModuleInit {
       if (this.checkUserIsBanHere(channelToUpdate.ban, channelToUpdate.banName, find.nickname)) return; // Il est banni
       channelToUpdate.users.push(find.nickname);
       const pos: number = find.joinChannel.indexOf(channel);
+      if (pos < 0)
+        return ;
       find.joinChannel.splice(pos, 1);
+      find.invitesId.splice(pos, 1);
       await this.channelRepository.update(
           channelToUpdate.id,
           channelToUpdate,
@@ -1164,9 +1175,7 @@ export class ChannelService implements OnModuleInit {
         emitterId: 0,
       });
       socket.broadcast.emit('rcv', send);
-      //Envoyer un message dans le chat pour dire qu'il a rejoint
     }
-    // Channel n'existe plus
   }
 
   addUserSocketToList(socket: Socket) {
@@ -1208,6 +1217,8 @@ export class ChannelService implements OnModuleInit {
         });
         if (channelToUpdate) {
           const pos: number = user.joinChannel.indexOf(channel);
+          if (pos < 0)
+            return ;
           user.joinChannel.splice(pos, 1);
           user.invitesId.splice(pos, 1);
           await this.usersRepository.save(user);

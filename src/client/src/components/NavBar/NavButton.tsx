@@ -6,8 +6,6 @@ import notifsLogoOn from "../../resource/logo-notifications-on.png";
 import { ChatClientSocket } from "../../pages/Chat/Chat-client";
 import { AuthContext } from "../Auth/auth.context";
 import { MatchmakingClient } from "../../game/networking/matchmaking-client";
-import { MultiplayerClient } from "../../game/networking/multiplayer-client";
-import { removeMultiplayerGame } from "../../game/PongManager";
 import { GameInvite } from "../../type/game.type";
 import { useFetcher } from "../../hooks/UseFetcher";
 import { PageLink } from "../Navigation/PageLink";
@@ -42,7 +40,7 @@ export function DisconnectButton(props: { callback?: () => void }) {
     if (props.callback) props.callback();
 
     await MatchmakingClient.leaveMatchmaking();
-    await put<void>("auth/disconnect", {})
+    put<void>("auth/disconnect", {})
       .catch(() => {});
     Navigation.disconnect();
     setAuthed(false);

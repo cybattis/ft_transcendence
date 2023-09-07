@@ -280,7 +280,8 @@ export class MatchmakingService implements OnModuleInit {
    */
   public async inviteUserToCasualGame(client: AuthedSocket, invitingId: number, invitedId: number)
     : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
-    | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite>>
+    | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite
+    | typeof APIError.AlreadyInvitedToGame>>
   {
     // Get the inviting user
     const invitingUser = await this.getUserFromDb(invitingId);
@@ -302,6 +303,12 @@ export class MatchmakingService implements OnModuleInit {
 
     if (invitingId === invitedId)
       return failure(APIError.SelfInvite);
+
+    if (this.casualGameInvites.find((invite) => {
+      return invite.invitingPlayer.id === invitingId && invite.invitedPlayerId === invitedId;
+    })) {
+      return failure(APIError.AlreadyInvitedToGame);
+    }
 
     const invitingPlayer: CasualMatchmakingPlayer = {
       id: invitingId,
@@ -398,7 +405,8 @@ export class MatchmakingService implements OnModuleInit {
      */
   public async inviteUserToRankedGame(client: AuthedSocket, invitingId: number, invitedId: number)
   : Promise<Result<true, typeof APIError.UserNotFound | typeof APIError.UserAlreadyInGame
-      | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite>>
+      | typeof APIError.OtherUserNotFound | typeof APIError.UserInMatchmaking | typeof APIError.SelfInvite
+      | typeof APIError.AlreadyInvitedToGame>>
     {
       // Get the inviting user
       const invitingUser = await this.getUserFromDb(invitingId);
@@ -420,6 +428,12 @@ export class MatchmakingService implements OnModuleInit {
 
       if (invitingId === invitedId)
         return failure(APIError.SelfInvite);
+
+      if (this.rankedGameInvites.find((invite) => {
+        return invite.invitingPlayer.id === invitingId && invite.invitedPlayerId === invitedId;
+      })) {
+        return failure(APIError.AlreadyInvitedToGame);
+      }
 
       const invitingPlayer: RankedMatchmakingPlayer = {
         id: invitingId,
