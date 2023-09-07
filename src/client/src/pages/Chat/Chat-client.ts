@@ -81,7 +81,6 @@ export namespace ChatClientSocket {
     socket = SocketManager.configureSocket(wsBaseURL, socketOptions);
 
     socket.on("join", (room: string) => {
-      console.log("JOin", room);
       newJoinChannel.forEach((callback) => callback(room));
     });
 
@@ -112,7 +111,6 @@ export namespace ChatClientSocket {
     });
 
     socket.on("quit", (room: string) => {
-      console.log("Quit", room);
       newQuitCallBack.forEach((callback) => callback(room));
     });
 
@@ -125,7 +123,6 @@ export namespace ChatClientSocket {
     });
 
     socket.on("err", (data: { channel: string; reason: string }) => {
-      console.log("err", data);
       newErrCallBack.forEach((callback) => callback(data));
     });
 
