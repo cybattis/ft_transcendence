@@ -385,8 +385,7 @@ export class UserService implements OnModuleInit {
 
     // Add friend to my blocked list
     me.blockedId.push(new_friend.id);
-    if(!me.blockedChat.includes(new_friend.nickname))
-      me.blockedChat.push(new_friend.nickname);
+    me.blockedChat.push(new_friend.nickname);
     for (let i = 0; me.chans[i]; i ++) {
       if (me.chans[i] === new_friend.nickname)
       {
@@ -396,8 +395,7 @@ export class UserService implements OnModuleInit {
 
     // Add me to friend's blocked list
     new_friend.blockedById.push(me.id);
-    if(!new_friend.blockedChat.includes(me.nickname))
-      new_friend.blockedChat.push(me.nickname);
+    new_friend.blockedChat.push(me.nickname);
     for (let i = 0; new_friend.chans[i]; i ++) {
       if (new_friend.chans[i] === me.nickname)
       {
@@ -516,6 +514,7 @@ export class UserService implements OnModuleInit {
         id: true,
         requestedId: true,
         friendsId: true,
+        blockedId: true,
       },
     });
     if (!me)
@@ -528,10 +527,13 @@ export class UserService implements OnModuleInit {
     for (let i = 0; i < me.requestedId.length; i++) {
       if (me.requestedId[i] === friend.id) {
         me.requestedId.splice(i, 1);
-        me.friendsId.push(friend.id);
-        friend.friendsId.push(me.id);
 
-        await this.usersRepository.save(friend);
+        if (!me.blockedId.includes(friend.id) && !friend.blockedId.includes(me.id)) {
+          me.friendsId.push(friend.id);
+          friend.friendsId.push(me.id);
+          await this.usersRepository.save(friend);
+        }
+
         const updated_me = await this.usersRepository.save(me);
         return success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }

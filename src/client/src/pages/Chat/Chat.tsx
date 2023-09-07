@@ -1003,7 +1003,7 @@ export default function ChatClient() {
     //     setMessagePrivateForm(false);
     //   }
     // };
-
+    //
     // useEffect(() => {
     //   document.addEventListener("keydown", keyPress);
     //   return () => document.removeEventListener("keydown", keyPress);
@@ -1440,8 +1440,6 @@ export default function ChatClient() {
       sendMessage();
     }
   };
-
-  //SI USER BLOCK PAS D INVITES NE RIEN FAIRE TOUT ENLEVER
 
   return (
     <div className="chat-div">

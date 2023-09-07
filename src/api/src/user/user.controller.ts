@@ -46,9 +46,10 @@ export class UserController{
   async findAll() /*: Promise<UserInfo[]>*/ {
     const result = await this.userService.findAll();
     return result;
+
     const infos: UserInfo[] = [];
     result.forEach((user) => {
-      if (user.isVerified === true)
+      if (user.isVerified)
         infos.push(TypeConverters.fromUserToUserInfo(user));
     });
     return infos;

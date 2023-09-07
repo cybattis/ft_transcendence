@@ -51,10 +51,10 @@ function BlockUser(props: FriendRequestProps) {
   const { put, showErrorInModal } = useFetcher();
 
   const handleUnblockButton = async () => {
-    if (props.isBlocked)
-      props.setIsBlocked(false);
     put<UserFriendsData>(`user/unblock/${props.data.nickname}`, {})
       .then(res => {
+        if (props.isBlocked)
+          props.setIsBlocked(false);
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.NONE);
       })
@@ -62,10 +62,10 @@ function BlockUser(props: FriendRequestProps) {
   };
 
   const handleBlockButton = async () => {
-    if (!props.isBlocked)
-      props.setIsBlocked(true);
     put<UserFriendsData>(`user/block-user/${props.data.nickname}`, {})
       .then(res => {
+        if (!props.isBlocked)
+          props.setIsBlocked(true);
         ChatClientSocket.notificationEvent(props.data.id);
         props.setStatus(relationStatus.BLOCKED);
       })
