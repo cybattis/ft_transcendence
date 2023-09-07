@@ -379,6 +379,7 @@ export class UserService implements OnModuleInit {
       where: { id: myId },
       select: {
         id: true,
+        nickname: true,
         blockedId: true,
         blockedChat: true,
       },
@@ -411,6 +412,7 @@ export class UserService implements OnModuleInit {
       where: { id: myId },
       select: {
         id: true,
+        nickname: true,
         blockedId: true,
         blockedChat: true,
       },
@@ -422,6 +424,7 @@ export class UserService implements OnModuleInit {
       where: { nickname: friendUsername },
       select: {
         id: true,
+        nickname: true,
         blockedById: true,
         blockedChat: true,
       },
