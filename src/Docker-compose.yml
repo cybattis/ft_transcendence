@@ -51,6 +51,7 @@ services:
       - POSTGRES_DB=$POSTGRES_DB
       - API_UID=$API_UID
       - JWT_SECRET=$JWT_SECRET
+      - API_SECRET=$API_SECRET
       - API_URL=$API_URL
       - EMAIL_HOST=$EMAIL_HOST
       - EMAIL_USR=$EMAIL_USR

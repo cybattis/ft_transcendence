@@ -52,7 +52,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   async exchangeCodeForToken(code: string): Promise<IntraTokenDto> {
     const clientId = process.env['API_UID'];
-    const clientSecret = process.env['JWT_SECRET'];
+    const clientSecret = process.env['API_SECRET'];
     const redirectUri = process.env['API_URL'];
     const tokenEndpoint = 'https://api.intra.42.fr/oauth/token';
 

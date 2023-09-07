@@ -173,7 +173,6 @@ export class UserController{
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
 
-    console.log("FILE: ", file.path)
     const checkImage = await validateMIMEType(file.path, {
       allowMimeTypes: ['image/jpeg', 'image/gif', 'image/png']
     });
