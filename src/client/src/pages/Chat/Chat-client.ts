@@ -12,11 +12,8 @@ export type newMessagesCallBack = {
 
 export type newGameMessageCallBack = {
   (data: {
-    sender: string;
-    opponent: string;
-    msg: string;
-    channel: string;
-    blockedUsers: any;
+    sender: string,
+    content: string
   }): void;
 };
 
@@ -104,10 +101,7 @@ export namespace ChatClientSocket {
       "rcvgame",
       (data: {
         sender: string;
-        opponent: string;
-        msg: string;
-        channel: string;
-        blockedUsers: any;
+        content: string;
       }) => {
         newGameMessageCallBack.forEach((callback) => callback(data));
       }
@@ -298,19 +292,23 @@ export namespace ChatClientSocket {
   }
 
   export function sendGameChat(send: {
-    username: string;
-    opponent: string;
-    channel: string;
-    msg: string;
+    gameId: number,
+    sender: string,
+    content: string,
   }) {
     if (!checkChatConnection()) return;
-    if (!send.msg || !send.msg[0]) return;
+    if (!send.content || !send.content[0]) return;
     socket.emit("sendGame", send);
   }
 
-  export function joinGameChat(joinGame: { canal: string }) {
+  export function joinGameChat(gameId: number ) {
     if (!checkChatConnection()) return;
-    socket.emit("joinGame", joinGame);
+    socket.emit("joinGame", gameId);
+  }
+
+  export function leaveGameChat(gameId: number ) {
+    if (!checkChatConnection()) return;
+    socket.emit("leaveGame", gameId);
   }
 
   // Callbacks

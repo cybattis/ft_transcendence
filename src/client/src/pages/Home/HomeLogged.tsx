@@ -352,7 +352,9 @@ function UserProfile(props: { data: UserInfo | null }) {
   let xp = 0;
   const data = props.data;
 
-  if (data) xp = data.level > 1 ? data.xp - 1000 * (data.level - 1) : data.xp;
+  if (props.data) xp =  props.data?.level > 1
+      ? (props.data?.xp - (1000 * (props.data?.level - 1) + (props.data?.level - 2) * 100))
+      : props.data?.xp;
 
   return (
     <div id={"HomeUserInfo"} className="userProfile_container">
