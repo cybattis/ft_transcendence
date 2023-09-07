@@ -3,7 +3,6 @@ import { ChatClientSocket } from "./Chat-client";
 import muteLogo from "../../resource/muted-logo.png";
 import unmuteLogo from "../../resource/unmuted-logo.png";
 import "./PrivateGameChat.css";
-const allMessages: any = [];
 
 const maxMessage: number = 126;
 
@@ -110,12 +109,12 @@ export default function PrivateGameChat(props: PrivateGameChatProps) {
   useEffect(() => {
     function receiveMessage(message: {sender: string, content: string}) {
       const newMessage: Message = {
-        id: allMessages.length,
+        id: messages.length,
         sender: message.sender,
         content: message.content,
       }
-      allMessages.push(newMessage);
-      setMessages([...allMessages]);
+      messages.push(newMessage);
+      setMessages([...messages]);
     }
 
     ChatClientSocket.onGameMessageRecieve(receiveMessage);

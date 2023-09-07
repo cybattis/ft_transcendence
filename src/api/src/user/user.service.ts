@@ -342,11 +342,11 @@ export class UserService implements OnModuleInit {
             friend.friendsId.splice(j, 1);
             const updated_friend = await this.usersRepository.save(friend);
 
+            await this.channelService.sendNotificationEvent(friendId);
             // Both users are not friends anymore
             return success(TypeConverters.fromUserToUserFriendsData(updated_friend));
           }
         }
-
         // The friend does not have me in his friends list
         return  success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }
@@ -424,6 +424,7 @@ export class UserService implements OnModuleInit {
       where: { id: myId },
       select: {
         id: true,
+        nickname: true,
         blockedId: true,
         blockedById: true,
         blockedChat: true,
@@ -436,6 +437,7 @@ export class UserService implements OnModuleInit {
       where: { nickname: friendUsername },
       select: {
         id: true,
+        nickname: true,
         blockedById: true,
         blockedChat: true,
       },
@@ -636,14 +638,14 @@ export class UserService implements OnModuleInit {
     return success(false);
   }
 
-  async updateAvatar(path: string, token: string)
+  async updateAvatar(file: Express.Multer.File, token: string)
     : Promise<Result<string, typeof APIError.UserNotFound | typeof APIError.InvalidToken>>
   {
     const user = await this.getUserFromToken(token);
     if (user.isErr())
       return failure(user.error);
 
-    user.value.avatarUrl = apiBaseURL + path;
+    user.value.avatarUrl = apiBaseURL + file.path;
     await this.usersRepository.save(user.value);
 
     return success(user.value.avatarUrl);

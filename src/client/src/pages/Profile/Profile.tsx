@@ -110,7 +110,9 @@ function FriendRequest(props: FriendRequestProps) {
 
   const handleRemoveButton = async () => {
     put(`user/remove-friend/${props.data.id}`, {})
-      .then(() => props.setStatus(relationStatus.NONE))
+      .then(() => {
+          props.setStatus(relationStatus.NONE);
+      })
       .catch(showErrorInModal);
   };
 

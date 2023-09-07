@@ -48,9 +48,7 @@ export default function ChatClient() {
   const [isMute, setIsMute] = useState(false);
   const [blocked, setBlocked] = useState(false);
   const [isHere, setIsHere] = useState(false);
-  const [inviteGame, setInviteGame] = useState(false);
   const [inGeneral, setInGeneral] = useState(true);
-  const [isInvitedToGame, setIsInvitedToGame] = useState(false);
   const [isPriv, setIsPriv] = useState(false);
   const [owner, setOwner] = useState(false);
   const [allChannels, setAllChannels] = useState<string[]>([]);
@@ -78,8 +76,8 @@ export default function ChatClient() {
 
   interface InviteToGameProps {
     data: UserInfo;
-    status: boolean,
-    setStatus: (status: boolean) => void;
+    isInvited: boolean,
+    setIsInvited: (status: boolean) => void;
   }
 
   function Quit(props: { canal: string }) {
@@ -237,17 +235,14 @@ export default function ChatClient() {
   }
 
   const handleButton = (user: string) => {
-    if (user === usr) {
-      if (buttons)
-      {
-        setButtons(false);
-        setBanForm(false);
-        setMuteForm(false);
-      }
+    if (user === usr && buttons) {
+      setButtons(false);
     }
+
     setUsr(user);
     setBanForm(false);
     setMuteForm(false);
+
     if (!buttons) {
       setButtons(true);
       setJoinForm(false);
@@ -255,37 +250,14 @@ export default function ChatClient() {
   };
 
   const handleButtonForm = () => {
-    if (buttons) {
-      setBanForm(false);
-      setMuteForm(false);
-      setButtons(false);
-    } else {
-      setButtons(true);
-      setBanForm(false);
-      setMuteForm(false);
+    if (!buttons)
       setJoinForm(false);
-    }
-  };
 
-  const handleBlock = () => {
-    const sendBlock = { username: username, target: usr, cmd: "+blocked" };
-    ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/block-user/${usr}`, {})
-      .catch(showErrorInModal);
-    ChatClientSocket.changedUsername(usr);
-  };
-
-  const handleUnBlock = async () => {
-    const sendBlock = { username: username, target: usr , cmd: "-blocked"};
-    ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/unblock/${usr}`, {})
-      .then(res => {
-        for (let i = 0; blocedList[i]; i ++) {
-          if (blocedList[i] === usr)
-            blocedList.splice(i, 1);
-        }
-      })
-      .catch(showErrorInModal);
+    setButtons(!buttons);
+    setBanForm(false);
+    setMuteForm(false);
+    setBanForm(false);
+    setMuteForm(false);
   };
 
   const handleAddOpe = () => {
@@ -490,37 +462,25 @@ export default function ChatClient() {
   function InviteToGame(props: InviteToGameProps) {
     const { setErrorMessage } = useContext(PopupContext);
 
-    const keyPress = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (props.status) props.setStatus(false);
-        if (isInvitedToGame) setIsInvitedToGame(false);
-      }
-    };
-
     function inviteToCasualGame() {
-      props.setStatus(true);
+      props.setIsInvited(true);
       MatchmakingClient.inviteUserToCasualGame(props.data.id)
         .catch((err) => {
-          props.setStatus(false);
+          props.setIsInvited(false);
           setErrorMessage(err.message);
         });
     }
 
     function inviteToRankedGame() {
-      props.setStatus(true);
+      props.setIsInvited(true);
       MatchmakingClient.inviteUserToRankedGame(props.data.id)
         .catch((err) => {
-          props.setStatus(false);
+          props.setIsInvited(false);
           setErrorMessage(err.message);
         });
     }
 
-    useEffect(() => {
-      document.addEventListener("keydown", keyPress);
-      return () => document.removeEventListener("keydown", keyPress);
-    }, []);
-
-    if (!props.status) {
+    if (!props.isInvited) {
       return (
         <div className="invites-game">
           <button className="friendButton" type="button" onClick={inviteToCasualGame}>
@@ -538,15 +498,13 @@ export default function ChatClient() {
     }
   }
 
-  const handleInviteGame = async () => {
-    setInviteGame(!inviteGame);
-  }
-
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
-    const [me, setMe] = useState<boolean>(false);
+    const [me, setMe] = useState<boolean>(true);
     const [chanOwner, setChanOwner] = useState(false);
     const [blockedBy, setBlockedBy] = useState(false);
+    const [isInvitedToGame, setIsInvitedToGame] = useState<boolean | undefined>(undefined);
+    const [showInviteGame, setShowInviteGame] = useState(false);
     const userData = useProfileData();
 
     const { data } = useData<UserInfo>(`user/profile/nickname/${usr}`, true);
@@ -563,6 +521,22 @@ export default function ChatClient() {
       }
 
       getMyNickname();
+
+      function fetchInvitedStatus() {
+        if (!userData.data)
+          return;
+
+        get<boolean>(`game-invites/has-invited/${userData.data.id}`)
+          .then((res) => setIsInvitedToGame(res))
+          .catch(() => {});
+      }
+      fetchInvitedStatus();
+
+      ChatClientSocket.onNotificationEvent(fetchInvitedStatus);
+
+      return () => {
+        ChatClientSocket.offNotificationEvent(fetchInvitedStatus);
+      }
     }, [userData.data]);
 
       const keyPress = (event: KeyboardEvent) => {
@@ -571,9 +545,28 @@ export default function ChatClient() {
             setButtons(false);
             setBanForm(false);
             setMuteForm(false);
+            setShowInviteGame(false);
+            setIsInvitedToGame(false);
           }
         }
       };
+
+    const handleBlock = () => {
+      const sendBlock = { username: username, target: usr, cmd: "+blocked" };
+      ChatClientSocket.blocked(sendBlock);
+      put<UserFriendsData>(`user/block-user/${usr}`, {})
+        .then(() => setBlocked(true))
+        .catch(showErrorInModal);
+      ChatClientSocket.changedUsername(usr);
+    };
+
+    const handleUnBlock = async () => {
+      const sendBlock = { username: username, target: usr , cmd: "-blocked"};
+      ChatClientSocket.blocked(sendBlock);
+      put<UserFriendsData>(`user/unblock/${usr}`, {})
+        .then(() => setBlocked(false))
+        .catch(showErrorInModal);
+    };
 
     useEffect(() => {
       async function isUsrInChan() {
@@ -631,7 +624,7 @@ export default function ChatClient() {
       }
       isOwner();
 
-      async function getBlockedUsrs() {
+      function getBlockedUsrs() {
           get<string[]>("user/blockedList")
           .then((res) => {
             if (res.includes(usr))
@@ -667,9 +660,13 @@ export default function ChatClient() {
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
 
+    const handleInviteGame = async () => {
+      setShowInviteGame(!showInviteGame);
+    };
+
     return (
       <div className="buttons-form">
-        <form method="get" onSubmit={handleButtonForm}>
+        <div>
           <h4 className="title-form-chat">
             Choose your action on {usr}
           </h4>
@@ -767,10 +764,10 @@ export default function ChatClient() {
               </div>
             )}
           </div>
-          {banForm && <Ban />}
-          {muteForm && <Mute />}
-          {inviteGame && data && <InviteToGame data={data} status={isInvitedToGame} setStatus={setIsInvitedToGame}/>}
-        </form>
+          {banForm ? <Ban /> : null}
+          {muteForm ? <Mute /> : null}
+          {(showInviteGame && data && isInvitedToGame !== undefined) ? <InviteToGame data={data} isInvited={isInvitedToGame} setIsInvited={setIsInvitedToGame}/> : null}
+        </div>
       </div>
     );
   }
