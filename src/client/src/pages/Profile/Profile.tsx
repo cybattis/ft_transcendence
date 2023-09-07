@@ -35,12 +35,15 @@ enum relationStatus {
 interface FriendRequestProps {
   data: UserInfo;
   status: relationStatus;
+  isBlocked: boolean;
   setStatus: (status: relationStatus) => void;
+  setIsBlocked: (status: boolean) => void;
 }
 
 interface InviteToGameProps {
   data: UserInfo;
   status: boolean,
+  isBlocked: boolean,
   setStatus: (status: boolean) => void;
 }
 
@@ -48,6 +51,8 @@ function BlockUser(props: FriendRequestProps) {
   const { put, showErrorInModal } = useFetcher();
 
   const handleUnblockButton = async () => {
+    if (props.isBlocked)
+      props.setIsBlocked(false);
     put<UserFriendsData>(`user/unblock/${props.data.nickname}`, {})
       .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
@@ -57,6 +62,8 @@ function BlockUser(props: FriendRequestProps) {
   };
 
   const handleBlockButton = async () => {
+    if (!props.isBlocked)
+      props.setIsBlocked(true);
     put<UserFriendsData>(`user/block-user/${props.data.nickname}`, {})
       .then(res => {
         ChatClientSocket.notificationEvent(props.data.id);
@@ -171,6 +178,9 @@ function InviteToGame(props: InviteToGameProps) {
         setErrorMessage(err.message);
       });
   }
+
+  if (props.isBlocked)
+    return <></>;
 
   if (!props.status) {
     return (
@@ -470,6 +480,7 @@ export function ProfileLoader(props: {profileType: ProfileType}) {
 export function Profile(props: {data: UserInfo}) {
   const [friendStatus, setFriendStatus] = useState(relationStatus.UNKNOWN);
   const [isInvitedToGame, setIsInvitedToGame] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
   const [customization, setCustomization] = useState(false);
   const winrate: number = calculateWinrate(props.data);
   const [oldColor, setOldColor] = useState<RgbColor>({
@@ -506,14 +517,21 @@ export function Profile(props: {data: UserInfo}) {
       else if (
         meData.blockedById &&
         meData.blockedById.includes(Number(decoded.id))
-      )
+      ) {
         setFriendStatus(relationStatus.BLOCKED);
+        setIsBlocked(true);
+      }
       else if (
         meData.blockedId &&
         meData.blockedId.includes(Number(decoded.id))
-      )
+      ) {
         setFriendStatus(relationStatus.BLOCKEDBY);
-      else setFriendStatus(relationStatus.NONE);
+        setIsBlocked(true);
+      }
+      else{
+        setFriendStatus(relationStatus.NONE);
+        setIsBlocked(false);
+      }
     }
 
     async function fetchData() {
@@ -522,7 +540,7 @@ export function Profile(props: {data: UserInfo}) {
       try {
         const friendData = await get<UserFriendsData>(`user/friends-data/${props.data.id}`);
         const invitedData = await get<boolean>(`game-invites/has-invited/${props.data.id}`);
-
+        
         checkFriendStatus(friendData);
         setIsInvitedToGame(invitedData);
       } catch (err) {}
@@ -551,16 +569,21 @@ export function Profile(props: {data: UserInfo}) {
                 <FriendRequest
                   data={props.data}
                   status={friendStatus}
+                  isBlocked={isBlocked}
                   setStatus={setFriendStatus}
+                  setIsBlocked={setIsBlocked}
                 />
                 <BlockUser
                   data={props.data}
                   status={friendStatus}
+                  isBlocked={isBlocked}
                   setStatus={setFriendStatus}
+                  setIsBlocked={setIsBlocked}
                 />
                 <InviteToGame
                   data={props.data}
                   status={isInvitedToGame}
+                  isBlocked={isBlocked}
                   setStatus={setIsInvitedToGame}
                 />
             </div>

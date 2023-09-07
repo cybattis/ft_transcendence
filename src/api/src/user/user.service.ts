@@ -339,16 +339,11 @@ export class UserService implements OnModuleInit {
         for (let j = 0; j < friend.friendsId.length; j++) {
           if (friend.friendsId[j] === me.id) {
             // Create a new array without me and update the database
-            console.log(friend.friendsId);
             friend.friendsId.splice(j, 1);
             const updated_friend = await this.usersRepository.save(friend);
-            console.log(friend.friendsId);
-            console.log(updated_friend.friendsId);
-
-            console.log("friends nuked !");
 
             // Both users are not friends anymore
-            return success(TypeConverters.fromUserToUserFriendsData(updated_me));
+            return success(TypeConverters.fromUserToUserFriendsData(updated_friend));
           }
         }
 
@@ -379,20 +374,38 @@ export class UserService implements OnModuleInit {
       where: { id: myId },
       select: {
         id: true,
+        nickname: true,
         blockedId: true,
         blockedChat: true,
+        chans: true,
       },
     });
     if (!me)
       return failure(APIError.UserNotFound);
 
     // Add friend to my blocked list
-    me.blockedId.push(friend.id);
-    me.blockedChat.push(friend.nickname);
+    me.blockedId.push(new_friend.id);
+    if(!me.blockedChat.includes(new_friend.nickname))
+      me.blockedChat.push(new_friend.nickname);
+    for (let i = 0; me.chans[i]; i ++) {
+      if (me.chans[i] === new_friend.nickname)
+      {
+        me.chans.splice(i, 1);
+      }
+    }
 
     // Add me to friend's blocked list
     new_friend.blockedById.push(me.id);
-    new_friend.blockedChat.push(me.nickname);
+    if(!new_friend.blockedChat.includes(me.nickname))
+      new_friend.blockedChat.push(me.nickname);
+    for (let i = 0; new_friend.chans[i]; i ++) {
+      if (new_friend.chans[i] === me.nickname)
+      {
+        new_friend.chans.splice(i, 1);
+      }
+    }
+
+    await this.channelService.deletePrivateChan(me.nickname, new_friend.nickname);
 
     // Update the friend's blocked list in the database
     await this.usersRepository.save(new_friend);
@@ -412,6 +425,7 @@ export class UserService implements OnModuleInit {
       select: {
         id: true,
         blockedId: true,
+        blockedById: true,
         blockedChat: true,
       },
     });
@@ -575,6 +589,30 @@ export class UserService implements OnModuleInit {
       blockedUsernames.push(user.nickname);
     }
 
+    return success(blockedUsernames);
+  }
+
+  async getBlockedByList(myId: number)
+    : Promise<Result<string[], typeof APIError.UserNotFound>>
+  {
+    const me: User | null = await this.usersRepository.findOneBy({ id: myId });
+    if (!me)
+      return failure(APIError.UserNotFound);
+
+    let blockedUsernames: string[] = [];
+    for (const otherId of me.blockedById) {
+      const user: User | null = await this.usersRepository.findOne({
+        where: { id: otherId },
+        select: ['id', 'nickname'],
+      });
+      if (!user) {
+        me.blockedById = me.blockedById.filter((id) => id !== otherId);
+        await this.usersRepository.save(me);
+        continue;
+      }
+
+      blockedUsernames.push(user.nickname);
+    }
     return success(blockedUsernames);
   }
 

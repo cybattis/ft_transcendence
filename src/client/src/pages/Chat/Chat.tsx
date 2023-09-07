@@ -272,6 +272,7 @@ export default function ChatClient() {
     ChatClientSocket.blocked(sendBlock);
     put<UserFriendsData>(`user/block-user/${usr}`, {})
       .catch(showErrorInModal);
+    ChatClientSocket.changedUsername(usr);
   };
 
   const handleUnBlock = async () => {
@@ -545,6 +546,7 @@ export default function ChatClient() {
     const [targetOp, setTargetOp] = useState(false);
     const [me, setMe] = useState<boolean>(false);
     const [chanOwner, setChanOwner] = useState(false);
+    const [blockedBy, setBlockedBy] = useState(false);
     const userData = useProfileData();
 
     const { data } = useData<UserInfo>(`user/profile/nickname/${usr}`, true);
@@ -638,6 +640,14 @@ export default function ChatClient() {
               setBlocked(false);
           })
           .catch((error) => {});
+          get<string[]>("user/blockedByList")
+          .then((res) => {
+            if (res.includes(usr))
+              setBlockedBy(true);
+            else if (!res.includes(usr) && blockedBy === true)
+              setBlockedBy(false);
+          })
+          .catch((error) => {});
       }
       getBlockedUsrs();
 
@@ -656,8 +666,6 @@ export default function ChatClient() {
       document.addEventListener("keydown", keyPress);
       return () => document.removeEventListener("keydown", keyPress);
     }, []);
-
-    console.log(isOpe);
 
     return (
       <div className="buttons-form">
@@ -683,7 +691,7 @@ export default function ChatClient() {
                         UnBlock
                       </button>
                     )}
-                    {isHere && (
+                    {isHere && !blocked && !blockedBy && (
                       <button className="chat-buttons" onClick={handleInviteGame}>
                         Invite to Play
                       </button>
@@ -742,9 +750,11 @@ export default function ChatClient() {
                           <PageLink to={`/profile/nickname/${usr}`}>
                             <button className="chat-buttons">Profile</button>
                           </PageLink>
-                          <button className="chat-buttons" onClick={handleInviteGame}>
-                            Invite to Play
-                          </button>
+                          {!blocked && !blockedBy && (
+                            <button className="chat-buttons" onClick={handleInviteGame}>
+                              Invite to Play
+                            </button>
+                          )}
                         </div>
                       </div>
                 )}
@@ -975,6 +985,8 @@ export default function ChatClient() {
   function Invitation(props: { canal: string }) {
     const [buttonInvitation, setButtonInvitation] = useState(false);
     const [usersList, setUsersList] = useState<UserInfo[]>([]);
+    const [blockedList, setBlockedList] = useState<string[]>([]);
+    const [blockedByList, setBlockedByList] = useState<string[]>([]);
 
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -1005,6 +1017,14 @@ export default function ChatClient() {
         get<UserInfo[]>("user")
           .then(users => setUsersList(users))
           .catch(() => {});
+        get<string[]>("user/blockedByList")
+          .then((res) => {
+            if (res) setBlockedByList(res);
+        });
+        get<string[]>("user/blockedList")
+          .then((res) => {
+            if (res) setBlockedList(res);
+        });
       }
       requUser();
 
@@ -1021,7 +1041,7 @@ export default function ChatClient() {
 
     function ListUsers() {
       const list = usersList.map((user: any) =>
-        username !== user.nickname ? (
+        username !== user.nickname && !blockedList.includes(user.nickname) && !blockedByList.includes(user.nickname) ? (
           <div className="li-prv" key={user.nickname}>
             <button
               className="btn-handle-prv"
@@ -1094,6 +1114,8 @@ export default function ChatClient() {
 
   function AffPrivateMessage() {
     const [usersList, setUsersList] = useState<UserInfo[]>([]);
+    const [blockedList, setBlockedList] = useState<string[]>([]);
+    const [blockedByList, setBlockedByList] = useState<string[]>([]);
 
     const keyPress = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -1108,6 +1130,16 @@ export default function ChatClient() {
 
     useEffect(() => {
       async function requUser() {
+        get<string[]>("user/blockedList")
+          .then((res) => {
+            if (res) setBlockedList(res);
+          })
+          .catch((error) => {});
+        get<string[]>("user/blockedByList")
+          .then((res) => {
+            if (res) setBlockedByList(res);
+          })
+          .catch((error) => {});
         get<UserInfo[]>("user")
           .then(users => setUsersList(users))
           .catch(() => {});
@@ -1123,7 +1155,7 @@ export default function ChatClient() {
 
     function ListUsers() {
       const list = usersList.map((user: any) =>
-        username !== user.nickname ? (
+        username !== user.nickname && !blockedList.includes(user.nickname) && !blockedByList.includes(user.nickname) ? (
           <div className="li-prv" key={user.nickname}>
             <button
               className="btn-handle-prv"
@@ -1246,18 +1278,20 @@ export default function ChatClient() {
 
     const joinCallBack = (room: string) => {
       if (room[0] !== "#")
+      {
         room.indexOf(username) === 0
           ? (room = room.substring(username.length))
           : (room = room.substring(0, room.length - username.length));
-        if (!channelList.includes(room)) {
-          channelList.push(room);
-          const canal = document.getElementById("canal");
-          if (canal) canal.innerHTML = room;
-          setRoomChange(room);
-          fetchList(roomChange);
-          fetchMessage(roomChange);
-          fetchAllChannels();
       }
+      if (room[0] === "#" && !channelList.includes(room)) {
+        channelList.push(room);
+        const canal = document.getElementById("canal");
+        if (canal) canal.innerHTML = room;
+        setRoomChange(room);
+      }
+      fetchList(roomChange);
+      fetchMessage(roomChange);
+      fetchAllChannels();
     };
 
     ChatClientSocket.onJoinChan(joinCallBack);
@@ -1286,7 +1320,7 @@ export default function ChatClient() {
 
     ChatClientSocket.onChangeUsername(changeUsernameCallBack);
 
-    const quitCallBack = (room: string) => {
+    const quitCallBack = async (room: string) => {
       const index = channelList.indexOf(room);
       if (index >= 0)
         channelList.splice(index, 1);
@@ -1410,7 +1444,7 @@ export default function ChatClient() {
     }
   };
 
-  //FAIRE POP UP POUR TOUTES ACTIONS DANS LE CHANNEL (KICK, ADD ET SUB OP)
+  //SI USER BLOCK PAS D INVITES NE RIEN FAIRE TOUT ENLEVER
 
   return (
     <div className="chat-div">

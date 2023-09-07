@@ -42,7 +42,7 @@ export class UserController{
   ) {}
 
   @Get()
-  async findAll() /*: Promise<UserInfo[]> */ {
+  async findAll() /*: Promise<UserInfo[]>*/ {
     const result = await this.userService.findAll();
     return result;
     const infos: UserInfo[] = [];
@@ -273,6 +273,17 @@ export class UserController{
   : Promise<string[]> {
     const payload = decodeTokenOrThrow(header, this.jwtService);
     const result = await this.userService.getBlockedList(payload.id);
+    if (result.isErr())
+      throw new ForbiddenException();
+    return result.value;
+  }
+
+  @UseGuards(TokenGuard)
+  @Get('blockedByList')
+  async getBlockedByList(@Headers('Authorization') header: Headers)
+  : Promise<string[]> {
+    const payload = decodeTokenOrThrow(header, this.jwtService);
+    const result = await this.userService.getBlockedByList(payload.id);
     if (result.isErr())
       throw new ForbiddenException();
     return result.value;

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { GameChatInterface } from "./Interface/gamechat.interface";
 import { ChatClientSocket } from "./Chat-client";
 import muteLogo from "../../resource/muted-logo.png";
 import unmuteLogo from "../../resource/unmuted-logo.png";

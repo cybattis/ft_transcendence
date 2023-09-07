@@ -635,15 +635,12 @@ export class ChannelService implements OnModuleInit {
     return ;
     const socketTarget = await this.getSocketById(user.id);
     const channel = username + target;
-    console.log("Channel :", channel);
     const res: string | null = await this.findChannelPrivateMessage(
       username,
       target,
       );
-    console.log(res);
     if (res) return;
     if (socketTarget) {
-      console.log("creer");
       await this.channelRepository.save({
         channel: channel,
         status: 'message',
@@ -729,6 +726,8 @@ export class ChannelService implements OnModuleInit {
         const reason = username + ' just blocked you.';
         const err = { reason };
         server.to(targetUser).emit('err', err);
+        server.to(targetUser).emit("quit", username);
+        server.to(targetUser).emit("change-username", username);
       }
       else if (cmd === "-blocked")
       {
@@ -1061,6 +1060,15 @@ export class ChannelService implements OnModuleInit {
         return find[index].channel;
     }
     return null;
+  }
+
+  async deletePrivateChan(userOne: string, userTwo: string) {
+    const findChan = await this.findChannelPrivateMessage(userOne, userTwo);
+    if (!findChan) return;
+    const chan = await this.channelRepository.findOne({where: {channel: findChan}});
+    if (!chan) return;
+    await this.chatRepository.delete({ channel: chan.channel });
+    await this.channelRepository.delete({ channel: chan.channel });
   }
 
   async changeParam(
