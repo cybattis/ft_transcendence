@@ -20,14 +20,12 @@ import {failure, Result, success} from "../utils/Error";
 import {APIError} from "../utils/errors";
 import {TypeCheckers} from "../utils/type-checkers";
 import {ChannelService} from "../channel/channel.service";
-import { CloudinaryService } from 'src/auth/cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService implements OnModuleInit {
   private gameService: GameService;
   private jwtService: JwtService;
   private channelService: ChannelService;
-  private cloudinary: CloudinaryService;
   @InjectRepository(User)
   private usersRepository: Repository<User>;
 
@@ -607,15 +605,10 @@ export class UserService implements OnModuleInit {
     if (user.isErr())
       return failure(user.error);
 
-      try {
-        const image = await this.cloudinary.uploadFile(file);
-        user.value.avatarUrl = apiBaseURL + image.secure_url;
-        await this.usersRepository.save(user.value);
+    user.value.avatarUrl = apiBaseURL + file.path;
+    await this.usersRepository.save(user.value);
 
-        return success(user.value.avatarUrl);
-      } catch (error) {
-        return error
-      }
+    return success(user.value.avatarUrl);
   }
 
   async changePrvChannel(old : string, actual : string){

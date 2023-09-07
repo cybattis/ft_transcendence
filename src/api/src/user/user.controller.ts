@@ -33,6 +33,8 @@ import {APIError} from "../utils/errors";
 import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
 import { PaddleColorDto, UserSettingsDto } from "./dto/user.dto";
+import { validateMIMEType } from "validate-image-type";
+import {failure} from "../utils/Error";
 
 @Controller('user')
 export class UserController{
@@ -170,6 +172,15 @@ export class UserController{
     if (req?.fileValidationError === 'UNSUPPORTED_FILE_TYPE') {
       throw new BadRequestException('Accepted file are: jpg, jpeg, png, gif');
     }
+
+    console.log("FILE: ", file.path)
+    const checkImage = await validateMIMEType(file.path, {
+      allowMimeTypes: ['image/jpeg', 'image/gif', 'image/png']
+    });
+    if (!checkImage.ok) {
+      throw new BadRequestException("File is not an image");
+    }
+
     const token = getTokenOrThrow(header);
     const result = await this.userService.updateAvatar(file, token);
     if (result.isErr())
