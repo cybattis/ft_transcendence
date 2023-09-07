@@ -543,7 +543,7 @@ export default function ChatClient() {
 
   function Buttons() {
     const [targetOp, setTargetOp] = useState(false);
-    const [me, setMe] = useState<boolean>(false);
+    const [me, setMe] = useState<boolean>(true);
     const [chanOwner, setChanOwner] = useState(false);
     const userData = useProfileData();
 
