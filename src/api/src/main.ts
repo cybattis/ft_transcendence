@@ -6,13 +6,13 @@ import { join } from 'path';
 import * as fs from 'fs';
 
 async function bootstrap() {
-  // const httpsOptions = {
-  //   cert: fs.readFileSync('./secret/fullchain.pem'),
-  //   key: fs.readFileSync('./secret/ssl_keychain.pem'),
-  // };
+  const httpsOptions = {
+    cert: fs.readFileSync('./secret/fullchain.pem'),
+    key: fs.readFileSync('./secret/ssl_keychain.pem'),
+  };
 
   const app = await NestFactory.create(AppModule, {
-    // httpsOptions,
+    httpsOptions,
     cors: true,
   });
 
