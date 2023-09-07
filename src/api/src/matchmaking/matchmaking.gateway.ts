@@ -95,6 +95,8 @@ export class MatchmakingGateway
           return "You can't invite someone while you are in matchmaking.";
         case APIError.SelfInvite:
           return "You can't invite yourself to a game.";
+        case APIError.AlreadyInvitedToGame:
+          return "You already invited this user to a game.";
       }
     }
     return "OK";
@@ -159,6 +161,8 @@ export class MatchmakingGateway
           return "You can't invite someone while you are in matchmaking.";
         case APIError.SelfInvite:
           return "You can't invite yourself to a game.";
+        case APIError.AlreadyInvitedToGame:
+          return "You already invited this user to a game.";
       }
     }
     return "OK";
