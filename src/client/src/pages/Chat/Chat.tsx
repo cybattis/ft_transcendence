@@ -249,17 +249,6 @@ export default function ChatClient() {
     }
   };
 
-  const handleButtonForm = () => {
-    if (!buttons)
-      setJoinForm(false);
-
-    setButtons(!buttons);
-    setBanForm(false);
-    setMuteForm(false);
-    setBanForm(false);
-    setMuteForm(false);
-  };
-
   const handleAddOpe = () => {
     const ope = {
       op: "op",
@@ -1076,11 +1065,6 @@ export default function ChatClient() {
         : setMessagePrivateForm(true);
       setButtons(false);
       setJoinForm(false);
-    };
-
-    const handlePrivate = () => {
-      const sendPrv = { username: username, target: usr };
-      ChatClientSocket.privateMessage(sendPrv);
     };
 
     return (
