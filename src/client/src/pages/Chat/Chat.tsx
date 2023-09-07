@@ -1278,10 +1278,10 @@ export default function ChatClient() {
           canal.innerHTML = newName;
           setRoomChange(newName);
         }
-        await fetchMessage(roomChange);
-        await fetchAllChannels();
-        await fetchList(roomChange);
       }
+      await fetchMessage(roomChange);
+      await fetchAllChannels();
+      await fetchList(roomChange);
     }
 
     ChatClientSocket.onChangeUsername(changeUsernameCallBack);

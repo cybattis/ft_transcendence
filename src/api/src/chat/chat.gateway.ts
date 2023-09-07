@@ -137,6 +137,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.password,
       blockedUsers.value.blockedChat,
     );
+
+    socket.broadcast.emit('change-username', data.username);
   }
 
   @SubscribeMessage('joinGame')
