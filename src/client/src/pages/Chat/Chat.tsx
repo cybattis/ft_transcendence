@@ -553,6 +553,9 @@ export default function ChatClient() {
 
       ChatClientSocket.onNotificationEvent(fetchInvitedStatus);
 
+      return () => {
+        ChatClientSocket.offNotificationEvent(fetchInvitedStatus);
+      }
     }, [userData.data]);
 
       const keyPress = (event: KeyboardEvent) => {
