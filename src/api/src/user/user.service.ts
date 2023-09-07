@@ -342,16 +342,12 @@ export class UserService implements OnModuleInit {
             console.log(friend.friendsId);
             friend.friendsId.splice(j, 1);
             const updated_friend = await this.usersRepository.save(friend);
-            console.log(friend.friendsId);
-            console.log(updated_friend.friendsId);
 
-            console.log("friends nuked !");
-
+            await this.channelService.sendNotificationEvent(friendId);
             // Both users are not friends anymore
             return success(TypeConverters.fromUserToUserFriendsData(updated_me));
           }
         }
-
         // The friend does not have me in his friends list
         return  success(TypeConverters.fromUserToUserFriendsData(updated_me));
       }

@@ -34,7 +34,6 @@ import {decodeTokenOrThrow, getTokenOrThrow} from "../utils/tokenUtils";
 import {TypeConverters} from "../utils/type-converters";
 import { PaddleColorDto, UserSettingsDto } from "./dto/user.dto";
 import { validateMIMEType } from "validate-image-type";
-import {failure} from "../utils/Error";
 
 @Controller('user')
 export class UserController{
@@ -273,6 +272,7 @@ export class UserController{
           throw new NotFoundException();
       }
     }
+
 
     return result.value;
   }
