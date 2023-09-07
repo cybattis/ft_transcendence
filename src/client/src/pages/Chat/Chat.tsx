@@ -260,26 +260,6 @@ export default function ChatClient() {
     setMuteForm(false);
   };
 
-  const handleBlock = () => {
-    const sendBlock = { username: username, target: usr, cmd: "+blocked" };
-    ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/block-user/${usr}`, {})
-      .catch(showErrorInModal);
-  };
-
-  const handleUnBlock = async () => {
-    const sendBlock = { username: username, target: usr , cmd: "-blocked"};
-    ChatClientSocket.blocked(sendBlock);
-    put<UserFriendsData>(`user/unblock/${usr}`, {})
-      .then(res => {
-        for (let i = 0; blocedList[i]; i ++) {
-          if (blocedList[i] === usr)
-            blocedList.splice(i, 1);
-        }
-      })
-      .catch(showErrorInModal);
-  };
-
   const handleAddOpe = () => {
     const ope = {
       op: "op",
@@ -570,6 +550,22 @@ export default function ChatClient() {
         }
       };
 
+    const handleBlock = () => {
+      const sendBlock = { username: username, target: usr, cmd: "+blocked" };
+      ChatClientSocket.blocked(sendBlock);
+      put<UserFriendsData>(`user/block-user/${usr}`, {})
+        .then(() => setBlocked(true))
+        .catch(showErrorInModal);
+    };
+
+    const handleUnBlock = async () => {
+      const sendBlock = { username: username, target: usr , cmd: "-blocked"};
+      ChatClientSocket.blocked(sendBlock);
+      put<UserFriendsData>(`user/unblock/${usr}`, {})
+        .then(() => setBlocked(false))
+        .catch(showErrorInModal);
+    };
+
     useEffect(() => {
       async function isUsrInChan() {
         let canal = roomChange;
@@ -626,7 +622,7 @@ export default function ChatClient() {
       }
       isOwner();
 
-      async function getBlockedUsrs() {
+      function getBlockedUsrs() {
           get<string[]>("user/blockedList")
           .then((res) => {
             if (res.includes(usr))
